@@ -37,7 +37,7 @@ function App() {
       setSelectedPlaylists([...selectedPlaylists, playlist]);
       setRatioConfig({
         ...ratioConfig,
-        [playlist.id]: { min: 1, max: 2, weight: 1, weightType: 'frequency' }
+        [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' }
       });
     }
   };

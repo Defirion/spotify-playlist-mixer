@@ -4,11 +4,19 @@
   box-sizing: border-box;
 }
 
+:root {
+  --dark-green: #132a13;
+  --hunter-green: #31572c;
+  --fern-green: #4f772d;
+  --moss-green: #90a955;
+  --mindaro: #ecf39e;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+  background: linear-gradient(135deg, var(--dark-green) 0%, var(--hunter-green) 100%);
   min-height: 100vh;
-  color: #fff;
+  color: var(--mindaro);
 }
 
 .container {
@@ -25,21 +33,21 @@ body {
 .header h1 {
   font-size: 2.5rem;
   margin-bottom: 10px;
-  color: #1db954;
+  color: var(--moss-green);
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(49, 87, 44, 0.3);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--fern-green);
 }
 
 .btn {
-  background: #1db954;
-  color: white;
+  background: var(--fern-green);
+  color: var(--mindaro);
   border: none;
   padding: 12px 24px;
   border-radius: 24px;
@@ -50,12 +58,12 @@ body {
 }
 
 .btn:hover {
-  background: #1ed760;
+  background: var(--moss-green);
   transform: translateY(-2px);
 }
 
 .btn:disabled {
-  background: #666;
+  background: var(--hunter-green);
   cursor: not-allowed;
   transform: none;
 }
@@ -74,31 +82,31 @@ body {
 .input-group select {
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--fern-green);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--hunter-green);
+  color: var(--mindaro);
   font-size: 16px;
 }
 
 .input-group select {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--hunter-green);
   cursor: pointer;
 }
 
 .input-group select option {
-  background: #2a2a2a;
-  color: white;
+  background: var(--dark-green);
+  color: var(--mindaro);
   padding: 8px;
 }
 
 .input-group input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(236, 243, 158, 0.6);
 }
 
 .toggle-group {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hunter-green);
   border-radius: 8px;
   padding: 4px;
   gap: 4px;
@@ -109,7 +117,7 @@ body {
   padding: 8px 16px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(236, 243, 158, 0.7);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -117,14 +125,129 @@ body {
 }
 
 .toggle-option.active {
-  background: #1db954;
-  color: white;
+  background: var(--fern-green);
+  color: var(--mindaro);
   font-weight: 600;
 }
 
 .toggle-option:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--dark-green);
+  color: var(--mindaro);
+}
+
+/* Custom slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--hunter-green);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--mindaro);
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--mindaro);
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+/* Dual Range Slider (Tinder-style) */
+.dual-range-slider {
+  position: relative;
+  width: 100%;
+  height: 20px;
+}
+
+.dual-range-slider input[type="range"] {
+  position: absolute;
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dual-range-slider input[type="range"]::-webkit-slider-thumb {
+  pointer-events: all;
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 50%;
+  border: 2px solid var(--mindaro);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+  -webkit-appearance: none;
+}
+
+.dual-range-slider input[type="range"]::-moz-range-thumb {
+  pointer-events: all;
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 50%;
+  border: 2px solid var(--mindaro);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+}
+
+.dual-range-slider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--hunter-green);
+  border-radius: 3px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.dual-range-slider .range-min {
+  z-index: 4;
+}
+
+.dual-range-slider .range-max {
+  z-index: 3;
+}
+
+.dual-range-slider .range-min::-webkit-slider-thumb {
+  background: var(--fern-green);
+  position: relative;
+  z-index: 4;
+}
+
+.dual-range-slider .range-max::-webkit-slider-thumb {
+  background: var(--moss-green);
+  position: relative;
+  z-index: 3;
 }
 
 .playlist-item {
@@ -132,9 +255,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--hunter-green);
   border-radius: 8px;
   margin-bottom: 8px;
+  border: 1px solid var(--fern-green);
 }
 
 .ratio-controls {
@@ -150,8 +274,9 @@ body {
 }
 
 .error {
-  color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.1);
+  color: var(--mindaro);
+  background: rgba(79, 119, 45, 0.3);
+  border: 1px solid var(--fern-green);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 16px;

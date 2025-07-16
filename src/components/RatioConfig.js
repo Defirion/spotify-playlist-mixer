@@ -2,7 +2,7 @@ import React from 'react';
 
 const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
   const handleConfigChange = (playlistId, field, value) => {
-    const currentConfig = ratioConfig[playlistId] || { min: 1, max: 2, weight: 1, weightType: 'frequency' };
+    const currentConfig = ratioConfig[playlistId] || { min: 1, max: 2, weight: 2, weightType: 'frequency' };
     const newValue = field === 'weightType' ? value : (parseInt(value) || 1);
     onRatioUpdate(playlistId, {
       ...currentConfig,
@@ -27,81 +27,91 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
               <h4>{playlist.name}</h4>
               
               <div className="input-group">
-                <label>Min songs in sequence:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={config.min}
-                  onChange={(e) => handleConfigChange(playlist.id, 'min', e.target.value)}
-                />
-              </div>
-              
-              <div className="input-group">
-                <label>Max songs in sequence:</label>
-                <input
-                  type="number"
-                  min={config.min}
-                  max="10"
-                  value={config.max}
-                  onChange={(e) => handleConfigChange(playlist.id, 'max', e.target.value)}
-                />
-              </div>
-              
-              <div className="input-group">
-                <label>Playlist Limit (optional):</label>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <select
-                    value={config.limitType || 'none'}
-                    onChange={(e) => handleConfigChange(playlist.id, 'limitType', e.target.value)}
-                    style={{ flex: '0 0 auto', width: '120px' }}
-                  >
-                    <option value="none">No limit</option>
-                    <option value="songs">Max songs</option>
-                    <option value="time">Max minutes</option>
-                  </select>
-                  
-                  {config.limitType && config.limitType !== 'none' && (
-                    <input
-                      type="number"
-                      min="1"
-                      max={config.limitType === 'songs' ? '200' : '300'}
-                      value={config.limitValue || ''}
-                      onChange={(e) => handleConfigChange(playlist.id, 'limitValue', e.target.value)}
-                      placeholder={config.limitType === 'songs' ? 'Songs' : 'Minutes'}
-                      style={{ flex: 1 }}
-                    />
-                  )}
+                <label>Songs per group: {config.min === config.max ? config.min : `${config.min}-${config.max}`}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>1</span>
+                  <div style={{ flex: 1, position: 'relative', height: '20px' }}>
+                    <div className="dual-range-slider">
+                      <input
+                        type="range"
+                        min="1"
+                        max="8"
+                        value={config.min}
+                        onChange={(e) => {
+                          const newMin = parseInt(e.target.value);
+                          handleConfigChange(playlist.id, 'min', newMin);
+                          if (newMin > config.max) {
+                            handleConfigChange(playlist.id, 'max', newMin);
+                          }
+                        }}
+                        className="range-min"
+                      />
+                      <input
+                        type="range"
+                        min="1"
+                        max="8"
+                        value={config.max}
+                        onChange={(e) => {
+                          const newMax = parseInt(e.target.value);
+                          if (newMax >= config.min) {
+                            handleConfigChange(playlist.id, 'max', newMax);
+                          }
+                        }}
+                        className="range-max"
+                      />
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>8</span>
                 </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  Set a maximum for this specific playlist (e.g., "max 30 bachata songs" or "max 60 minutes of salsa")
+                  Drag handles to set min-max range of songs that play together
                 </div>
               </div>
+              
+
               
               <div className="input-group">
                 <label>Weighting Strategy:</label>
-                <select
-                  value={config.weightType || 'frequency'}
-                  onChange={(e) => handleConfigChange(playlist.id, 'weightType', e.target.value)}
-                >
-                  <option value="frequency">By Frequency (song count)</option>
-                  <option value="time">By Time (equal playtime)</option>
-                </select>
+                <div className="toggle-group">
+                  <button
+                    type="button"
+                    className={`toggle-option ${(config.weightType || 'frequency') === 'frequency' ? 'active' : ''}`}
+                    onClick={() => handleConfigChange(playlist.id, 'weightType', 'frequency')}
+                  >
+                    By Frequency
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-option ${config.weightType === 'time' ? 'active' : ''}`}
+                    onClick={() => handleConfigChange(playlist.id, 'weightType', 'time')}
+                  >
+                    By Time
+                  </button>
+                </div>
+                <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+                  {config.weightType === 'time' 
+                    ? 'Balances total playtime per genre (good for different song lengths)'
+                    : 'Balances song count per genre (traditional approach)'
+                  }
+                </div>
               </div>
               
               <div className="input-group">
                 <label>
-                  {config.weightType === 'time' ? 'Time Weight:' : 'Frequency:'}
+                  Frequency: {['Low', 'Normal', 'High', 'Very High'][config.weight - 1] || 'Normal'}
                 </label>
-                <select
-                  value={config.weight}
-                  onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
-                >
-                  <option value="1">Low (1x)</option>
-                  <option value="2">Normal (2x)</option>
-                  <option value="3">High (3x)</option>
-                  <option value="4">Very High (4x)</option>
-                </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Low</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="4"
+                    value={config.weight}
+                    onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Very High</span>
+                </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
                   {config.weightType === 'time' 
                     ? 'Adjusts for song length to balance total playtime per genre'
