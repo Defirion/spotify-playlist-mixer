@@ -9,7 +9,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
     targetDuration: 240, // minutes
     useTimeLimit: false,
     playlistName: 'My Mixed Playlist',
-    shuffleWithinGroups: true
+    shuffleWithinGroups: true,
+    popularityStrategy: 'mixed', // 'mixed', 'front-loaded', 'mid-peak', 'crescendo'
+    recencyBoost: true
   });
 
   const handleMix = async () => {
@@ -191,16 +193,65 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
       </div>
       
       <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+        <div className="input-group">
+          <label>Popularity Strategy:</label>
+          <div className="toggle-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+            <button
+              type="button"
+              className={`toggle-option ${mixOptions.popularityStrategy === 'mixed' ? 'active' : ''}`}
+              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'mixed'})}
+            >
+              Mixed
+            </button>
+            <button
+              type="button"
+              className={`toggle-option ${mixOptions.popularityStrategy === 'front-loaded' ? 'active' : ''}`}
+              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'front-loaded'})}
+            >
+              Front-loaded
+            </button>
+            <button
+              type="button"
+              className={`toggle-option ${mixOptions.popularityStrategy === 'mid-peak' ? 'active' : ''}`}
+              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'mid-peak'})}
+            >
+              Mid-peak
+            </button>
+            <button
+              type="button"
+              className={`toggle-option ${mixOptions.popularityStrategy === 'crescendo' ? 'active' : ''}`}
+              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'crescendo'})}
+            >
+              Crescendo
+            </button>
+          </div>
+          <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+            {mixOptions.popularityStrategy === 'mixed' && 'Random mix of all popularity levels'}
+            {mixOptions.popularityStrategy === 'front-loaded' && 'Popular songs first, then fade to deep cuts'}
+            {mixOptions.popularityStrategy === 'mid-peak' && 'Build to popular songs in the middle, perfect for parties'}
+            {mixOptions.popularityStrategy === 'crescendo' && 'Build from deep cuts to biggest hits at the end'}
+          </div>
+        </div>
+        
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '12px' }}>
+          <input
+            type="checkbox"
+            checked={mixOptions.recencyBoost}
+            onChange={(e) => setMixOptions({...mixOptions, recencyBoost: e.target.checked})}
+          />
+          Boost recent tracks (newer songs get popularity bonus)
+        </label>
+        
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' }}>
           <input
             type="checkbox"
             checked={mixOptions.shuffleWithinGroups}
             onChange={(e) => setMixOptions({...mixOptions, shuffleWithinGroups: e.target.checked})}
           />
-          Shuffle songs within each playlist
+          Shuffle within popularity groups
         </label>
         <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-          Randomizes the order of songs within each playlist before mixing
+          Randomizes songs within each popularity quadrant while maintaining the overall strategy
         </div>
       </div>
       
