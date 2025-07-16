@@ -75,12 +75,14 @@ const createPopularityQuadrants = (tracks, recencyBoost = false) => {
     deepCuts: sortedTracks.slice(quarterSize * 3) // 75-100% (least popular)
   };
   
-  // Log quadrant information with relative rankings
-  console.log(`📊 Popularity Quadrants Created (relative to this playlist):`);
-  console.log(`  🔥 Top Hits: ${quadrants.topHits.length} tracks (${Math.round(quadrants.topHits[quadrants.topHits.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.topHits[0]?.adjustedPopularity || 0)} popularity)`);
-  console.log(`  ⭐ Popular: ${quadrants.popular.length} tracks (${Math.round(quadrants.popular[quadrants.popular.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.popular[0]?.adjustedPopularity || 0)} popularity)`);
-  console.log(`  📻 Moderate: ${quadrants.moderate.length} tracks (${Math.round(quadrants.moderate[quadrants.moderate.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.moderate[0]?.adjustedPopularity || 0)} popularity)`);
-  console.log(`  💎 Deep Cuts: ${quadrants.deepCuts.length} tracks (${Math.round(quadrants.deepCuts[quadrants.deepCuts.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.deepCuts[0]?.adjustedPopularity || 0)} popularity)`);
+  // Log quadrant information with relative rankings (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`📊 Popularity Quadrants Created (relative to this playlist):`);
+    console.log(`  🔥 Top Hits: ${quadrants.topHits.length} tracks (${Math.round(quadrants.topHits[quadrants.topHits.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.topHits[0]?.adjustedPopularity || 0)} popularity)`);
+    console.log(`  ⭐ Popular: ${quadrants.popular.length} tracks (${Math.round(quadrants.popular[quadrants.popular.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.popular[0]?.adjustedPopularity || 0)} popularity)`);
+    console.log(`  📻 Moderate: ${quadrants.moderate.length} tracks (${Math.round(quadrants.moderate[quadrants.moderate.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.moderate[0]?.adjustedPopularity || 0)} popularity)`);
+    console.log(`  💎 Deep Cuts: ${quadrants.deepCuts.length} tracks (${Math.round(quadrants.deepCuts[quadrants.deepCuts.length-1]?.adjustedPopularity || 0)}-${Math.round(quadrants.deepCuts[0]?.adjustedPopularity || 0)} popularity)`);
+  }
   
   return quadrants;
 };
@@ -98,7 +100,9 @@ const createPopularityPools = (playlistTracks, options) => {
       return;
     }
     
-    console.log(`\n🎼 Processing playlist: ${playlistId} (${tracks.length} tracks)`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n🎼 Processing playlist: ${playlistId} (${tracks.length} tracks)`);
+    }
     
     // Create quadrants - this is now relative to THIS playlist only
     const quadrants = createPopularityQuadrants(tracks, recencyBoost);
@@ -124,7 +128,9 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
   
   const positionRatio = position / totalLength; // 0.0 to 1.0
   
-  console.log(`🎯 Position ${position}/${totalLength} (${Math.round(positionRatio * 100)}%) - Strategy: ${strategy}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🎯 Position ${position}/${totalLength} (${Math.round(positionRatio * 100)}%) - Strategy: ${strategy}`);
+  }
   
   let selectedPools = [];
   
@@ -133,13 +139,13 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
       // Popular songs first, fade to deep cuts
       if (positionRatio < 0.3) {
         selectedPools = [...pools.topHits, ...pools.popular];
-        console.log(`   Using: Top Hits + Popular (front-loaded start)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Top Hits + Popular (front-loaded start)`);
       } else if (positionRatio < 0.7) {
         selectedPools = [...pools.moderate, ...pools.popular];
-        console.log(`   Using: Moderate + Popular (front-loaded middle)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Moderate + Popular (front-loaded middle)`);
       } else {
         selectedPools = [...pools.deepCuts, ...pools.moderate];
-        console.log(`   Using: Deep Cuts + Moderate (front-loaded end)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Deep Cuts + Moderate (front-loaded end)`);
       }
       break;
       
@@ -147,19 +153,19 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
       // Build to peak in middle, then fade
       if (positionRatio < 0.2) {
         selectedPools = [...pools.moderate, ...pools.deepCuts];
-        console.log(`   Using: Moderate + Deep Cuts (mid-peak start)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Moderate + Deep Cuts (mid-peak start)`);
       } else if (positionRatio < 0.4) {
         selectedPools = [...pools.popular, ...pools.moderate];
-        console.log(`   Using: Popular + Moderate (mid-peak build)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Popular + Moderate (mid-peak build)`);
       } else if (positionRatio < 0.6) {
         selectedPools = [...pools.topHits, ...pools.popular];
-        console.log(`   Using: Top Hits + Popular (mid-peak PEAK! 🔥)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Top Hits + Popular (mid-peak PEAK! 🔥)`);
       } else if (positionRatio < 0.8) {
         selectedPools = [...pools.popular, ...pools.moderate];
-        console.log(`   Using: Popular + Moderate (mid-peak wind down)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Popular + Moderate (mid-peak wind down)`);
       } else {
         selectedPools = [...pools.moderate, ...pools.deepCuts];
-        console.log(`   Using: Moderate + Deep Cuts (mid-peak end)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Moderate + Deep Cuts (mid-peak end)`);
       }
       break;
       
@@ -167,13 +173,13 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
       // Build from deep cuts to biggest hits
       if (positionRatio < 0.3) {
         selectedPools = [...pools.deepCuts, ...pools.moderate];
-        console.log(`   Using: Deep Cuts + Moderate (crescendo start)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Deep Cuts + Moderate (crescendo start)`);
       } else if (positionRatio < 0.6) {
         selectedPools = [...pools.moderate, ...pools.popular];
-        console.log(`   Using: Moderate + Popular (crescendo build)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Moderate + Popular (crescendo build)`);
       } else {
         selectedPools = [...pools.popular, ...pools.topHits];
-        console.log(`   Using: Popular + Top Hits (crescendo finale)`);
+        if (process.env.NODE_ENV === 'development') console.log(`   Using: Popular + Top Hits (crescendo finale)`);
       }
       break;
       
@@ -181,21 +187,26 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
     default:
       // Random mix of all quadrants
       selectedPools = [...pools.topHits, ...pools.popular, ...pools.moderate, ...pools.deepCuts];
-      console.log(`   Using: All quadrants mixed`);
+      if (process.env.NODE_ENV === 'development') console.log(`   Using: All quadrants mixed`);
       break;
   }
   
-  console.log(`   Available tracks: ${selectedPools.length}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`   Available tracks: ${selectedPools.length}`);
+  }
   return selectedPools;
 };
 
 export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   const { totalSongs, targetDuration, useTimeLimit, shuffleWithinGroups, popularityStrategy, recencyBoost } = options;
 
-  console.log('=== POPULARITY-AWARE MIXER ===');
-  console.log('Playlists:', Object.keys(playlistTracks).length);
-  console.log('Strategy:', popularityStrategy);
-  console.log('Recency boost:', recencyBoost);
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('=== POPULARITY-AWARE MIXER ===');
+    console.log('Playlists:', Object.keys(playlistTracks).length);
+    console.log('Strategy:', popularityStrategy);
+    console.log('Recency boost:', recencyBoost);
+  }
 
   // Validate inputs
   if (!playlistTracks || Object.keys(playlistTracks).length === 0) {
@@ -214,7 +225,9 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   });
 
   // Create popularity-based pools for each playlist
-  console.log('🎯 Creating popularity pools...');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 Creating popularity pools...');
+  }
   const popularityPools = createPopularityPools(cleanedPlaylistTracks, options);
 
   // Get valid playlist IDs
@@ -320,13 +333,15 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
         else if (pools.moderate.find(t => t.id === selectedTrack.id)) quadrant = '📻 Moderate';
         else if (pools.deepCuts.find(t => t.id === selectedTrack.id)) quadrant = '💎 Deep Cut';
         
-        // Log detailed track information
-        const recencyInfo = selectedTrack.recencyBonus > 0 
-          ? ` (+${selectedTrack.recencyBonus} recency bonus from ${selectedTrack.releaseYear})`
-          : ` (${selectedTrack.releaseYear})`;
-        
-        console.log(`  🎵 "${selectedTrack.name}" by ${selectedTrack.artists?.[0]?.name || 'Unknown'}`);
-        console.log(`     ${quadrant} within this playlist | Popularity: ${selectedTrack.basePopularity} → ${Math.round(selectedTrack.adjustedPopularity)}${recencyInfo}`);
+        // Log detailed track information (development only)
+        if (process.env.NODE_ENV === 'development') {
+          const recencyInfo = selectedTrack.recencyBonus > 0 
+            ? ` (+${selectedTrack.recencyBonus} recency bonus from ${selectedTrack.releaseYear})`
+            : ` (${selectedTrack.releaseYear})`;
+          
+          console.log(`  🎵 "${selectedTrack.name}" by ${selectedTrack.artists?.[0]?.name || 'Unknown'}`);
+          console.log(`     ${quadrant} within this playlist | Popularity: ${selectedTrack.basePopularity} → ${Math.round(selectedTrack.adjustedPopularity)}${recencyInfo}`);
+        }
         
         mixedTracks.push({
           ...selectedTrack,
