@@ -1,9 +1,8 @@
 import React from 'react';
-import { SPOTIFY_CLIENT_ID } from '../config';
 
 const SpotifyAuth = ({ onAuth }) => {
-  const CLIENT_ID = SPOTIFY_CLIENT_ID;
-  const REDIRECT_URI = window.location.origin;
+  const CLIENT_ID = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+  const REDIRECT_URI = window.location.origin + '/';
   const SCOPES = [
     'playlist-read-private',
     'playlist-read-collaborative',
@@ -31,10 +30,8 @@ const SpotifyAuth = ({ onAuth }) => {
         </button>
       </div>
       <div style={{ marginTop: '20px', fontSize: '14px', opacity: '0.8' }}>
-        <p><strong>Setup Required:</strong></p>
-        <p>1. Create a Spotify app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: '#1db954' }}>developer.spotify.com</a></p>
-        <p>2. Add "{window.location.origin}" as a redirect URI</p>
-        <p>3. Replace CLIENT_ID in SpotifyAuth.js with your app's client ID</p>
+        <p><strong>Ready to use!</strong></p>
+        <p>Click the button above to connect your Spotify account and start mixing playlists.</p>
       </div>
     </div>
   );

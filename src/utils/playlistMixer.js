@@ -8,10 +8,10 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
-// Get random number between min and max (inclusive)
-const getRandomInRange = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+// Get random number between min and max (inclusive) - currently unused but kept for future features
+// const getRandomInRange = (min, max) => {
+//   return Math.floor(Math.random() * (max - min + 1)) + min;
+// };
 
 // Calculate total duration for a set of tracks (in milliseconds)
 const calculateTotalDuration = (tracks) => {

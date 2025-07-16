@@ -3,7 +3,7 @@ import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
 import RatioConfig from './components/RatioConfig';
 import PlaylistMixer from './components/PlaylistMixer';
-import { getSpotifyApi } from './utils/spotify';
+// Spotify API utility imported in components that need it
 
 function App() {
   const [accessToken, setAccessToken] = useState(null);
