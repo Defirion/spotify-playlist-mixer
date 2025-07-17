@@ -8,7 +8,7 @@
 
 ## 🌟 What Makes This Special
 
-Transform your music experience with **studio-quality playlist mixing** that rivals professional DJ software. Whether you're planning a party, workout session, or road trip, create the perfect soundtrack with precision controls and intelligent automation.
+Transform your music experience with **studio-quality playlist mixing** that rivals professional DJ software (not really though :P). Whether you're planning a party, workout session, or road trip, create the perfect soundtrack with precision controls and intelligent automation.
 
 ## ✨ Key Features
 
