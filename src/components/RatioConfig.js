@@ -157,11 +157,11 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                 <label>
                   Frequency: {(() => {
                     const weight = config.weight || 2;
-                    if (weight <= 2) return 'Low';
-                    if (weight <= 4) return 'Normal';
-                    if (weight <= 6) return 'High';
-                    if (weight <= 8) return 'Very High';
-                    return 'Maximum';
+                    if (weight <= 2) return `Low (${weight})`;
+                    if (weight <= 4) return `Normal (${weight})`;
+                    if (weight <= 6) return `High (${weight})`;
+                    if (weight <= 8) return `Very High (${weight})`;
+                    return `Maximum (${weight})`;
                   })()}
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
@@ -195,11 +195,11 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
             const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
             const frequencyText = (() => {
               const weight = config.weight || 2;
-              if (weight <= 2) return 'Low';
-              if (weight <= 4) return 'Normal';
-              if (weight <= 6) return 'High';
-              if (weight <= 8) return 'Very High';
-              return 'Maximum';
+              if (weight <= 2) return `Low (${weight})`;
+              if (weight <= 4) return `Normal (${weight})`;
+              if (weight <= 6) return `High (${weight})`;
+              if (weight <= 8) return `Very High (${weight})`;
+              return `Maximum (${weight})`;
             })();
             
             return (
