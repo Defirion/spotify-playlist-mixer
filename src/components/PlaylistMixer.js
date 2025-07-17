@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 import { mixPlaylists } from '../utils/playlistMixer';
+import DraggableTrackList from './DraggableTrackList';
 
 const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
   const [loading, setLoading] = useState(false);
   const [localMixOptions, setLocalMixOptions] = useState(mixOptions);
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [customTrackOrder, setCustomTrackOrder] = useState(null);
 
   // Sync localMixOptions with mixOptions when it changes (from presets)
   React.useEffect(() => {
     setLocalMixOptions(mixOptions);
     // Clear preview when settings change so user knows to regenerate
     setPreview(null);
+    setCustomTrackOrder(null);
   }, [mixOptions]);
 
   // Clear preview when ratioConfig changes
   React.useEffect(() => {
     setPreview(null);
+    setCustomTrackOrder(null);
   }, [ratioConfig]);
+
+  const handlePreviewOrderChange = (reorderedTracks) => {
+    setCustomTrackOrder(reorderedTracks);
+  };
 
   const handleMix = async () => {
     try {
@@ -55,8 +63,15 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         throw new Error('No tracks found in selected playlists');
       }
       
-      // Mix the playlists according to ratios
-      const mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
+      // Use custom track order if available, otherwise mix the playlists according to ratios
+      let mixedTracks;
+      if (customTrackOrder && customTrackOrder.length > 0) {
+        // Use the custom reordered tracks from preview
+        mixedTracks = customTrackOrder;
+      } else {
+        // Generate new mix using the standard algorithm
+        mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
+      }
       
       if (mixedTracks.length === 0) {
         throw new Error('Failed to mix playlists - no tracks generated');
@@ -769,97 +784,13 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             </div>
           )}
 
-          {/* Track List */}
-          <div style={{ 
-            background: 'var(--hunter-green)', 
-            borderRadius: '8px', 
-            border: '1px solid var(--fern-green)',
-            maxHeight: '300px',
-            overflowY: 'auto',
-            marginBottom: '16px'
-          }}>
-            <div style={{ 
-              padding: '12px 16px', 
-              borderBottom: '1px solid var(--fern-green)',
-              position: 'sticky',
-              top: 0,
-              background: 'var(--hunter-green)',
-              zIndex: 1
-            }}>
-              <strong>🎵 First {preview.tracks.length} Songs</strong>
-            </div>
-            
-            {(() => {
-              // Calculate relative popularity quadrants for track labeling
-              const tracksWithPop = preview.tracks.filter(t => t.popularity !== undefined);
-              const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
-              const qSize = Math.floor(sortedByPop.length / 4);
-              
-              const getTrackQuadrant = (track) => {
-                if (track.popularity === undefined) return null;
-                const index = sortedByPop.findIndex(t => t.id === track.id);
-                if (index < qSize) return 'topHits';
-                if (index < qSize * 2) return 'popular';
-                if (index < qSize * 3) return 'moderate';
-                return 'deepCuts';
-              };
-              
-              return preview.tracks.map((track, index) => {
-                const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
-                const quadrant = getTrackQuadrant(track);
-                
-                return (
-                <div 
-                  key={`${track.id}-${index}`}
-                  style={{ 
-                    padding: '8px 16px', 
-                    borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                      {index + 1}. {track.name}
-                    </div>
-                    <div style={{ fontSize: '12px', opacity: '0.7' }}>
-                      {track.artists?.[0]?.name || 'Unknown Artist'} • 
-                      <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
-                        {sourcePlaylist?.name || 'Unknown Playlist'}
-                      </span>
-                      {track.popularity !== undefined && (
-                        <span style={{ 
-                          marginLeft: '8px', 
-                          fontSize: '10px', 
-                          background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
-                                    quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
-                                    quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
-                                    'rgba(233, 30, 99, 0.2)',
-                          color: quadrant === 'topHits' ? '#FF5722' :
-                               quadrant === 'popular' ? '#FF8F00' :
-                               quadrant === 'moderate' ? '#00BCD4' :
-                               '#E91E63',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontWeight: '500'
-                        }}>
-                          {quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
-                           quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
-                           quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
-                           `💎 Deep Cuts (${track.popularity})`}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '11px', opacity: '0.6' }}>
-                    {formatDuration(track.duration_ms || 0)}
-                  </div>
-                </div>
-                );
-              });
-            })()}
-          </div>
+          {/* Draggable Track List */}
+          <DraggableTrackList 
+            tracks={preview.tracks}
+            selectedPlaylists={selectedPlaylists}
+            onTrackOrderChange={handlePreviewOrderChange}
+            formatDuration={formatDuration}
+          />
           
 
         </div>
@@ -867,6 +798,22 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
       {preview && (
         <div style={{ marginBottom: '20px' }}>
+          {/* Custom Order Notification */}
+          {customTrackOrder && customTrackOrder.length > 0 && (
+            <div style={{ 
+              fontSize: '13px', 
+              opacity: '0.9',
+              textAlign: 'center',
+              marginBottom: '16px',
+              padding: '12px',
+              background: 'rgba(54, 162, 235, 0.15)',
+              borderRadius: '8px',
+              border: '1px solid #36A2EB'
+            }}>
+              <strong>🎯 Custom Order Active:</strong> You've reordered the tracks! Your playlist will be created with your custom track order.
+            </div>
+          )}
+          
           <div style={{ 
             fontSize: '12px', 
             opacity: '0.8',
@@ -889,10 +836,14 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 fontWeight: 'bold',
                 padding: '16px 32px',
                 fontSize: '18px',
-                width: '100%'
+                width: '100%',
+                background: customTrackOrder && customTrackOrder.length > 0 ? 'var(--moss-green)' : undefined
               }}
             >
-              {loading ? 'Creating Playlist...' : '🎵 Create This Playlist in Spotify'}
+              {loading ? 'Creating Playlist...' : 
+               customTrackOrder && customTrackOrder.length > 0 ? 
+               '🎯 Create Playlist with Custom Order' : 
+               '🎵 Create This Playlist in Spotify'}
             </button>
           </div>
         </div>

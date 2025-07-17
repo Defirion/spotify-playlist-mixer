@@ -7,6 +7,7 @@ import PlaylistMixer from './components/PlaylistMixer';
 import PresetTemplates from './components/PresetTemplates';
 
 import ToastError from './components/ToastError';
+import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
@@ -15,7 +16,7 @@ function MainApp() {
   const [accessToken, setAccessToken] = useState(null);
   const [selectedPlaylists, setSelectedPlaylists] = useState([]);
   const [ratioConfig, setRatioConfig] = useState({});
-  const [mixedPlaylist, setMixedPlaylist] = useState(null);
+  const [mixedPlaylists, setMixedPlaylists] = useState([]);
   const [error, setError] = useState(null);
   const [mixOptions, setMixOptions] = useState({
     totalSongs: 100,
@@ -84,6 +85,20 @@ function MainApp() {
     setError(null);
   };
 
+  const handleDismissSuccess = (toastId) => {
+    setMixedPlaylists(prev => prev.filter(playlist => playlist.toastId !== toastId));
+  };
+
+  const handleMixedPlaylist = (newPlaylist) => {
+    // Add unique ID and timestamp for managing multiple toasts
+    const playlistWithId = {
+      ...newPlaylist,
+      toastId: Date.now() + Math.random(),
+      createdAt: new Date()
+    };
+    setMixedPlaylists(prev => [playlistWithId, ...prev]);
+  };
+
   if (!accessToken) {
     return (
       <div className="container">
@@ -106,6 +121,11 @@ function MainApp() {
       <ToastError 
         error={error} 
         onDismiss={handleDismissError}
+      />
+
+      <SuccessToast 
+        mixedPlaylists={mixedPlaylists}
+        onDismiss={handleDismissSuccess}
       />
 
       <PlaylistSelector
@@ -142,27 +162,12 @@ function MainApp() {
           selectedPlaylists={selectedPlaylists}
           ratioConfig={ratioConfig}
           mixOptions={mixOptions}
-          onMixedPlaylist={setMixedPlaylist}
+          onMixedPlaylist={handleMixedPlaylist}
           onError={setError}
         />
       )}
 
-      {mixedPlaylist && (
-        <div className="card">
-          <h3>🎉 Mixed Playlist Created!</h3>
-          <p>
-            Your new playlist "{mixedPlaylist.name}" has been created with {mixedPlaylist.tracks?.total || mixedPlaylist.tracks?.length || 0} songs
-            {mixedPlaylist.duration && (
-              <span> ({Math.floor(mixedPlaylist.duration / 60)}h {mixedPlaylist.duration % 60}m)</span>
-            )}.
-          </p>
-          {mixedPlaylist.external_urls?.spotify && (
-            <a href={mixedPlaylist.external_urls.spotify} target="_blank" rel="noopener noreferrer">
-              <button className="btn">Open in Spotify</button>
-            </a>
-          )}
-        </div>
-      )}
+
 
       <ScrollToBottom />
     </div>

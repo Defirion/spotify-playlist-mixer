@@ -7,10 +7,13 @@ const PlaylistPreview = ({
   ratioConfig, 
   mixOptions, 
   onCreatePlaylist,
-  onError 
+  onError,
+  onPreviewOrderChange
 }) => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const generatePreview = async () => {
     try {
@@ -95,6 +98,63 @@ const PlaylistPreview = ({
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newTracks = [...preview.tracks];
+    const draggedTrack = newTracks[draggedIndex];
+    
+    // Remove the dragged track
+    newTracks.splice(draggedIndex, 1);
+    
+    // Insert at new position
+    const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newTracks.splice(insertIndex, 0, draggedTrack);
+    
+    // Update preview with new order
+    const updatedPreview = {
+      ...preview,
+      tracks: newTracks
+    };
+    
+    setPreview(updatedPreview);
+    
+    // Notify parent component of the new order
+    if (onPreviewOrderChange) {
+      onPreviewOrderChange(newTracks);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   if (selectedPlaylists.length < 2) {
     return null;
   }
@@ -168,30 +228,58 @@ const PlaylistPreview = ({
               zIndex: 1
             }}>
               <strong>🎵 First {preview.tracks.length} Songs</strong>
+              <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+                💡 Drag and drop to reorder tracks
+              </div>
             </div>
             
             {preview.tracks.map((track, index) => {
               const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index;
+              
               return (
                 <div 
                   key={`${track.id}-${index}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
                   style={{ 
                     padding: '8px 16px', 
                     borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    cursor: 'grab',
+                    opacity: isDragging ? 0.5 : 1,
+                    backgroundColor: isDragOver ? 'rgba(79, 119, 45, 0.2)' : 'transparent',
+                    borderLeft: isDragOver ? '3px solid var(--moss-green)' : '3px solid transparent',
+                    transition: 'all 0.2s ease',
+                    userSelect: 'none'
                   }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '500' }}>
-                      {index + 1}. {track.name}
+                  <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <div style={{ 
+                      marginRight: '12px', 
+                      fontSize: '16px', 
+                      opacity: '0.5',
+                      cursor: 'grab'
+                    }}>
+                      ⋮⋮
                     </div>
-                    <div style={{ fontSize: '14px', opacity: '0.7' }}>
-                      {track.artists?.[0]?.name || 'Unknown Artist'} • 
-                      <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
-                        {sourcePlaylist?.name || 'Unknown Playlist'}
-                      </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '500' }}>
+                        {index + 1}. {track.name}
+                      </div>
+                      <div style={{ fontSize: '14px', opacity: '0.7' }}>
+                        {track.artists?.[0]?.name || 'Unknown Artist'} • 
+                        <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
+                          {sourcePlaylist?.name || 'Unknown Playlist'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div style={{ fontSize: '12px', opacity: '0.6' }}>
