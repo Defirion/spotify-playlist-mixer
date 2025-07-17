@@ -39,6 +39,16 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
         };
       });
+
+      // Add Spotify Search stats if there are any search tracks
+      const searchTracks = reorderedTracks.filter(track => track.sourcePlaylist === 'search');
+      if (searchTracks.length > 0) {
+        updatedStats['search'] = {
+          name: '🔍 Spotify Search',
+          count: searchTracks.length,
+          totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        };
+      }
       
       const updatedPreview = {
         ...preview,

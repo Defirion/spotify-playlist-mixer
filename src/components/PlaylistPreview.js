@@ -51,6 +51,16 @@ const PlaylistPreview = ({
         };
       });
 
+      // Add Spotify Search stats if there are any search tracks
+      const searchTracks = previewTracks.filter(track => track.sourcePlaylist === 'search');
+      if (searchTracks.length > 0) {
+        playlistStats['search'] = {
+          name: '🔍 Spotify Search',
+          count: searchTracks.length,
+          totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        };
+      }
+
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
@@ -153,6 +163,47 @@ const PlaylistPreview = ({
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+  };
+
+  const handleRemoveTrack = (index) => {
+    const newTracks = [...preview.tracks];
+    newTracks.splice(index, 1);
+
+    // Recalculate stats for the updated track list
+    const updatedStats = {};
+    selectedPlaylists.forEach(playlist => {
+      updatedStats[playlist.id] = {
+        name: playlist.name,
+        count: newTracks.filter(track => track.sourcePlaylist === playlist.id).length,
+        totalDuration: newTracks
+          .filter(track => track.sourcePlaylist === playlist.id)
+          .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+      };
+    });
+
+    // Add Spotify Search stats if there are any search tracks
+    const searchTracks = newTracks.filter(track => track.sourcePlaylist === 'search');
+    if (searchTracks.length > 0) {
+      updatedStats['search'] = {
+        name: '🔍 Spotify Search',
+        count: searchTracks.length,
+        totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+      };
+    }
+
+    const updatedPreview = {
+      ...preview,
+      tracks: newTracks,
+      stats: updatedStats,
+      totalDuration: newTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+    };
+
+    setPreview(updatedPreview);
+
+    // Notify parent component of the new order
+    if (onPreviewOrderChange) {
+      onPreviewOrderChange(newTracks);
+    }
   };
 
 
