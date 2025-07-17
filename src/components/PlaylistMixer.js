@@ -2,17 +2,9 @@ import React, { useState } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 import { mixPlaylists } from '../utils/playlistMixer';
 
-const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPlaylist, onError }) => {
+const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
   const [loading, setLoading] = useState(false);
-  const [mixOptions, setMixOptions] = useState({
-    totalSongs: 100,
-    targetDuration: 240, // minutes
-    useTimeLimit: false,
-    playlistName: 'My Mixed Playlist',
-    shuffleWithinGroups: true,
-    popularityStrategy: 'mixed', // 'mixed', 'front-loaded', 'mid-peak', 'crescendo'
-    recencyBoost: true
-  });
+  const [localMixOptions, setLocalMixOptions] = useState(mixOptions);
 
   const handleMix = async () => {
     try {
@@ -50,7 +42,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
       }
       
       // Mix the playlists according to ratios
-      const mixedTracks = mixPlaylists(playlistTracks, ratioConfig, mixOptions);
+      const mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
       
       if (mixedTracks.length === 0) {
         throw new Error('Failed to mix playlists - no tracks generated');
@@ -61,7 +53,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
       const userId = userResponse.data.id;
       
       const playlistResponse = await api.post(`/users/${userId}/playlists`, {
-        name: mixOptions.playlistName.trim(),
+        name: localMixOptions.playlistName.trim(),
         description: `Mixed from: ${selectedPlaylists.map(p => p.name).join(', ')}`,
         public: false
       });
@@ -134,8 +126,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
           <label>Playlist Name:</label>
           <input
             type="text"
-            value={mixOptions.playlistName}
-            onChange={(e) => setMixOptions({...mixOptions, playlistName: e.target.value})}
+            value={localMixOptions.playlistName}
+            onChange={(e) => setLocalMixOptions({...localMixOptions, playlistName: e.target.value})}
           />
         </div>
         
@@ -144,29 +136,29 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
           <div className="toggle-group">
             <button
               type="button"
-              className={`toggle-option ${!mixOptions.useTimeLimit ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, useTimeLimit: false})}
+              className={`toggle-option ${!localMixOptions.useTimeLimit ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: false})}
             >
               Song Count
             </button>
             <button
               type="button"
-              className={`toggle-option ${mixOptions.useTimeLimit ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, useTimeLimit: true})}
+              className={`toggle-option ${localMixOptions.useTimeLimit ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: true})}
             >
               Time Duration
             </button>
           </div>
           
           <div style={{ marginTop: '12px' }}>
-            {mixOptions.useTimeLimit ? (
+            {localMixOptions.useTimeLimit ? (
               <>
                 <input
                   type="number"
                   min="30"
                   max="600"
-                  value={mixOptions.targetDuration}
-                  onChange={(e) => setMixOptions({...mixOptions, targetDuration: parseInt(e.target.value)})}
+                  value={localMixOptions.targetDuration}
+                  onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
                   placeholder="Minutes"
                 />
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
@@ -179,8 +171,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
                   type="number"
                   min="10"
                   max="500"
-                  value={mixOptions.totalSongs}
-                  onChange={(e) => setMixOptions({...mixOptions, totalSongs: parseInt(e.target.value)})}
+                  value={localMixOptions.totalSongs}
+                  onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
                   placeholder="Number of songs"
                 />
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
@@ -198,46 +190,46 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
           <div className="toggle-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
             <button
               type="button"
-              className={`toggle-option ${mixOptions.popularityStrategy === 'mixed' ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'mixed'})}
+              className={`toggle-option ${localMixOptions.popularityStrategy === 'mixed' ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'mixed'})}
             >
               Mixed
             </button>
             <button
               type="button"
-              className={`toggle-option ${mixOptions.popularityStrategy === 'front-loaded' ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'front-loaded'})}
+              className={`toggle-option ${localMixOptions.popularityStrategy === 'front-loaded' ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'front-loaded'})}
             >
               Front-loaded
             </button>
             <button
               type="button"
-              className={`toggle-option ${mixOptions.popularityStrategy === 'mid-peak' ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'mid-peak'})}
+              className={`toggle-option ${localMixOptions.popularityStrategy === 'mid-peak' ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'mid-peak'})}
             >
               Mid-peak
             </button>
             <button
               type="button"
-              className={`toggle-option ${mixOptions.popularityStrategy === 'crescendo' ? 'active' : ''}`}
-              onClick={() => setMixOptions({...mixOptions, popularityStrategy: 'crescendo'})}
+              className={`toggle-option ${localMixOptions.popularityStrategy === 'crescendo' ? 'active' : ''}`}
+              onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'crescendo'})}
             >
               Crescendo
             </button>
           </div>
           <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-            {mixOptions.popularityStrategy === 'mixed' && 'Random mix of all popularity levels'}
-            {mixOptions.popularityStrategy === 'front-loaded' && 'Popular songs first, then fade to deep cuts'}
-            {mixOptions.popularityStrategy === 'mid-peak' && 'Build to popular songs in the middle, perfect for parties'}
-            {mixOptions.popularityStrategy === 'crescendo' && 'Build from deep cuts to biggest hits at the end'}
+            {localMixOptions.popularityStrategy === 'mixed' && 'Random mix of all popularity levels'}
+            {localMixOptions.popularityStrategy === 'front-loaded' && 'Popular songs first, then fade to deep cuts'}
+            {localMixOptions.popularityStrategy === 'mid-peak' && 'Build to popular songs in the middle, perfect for parties'}
+            {localMixOptions.popularityStrategy === 'crescendo' && 'Build from deep cuts to biggest hits at the end'}
           </div>
         </div>
         
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '12px' }}>
           <input
             type="checkbox"
-            checked={mixOptions.recencyBoost}
-            onChange={(e) => setMixOptions({...mixOptions, recencyBoost: e.target.checked})}
+            checked={localMixOptions.recencyBoost}
+            onChange={(e) => setLocalMixOptions({...localMixOptions, recencyBoost: e.target.checked})}
           />
           Boost recent tracks (newer songs get popularity bonus)
         </label>
@@ -245,8 +237,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, onMixedPla
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' }}>
           <input
             type="checkbox"
-            checked={mixOptions.shuffleWithinGroups}
-            onChange={(e) => setMixOptions({...mixOptions, shuffleWithinGroups: e.target.checked})}
+            checked={localMixOptions.shuffleWithinGroups}
+            onChange={(e) => setLocalMixOptions({...localMixOptions, shuffleWithinGroups: e.target.checked})}
           />
           Shuffle within popularity groups
         </label>

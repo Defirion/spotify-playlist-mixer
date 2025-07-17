@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
 import RatioConfig from './components/RatioConfig';
 import PlaylistMixer from './components/PlaylistMixer';
-// Spotify API utility imported in components that need it
+import PresetTemplates from './components/PresetTemplates';
+import PlaylistPreview from './components/PlaylistPreview';
+import ErrorHandler from './components/ErrorHandler';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
-function App() {
+function MainApp() {
   const [accessToken, setAccessToken] = useState(null);
   const [selectedPlaylists, setSelectedPlaylists] = useState([]);
   const [ratioConfig, setRatioConfig] = useState({});
   const [mixedPlaylist, setMixedPlaylist] = useState(null);
   const [error, setError] = useState(null);
+  const [mixOptions, setMixOptions] = useState({
+    totalSongs: 100,
+    targetDuration: 240,
+    useTimeLimit: false,
+    playlistName: 'My Mixed Playlist',
+    shuffleWithinGroups: true,
+    popularityStrategy: 'mixed',
+    recencyBoost: true
+  });
 
   useEffect(() => {
     // Check for access token in URL hash (after Spotify redirect)
@@ -49,6 +63,31 @@ function App() {
     });
   };
 
+  const handleApplyPreset = ({ ratioConfig: newRatioConfig, strategy, settings, presetName }) => {
+    setRatioConfig(newRatioConfig);
+    setMixOptions(prev => ({
+      ...prev,
+      popularityStrategy: strategy,
+      ...settings,
+      playlistName: `${presetName} Mix`
+    }));
+    setError(null);
+  };
+
+  const handleCreatePlaylist = async () => {
+    // This will be called from PlaylistMixer component
+    setError(null);
+  };
+
+  const handleDismissError = () => {
+    setError(null);
+  };
+
+  const handleRetryError = () => {
+    setError(null);
+    // Could add specific retry logic here
+  };
+
   if (!accessToken) {
     return (
       <div className="container">
@@ -68,13 +107,22 @@ function App() {
         <p>Mix your playlists with custom ratios</p>
       </div>
 
-      {error && <div className="error">{error}</div>}
+      <ErrorHandler 
+        error={error} 
+        onDismiss={handleDismissError}
+        onRetry={handleRetryError}
+      />
 
       <PlaylistSelector
         accessToken={accessToken}
         selectedPlaylists={selectedPlaylists}
         onPlaylistSelect={handlePlaylistSelection}
         onError={setError}
+      />
+
+      <PresetTemplates
+        selectedPlaylists={selectedPlaylists}
+        onApplyPreset={handleApplyPreset}
       />
 
       {selectedPlaylists.length > 0 && (
@@ -86,10 +134,22 @@ function App() {
       )}
 
       {selectedPlaylists.length > 1 && (
+        <PlaylistPreview
+          accessToken={accessToken}
+          selectedPlaylists={selectedPlaylists}
+          ratioConfig={ratioConfig}
+          mixOptions={mixOptions}
+          onCreatePlaylist={handleCreatePlaylist}
+          onError={setError}
+        />
+      )}
+
+      {selectedPlaylists.length > 1 && (
         <PlaylistMixer
           accessToken={accessToken}
           selectedPlaylists={selectedPlaylists}
           ratioConfig={ratioConfig}
+          mixOptions={mixOptions}
           onMixedPlaylist={setMixedPlaylist}
           onError={setError}
         />
@@ -112,6 +172,39 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+      </Routes>
+      
+      {/* Footer with links */}
+      <footer style={{ 
+        textAlign: 'center', 
+        padding: '20px', 
+        marginTop: '40px',
+        borderTop: '1px solid var(--fern-green)',
+        opacity: '0.7'
+      }}>
+        <Link to="/privacy" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+          Privacy Policy
+        </Link>
+        |
+        <Link to="/terms" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+          Terms of Service
+        </Link>
+        |
+        <Link to="/" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+          Back to Mixer
+        </Link>
+      </footer>
+    </Router>
   );
 }
 
