@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove }) => {
+  const [globalBalanceMethod, setGlobalBalanceMethod] = useState('frequency');
   // Helper function to format duration from seconds to MM:SS
   const formatDurationFromSeconds = (seconds) => {
     if (!seconds) return null;
@@ -18,12 +19,55 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
     });
   };
 
+  const handleGlobalBalanceMethodChange = (method) => {
+    setGlobalBalanceMethod(method);
+    // Update all playlists to use the new balance method
+    selectedPlaylists.forEach(playlist => {
+      handleConfigChange(playlist.id, 'weightType', method);
+    });
+  };
+
   return (
     <div className="card">
       <h2>🎛️ Customize Your Mix</h2>
       <p>Choose how your playlists blend together</p>
       
-      <div className="ratio-controls">
+      {/* Universal Balance Method */}
+      <div style={{ 
+        background: 'rgba(255, 255, 255, 0.08)', 
+        padding: '16px', 
+        borderRadius: '8px', 
+        marginBottom: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <label style={{ fontSize: '16px', fontWeight: '500', marginBottom: '12px', display: 'block' }}>
+          ⚖️ Balance Method (applies to all playlists):
+        </label>
+        <div className="toggle-group">
+          <button
+            type="button"
+            className={`toggle-option ${globalBalanceMethod === 'frequency' ? 'active' : ''}`}
+            onClick={() => handleGlobalBalanceMethodChange('frequency')}
+          >
+            Same Song Count
+          </button>
+          <button
+            type="button"
+            className={`toggle-option ${globalBalanceMethod === 'time' ? 'active' : ''}`}
+            onClick={() => handleGlobalBalanceMethodChange('time')}
+          >
+            Same Play Time
+          </button>
+        </div>
+        <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '8px' }}>
+          {globalBalanceMethod === 'time' 
+            ? 'Perfect for mixing genres with different song lengths (salsa vs bachata)'
+            : 'Traditional approach - equal number of songs from each playlist'
+          }
+        </div>
+      </div>
+      
+      <div className="ratio-controls" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {selectedPlaylists.map(playlist => {
           const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
           return (
@@ -127,32 +171,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               
 
               
-              <div className="input-group">
-                <label>⚖️ Balance Method:</label>
-                <div className="toggle-group">
-                  <button
-                    type="button"
-                    className={`toggle-option ${(config.weightType || 'frequency') === 'frequency' ? 'active' : ''}`}
-                    onClick={() => handleConfigChange(playlist.id, 'weightType', 'frequency')}
-                  >
-                    Same Song Count
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-option ${config.weightType === 'time' ? 'active' : ''}`}
-                    onClick={() => handleConfigChange(playlist.id, 'weightType', 'time')}
-                  >
-                    Same Play Time
-                  </button>
-                </div>
-                <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  {config.weightType === 'time' 
-                    ? 'Perfect for mixing genres with different song lengths (salsa vs bachata)'
-                    : 'Traditional approach - equal number of songs from each playlist'
-                  }
-                </div>
-              </div>
-              
+
               <div className="input-group">
                 <label>
                   🎲 Selection Priority: {(() => {
@@ -197,11 +216,8 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                 return sum + config.weight;
               }, 0);
               
-              // Check if any playlists use time-balanced weighting
-              const hasTimeBalanced = selectedPlaylists.some(p => {
-                const config = ratioConfig[p.id] || { weightType: 'frequency' };
-                return config.weightType === 'time';
-              });
+              // Use global balance method instead of checking individual playlists
+              const hasTimeBalanced = globalBalanceMethod === 'time';
               
               const exampleTitle = hasTimeBalanced ? 'Example Mix (per 60 minutes):' : 'Example Mix (per 100 songs):';
               const baseAmount = hasTimeBalanced ? 60 : 100; // 60 minutes or 100 songs
@@ -213,25 +229,14 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                     {selectedPlaylists.map(playlist => {
                       const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
                       const percentage = Math.round((config.weight / totalWeight) * 100);
-                      const weightTypeText = config.weightType === 'time' ? 'same play time' : 'same song count';
+                      const weightTypeText = globalBalanceMethod === 'time' ? 'same play time' : 'same song count';
                       
                       let displayText;
                       
-                      if (hasTimeBalanced && config.weightType === 'time' && playlist.realAverageDurationSeconds) {
+                      if (hasTimeBalanced && globalBalanceMethod === 'time' && playlist.realAverageDurationSeconds) {
                         // Time-balanced calculation: distribute 60 minutes based on weight percentage
                         const playlistAvgMinutes = playlist.realAverageDurationSeconds / 60;
                         const playlistMinutes = (percentage / 100) * baseAmount; // percentage of 60 minutes
-                        const exactSongs = playlistMinutes / playlistAvgMinutes;
-                        const minSongs = Math.floor(exactSongs);
-                        const maxSongs = Math.ceil(exactSongs);
-                        const formattedMinutes = playlistMinutes.toFixed(1);
-                        
-                        const songsText = minSongs === maxSongs ? `${minSongs}` : `${minSongs}-${maxSongs}`;
-                        displayText = `~${songsText} songs (${formattedMinutes} min, ${percentage}%)`;
-                      } else if (hasTimeBalanced && config.weightType === 'frequency') {
-                        // For frequency-based in time context: estimate based on average duration
-                        const playlistAvgMinutes = playlist.realAverageDurationSeconds ? playlist.realAverageDurationSeconds / 60 : 3.5;
-                        const playlistMinutes = (percentage / 100) * baseAmount;
                         const exactSongs = playlistMinutes / playlistAvgMinutes;
                         const minSongs = Math.floor(exactSongs);
                         const maxSongs = Math.ceil(exactSongs);
