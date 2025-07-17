@@ -188,34 +188,9 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
         })}
       </div>
       
-      <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px' }}>
-        <h4>📊 Your Mix Preview:</h4>
-        <div style={{ fontSize: '14px', marginTop: '8px' }}>
-          {selectedPlaylists.map(playlist => {
-            const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
-            const frequencyText = (() => {
-              const weight = config.weight || 2;
-              if (weight <= 2) return `Rarely`;
-              if (weight <= 4) return `Sometimes`;
-              if (weight <= 6) return `Often`;
-              if (weight <= 8) return `Very Often`;
-              return `Always`;
-            })();
-            
-            const groupText = config.min === config.max ? 
-              `${config.min} song${config.min > 1 ? 's' : ''}` : 
-              `${config.min}-${config.max} songs`;
-            
-            return (
-              <div key={playlist.id} style={{ marginBottom: '4px' }}>
-                • <strong>{playlist.name}:</strong> {groupText} at a time, plays {frequencyText.toLowerCase()}
-              </div>
-            );
-          })}
-        </div>
-        
-        {selectedPlaylists.length > 1 && (
-          <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(29, 185, 84, 0.1)', borderRadius: '4px' }}>
+      {selectedPlaylists.length > 1 && (
+        <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px' }}>
+          <div style={{ padding: '8px', background: 'rgba(29, 185, 84, 0.1)', borderRadius: '4px' }}>
             {(() => {
               const totalWeight = selectedPlaylists.reduce((sum, p) => {
                 const config = ratioConfig[p.id] || { weight: 1 };
@@ -289,8 +264,8 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               );
             })()}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
