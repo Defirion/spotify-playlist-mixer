@@ -2,6 +2,23 @@ import React, { useState } from 'react';
 
 const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove }) => {
   const [globalBalanceMethod, setGlobalBalanceMethod] = useState('frequency');
+
+  // Update global balance method when ratioConfig changes (from presets)
+  React.useEffect(() => {
+    if (selectedPlaylists.length > 0 && ratioConfig) {
+      // Check if any playlist has weightType 'time'
+      const hasTimeWeighting = selectedPlaylists.some(playlist => {
+        const config = ratioConfig[playlist.id];
+        return config && config.weightType === 'time';
+      });
+      
+      // Set global balance method based on the weightType found
+      const newMethod = hasTimeWeighting ? 'time' : 'frequency';
+      if (newMethod !== globalBalanceMethod) {
+        setGlobalBalanceMethod(newMethod);
+      }
+    }
+  }, [ratioConfig, selectedPlaylists, globalBalanceMethod]);
   // Helper function to format duration from seconds to MM:SS
   const formatDurationFromSeconds = (seconds) => {
     if (!seconds) return null;
@@ -29,6 +46,133 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
 
   return (
     <div className="card">
+      <style>
+        {`
+          .ratio-config-slider {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            height: 6px !important;
+            background: var(--hunter-green) !important;
+            border-radius: 3px !important;
+            outline: none !important;
+            cursor: pointer !important;
+            border: 1px solid var(--fern-green) !important;
+            padding: 12px 1px !important;
+            margin: 0 !important;
+          }
+          
+          .ratio-config-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--moss-green);
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid var(--mindaro);
+            box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+          }
+          
+          .ratio-config-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--moss-green);
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid var(--mindaro);
+            box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+          }
+          
+          .ratio-config-slider:hover::-webkit-slider-thumb {
+            background: var(--fern-green);
+            transform: scale(1.1);
+          }
+          
+          .ratio-config-slider:hover::-moz-range-thumb {
+            background: var(--fern-green);
+            transform: scale(1.1);
+          }
+          
+          .dual-range-slider {
+            position: relative !important;
+            width: 100% !important;
+            height: 20px !important;
+          }
+          
+          .dual-range-slider::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 6px !important;
+            background: var(--hunter-green) !important;
+            border-radius: 3px !important;
+            transform: translateY(-50%) !important;
+            z-index: 1 !important;
+          }
+          
+          .dual-range-slider input[type="range"] {
+            position: absolute !important;
+            width: 100% !important;
+            height: 6px !important;
+            background: var(--hunter-green) !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            pointer-events: none !important;
+            border-radius: 3px !important;
+          }
+          
+          .dual-range-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            width: 18px !important;
+            height: 18px !important;
+            background: var(--moss-green) !important;
+            border-radius: 4px !important;
+            border: 2px solid var(--mindaro) !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3) !important;
+            pointer-events: all !important;
+            position: relative !important;
+          }
+          
+          .dual-range-slider input[type="range"]::-moz-range-thumb {
+            width: 18px !important;
+            height: 18px !important;
+            background: var(--moss-green) !important;
+            border-radius: 4px !important;
+            border: 2px solid var(--mindaro) !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3) !important;
+            pointer-events: all !important;
+            position: relative !important;
+          }
+          
+          .dual-range-slider .range-min {
+            z-index: 2 !important;
+          }
+          
+          .dual-range-slider .range-max {
+            z-index: 3 !important;
+          }
+          
+          .dual-range-slider .range-min::-webkit-slider-thumb {
+            background: var(--fern-green) !important;
+            z-index: 2 !important;
+          }
+          
+          .dual-range-slider .range-max::-webkit-slider-thumb {
+            background: var(--moss-green) !important;
+            z-index: 3 !important;
+          }
+        `}
+      </style>
       <h2>🎛️ Customize Your Mix</h2>
       <p>Choose how your playlists blend together</p>
       
@@ -76,16 +220,21 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               padding: '16px', 
               borderRadius: '8px' 
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', position: 'relative' }}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: playlist.coverImage ? 'auto minmax(200px, 300px) 1fr auto' : 'minmax(200px, 300px) 1fr auto',
+                alignItems: 'center', 
+                gap: '16px', 
+                width: '100%' 
+              }}>
                 {playlist.coverImage && (
                   <img 
                     src={playlist.coverImage} 
                     alt={playlist.name} 
-                    className="playlist-cover" 
-                    style={{ marginRight: '12px' }}
+                    className="playlist-cover"
                   />
                 )}
-                <div className="playlist-info" style={{ flex: 1 }}>
+                <div className="playlist-info">
                   <strong style={{ fontSize: '16px' }}>{playlist.name}</strong>
                   <div style={{ fontSize: '14px', opacity: '0.8', marginTop: '2px' }}>
                     {playlist.tracks.total} tracks
@@ -99,12 +248,96 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                     )}
                   </div>
                 </div>
+                
+                {/* Inline Sliders */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '280px' }}>
+                  <div style={{ fontSize: '12px', opacity: '0.8', textAlign: 'center' }}>
+                    🎵 Play together: {config.min === config.max ? `${config.min} song${config.min > 1 ? 's' : ''}` : `${config.min}-${config.max} songs`}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '10px', opacity: '0.7' }}>1</span>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <div className="dual-range-background" style={{
+                        width: '100%',
+                        height: '6px',
+                        background: 'var(--hunter-green)',
+                        border: '1px solid var(--fern-green)',
+                        borderRadius: '3px',
+                        padding: '12px 1px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div className="dual-range-slider" style={{ 
+                          width: '100%',
+                          height: '6px',
+                          position: 'relative',
+                          marginTop: '14px'
+                        }}>
+                        <input
+                          type="range"
+                          min="1"
+                          max="8"
+                          value={config.min}
+                          onChange={(e) => {
+                            const newMin = parseInt(e.target.value);
+                            handleConfigChange(playlist.id, 'min', newMin);
+                            if (newMin > config.max) {
+                              handleConfigChange(playlist.id, 'max', newMin);
+                            }
+                          }}
+                          className="range-min ratio-config-slider"
+                        />
+                        <input
+                          type="range"
+                          min="1"
+                          max="8"
+                          value={config.max}
+                          onChange={(e) => {
+                            const newMax = parseInt(e.target.value);
+                            if (newMax >= config.min) {
+                              handleConfigChange(playlist.id, 'max', newMax);
+                            }
+                          }}
+                          className="range-max ratio-config-slider"
+                        />
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '10px', opacity: '0.7' }}>8</span>
+                  </div>
+                  
+                  <div style={{ fontSize: '12px', opacity: '0.8', textAlign: 'center' }}>
+                    🎲 Priority: {(() => {
+                      const weight = config.weight || 20;
+                      const totalWeight = Object.values(ratioConfig).reduce((sum, cfg) => sum + (cfg.weight || 20), 0);
+                      const percentage = Math.round((weight / totalWeight) * 100);
+                      
+                      if (weight <= 20) return `Low (${weight}) - ~${percentage}% of mix`;
+                      if (weight <= 40) return `Normal (${weight}) - ~${percentage}% of mix`;
+                      if (weight <= 60) return `High (${weight}) - ~${percentage}% of mix`;
+                      if (weight <= 80) return `Top (${weight}) - ~${percentage}% of mix`;
+                      return `Max (${weight}) - ~${percentage}% of mix`;
+                    })()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '10px', opacity: '0.7' }}>Low</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={config.weight}
+                      onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
+                      className="ratio-config-slider"
+                      style={{ flex: 1 }}
+                    />
+                    <span style={{ fontSize: '10px', opacity: '0.7' }}>High</span>
+                  </div>
+                </div>
+                
                 <button
                   onClick={() => onPlaylistRemove && onPlaylistRemove(playlist.id)}
                   style={{
-                    position: 'absolute',
-                    top: '0',
-                    right: '0',
                     background: '#ff4444',
                     color: 'white',
                     border: 'none',
@@ -117,7 +350,8 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'background-color 0.2s'
+                    transition: 'background-color 0.2s',
+                    flexShrink: 0
                   }}
                   onMouseEnter={(e) => e.target.style.background = '#cc0000'}
                   onMouseLeave={(e) => e.target.style.background = '#ff4444'}
@@ -125,82 +359,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                 >
                   ×
                 </button>
-              </div>
-              
-              <div className="input-group">
-                <label>🎵 Play together: {config.min === config.max ? `${config.min} song${config.min > 1 ? 's' : ''}` : `${config.min}-${config.max} songs`}</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>1</span>
-                  <div style={{ flex: 1, position: 'relative', height: '20px' }}>
-                    <div className="dual-range-slider">
-                      <input
-                        type="range"
-                        min="1"
-                        max="8"
-                        value={config.min}
-                        onChange={(e) => {
-                          const newMin = parseInt(e.target.value);
-                          handleConfigChange(playlist.id, 'min', newMin);
-                          if (newMin > config.max) {
-                            handleConfigChange(playlist.id, 'max', newMin);
-                          }
-                        }}
-                        className="range-min"
-                      />
-                      <input
-                        type="range"
-                        min="1"
-                        max="8"
-                        value={config.max}
-                        onChange={(e) => {
-                          const newMax = parseInt(e.target.value);
-                          if (newMax >= config.min) {
-                            handleConfigChange(playlist.id, 'max', newMax);
-                          }
-                        }}
-                        className="range-max"
-                      />
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>8</span>
-                </div>
-                <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  How many songs play back-to-back from this playlist
-                </div>
-              </div>
-              
-
-              
-
-              <div className="input-group">
-                <label>
-                  🎲 Selection Priority: {(() => {
-                    const weight = config.weight || 2;
-                    const totalWeight = Object.values(ratioConfig).reduce((sum, cfg) => sum + (cfg.weight || 1), 0);
-                    const percentage = Math.round((weight / totalWeight) * 100);
-                    
-                    if (weight <= 2) return `Low Priority (${weight}) - ~${percentage}% of mix`;
-                    if (weight <= 4) return `Normal Priority (${weight}) - ~${percentage}% of mix`;
-                    if (weight <= 6) return `High Priority (${weight}) - ~${percentage}% of mix`;
-                    if (weight <= 8) return `Top Priority (${weight}) - ~${percentage}% of mix`;
-                    return `Maximum Priority (${weight}) - ~${percentage}% of mix`;
-                  })()}
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Lower</span>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={config.weight}
-                    onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Higher</span>
-                </div>
-                <div style={{ fontSize: '11px', opacity: '0.6', marginTop: '4px' }}>
-                  Higher priority = more songs selected from this playlist
-                </div>
               </div>
             </div>
           );
