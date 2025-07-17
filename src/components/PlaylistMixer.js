@@ -557,68 +557,70 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         )}
       </div>
       
-      {/* Action Buttons */}
-      <div style={{ 
-        background: 'var(--hunter-green)', 
-        padding: '20px', 
-        borderRadius: '12px', 
-        marginBottom: '20px',
-        border: '1px solid var(--fern-green)',
-        textAlign: 'center'
-      }}>
-        <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          🚀 Ready to Create?
-        </h3>
-        
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button 
-            className="btn" 
-            onClick={generatePreview}
-            disabled={previewLoading || selectedPlaylists.length < 2}
-            style={{ 
-              background: 'var(--fern-green)',
-              border: '2px solid var(--moss-green)',
-              padding: '12px 24px',
-              fontSize: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {previewLoading ? (
-              <>⏳ Generating Preview...</>
-            ) : (
-              <>👀 Preview First</>
-            )}
-          </button>
+      {/* Action Buttons - Only show when no preview */}
+      {!preview && (
+        <div style={{ 
+          background: 'var(--hunter-green)', 
+          padding: '20px', 
+          borderRadius: '12px', 
+          marginBottom: '20px',
+          border: '1px solid var(--fern-green)',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            🚀 Ready to Create?
+          </h3>
           
-          <button
-            className="btn"
-            onClick={handleMix}
-            disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
-            style={{ 
-              background: 'var(--moss-green)',
-              border: '2px solid var(--mindaro)',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {loading ? (
-              <>⏳ Creating Playlist...</>
-            ) : (
-              <>✨ Create My Mix</>
-            )}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              className="btn" 
+              onClick={generatePreview}
+              disabled={previewLoading || selectedPlaylists.length < 2}
+              style={{ 
+                background: 'var(--moss-green)',
+                border: '2px solid var(--mindaro)',
+                padding: '12px 24px',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {previewLoading ? (
+                <>⏳ Generating Preview...</>
+              ) : (
+                <>👀 Preview First</>
+              )}
+            </button>
+            
+            <button
+              className="btn"
+              onClick={handleMix}
+              disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
+              style={{ 
+                background: 'var(--fern-green)',
+                border: '2px solid var(--moss-green)',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {loading ? (
+                <>⏳ Creating Playlist...</>
+              ) : (
+                <>✨ Create My Mix</>
+              )}
+            </button>
+          </div>
+          
+          <p style={{ margin: '12px 0 0 0', fontSize: '13px', opacity: '0.7' }}>
+            Preview lets you see and adjust your mix before creating the final playlist
+          </p>
         </div>
-        
-        <p style={{ margin: '12px 0 0 0', fontSize: '13px', opacity: '0.7' }}>
-          Preview lets you see and adjust your mix before creating the final playlist
-        </p>
-      </div>
+      )}
 
       {preview && (
         <div style={{ marginBottom: '20px' }}>
@@ -666,9 +668,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               background: 'rgba(29, 185, 84, 0.2)',
               borderRadius: '6px'
             }}>
-              ✨ Using <strong>{localMixOptions.popularityStrategy === 'mixed' ? 'Random Mix' : 
-                localMixOptions.popularityStrategy === 'front-loaded' ? 'Hits First' :
-                localMixOptions.popularityStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
+              ✨ Using <strong>{preview.usedStrategy === 'mixed' ? 'Random Mix' : 
+                preview.usedStrategy === 'front-loaded' ? 'Hits First' :
+                preview.usedStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
             </div>
           </div>
           
@@ -682,6 +684,65 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             maxHeight="400px"
             showPlaylistSource={true}
           />
+          
+          {/* Preview Action Buttons */}
+          <div style={{ 
+            background: 'var(--hunter-green)', 
+            padding: '20px', 
+            borderRadius: '0 0 12px 12px', 
+            border: '1px solid var(--fern-green)',
+            borderTop: 'none',
+            textAlign: 'center'
+          }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button 
+                className="btn" 
+                onClick={generatePreview}
+                disabled={previewLoading || selectedPlaylists.length < 2}
+                style={{ 
+                  background: 'var(--moss-green)',
+                  border: '2px solid var(--mindaro)',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {previewLoading ? (
+                  <>⏳ Regenerating...</>
+                ) : (
+                  <>🔄 Regenerate</>
+                )}
+              </button>
+              
+              <button
+                className="btn"
+                onClick={handleMix}
+                disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
+                style={{ 
+                  background: 'var(--fern-green)',
+                  border: '2px solid var(--moss-green)',
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {loading ? (
+                  <>⏳ Creating Playlist...</>
+                ) : (
+                  <>✨ Create This Playlist</>
+                )}
+              </button>
+            </div>
+            
+            <p style={{ margin: '12px 0 0 0', fontSize: '13px', opacity: '0.7' }}>
+              Happy with your mix? Create the playlist or regenerate with your current settings
+            </p>
+          </div>
         </div>
       )}
     </div>
