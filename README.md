@@ -4,10 +4,17 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 
 ## ✨ Features
 
-### 🎛️ **Custom Ratios**
-- Set min-max songs per group (e.g., 2-4 bachata songs, then 1-2 salsa)
-- Dual-range sliders for intuitive control
-- Time-based balancing ensures equal playtime per genre
+### 🎯 **Quick Start Templates**
+- **💃 Karimctiva**: Smart bachata/salsa mixing with dance flow (5 hours, mid-peak)
+- **💪 Workout Mix**: High energy with consistent tempo (1 hour, front-loaded)
+- **🚗 Road Trip**: Build to epic finale with sing-along hits (3 hours, crescendo)
+- **Smart Detection**: Automatically detects bachata/salsa playlists for optimal ratios
+
+### 🎛️ **Advanced Custom Ratios**
+- Set min-max songs per group (e.g., exactly 2 bachata songs, then 1-2 salsa)
+- Dual-range sliders with granular control (10-point frequency scale)
+- **Time-based balancing**: Ensures equal playtime per genre (accounts for different song lengths)
+- **Frequency-based balancing**: Traditional song count approach
 
 ### 🎯 **Smart Popularity Strategies**
 - **Mixed**: Random selection from all popularity levels
@@ -18,12 +25,21 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 ### ⏰ **Flexible Playlist Sizing**
 - Create by song count (e.g., 100 songs)
 - Or by time duration (e.g., 4 hours for a party)
+- Smart preview system shows exactly what you'll get
+
+### 🎨 **Enhanced User Experience**
+- **Playlist cover images**: Visual identification throughout the interface
+- **Live preview**: See your mix before creating the full playlist
+- **Toast notifications**: Non-intrusive error handling
+- **Smart scroll indicator**: Never miss newly created playlists
+- **Rich playlist info**: Track counts and average song lengths
 
 ### 🚀 **Advanced Features**
 - **Relative popularity**: Each playlist's hits are ranked within that genre
 - **Recency boost**: Newer songs get popularity bonus
-- **Time balancing**: Automatically adds extra songs to balance total playtime
+- **Intelligent time balancing**: Accounts for salsa (~4.5min) vs bachata (~3.5min) song lengths
 - **URL-based input**: Add any public Spotify playlist via URL
+- **Real-time ratio calculations**: See exact percentages and song estimates
 
 ## 🎉 Perfect For
 - **Party DJs**: Create energy curves that build and peak at the right time
