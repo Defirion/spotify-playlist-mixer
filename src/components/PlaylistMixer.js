@@ -240,41 +240,43 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
   const getRatioBreakdownPoint = () => {
     if (selectedPlaylists.length === 0 || !ratioConfig) return null;
     
+    // Calculate total weight for ratio calculations
+    const totalWeight = selectedPlaylists.reduce((sum, playlist) => {
+      const config = ratioConfig[playlist.id] || { weight: 1 };
+      return sum + config.weight;
+    }, 0);
+    
     // Calculate how many songs each playlist can contribute based on their ratios
     const playlistLimits = selectedPlaylists.map(playlist => {
       const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
       const availableSongs = playlist.tracks.total;
       
       // Calculate maximum songs this playlist can contribute based on its max group size
-      // If a playlist has 50 songs and max group size is 3, it can contribute ~16 groups = 48 songs
       const maxGroups = Math.floor(availableSongs / config.max);
       const maxContribution = maxGroups * config.max;
+      
+      // Calculate how many total songs we could have if this playlist is the limiting factor
+      const targetRatio = config.weight / totalWeight;
+      const maxTotalIfLimiting = Math.floor(maxContribution / targetRatio);
       
       return {
         name: playlist.name,
         available: availableSongs,
         maxContribution,
+        maxTotalIfLimiting,
+        targetRatio,
         config
       };
     });
     
-    // Find the limiting playlist (the one that will run out first)
+    // Find the actual limiting playlist (the one that gives us the smallest total)
     const limitingPlaylist = playlistLimits.reduce((min, current) => 
-      current.maxContribution < min.maxContribution ? current : min
+      current.maxTotalIfLimiting < min.maxTotalIfLimiting ? current : min
     );
-    
-    // Calculate total songs possible with perfect ratios
-    const totalWeight = selectedPlaylists.reduce((sum, playlist) => {
-      const config = ratioConfig[playlist.id] || { weight: 1 };
-      return sum + config.weight;
-    }, 0);
-    
-    const limitingWeight = ratioConfig[selectedPlaylists.find(p => p.name === limitingPlaylist.name)?.id]?.weight || 1;
-    const ratioBasedLimit = Math.floor((limitingPlaylist.maxContribution / limitingWeight) * totalWeight);
     
     return {
       limitingPlaylist: limitingPlaylist.name,
-      perfectRatioLimit: ratioBasedLimit,
+      perfectRatioLimit: limitingPlaylist.maxTotalIfLimiting,
       totalAvailable: playlistLimits.reduce((sum, p) => sum + p.available, 0)
     };
   };
