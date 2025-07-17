@@ -202,6 +202,155 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
+  // Calculate total available content from selected playlists
+  const getTotalAvailableContent = () => {
+    const totalSongs = selectedPlaylists.reduce((sum, playlist) => sum + playlist.tracks.total, 0);
+    
+    // Estimate total duration based on playlist names and song counts
+    const totalDurationMs = selectedPlaylists.reduce((sum, playlist) => {
+      const name = playlist.name.toLowerCase();
+      let avgDurationMs;
+      if (name.includes('salsa')) {
+        avgDurationMs = 4.5 * 60 * 1000; // 4.5 minutes
+      } else if (name.includes('bachata')) {
+        avgDurationMs = 3.5 * 60 * 1000; // 3.5 minutes
+      } else {
+        avgDurationMs = 3.5 * 60 * 1000; // 3.5 minutes default
+      }
+      return sum + (playlist.tracks.total * avgDurationMs);
+    }, 0);
+    
+    const totalDurationMinutes = Math.round(totalDurationMs / (1000 * 60));
+    
+    return {
+      totalSongs,
+      totalDurationMinutes,
+      totalDurationHours: totalDurationMinutes / 60
+    };
+  };
+
+  // Calculate when ratios will start breaking down
+  const getRatioBreakdownPoint = () => {
+    if (selectedPlaylists.length === 0 || !ratioConfig) return null;
+    
+    // Calculate how many songs each playlist can contribute based on their ratios
+    const playlistLimits = selectedPlaylists.map(playlist => {
+      const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
+      const availableSongs = playlist.tracks.total;
+      
+      // Calculate maximum songs this playlist can contribute based on its max group size
+      // If a playlist has 50 songs and max group size is 3, it can contribute ~16 groups = 48 songs
+      const maxGroups = Math.floor(availableSongs / config.max);
+      const maxContribution = maxGroups * config.max;
+      
+      return {
+        name: playlist.name,
+        available: availableSongs,
+        maxContribution,
+        config
+      };
+    });
+    
+    // Find the limiting playlist (the one that will run out first)
+    const limitingPlaylist = playlistLimits.reduce((min, current) => 
+      current.maxContribution < min.maxContribution ? current : min
+    );
+    
+    // Calculate total songs possible with perfect ratios
+    const totalWeight = selectedPlaylists.reduce((sum, playlist) => {
+      const config = ratioConfig[playlist.id] || { weight: 1 };
+      return sum + config.weight;
+    }, 0);
+    
+    const limitingWeight = ratioConfig[selectedPlaylists.find(p => p.name === limitingPlaylist.name)?.id]?.weight || 1;
+    const ratioBasedLimit = Math.floor((limitingPlaylist.maxContribution / limitingWeight) * totalWeight);
+    
+    return {
+      limitingPlaylist: limitingPlaylist.name,
+      perfectRatioLimit: ratioBasedLimit,
+      totalAvailable: playlistLimits.reduce((sum, p) => sum + p.available, 0)
+    };
+  };
+
+  // Check if current settings exceed available content
+  const getExceedsLimitWarning = () => {
+    if (selectedPlaylists.length === 0) return null;
+    
+    const available = getTotalAvailableContent();
+    const ratioBreakdown = getRatioBreakdownPoint();
+    
+    if (localMixOptions.useTimeLimit) {
+      if (localMixOptions.targetDuration > available.totalDurationMinutes) {
+        // Calculate when ratios will break down for time-based playlists
+        const perfectRatioMinutes = ratioBreakdown ? Math.round((ratioBreakdown.perfectRatioLimit * 3.5)) : available.totalDurationMinutes;
+        
+        return {
+          type: 'time',
+          requested: localMixOptions.targetDuration,
+          available: available.totalDurationMinutes,
+          availableFormatted: formatTotalDuration(available.totalDurationMinutes * 60 * 1000),
+          requestedFormatted: `${(localMixOptions.targetDuration / 60).toFixed(1)}h`,
+          ratioBreakdown: ratioBreakdown,
+          perfectRatioLimit: perfectRatioMinutes,
+          perfectRatioFormatted: formatTotalDuration(perfectRatioMinutes * 60 * 1000)
+        };
+      }
+    } else {
+      if (localMixOptions.totalSongs > available.totalSongs) {
+        return {
+          type: 'songs',
+          requested: localMixOptions.totalSongs,
+          available: available.totalSongs,
+          availableFormatted: `${available.totalSongs} songs`,
+          requestedFormatted: `${localMixOptions.totalSongs} songs`,
+          ratioBreakdown: ratioBreakdown,
+          perfectRatioLimit: ratioBreakdown?.perfectRatioLimit || available.totalSongs,
+          perfectRatioFormatted: `${ratioBreakdown?.perfectRatioLimit || available.totalSongs} songs`
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const exceedsLimit = getExceedsLimitWarning();
+  const ratioBreakdown = getRatioBreakdownPoint();
+
+  // Check if ratios will break down (only when user requests more than perfect ratio limit)
+  const getRatioAccuracyWarning = () => {
+    if (!ratioBreakdown || selectedPlaylists.length === 0) return null;
+    
+    const available = getTotalAvailableContent();
+    const perfectRatioMinutes = Math.round(ratioBreakdown.perfectRatioLimit * 3.5);
+    
+    // Only show if user is requesting more than the perfect ratio limit
+    let showWarning = false;
+    if (localMixOptions.useTimeLimit) {
+      showWarning = localMixOptions.targetDuration > perfectRatioMinutes;
+    } else {
+      showWarning = localMixOptions.totalSongs > ratioBreakdown.perfectRatioLimit;
+    }
+    
+    // And only if perfect ratio limit is less than total available content
+    if (showWarning && ratioBreakdown.perfectRatioLimit < available.totalSongs) {
+      return {
+        limitingPlaylist: ratioBreakdown.limitingPlaylist,
+        perfectRatioLimit: ratioBreakdown.perfectRatioLimit,
+        perfectRatioFormatted: localMixOptions.useTimeLimit 
+          ? formatTotalDuration(perfectRatioMinutes * 60 * 1000)
+          : `${ratioBreakdown.perfectRatioLimit} songs`,
+        totalAvailable: available.totalSongs,
+        totalAvailableFormatted: localMixOptions.useTimeLimit
+          ? formatTotalDuration(available.totalDurationMinutes * 60 * 1000)
+          : `${available.totalSongs} songs`
+      };
+    }
+    
+    return null;
+  };
+
+  const ratioAccuracyWarning = getRatioAccuracyWarning();
+
   return (
     <div className="card">
       <h2>Mix Your Playlists</h2>
@@ -238,36 +387,179 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <div style={{ marginTop: '12px' }}>
             {localMixOptions.useTimeLimit ? (
               <>
-                <input
-                  type="number"
-                  min="30"
-                  max="600"
-                  value={localMixOptions.targetDuration}
-                  onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
-                  placeholder="Minutes"
-                />
+                <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                  Duration: {(localMixOptions.targetDuration / 60).toFixed(1)} hours
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>1h</span>
+                  <input
+                    type="range"
+                    min="60"
+                    max="1200"
+                    step="30"
+                    value={localMixOptions.targetDuration}
+                    onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>20h</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
+                  <input
+                    type="number"
+                    min="30"
+                    max="2400"
+                    step="30"
+                    value={Math.round(localMixOptions.targetDuration)}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 60;
+                      setLocalMixOptions({...localMixOptions, targetDuration: Math.max(30, Math.min(2400, value))});
+                    }}
+                    style={{ 
+                      width: '80px', 
+                      padding: '4px 8px', 
+                      fontSize: '12px',
+                      background: 'var(--hunter-green)',
+                      border: '1px solid var(--fern-green)',
+                      borderRadius: '4px',
+                      color: 'var(--mindaro)'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>min</span>
+                </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  Target duration in minutes (e.g., 240 = 4 hours)
+                  Perfect for parties, workouts, or long events
                 </div>
               </>
             ) : (
               <>
-                <input
-                  type="number"
-                  min="10"
-                  max="500"
-                  value={localMixOptions.totalSongs}
-                  onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
-                  placeholder="Number of songs"
-                />
+                <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                  Songs: {localMixOptions.totalSongs} tracks
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>10</span>
+                  <input
+                    type="range"
+                    min="10"
+                    max="200"
+                    step="10"
+                    value={localMixOptions.totalSongs}
+                    onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>200</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
+                  <input
+                    type="number"
+                    min="5"
+                    max="1000"
+                    step="5"
+                    value={localMixOptions.totalSongs}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 10;
+                      setLocalMixOptions({...localMixOptions, totalSongs: Math.max(5, Math.min(1000, value))});
+                    }}
+                    style={{ 
+                      width: '80px', 
+                      padding: '4px 8px', 
+                      fontSize: '12px',
+                      background: 'var(--hunter-green)',
+                      border: '1px solid var(--fern-green)',
+                      borderRadius: '4px',
+                      color: 'var(--mindaro)'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>songs</span>
+                </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  Total number of songs in the playlist
+                  Choose exact number of songs for your playlist
                 </div>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Limit Exceeded Warning */}
+      {exceedsLimit && (
+        <div style={{ 
+          marginBottom: '20px',
+          padding: '16px',
+          background: 'rgba(255, 165, 0, 0.15)',
+          border: '2px solid #FFA500',
+          borderRadius: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#FFA500' }}>
+                Exceeding Available Content
+              </h4>
+              <p style={{ margin: '0 0 12px 0', lineHeight: '1.4' }}>
+                You've requested <strong>{exceedsLimit.requestedFormatted}</strong> but your playlists only contain <strong>{exceedsLimit.availableFormatted}</strong> total.
+              </p>
+              <div style={{ 
+                fontSize: '13px', 
+                opacity: '0.9',
+                padding: '8px 12px',
+                background: 'rgba(255, 165, 0, 0.1)',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 165, 0, 0.3)',
+                marginBottom: '8px'
+              }}>
+                <strong>📋 What will happen:</strong> The app will create a playlist with all available content ({exceedsLimit.availableFormatted}).
+              </div>
+              {exceedsLimit.ratioBreakdown && exceedsLimit.perfectRatioLimit < exceedsLimit.available && (
+                <div style={{ 
+                  fontSize: '12px', 
+                  opacity: '0.85',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 165, 0, 0.08)',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255, 165, 0, 0.2)'
+                }}>
+                  <strong>⚖️ Ratio accuracy:</strong> Your configured ratios will be maintained perfectly for the first <strong>{exceedsLimit.perfectRatioFormatted}</strong>. After that, <strong>{exceedsLimit.ratioBreakdown.limitingPlaylist}</strong> will run out first, and the remaining content will come from other playlists.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Independent Ratio Accuracy Warning */}
+      {ratioAccuracyWarning && !exceedsLimit && (
+        <div style={{ 
+          marginBottom: '20px',
+          padding: '16px',
+          background: 'rgba(54, 162, 235, 0.15)',
+          border: '2px solid #36A2EB',
+          borderRadius: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '20px' }}>⚖️</span>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#36A2EB' }}>
+                Ratio Accuracy Notice
+              </h4>
+              <p style={{ margin: '0 0 12px 0', lineHeight: '1.4' }}>
+                Your configured ratios will be maintained perfectly for the first <strong>{ratioAccuracyWarning.perfectRatioFormatted}</strong>.
+              </p>
+              <div style={{ 
+                fontSize: '13px', 
+                opacity: '0.9',
+                padding: '8px 12px',
+                background: 'rgba(54, 162, 235, 0.1)',
+                borderRadius: '6px',
+                border: '1px solid rgba(54, 162, 235, 0.3)'
+              }}>
+                <strong>📋 After that:</strong> <strong>{ratioAccuracyWarning.limitingPlaylist}</strong> will run out first, and the remaining content ({ratioAccuracyWarning.totalAvailableFormatted} total available) will come from other playlists with adjusted ratios.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div style={{ marginBottom: '20px' }}>
         <div className="input-group">
@@ -334,7 +626,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       
       {/* Preview Section */}
       <div style={{ marginBottom: '20px', paddingTop: '20px', borderTop: '1px solid var(--fern-green)' }}>
-        <h3>👀 Preview Your Mix</h3>
+        <h3>👀 DEMO Preview Your Mix</h3>
         <p style={{ marginBottom: '16px', fontSize: '14px', opacity: '0.8' }}>
           See how your playlist will look before creating it
         </p>
@@ -345,12 +637,26 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           disabled={previewLoading || selectedPlaylists.length < 2}
           style={{ marginRight: '12px' }}
         >
-          {previewLoading ? 'Generating Preview...' : '🔍 Generate Preview'}
+          {previewLoading ? 'Generating DEMO Preview...' : '🔍 Generate DEMO Preview'}
         </button>
       </div>
 
       {preview && (
         <div style={{ marginBottom: '20px' }}>
+          {/* Important Notice - Moved Higher */}
+          <div style={{ 
+            fontSize: '13px', 
+            opacity: '0.9',
+            textAlign: 'center',
+            marginBottom: '16px',
+            padding: '12px',
+            background: 'rgba(144, 169, 85, 0.15)',
+            borderRadius: '8px',
+            border: '1px solid var(--moss-green)'
+          }}>
+            <strong>📋 DEMO PREVIEW:</strong> This shows a sample of your mix. Your full playlist will have {localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`} of music with the same ratios and strategy.
+          </div>
+
           {/* Stats Summary */}
           <div style={{ 
             background: 'var(--hunter-green)', 
@@ -359,7 +665,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             marginBottom: '16px',
             border: '1px solid var(--fern-green)'
           }}>
-            <h4 style={{ margin: '0 0 12px 0' }}>📊 Preview Stats</h4>
+            <h4 style={{ margin: '0 0 12px 0' }}>📊 DEMO Preview Stats</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               {Object.entries(preview.stats).map(([playlistId, stats]) => (
                 <div key={playlistId}>
