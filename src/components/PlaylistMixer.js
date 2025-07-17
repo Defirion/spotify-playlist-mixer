@@ -213,11 +213,26 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
   const getTotalAvailableContent = () => {
     const totalSongs = selectedPlaylists.reduce((sum, playlist) => sum + playlist.tracks.total, 0);
     
-    // Only show real duration data - no estimates
+    // Calculate real total duration using actual average duration data
+    let totalDurationMinutes = 0;
+    let hasRealData = true;
+    
+    for (const playlist of selectedPlaylists) {
+      if (playlist.realAverageDurationSeconds) {
+        const playlistDurationMinutes = (playlist.tracks.total * playlist.realAverageDurationSeconds) / 60;
+        totalDurationMinutes += playlistDurationMinutes;
+      } else {
+        // Fallback to estimate if no real data available
+        totalDurationMinutes += playlist.tracks.total * 3.5;
+        hasRealData = false;
+      }
+    }
+    
     return {
       totalSongs,
-      totalDurationMinutes: null, // Will be calculated when real data is available
-      totalDurationHours: null
+      totalDurationMinutes: Math.round(totalDurationMinutes),
+      totalDurationHours: totalDurationMinutes / 60,
+      hasRealDurationData: hasRealData
     };
   };
 
