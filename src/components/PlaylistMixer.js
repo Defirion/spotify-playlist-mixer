@@ -814,6 +814,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             selectedPlaylists={selectedPlaylists}
             onTrackOrderChange={handlePreviewOrderChange}
             formatDuration={formatDuration}
+            accessToken={accessToken}
           />
           
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import AddUnselectedModal from './AddUnselectedModal';
 
-const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration }) => {
+const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
@@ -8,6 +9,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [isResizing, setIsResizing] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [normalHeight, setNormalHeight] = useState(400);
+  const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -24,7 +26,10 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    if (draggedIndex === null || draggedIndex === index) return;
+    // Check if it's a modal track being dragged
+    const dragData = e.dataTransfer.types.includes('application/json');
+    
+    if (!dragData && (draggedIndex === null || draggedIndex === index)) return;
     
     // Calculate if we're in the top or bottom half of the element
     const rect = e.currentTarget.getBoundingClientRect();
@@ -39,9 +44,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       insertPosition = index + 1;
     }
     
-    // Don't show drop line if it would be the same position
-    if (draggedIndex < insertPosition && insertPosition === draggedIndex + 1) return;
-    if (draggedIndex > insertPosition && insertPosition === draggedIndex) return;
+    // Don't show drop line if it would be the same position (only for internal drags)
+    if (!dragData && draggedIndex !== null) {
+      if (draggedIndex < insertPosition && insertPosition === draggedIndex + 1) return;
+      if (draggedIndex > insertPosition && insertPosition === draggedIndex) return;
+    }
     
     setDropLinePosition({ index: insertPosition, isTopHalf });
   };
@@ -66,6 +73,35 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
     
+    // Check if it's a track from the modal
+    try {
+      const dragData = e.dataTransfer.getData('application/json');
+      if (dragData) {
+        const { type, track } = JSON.parse(dragData);
+        if (type === 'modal-track') {
+          // Handle drop from modal
+          const newTracks = [...localTracks];
+          const insertIndex = dropLinePosition ? dropLinePosition.index : localTracks.length;
+          
+          // Insert the track at the specified position
+          newTracks.splice(insertIndex, 0, track);
+          
+          setLocalTracks(newTracks);
+          
+          // Notify parent component of the new track list
+          if (onTrackOrderChange) {
+            onTrackOrderChange(newTracks);
+          }
+          
+          setDropLinePosition(null);
+          return;
+        }
+      }
+    } catch (error) {
+      // Not a modal track, continue with normal drag handling
+    }
+    
+    // Handle normal internal drag and drop
     if (draggedIndex === null || !dropLinePosition) {
       setDraggedIndex(null);
       setDropLinePosition(null);
@@ -184,20 +220,45 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     return 'deepCuts';
   };
 
+  const handleAddUnselectedTracks = (tracksToAdd) => {
+    const newTracks = [...localTracks, ...tracksToAdd];
+    setLocalTracks(newTracks);
+    
+    // Notify parent component of the new track list
+    if (onTrackOrderChange) {
+      onTrackOrderChange(newTracks);
+    }
+  };
+
   return (
     <div style={{ 
       position: 'relative',
       marginBottom: '16px'
     }}>
-      <div style={{ 
-        background: 'var(--hunter-green)', 
-        borderRadius: '8px', 
-        border: '1px solid var(--fern-green)',
-        height: `${containerHeight}px`,
-        overflowY: 'auto',
-        borderBottomLeftRadius: '0px',
-        borderBottomRightRadius: '0px'
-      }}>
+      <div 
+        style={{ 
+          background: 'var(--hunter-green)', 
+          borderRadius: '8px', 
+          border: '1px solid var(--fern-green)',
+          height: `${containerHeight}px`,
+          overflowY: 'auto',
+          borderBottomLeftRadius: '0px',
+          borderBottomRightRadius: '0px'
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          // If dragging over empty space, set drop position to end
+          if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
+            setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+          }
+        }}
+        onDrop={(e) => {
+          // Handle drops on empty space
+          if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
+            handleDrop(e, localTracks.length);
+          }
+        }}
+      >
         <div style={{ 
           padding: '12px 16px', 
           borderBottom: '1px solid var(--fern-green)',
@@ -212,16 +273,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           <div>
             <strong>🎵 {localTracks.length} Songs</strong>
             <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-              💡 Drag and drop to reorder • Click ✕ to remove tracks • Drag bottom edge to resize
+              💡 <strong>Drag and drop to reorder</strong> • <strong>Click ✕ to remove tracks</strong> • <strong>Drag bottom edge to resize</strong>
             </div>
           </div>
           
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
-              onClick={() => {
-                // TODO: Implement add unselected songs functionality
-                alert('Add unselected songs feature coming soon!');
-              }}
+              onClick={() => setShowAddUnselectedModal(true)}
               style={{
                 background: 'var(--moss-green)',
                 color: 'white',
@@ -240,14 +298,23 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onMouseEnter={(e) => {
                 e.target.style.background = 'var(--fern-green)';
                 e.target.style.transform = 'translateY(-1px)';
+                const iconSpan = e.target.querySelector('span');
+                if (iconSpan) iconSpan.style.backgroundColor = '#3d5a26';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = 'var(--moss-green)';
                 e.target.style.transform = 'translateY(0)';
+                const iconSpan = e.target.querySelector('span');
+                if (iconSpan) iconSpan.style.backgroundColor = '#7a9147';
               }}
               title="Add songs that weren't selected from your playlists"
             >
-              <span>➕</span>
+              <span style={{
+                backgroundColor: '#7a9147',
+                borderRadius: '4px',
+                padding: '4px',
+                transition: 'background-color 0.2s ease'
+              }}>➕</span>
               Add Unselected
             </button>
             
@@ -274,19 +341,64 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onMouseEnter={(e) => {
                 e.target.style.background = '#1ed760';
                 e.target.style.transform = 'translateY(-1px)';
+                const iconSpan = e.target.querySelector('span');
+                if (iconSpan) iconSpan.style.backgroundColor = '#17c653';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = '#1DB954';
                 e.target.style.transform = 'translateY(0)';
+                const iconSpan = e.target.querySelector('span');
+                if (iconSpan) iconSpan.style.backgroundColor = '#189a47';
               }}
               title="Search and add songs directly from Spotify"
             >
-              <span>🎵</span>
+              <span style={{
+                backgroundColor: '#189a47',
+                borderRadius: '4px',
+                padding: '4px',
+                transition: 'background-color 0.2s ease'
+              }}>🎵</span>
               Add from Spotify
             </button>
           </div>
         </div>
       
+      {/* Empty state drop zone */}
+      {localTracks.length === 0 && (
+        <div style={{
+          padding: '40px 20px',
+          textAlign: 'center',
+          color: 'var(--mindaro)',
+          opacity: '0.6',
+          fontSize: '14px',
+          borderStyle: dropLinePosition ? 'dashed' : 'none',
+          borderWidth: '2px',
+          borderColor: 'var(--moss-green)',
+          borderRadius: '8px',
+          margin: '20px',
+          backgroundColor: dropLinePosition ? 'rgba(144, 169, 85, 0.1)' : 'transparent',
+          transition: 'all 0.2s ease'
+        }}>
+          {dropLinePosition ? 
+            '🎵 Drop track here to add it to your playlist' : 
+            'No tracks in preview yet. Generate a preview or drag tracks from the modal.'
+          }
+        </div>
+      )}
+
+      {/* Drop line at the end when dragging over empty space */}
+      {dropLinePosition && dropLinePosition.index === localTracks.length && localTracks.length > 0 && (
+        <div style={{
+          height: '3px',
+          background: 'var(--moss-green)',
+          borderRadius: '2px',
+          boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
+          animation: 'pulse 1s infinite',
+          margin: '8px 16px',
+          pointerEvents: 'none'
+        }} />
+      )}
+
       {localTracks.map((track, index) => {
         const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
         const quadrant = getTrackQuadrant(track);
@@ -480,6 +592,20 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           opacity: isResizing ? 1 : 0.7
         }} />
       </div>
+
+      {/* Add Unselected Modal */}
+      <AddUnselectedModal
+        isOpen={showAddUnselectedModal}
+        onClose={() => setShowAddUnselectedModal(false)}
+        accessToken={accessToken}
+        selectedPlaylists={selectedPlaylists}
+        currentTracks={localTracks}
+        onAddTracks={handleAddUnselectedTracks}
+        onDragTrack={(track) => {
+          // Optional: Handle when a track starts being dragged from modal
+          console.log('Track being dragged from modal:', track.name);
+        }}
+      />
     </div>
   );
 };
