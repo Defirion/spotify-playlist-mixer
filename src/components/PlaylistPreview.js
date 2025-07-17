@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 
 const PlaylistPreview = ({
@@ -14,6 +14,8 @@ const PlaylistPreview = ({
   const [loading, setLoading] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [showQuickStart, setShowQuickStart] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const generatePreview = async () => {
     try {

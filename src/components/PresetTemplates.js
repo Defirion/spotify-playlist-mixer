@@ -7,6 +7,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             name: '💃 Karimctiva',
             description: 'Perfect for bachata/salsa mixing with dance flow',
             strategy: 'mid-peak',
+            strategyLabel: 'Party Mode',
             ratios: (playlists) => playlists.map((playlist) => {
                 const name = playlist.name.toLowerCase();
                 if (name.includes('bachata')) {
@@ -24,6 +25,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             name: '💪 Workout Mix',
             description: 'High energy with consistent tempo',
             strategy: 'front-loaded',
+            strategyLabel: 'Hits First',
             ratios: (playlists) => playlists.map(() => ({ min: 3, max: 5, weight: 3, weightType: 'frequency' })),
             settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 60 }
         },
@@ -32,6 +34,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             name: '🚗 Road Trip',
             description: 'Build to epic finale with sing-along hits',
             strategy: 'crescendo',
+            strategyLabel: 'Build Up',
             ratios: (playlists) => playlists.map(() => ({ min: 2, max: 3, weight: 2, weightType: 'frequency' })),
             settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 180 }
         }
@@ -89,7 +92,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
                             {preset.description}
                         </p>
                         <div style={{ fontSize: '11px', opacity: '0.7' }}>
-                            Strategy: {preset.strategy} • {selectedPlaylists.length} playlists
+                            Song Order Style: {preset.strategyLabel} • {selectedPlaylists.length} playlists
                         </div>
                     </div>
                 ))}
