@@ -78,10 +78,7 @@ function MainApp() {
     setError(null);
   };
 
-  const handleCreatePlaylist = async () => {
-    // This will be called from PlaylistMixer component
-    setError(null);
-  };
+
 
   const handleDismissError = () => {
     setError(null);

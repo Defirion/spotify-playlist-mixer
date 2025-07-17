@@ -198,7 +198,7 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
 };
 
 export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
-  const { totalSongs, targetDuration, useTimeLimit, shuffleWithinGroups, popularityStrategy, recencyBoost } = options;
+  const { totalSongs, targetDuration, useTimeLimit, popularityStrategy, recencyBoost } = options;
 
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
