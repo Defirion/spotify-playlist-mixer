@@ -6,6 +6,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [localTracks, setLocalTracks] = useState(tracks);
   const [containerHeight, setContainerHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [normalHeight, setNormalHeight] = useState(400);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -112,6 +114,25 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
+  // Calculate 85% of screen height
+  const getMaxHeight = () => {
+    return Math.floor(window.innerHeight * 0.85);
+  };
+
+  // Double-click to maximize/minimize
+  const handleDoubleClick = () => {
+    if (isMaximized) {
+      // Minimize to normal height
+      setContainerHeight(normalHeight);
+      setIsMaximized(false);
+    } else {
+      // Save current height as normal height and maximize
+      setNormalHeight(containerHeight);
+      setContainerHeight(getMaxHeight());
+      setIsMaximized(true);
+    }
+  };
+
   // Resize functionality
   const handleResizeStart = (e) => {
     setIsResizing(true);
@@ -119,11 +140,24 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     
     const startY = e.clientY;
     const startHeight = containerHeight;
+    const maxHeight = getMaxHeight();
     
     const handleMouseMove = (e) => {
       const deltaY = e.clientY - startY;
-      const newHeight = Math.max(200, Math.min(1600, startHeight + deltaY));
+      const newHeight = Math.max(200, Math.min(maxHeight, startHeight + deltaY));
       setContainerHeight(newHeight);
+      
+      // Update maximized state based on height
+      if (newHeight >= maxHeight - 10) {
+        if (!isMaximized) {
+          setNormalHeight(startHeight);
+          setIsMaximized(true);
+        }
+      } else {
+        if (isMaximized) {
+          setIsMaximized(false);
+        }
+      }
     };
     
     const handleMouseUp = () => {
@@ -170,11 +204,86 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           position: 'sticky',
           top: 0,
           background: 'var(--hunter-green)',
-          zIndex: 1
+          zIndex: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
         }}>
-          <strong>🎵 {localTracks.length} Songs</strong>
-          <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-            💡 Drag and drop to reorder • Click ✕ to remove tracks • Drag bottom edge to resize
+          <div>
+            <strong>🎵 {localTracks.length} Songs</strong>
+            <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+              💡 Drag and drop to reorder • Click ✕ to remove tracks • Drag bottom edge to resize
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={() => {
+                // TODO: Implement add unselected songs functionality
+                alert('Add unselected songs feature coming soon!');
+              }}
+              style={{
+                background: 'var(--moss-green)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'var(--fern-green)';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'var(--moss-green)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+              title="Add songs that weren't selected from your playlists"
+            >
+              <span>➕</span>
+              Add Unselected
+            </button>
+            
+            <button
+              onClick={() => {
+                // TODO: Implement Spotify search functionality
+                alert('Spotify search feature coming soon!');
+              }}
+              style={{
+                background: '#1DB954',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#1ed760';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#1DB954';
+                e.target.style.transform = 'translateY(0)';
+              }}
+              title="Search and add songs directly from Spotify"
+            >
+              <span>🎵</span>
+              Add from Spotify
+            </button>
           </div>
         </div>
       
@@ -333,12 +442,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       {/* Resize handle - outside the scrollable container */}
       <div
         onMouseDown={handleResizeStart}
+        onDoubleClick={handleDoubleClick}
         style={{
           height: '12px',
           cursor: 'ns-resize',
-          background: isResizing ? 'rgba(144, 169, 85, 0.3)' : 'var(--hunter-green)',
+          background: isResizing ? 'rgba(144, 169, 85, 0.3)' : 
+                     isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)',
           border: '1px solid var(--fern-green)',
-          borderTop: isResizing ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
+          borderTop: isResizing ? '2px solid var(--moss-green)' : 
+                    isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
           borderBottomLeftRadius: '8px',
           borderBottomRightRadius: '8px',
           transition: 'all 0.2s ease',
@@ -354,11 +466,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         }}
         onMouseLeave={(e) => {
           if (!isResizing) {
-            e.target.style.background = 'var(--hunter-green)';
-            e.target.style.borderTop = '1px solid var(--fern-green)';
+            e.target.style.background = isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)';
+            e.target.style.borderTop = isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)';
           }
         }}
-        title="Drag to resize"
+        title={isMaximized ? "Drag to resize • Double-click to minimize" : "Drag to resize • Double-click to maximize"}
       >
         <div style={{
           width: '30px',
