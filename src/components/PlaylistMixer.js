@@ -124,22 +124,29 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         playlistTracks[playlist.id] = tracks;
       }
       
-      // Generate preview that maintains proper ratios
-      let previewSongCount;
-      if (localMixOptions.useTimeLimit) {
-        // For time-based: estimate songs needed, then scale down proportionally
-        const estimatedSongs = Math.ceil(localMixOptions.targetDuration / 3.5); // ~3.5 min per song
-        previewSongCount = Math.min(Math.max(estimatedSongs * 0.3, 20), 50); // 30% of estimated, min 20, max 50
+      // Generate preview - use full settings if toggle is enabled
+      let previewOptions;
+      if (localMixOptions.fullSamplePreview) {
+        // Use actual settings for full sample
+        previewOptions = { ...localMixOptions };
       } else {
-        // For song-count: use proportional sample
-        previewSongCount = Math.min(Math.max(localMixOptions.totalSongs * 0.3, 20), 50); // 30% of total, min 20, max 50
+        // Generate limited preview that maintains proper ratios
+        let previewSongCount;
+        if (localMixOptions.useTimeLimit) {
+          // For time-based: estimate songs needed, then scale down proportionally
+          const estimatedSongs = Math.ceil(localMixOptions.targetDuration / 3.5); // ~3.5 min per song
+          previewSongCount = Math.min(Math.max(estimatedSongs * 0.3, 20), 50); // 30% of estimated, min 20, max 50
+        } else {
+          // For song-count: use proportional sample
+          previewSongCount = Math.min(Math.max(localMixOptions.totalSongs * 0.3, 20), 50); // 30% of total, min 20, max 50
+        }
+        
+        previewOptions = {
+          ...localMixOptions,
+          totalSongs: Math.round(previewSongCount),
+          useTimeLimit: false // Always use song count for limited preview performance
+        };
       }
-      
-      const previewOptions = {
-        ...localMixOptions,
-        totalSongs: Math.round(previewSongCount),
-        useTimeLimit: false // Always use song count for preview performance
-      };
       
       const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
       
@@ -633,13 +640,32 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           See how your playlist will look before creating it
         </p>
         
+        <label style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          cursor: 'pointer', 
+          marginBottom: '12px',
+          fontSize: '14px'
+        }}>
+          <input
+            type="checkbox"
+            checked={localMixOptions.fullSamplePreview || false}
+            onChange={(e) => setLocalMixOptions({...localMixOptions, fullSamplePreview: e.target.checked})}
+          />
+          Generate full sample playlist (uses your actual settings instead of limited preview)
+        </label>
+        
         <button 
           className="btn" 
           onClick={generatePreview}
           disabled={previewLoading || selectedPlaylists.length < 2}
           style={{ marginRight: '12px' }}
         >
-          {previewLoading ? 'Generating DEMO Preview...' : '🔍 Generate DEMO Preview'}
+          {previewLoading ? 
+            (localMixOptions.fullSamplePreview ? 'Generating Full Sample...' : 'Generating DEMO Preview...') : 
+            (localMixOptions.fullSamplePreview ? '🎵 Generate Full Sample' : '🔍 Generate DEMO Preview')
+          }
         </button>
       </div>
 
@@ -652,11 +678,15 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             textAlign: 'center',
             marginBottom: '16px',
             padding: '12px',
-            background: 'rgba(144, 169, 85, 0.15)',
+            background: localMixOptions.fullSamplePreview ? 'rgba(29, 185, 84, 0.15)' : 'rgba(144, 169, 85, 0.15)',
             borderRadius: '8px',
-            border: '1px solid var(--moss-green)'
+            border: localMixOptions.fullSamplePreview ? '1px solid #1DB954' : '1px solid var(--moss-green)'
           }}>
-            <strong>📋 DEMO PREVIEW:</strong> This shows a sample of your mix. Your full playlist will have {localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`} of music with the same ratios and strategy.
+            {localMixOptions.fullSamplePreview ? (
+              <><strong>🎵 FULL SAMPLE:</strong> This is your complete playlist using your actual settings ({localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`}).</>
+            ) : (
+              <><strong>📋 DEMO PREVIEW:</strong> This shows a sample of your mix. Your full playlist will have {localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`} of music with the same ratios and strategy.</>
+            )}
           </div>
 
           {/* Stats Summary */}
@@ -683,6 +713,91 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             </div>
           </div>
 
+          {/* Popularity Quadrants Analysis */}
+          {localMixOptions.popularityStrategy !== 'mixed' && (
+            <div style={{ 
+              background: 'var(--hunter-green)', 
+              padding: '16px', 
+              borderRadius: '8px', 
+              border: '1px solid var(--fern-green)',
+              marginBottom: '16px'
+            }}>
+              <h4 style={{ margin: '0 0 12px 0' }}>🎯 Popularity Distribution</h4>
+              {(() => {
+                // Calculate popularity quadrants
+                const tracksWithPopularity = preview.tracks.filter(track => track.popularity !== undefined);
+                if (tracksWithPopularity.length === 0) {
+                  return <div style={{ fontSize: '14px', opacity: '0.7' }}>No popularity data available for analysis</div>;
+                }
+
+                // Sort tracks by popularity to create relative quadrants (matches mixing algorithm)
+                const sortedByPopularity = [...tracksWithPopularity].sort((a, b) => b.popularity - a.popularity);
+                const quarterSize = Math.floor(sortedByPopularity.length / 4);
+                
+                const topHits = sortedByPopularity.slice(0, quarterSize);
+                const popular = sortedByPopularity.slice(quarterSize, quarterSize * 2);
+                const moderate = sortedByPopularity.slice(quarterSize * 2, quarterSize * 3);
+                const deepCuts = sortedByPopularity.slice(quarterSize * 3);
+                
+                // Get popularity ranges for each quadrant
+                const getRange = (tracks) => {
+                  if (tracks.length === 0) return 'N/A';
+                  const min = Math.min(...tracks.map(t => t.popularity));
+                  const max = Math.max(...tracks.map(t => t.popularity));
+                  return min === max ? `${min}` : `${min}-${max}`;
+                };
+
+                const quadrants = {
+                  [`🔥 Top Hits (${getRange(topHits)})`]: topHits.length,
+                  [`⭐ Popular (${getRange(popular)})`]: popular.length,
+                  [`📻 Moderate (${getRange(moderate)})`]: moderate.length,
+                  [`💎 Deep Cuts (${getRange(deepCuts)})`]: deepCuts.length
+                };
+
+                const totalWithData = tracksWithPopularity.length;
+                
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                    {Object.entries(quadrants).map(([label, count]) => {
+                      const percentage = totalWithData > 0 ? Math.round((count / totalWithData) * 100) : 0;
+                      const color = label.includes('Top Hits') ? '#FF5722' :
+                                   label.includes('Popular') ? '#FF8F00' :
+                                   label.includes('Moderate') ? '#00BCD4' : '#E91E63';
+                      
+                      return (
+                        <div key={label} style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          padding: '12px',
+                          borderRadius: '6px',
+                          border: `2px solid ${color}`,
+                          textAlign: 'center'
+                        }}>
+                          <div style={{ fontSize: '18px', fontWeight: 'bold', color: color }}>
+                            {count}
+                          </div>
+                          <div style={{ fontSize: '12px', opacity: '0.8', marginTop: '4px' }}>
+                            {label}
+                          </div>
+                          <div style={{ fontSize: '11px', opacity: '0.6', marginTop: '2px' }}>
+                            {percentage}%
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+              <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '12px', textAlign: 'center' }}>
+                Strategy: <strong>{localMixOptions.popularityStrategy}</strong>
+                {(() => {
+                  const tracksWithPopularity = preview.tracks.filter(track => track.popularity !== undefined);
+                  return tracksWithPopularity.length < preview.tracks.length && 
+                    ` • ${preview.tracks.length - tracksWithPopularity.length} songs without popularity data`;
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* Track List */}
           <div style={{ 
             background: 'var(--hunter-green)', 
@@ -703,9 +818,26 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               <strong>🎵 First {preview.tracks.length} Songs</strong>
             </div>
             
-            {preview.tracks.map((track, index) => {
-              const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
-              return (
+            {(() => {
+              // Calculate relative popularity quadrants for track labeling
+              const tracksWithPop = preview.tracks.filter(t => t.popularity !== undefined);
+              const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
+              const qSize = Math.floor(sortedByPop.length / 4);
+              
+              const getTrackQuadrant = (track) => {
+                if (track.popularity === undefined) return null;
+                const index = sortedByPop.findIndex(t => t.id === track.id);
+                if (index < qSize) return 'topHits';
+                if (index < qSize * 2) return 'popular';
+                if (index < qSize * 3) return 'moderate';
+                return 'deepCuts';
+              };
+              
+              return preview.tracks.map((track, index) => {
+                const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
+                const quadrant = getTrackQuadrant(track);
+                
+                return (
                 <div 
                   key={`${track.id}-${index}`}
                   style={{ 
@@ -725,24 +857,49 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                       <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
                         {sourcePlaylist?.name || 'Unknown Playlist'}
                       </span>
+                      {track.popularity !== undefined && (
+                        <span style={{ 
+                          marginLeft: '8px', 
+                          fontSize: '10px', 
+                          background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
+                                    quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
+                                    quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
+                                    'rgba(233, 30, 99, 0.2)',
+                          color: quadrant === 'topHits' ? '#FF5722' :
+                               quadrant === 'popular' ? '#FF8F00' :
+                               quadrant === 'moderate' ? '#00BCD4' :
+                               '#E91E63',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: '500'
+                        }}>
+                          {quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
+                           quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
+                           quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
+                           `💎 Deep Cuts (${track.popularity})`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div style={{ fontSize: '11px', opacity: '0.6' }}>
                     {formatDuration(track.duration_ms || 0)}
                   </div>
                 </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
           
-          <div style={{ 
-            fontSize: '11px', 
-            opacity: '0.7',
-            textAlign: 'center',
-            marginBottom: '16px'
-          }}>
-            This is just a preview. Your full playlist will have {localMixOptions.useTimeLimit ? `${localMixOptions.targetDuration} minutes` : `${localMixOptions.totalSongs} songs`} of music.
-          </div>
+          {!localMixOptions.fullSamplePreview && (
+            <div style={{ 
+              fontSize: '11px', 
+              opacity: '0.7',
+              textAlign: 'center',
+              marginBottom: '16px'
+            }}>
+              This is just a preview. Your full playlist will have {localMixOptions.useTimeLimit ? `${localMixOptions.targetDuration} minutes` : `${localMixOptions.totalSongs} songs`} of music.
+            </div>
+          )}
         </div>
       )}
 
