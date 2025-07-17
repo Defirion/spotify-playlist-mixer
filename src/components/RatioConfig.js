@@ -227,7 +227,18 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                   const percentage = Math.round((config.weight / totalWeight) * 100);
                   const avgSongs = Math.round((config.min + config.max) / 2);
                   const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
-                  const estimatedSongs = Math.round((percentage / 100) * 100);
+                  
+                  let estimatedSongs;
+                  if (config.weightType === 'time' && playlist.realAverageDurationSeconds) {
+                    // For time-balanced: calculate based on real average durations
+                    const playlistAvgMinutes = playlist.realAverageDurationSeconds / 60;
+                    const totalMinutes = 100 * 3.5; // Assume 100 songs * 3.5 min average for the mix
+                    const playlistMinutes = Math.round((percentage / 100) * totalMinutes);
+                    estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
+                  } else {
+                    // For frequency-based: use simple percentage
+                    estimatedSongs = Math.round((percentage / 100) * 100);
+                  }
                   
                   return (
                     <div key={playlist.id}>
