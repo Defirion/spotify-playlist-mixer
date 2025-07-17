@@ -21,6 +21,8 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 - **Front-loaded**: Popular songs first, fade to deep cuts
 - **Mid-peak**: Build to popular songs in middle (perfect for parties!)
 - **Crescendo**: Build from deep cuts to biggest hits at the end
+- **Relative popularity system**: Tracks are ranked within your collection (🔥 Top Hits, ⭐ Popular, 📻 Moderate, 💎 Deep Cuts)
+- **Balanced distribution**: Each popularity level represents 25% of your tracks for perfect variety
 
 ### ⏰ **Flexible Playlist Sizing**
 - Create by song count (e.g., 100 songs)
@@ -30,6 +32,8 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 ### 🎨 **Enhanced User Experience**
 - **Playlist cover images**: Visual identification throughout the interface
 - **Live preview**: See your mix before creating the full playlist
+- **Popularity quadrant analysis**: Visual breakdown of track distribution across popularity levels
+- **Color-coded track labels**: Easy identification of hits vs deep cuts with improved contrast
 - **Toast notifications**: Non-intrusive error handling
 - **Smart scroll indicator**: Never miss newly created playlists
 - **Rich playlist info**: Track counts and average song lengths
