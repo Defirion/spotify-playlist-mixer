@@ -588,19 +588,35 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           </div>
         </div>
         
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '12px' }}>
+        <label style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          cursor: localMixOptions.popularityStrategy === 'mixed' ? 'not-allowed' : 'pointer', 
+          marginTop: '12px',
+          opacity: localMixOptions.popularityStrategy === 'mixed' ? 0.5 : 1
+        }}>
           <input
             type="checkbox"
-            checked={localMixOptions.recencyBoost}
+            checked={localMixOptions.popularityStrategy === 'mixed' ? true : localMixOptions.recencyBoost}
+            disabled={localMixOptions.popularityStrategy === 'mixed'}
             onChange={(e) => setLocalMixOptions({...localMixOptions, recencyBoost: e.target.checked})}
           />
           Boost recent tracks (newer songs get popularity bonus)
         </label>
         
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' }}>
+        <label style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          cursor: localMixOptions.popularityStrategy === 'mixed' ? 'not-allowed' : 'pointer', 
+          marginTop: '8px',
+          opacity: localMixOptions.popularityStrategy === 'mixed' ? 0.5 : 1
+        }}>
           <input
             type="checkbox"
-            checked={localMixOptions.shuffleWithinGroups}
+            checked={localMixOptions.popularityStrategy === 'mixed' ? true : localMixOptions.shuffleWithinGroups}
+            disabled={localMixOptions.popularityStrategy === 'mixed'}
             onChange={(e) => setLocalMixOptions({...localMixOptions, shuffleWithinGroups: e.target.checked})}
           />
           Shuffle within popularity groups

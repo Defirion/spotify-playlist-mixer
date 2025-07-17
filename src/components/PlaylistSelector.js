@@ -132,41 +132,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
         </div>
       </div>
       
-      {selectedPlaylists.length > 0 && (
-        <div>
-          <h3>Selected Playlists ({selectedPlaylists.length})</h3>
-          {selectedPlaylists.map(playlist => (
-            <div key={playlist.id} className="playlist-item">
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {playlist.coverImage && (
-                  <img 
-                    src={playlist.coverImage} 
-                    alt={playlist.name} 
-                    className="playlist-cover" 
-                  />
-                )}
-                <div className="playlist-info">
-                  <strong>{playlist.name}</strong>
-                  <div style={{ fontSize: '14px', opacity: '0.8' }}>
-                    {playlist.tracks.total} tracks • by {playlist.owner.display_name}
-                  </div>
-                </div>
-              </div>
-              <button
-                className="btn"
-                onClick={() => handleRemovePlaylist(playlist.id)}
-                style={{
-                  background: '#ff4444',
-                  padding: '8px 16px',
-                  fontSize: '14px'
-                }}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+
       
       {selectedPlaylists.length >= 10 && (
         <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 165, 0, 0.1)', borderRadius: '4px', fontSize: '14px' }}>

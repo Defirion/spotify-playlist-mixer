@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
+const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove }) => {
   // Helper function to format duration from seconds to MM:SS
   const formatDurationFromSeconds = (seconds) => {
     if (!seconds) return null;
@@ -32,7 +32,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
               padding: '16px', 
               borderRadius: '8px' 
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', position: 'relative' }}>
                 {playlist.coverImage && (
                   <img 
                     src={playlist.coverImage} 
@@ -41,7 +41,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
                     style={{ marginRight: '12px' }}
                   />
                 )}
-                <div className="playlist-info">
+                <div className="playlist-info" style={{ flex: 1 }}>
                   <strong style={{ fontSize: '16px' }}>{playlist.name}</strong>
                   <div style={{ fontSize: '14px', opacity: '0.8', marginTop: '2px' }}>
                     {playlist.tracks.total} tracks
@@ -55,6 +55,32 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={() => onPlaylistRemove && onPlaylistRemove(playlist.id)}
+                  style={{
+                    position: 'absolute',
+                    top: '0',
+                    right: '0',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#cc0000'}
+                  onMouseLeave={(e) => e.target.style.background = '#ff4444'}
+                  title={`Remove ${playlist.name}`}
+                >
+                  ×
+                </button>
               </div>
               
               <div className="input-group">

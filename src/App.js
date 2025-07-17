@@ -125,6 +125,12 @@ function MainApp() {
           selectedPlaylists={selectedPlaylists}
           ratioConfig={ratioConfig}
           onRatioUpdate={updateRatioConfig}
+          onPlaylistRemove={(playlistId) => {
+            const playlist = selectedPlaylists.find(p => p.id === playlistId);
+            if (playlist) {
+              handlePlaylistSelection(playlist);
+            }
+          }}
         />
       )}
 
