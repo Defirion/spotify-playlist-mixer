@@ -214,26 +214,55 @@ const PlaylistPreview = ({
 
   return (
     <div className="card">
-      <h2>👀 Preview Your Mix</h2>
-      <p>See how your playlist will look before creating it</p>
+      <h2>🎵 Your Mix Preview</h2>
+      <p style={{ marginBottom: '20px', opacity: '0.8' }}>
+        Take a look at your mix and make any adjustments
+      </p>
 
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        marginBottom: '20px',
+        justifyContent: 'center',
+        flexWrap: 'wrap'
+      }}>
         <button
           className="btn"
           onClick={generatePreview}
           disabled={loading}
-          style={{ marginRight: '12px' }}
+          style={{
+            background: 'var(--fern-green)',
+            border: '2px solid var(--moss-green)',
+            padding: '12px 24px',
+            fontSize: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
         >
-          {loading ? 'Generating Preview...' : '🔍 Generate Preview'}
+          {loading ? (
+            <>⏳ Generating Preview...</>
+          ) : (
+            <>🎵 Generate Preview</>
+          )}
         </button>
 
         {preview && (
           <button
             className="btn"
             onClick={onCreatePlaylist}
-            style={{ background: 'var(--moss-green)' }}
+            style={{
+              background: 'var(--moss-green)',
+              border: '2px solid var(--mindaro)',
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            ✅ Looks Good - Create Full Playlist
+            ✨ Create Full Playlist
           </button>
         )}
       </div>
@@ -242,49 +271,68 @@ const PlaylistPreview = ({
 
       {preview && (
         <div>
-          {/* Stats Summary */}
+          {/* Quick Stats */}
           <div style={{
             background: 'var(--hunter-green)',
-            padding: '16px',
-            borderRadius: '8px',
+            padding: '20px',
+            borderRadius: '12px',
             marginBottom: '20px',
             border: '1px solid var(--fern-green)'
           }}>
-            <h3 style={{ margin: '0 0 12px 0' }}>📊 Preview Stats</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📊 Your Preview
+              </h3>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--moss-green)' }}>
+                {preview.tracks.length} songs • {formatTotalDuration(preview.totalDuration)}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
               {Object.entries(preview.stats).map(([playlistId, stats]) => (
-                <div key={playlistId}>
-                  <strong>{stats.name}:</strong><br />
-                  <span style={{ fontSize: '14px', opacity: '0.8' }}>
-                    {stats.count} songs • {formatTotalDuration(stats.totalDuration)}
-                  </span>
+                <div key={playlistId} style={{
+                  background: 'rgba(0,0,0,0.2)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '13px', opacity: '0.7', marginBottom: '4px' }}>
+                    {stats.name.length > 18 ? stats.name.substring(0, 18) + '...' : stats.name}
+                  </div>
+                  <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--mindaro)' }}>
+                    {stats.count} songs
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: '0.6' }}>
+                    {formatTotalDuration(stats.totalDuration)}
+                  </div>
                 </div>
               ))}
-            </div>
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--fern-green)' }}>
-              <strong>Total Preview: {preview.tracks.length} songs • {formatTotalDuration(preview.totalDuration)}</strong>
             </div>
           </div>
 
           {/* Track List */}
           <div style={{
             background: 'var(--hunter-green)',
-            borderRadius: '8px',
+            borderRadius: '12px',
             border: '1px solid var(--fern-green)',
-            maxHeight: '400px',
+            maxHeight: '500px',
             overflowY: 'auto'
           }}>
             <div style={{
-              padding: '12px 16px',
+              padding: '16px 20px',
               borderBottom: '1px solid var(--fern-green)',
               position: 'sticky',
               top: 0,
               background: 'var(--hunter-green)',
               zIndex: 1
             }}>
-              <strong>🎵 First {preview.tracks.length} Songs</strong>
-              <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                💡 Drag and drop to reorder tracks
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h4 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🎵 Your Songs ({preview.tracks.length})
+                </h4>
+                <div style={{ fontSize: '12px', opacity: '0.7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  ⋮⋮ Drag to reorder
+                </div>
               </div>
             </div>
 
