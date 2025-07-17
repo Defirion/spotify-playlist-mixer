@@ -4,6 +4,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
+  const [containerHeight, setContainerHeight] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -110,6 +112,30 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
+  // Resize functionality
+  const handleResizeStart = (e) => {
+    setIsResizing(true);
+    e.preventDefault();
+    
+    const startY = e.clientY;
+    const startHeight = containerHeight;
+    
+    const handleMouseMove = (e) => {
+      const deltaY = e.clientY - startY;
+      const newHeight = Math.max(200, Math.min(1600, startHeight + deltaY));
+      setContainerHeight(newHeight);
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   // Calculate relative popularity quadrants for track labeling
   const tracksWithPop = localTracks.filter(t => t.popularity !== undefined);
   const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
@@ -126,26 +152,31 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
   return (
     <div style={{ 
-      background: 'var(--hunter-green)', 
-      borderRadius: '8px', 
-      border: '1px solid var(--fern-green)',
-      maxHeight: '400px',
-      overflowY: 'auto',
+      position: 'relative',
       marginBottom: '16px'
     }}>
       <div style={{ 
-        padding: '12px 16px', 
-        borderBottom: '1px solid var(--fern-green)',
-        position: 'sticky',
-        top: 0,
-        background: 'var(--hunter-green)',
-        zIndex: 1
+        background: 'var(--hunter-green)', 
+        borderRadius: '8px', 
+        border: '1px solid var(--fern-green)',
+        height: `${containerHeight}px`,
+        overflowY: 'auto',
+        borderBottomLeftRadius: '0px',
+        borderBottomRightRadius: '0px'
       }}>
-        <strong>🎵 {localTracks.length} Songs</strong>
-        <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-          💡 Drag and drop to reorder • Click ✕ to remove tracks
+        <div style={{ 
+          padding: '12px 16px', 
+          borderBottom: '1px solid var(--fern-green)',
+          position: 'sticky',
+          top: 0,
+          background: 'var(--hunter-green)',
+          zIndex: 1
+        }}>
+          <strong>🎵 {localTracks.length} Songs</strong>
+          <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+            💡 Drag and drop to reorder • Click ✕ to remove tracks • Drag bottom edge to resize
+          </div>
         </div>
-      </div>
       
       {localTracks.map((track, index) => {
         const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
@@ -297,6 +328,46 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           </div>
         );
       })}
+      </div>
+      
+      {/* Resize handle - outside the scrollable container */}
+      <div
+        onMouseDown={handleResizeStart}
+        style={{
+          height: '12px',
+          cursor: 'ns-resize',
+          background: isResizing ? 'rgba(144, 169, 85, 0.3)' : 'var(--hunter-green)',
+          border: '1px solid var(--fern-green)',
+          borderTop: isResizing ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
+          borderBottomLeftRadius: '8px',
+          borderBottomRightRadius: '8px',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          if (!isResizing) {
+            e.target.style.background = 'rgba(144, 169, 85, 0.1)';
+            e.target.style.borderTop = '2px solid rgba(144, 169, 85, 0.5)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isResizing) {
+            e.target.style.background = 'var(--hunter-green)';
+            e.target.style.borderTop = '1px solid var(--fern-green)';
+          }
+        }}
+        title="Drag to resize"
+      >
+        <div style={{
+          width: '30px',
+          height: '3px',
+          background: 'rgba(144, 169, 85, 0.6)',
+          borderRadius: '2px',
+          opacity: isResizing ? 1 : 0.7
+        }} />
+      </div>
     </div>
   );
 };

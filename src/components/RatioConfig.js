@@ -20,8 +20,8 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
 
   return (
     <div className="card">
-      <h2>Configure Ratios & Patterns</h2>
-      <p>Set how many songs from each playlist should play in sequence</p>
+      <h2>🎛️ Customize Your Mix</h2>
+      <p>Choose how your playlists blend together</p>
       
       <div className="ratio-controls">
         {selectedPlaylists.map(playlist => {
@@ -84,7 +84,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               </div>
               
               <div className="input-group">
-                <label>Songs per group: {config.min === config.max ? config.min : `${config.min}-${config.max}`}</label>
+                <label>🎵 Play together: {config.min === config.max ? `${config.min} song${config.min > 1 ? 's' : ''}` : `${config.min}-${config.max} songs`}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                   <span style={{ fontSize: '12px', opacity: '0.7' }}>1</span>
                   <div style={{ flex: 1, position: 'relative', height: '20px' }}>
@@ -121,51 +121,54 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                   <span style={{ fontSize: '12px', opacity: '0.7' }}>8</span>
                 </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  Drag handles to set min-max range of songs that play together
+                  How many songs play back-to-back from this playlist
                 </div>
               </div>
               
 
               
               <div className="input-group">
-                <label>Weighting Strategy:</label>
+                <label>⚖️ Balance Method:</label>
                 <div className="toggle-group">
                   <button
                     type="button"
                     className={`toggle-option ${(config.weightType || 'frequency') === 'frequency' ? 'active' : ''}`}
                     onClick={() => handleConfigChange(playlist.id, 'weightType', 'frequency')}
                   >
-                    By Frequency
+                    Same Song Count
                   </button>
                   <button
                     type="button"
                     className={`toggle-option ${config.weightType === 'time' ? 'active' : ''}`}
                     onClick={() => handleConfigChange(playlist.id, 'weightType', 'time')}
                   >
-                    By Time
+                    Same Play Time
                   </button>
                 </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
                   {config.weightType === 'time' 
-                    ? 'Balances total playtime per genre (good for different song lengths)'
-                    : 'Balances song count per genre (traditional approach)'
+                    ? 'Perfect for mixing genres with different song lengths (salsa vs bachata)'
+                    : 'Traditional approach - equal number of songs from each playlist'
                   }
                 </div>
               </div>
               
               <div className="input-group">
                 <label>
-                  Frequency: {(() => {
+                  🎲 Selection Priority: {(() => {
                     const weight = config.weight || 2;
-                    if (weight <= 2) return `Low (${weight})`;
-                    if (weight <= 4) return `Normal (${weight})`;
-                    if (weight <= 6) return `High (${weight})`;
-                    if (weight <= 8) return `Very High (${weight})`;
-                    return `Maximum (${weight})`;
+                    const totalWeight = Object.values(ratioConfig).reduce((sum, cfg) => sum + (cfg.weight || 1), 0);
+                    const percentage = Math.round((weight / totalWeight) * 100);
+                    
+                    if (weight <= 2) return `Low Priority (${weight}) - ~${percentage}% of mix`;
+                    if (weight <= 4) return `Normal Priority (${weight}) - ~${percentage}% of mix`;
+                    if (weight <= 6) return `High Priority (${weight}) - ~${percentage}% of mix`;
+                    if (weight <= 8) return `Top Priority (${weight}) - ~${percentage}% of mix`;
+                    return `Maximum Priority (${weight}) - ~${percentage}% of mix`;
                   })()}
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Low</span>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Lower</span>
                   <input
                     type="range"
                     min="1"
@@ -174,13 +177,10 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                     onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
                     style={{ flex: 1 }}
                   />
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Maximum</span>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Higher</span>
                 </div>
-                <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                  {config.weightType === 'time' 
-                    ? 'Adjusts for song length to balance total playtime per genre'
-                    : 'Higher frequency = more songs from this playlist in the mix'
-                  }
+                <div style={{ fontSize: '11px', opacity: '0.6', marginTop: '4px' }}>
+                  Higher priority = more songs selected from this playlist
                 </div>
               </div>
             </div>
@@ -189,22 +189,26 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
       </div>
       
       <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px' }}>
-        <h4>Pattern Preview:</h4>
+        <h4>📊 Your Mix Preview:</h4>
         <div style={{ fontSize: '14px', marginTop: '8px' }}>
           {selectedPlaylists.map(playlist => {
             const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
             const frequencyText = (() => {
               const weight = config.weight || 2;
-              if (weight <= 2) return `Low (${weight})`;
-              if (weight <= 4) return `Normal (${weight})`;
-              if (weight <= 6) return `High (${weight})`;
-              if (weight <= 8) return `Very High (${weight})`;
-              return `Maximum (${weight})`;
+              if (weight <= 2) return `Rarely`;
+              if (weight <= 4) return `Sometimes`;
+              if (weight <= 6) return `Often`;
+              if (weight <= 8) return `Very Often`;
+              return `Always`;
             })();
+            
+            const groupText = config.min === config.max ? 
+              `${config.min} song${config.min > 1 ? 's' : ''}` : 
+              `${config.min}-${config.max} songs`;
             
             return (
               <div key={playlist.id} style={{ marginBottom: '4px' }}>
-                <strong>{playlist.name}:</strong> {config.min}-{config.max} songs per group, {frequencyText} frequency
+                • <strong>{playlist.name}:</strong> {groupText} at a time, plays {frequencyText.toLowerCase()}
               </div>
             );
           })}
@@ -229,39 +233,54 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               
               return (
                 <>
-                  <strong>{exampleTitle}</strong>
+                  <strong>🎯 {exampleTitle}</strong>
                   <div style={{ fontSize: '13px', marginTop: '4px' }}>
                     {selectedPlaylists.map(playlist => {
                       const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
                       const percentage = Math.round((config.weight / totalWeight) * 100);
-                      const avgSongs = Math.round((config.min + config.max) / 2);
-                      const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
+                      const weightTypeText = config.weightType === 'time' ? 'same play time' : 'same song count';
                       
-                      let estimatedSongs, displayText;
+                      let displayText;
                       
                       if (hasTimeBalanced && config.weightType === 'time' && playlist.realAverageDurationSeconds) {
                         // Time-balanced calculation: distribute 60 minutes based on weight percentage
                         const playlistAvgMinutes = playlist.realAverageDurationSeconds / 60;
                         const playlistMinutes = (percentage / 100) * baseAmount; // percentage of 60 minutes
-                        estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
+                        const exactSongs = playlistMinutes / playlistAvgMinutes;
+                        const minSongs = Math.floor(exactSongs);
+                        const maxSongs = Math.ceil(exactSongs);
                         const formattedMinutes = playlistMinutes.toFixed(1);
-                        displayText = `~${estimatedSongs} songs (${formattedMinutes} min, ${percentage}%)`;
+                        
+                        const songsText = minSongs === maxSongs ? `${minSongs}` : `${minSongs}-${maxSongs}`;
+                        displayText = `~${songsText} songs (${formattedMinutes} min, ${percentage}%)`;
                       } else if (hasTimeBalanced && config.weightType === 'frequency') {
                         // For frequency-based in time context: estimate based on average duration
                         const playlistAvgMinutes = playlist.realAverageDurationSeconds ? playlist.realAverageDurationSeconds / 60 : 3.5;
                         const playlistMinutes = (percentage / 100) * baseAmount;
-                        estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
+                        const exactSongs = playlistMinutes / playlistAvgMinutes;
+                        const minSongs = Math.floor(exactSongs);
+                        const maxSongs = Math.ceil(exactSongs);
                         const formattedMinutes = playlistMinutes.toFixed(1);
-                        displayText = `~${estimatedSongs} songs (${formattedMinutes} min, ${percentage}%)`;
+                        
+                        const songsText = minSongs === maxSongs ? `${minSongs}` : `${minSongs}-${maxSongs}`;
+                        displayText = `~${songsText} songs (${formattedMinutes} min, ${percentage}%)`;
                       } else {
                         // Pure frequency-based: simple percentage of 100 songs
-                        estimatedSongs = Math.round((percentage / 100) * baseAmount);
-                        displayText = `~${estimatedSongs} songs (${percentage}%)`;
+                        const exactSongs = (percentage / 100) * baseAmount;
+                        const minSongs = Math.floor(exactSongs);
+                        const maxSongs = Math.ceil(exactSongs);
+                        
+                        const songsText = minSongs === maxSongs ? `${minSongs}` : `${minSongs}-${maxSongs}`;
+                        displayText = `~${songsText} songs (${percentage}%)`;
                       }
+                      
+                      const groupText = config.min === config.max ? 
+                        (config.min === 1 ? '1 at a time' : `${config.min} at a time`) : 
+                        `${config.min}-${config.max} at a time`;
                       
                       return (
                         <div key={playlist.id}>
-                          • <strong>{playlist.name}:</strong> {displayText} in groups of {avgSongs} ({weightTypeText})
+                          • <strong>{playlist.name}:</strong> {displayText}, {groupText} ({weightTypeText})
                         </div>
                       );
                     })}

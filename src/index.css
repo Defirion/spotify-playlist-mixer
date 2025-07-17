@@ -89,6 +89,10 @@ body {
   font-size: 16px;
 }
 
+.input-group input[type="range"] {
+  padding: 12px 1px;
+}
+
 .input-group select {
   background: var(--hunter-green);
   cursor: pointer;
