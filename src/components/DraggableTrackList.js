@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
+import { getSpotifyApi } from '../utils/spotify';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -10,6 +11,10 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [isMaximized, setIsMaximized] = useState(false);
   const [normalHeight, setNormalHeight] = useState(400);
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
+  const [showSpotifySearch, setShowSpotifySearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -73,13 +78,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
     
-    // Check if it's a track from the modal
+    // Check if it's a track from the modal or search results
     try {
       const dragData = e.dataTransfer.getData('application/json');
       if (dragData) {
         const { type, track } = JSON.parse(dragData);
-        if (type === 'modal-track') {
-          // Handle drop from modal
+        if (type === 'modal-track' || type === 'search-track') {
+          // Handle drop from modal or search results
           const newTracks = [...localTracks];
           const insertIndex = dropLinePosition ? dropLinePosition.index : localTracks.length;
           
@@ -94,11 +99,18 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           }
           
           setDropLinePosition(null);
+          
+          // If it's a search track, clear the search results
+          if (type === 'search-track') {
+            setSearchQuery('');
+            setSearchResults([]);
+          }
+          
           return;
         }
       }
     } catch (error) {
-      // Not a modal track, continue with normal drag handling
+      // Not a modal or search track, continue with normal drag handling
     }
     
     // Handle normal internal drag and drop
@@ -230,6 +242,48 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
+  const handleSpotifySearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const api = getSpotifyApi(accessToken);
+      
+      const response = await api.get(`/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=10`);
+      setSearchResults(response.data.tracks.items || []);
+      
+    } catch (err) {
+      console.error('Failed to search for songs:', err);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleAddSongFromSearch = (song) => {
+    // Add sourcePlaylist as 'search' to distinguish from playlist tracks
+    const songWithSource = {
+      ...song,
+      sourcePlaylist: 'search',
+      sourcePlaylistName: 'Spotify Search'
+    };
+
+    const newTracks = [...localTracks, songWithSource];
+    setLocalTracks(newTracks);
+    
+    // Notify parent component of the new track list
+    if (onTrackOrderChange) {
+      onTrackOrderChange(newTracks);
+    }
+
+    // Clear search after adding
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
   return (
     <div style={{ 
       position: 'relative',
@@ -319,10 +373,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             </button>
             
             <button
-              onClick={() => {
-                // TODO: Implement Spotify search functionality
-                alert('Spotify search feature coming soon!');
-              }}
+              onClick={() => setShowSpotifySearch(!showSpotifySearch)}
               style={{
                 background: '#1DB954',
                 color: 'white',
@@ -464,8 +515,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                   </div>
                   <div style={{ fontSize: '12px', opacity: '0.7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {track.artists?.[0]?.name || 'Unknown Artist'} • 
-                    <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
-                      {sourcePlaylist?.name || 'Unknown Playlist'}
+                    <span style={{ 
+                      color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)', 
+                      marginLeft: '4px' 
+                    }}>
+                      {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
                     </span>
                     {track.popularity !== undefined && (
                       <span style={{ 
@@ -592,6 +646,226 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           opacity: isResizing ? 1 : 0.7
         }} />
       </div>
+
+      {/* Spotify Search Interface */}
+      {showSpotifySearch && (
+        <div style={{
+          background: 'var(--hunter-green)',
+          border: '1px solid var(--fern-green)',
+          borderTop: 'none',
+          borderRadius: '0 0 8px 8px',
+          padding: '16px',
+          marginTop: '-1px'
+        }}>
+          <h3 style={{ margin: '0 0 12px 0', color: 'var(--mindaro)', fontSize: '16px' }}>
+            🎵 Search Spotify
+          </h3>
+          
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for songs..."
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                fontSize: '14px',
+                border: '1px solid var(--fern-green)',
+                borderRadius: '6px',
+                backgroundColor: 'var(--dark-green)',
+                color: 'var(--mindaro)',
+                outline: 'none'
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleSpotifySearch()}
+              onFocus={(e) => e.target.style.borderColor = 'var(--moss-green)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--fern-green)'}
+            />
+            <button
+              onClick={handleSpotifySearch}
+              disabled={searchLoading || !searchQuery.trim()}
+              style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '6px',
+                backgroundColor: '#1DB954',
+                color: 'white',
+                cursor: searchLoading || !searchQuery.trim() ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {searchLoading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div style={{
+              maxHeight: '300px',
+              overflowY: 'auto',
+              border: '1px solid var(--fern-green)',
+              borderRadius: '6px',
+              backgroundColor: 'var(--dark-green)'
+            }}>
+              {searchResults.map((song, index) => (
+                <div
+                  key={song.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('application/json', JSON.stringify({
+                      type: 'search-track',
+                      track: {
+                        ...song,
+                        sourcePlaylist: 'search',
+                        sourcePlaylistName: 'Spotify Search'
+                      }
+                    }));
+                    
+                    // Create a custom drag image
+                    const dragElement = e.currentTarget.cloneNode(true);
+                    dragElement.style.width = '400px';
+                    dragElement.style.opacity = '0.8';
+                    dragElement.style.transform = 'rotate(2deg)';
+                    dragElement.style.backgroundColor = '#1DB954';
+                    dragElement.style.border = '2px solid #1ed760';
+                    dragElement.style.borderRadius = '8px';
+                    dragElement.style.position = 'absolute';
+                    dragElement.style.top = '-1000px';
+                    document.body.appendChild(dragElement);
+                    
+                    e.dataTransfer.setDragImage(dragElement, 200, 30);
+                    
+                    // Clean up the drag image after a short delay
+                    setTimeout(() => {
+                      if (document.body.contains(dragElement)) {
+                        document.body.removeChild(dragElement);
+                      }
+                    }, 100);
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    borderBottom: index < searchResults.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'grab',
+                    transition: 'background-color 0.2s',
+                    userSelect: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(29, 185, 84, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.cursor = 'grabbing';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.cursor = 'grab';
+                  }}
+                >
+                  {/* Drag Handle */}
+                  <div style={{ 
+                    marginRight: '8px', 
+                    fontSize: '14px', 
+                    opacity: '0.5',
+                    cursor: 'grab'
+                  }}>
+                    ⋮⋮
+                  </div>
+
+                  {/* Album Art */}
+                  {song.album?.images?.[0]?.url && (
+                    <img 
+                      src={song.album.images[2]?.url || song.album.images[1]?.url || song.album.images[0]?.url}
+                      alt={`${song.album.name} album cover`}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '4px',
+                        objectFit: 'cover',
+                        flexShrink: 0
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  )}
+
+                  {/* Song Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontWeight: '500',
+                      fontSize: '14px',
+                      color: 'var(--mindaro)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {song.name}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      opacity: '0.7',
+                      color: 'var(--mindaro)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {song.artists?.[0]?.name || 'Unknown Artist'} • {song.album?.name || 'Unknown Album'}
+                    </div>
+                  </div>
+
+                  {/* Duration */}
+                  <div style={{
+                    fontSize: '11px',
+                    opacity: '0.6',
+                    color: 'var(--mindaro)',
+                    marginRight: '8px'
+                  }}>
+                    {formatDuration(song.duration_ms || 0)}
+                  </div>
+
+                  {/* Add Button */}
+                  <button
+                    onClick={() => handleAddSongFromSearch(song)}
+                    style={{
+                      padding: '4px 8px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      backgroundColor: '#1DB954',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#1ed760'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#1DB954'}
+                  >
+                    Add
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {searchQuery && !searchLoading && searchResults.length === 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              color: 'var(--mindaro)',
+              opacity: '0.7',
+              fontStyle: 'italic'
+            }}>
+              No songs found for "{searchQuery}"
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Unselected Modal */}
       <AddUnselectedModal

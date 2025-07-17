@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 
-const PlaylistPreview = ({ 
-  accessToken, 
-  selectedPlaylists, 
-  ratioConfig, 
-  mixOptions, 
+const PlaylistPreview = ({
+  accessToken,
+  selectedPlaylists,
+  ratioConfig,
+  mixOptions,
   onCreatePlaylist,
   onError,
   onPreviewOrderChange
@@ -19,26 +19,26 @@ const PlaylistPreview = ({
     try {
       setLoading(true);
       setPreview(null);
-      
+
       // Fetch tracks from selected playlists (same logic as PlaylistMixer)
       const { getSpotifyApi } = await import('../utils/spotify');
       const api = getSpotifyApi(accessToken);
-      
+
       const playlistTracks = {};
       for (const playlist of selectedPlaylists) {
         const tracks = await fetchAllPlaylistTracks(api, playlist.id);
         playlistTracks[playlist.id] = tracks;
       }
-      
+
       // Generate preview with first 20 songs
       const previewOptions = {
         ...mixOptions,
         totalSongs: mixOptions.useTimeLimit ? Math.min(60, mixOptions.totalSongs || 60) : 20,
         useTimeLimit: false // Always use song count for preview
       };
-      
+
       const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
-      
+
       // Calculate some stats
       const playlistStats = {};
       selectedPlaylists.forEach(playlist => {
@@ -50,13 +50,13 @@ const PlaylistPreview = ({
             .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
         };
       });
-      
+
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
         totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
       });
-      
+
     } catch (err) {
       onError('Failed to generate preview: ' + err.message);
       console.error(err);
@@ -69,19 +69,19 @@ const PlaylistPreview = ({
     let allTracks = [];
     let offset = 0;
     const limit = 100;
-    
+
     while (true) {
       const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
       const tracks = response.data.items
         .filter(item => item.track && item.track.id)
         .map(item => item.track);
-      
+
       allTracks = [...allTracks, ...tracks];
-      
+
       if (tracks.length < limit) break;
       offset += limit;
     }
-    
+
     return allTracks;
   };
 
@@ -116,7 +116,7 @@ const PlaylistPreview = ({
 
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
-    
+
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
@@ -125,27 +125,27 @@ const PlaylistPreview = ({
 
     const newTracks = [...preview.tracks];
     const draggedTrack = newTracks[draggedIndex];
-    
+
     // Remove the dragged track
     newTracks.splice(draggedIndex, 1);
-    
+
     // Insert at new position
     const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
     newTracks.splice(insertIndex, 0, draggedTrack);
-    
+
     // Update preview with new order
     const updatedPreview = {
       ...preview,
       tracks: newTracks
     };
-    
+
     setPreview(updatedPreview);
-    
+
     // Notify parent component of the new order
     if (onPreviewOrderChange) {
       onPreviewOrderChange(newTracks);
     }
-    
+
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -155,6 +155,8 @@ const PlaylistPreview = ({
     setDragOverIndex(null);
   };
 
+
+
   if (selectedPlaylists.length < 2) {
     return null;
   }
@@ -163,20 +165,20 @@ const PlaylistPreview = ({
     <div className="card">
       <h2>👀 Preview Your Mix</h2>
       <p>See how your playlist will look before creating it</p>
-      
+
       <div style={{ marginBottom: '20px' }}>
-        <button 
-          className="btn" 
+        <button
+          className="btn"
           onClick={generatePreview}
           disabled={loading}
           style={{ marginRight: '12px' }}
         >
           {loading ? 'Generating Preview...' : '🔍 Generate Preview'}
         </button>
-        
+
         {preview && (
-          <button 
-            className="btn" 
+          <button
+            className="btn"
             onClick={onCreatePlaylist}
             style={{ background: 'var(--moss-green)' }}
           >
@@ -185,13 +187,15 @@ const PlaylistPreview = ({
         )}
       </div>
 
+
+
       {preview && (
         <div>
           {/* Stats Summary */}
-          <div style={{ 
-            background: 'var(--hunter-green)', 
-            padding: '16px', 
-            borderRadius: '8px', 
+          <div style={{
+            background: 'var(--hunter-green)',
+            padding: '16px',
+            borderRadius: '8px',
             marginBottom: '20px',
             border: '1px solid var(--fern-green)'
           }}>
@@ -212,15 +216,15 @@ const PlaylistPreview = ({
           </div>
 
           {/* Track List */}
-          <div style={{ 
-            background: 'var(--hunter-green)', 
-            borderRadius: '8px', 
+          <div style={{
+            background: 'var(--hunter-green)',
+            borderRadius: '8px',
             border: '1px solid var(--fern-green)',
             maxHeight: '400px',
             overflowY: 'auto'
           }}>
-            <div style={{ 
-              padding: '12px 16px', 
+            <div style={{
+              padding: '12px 16px',
               borderBottom: '1px solid var(--fern-green)',
               position: 'sticky',
               top: 0,
@@ -232,14 +236,14 @@ const PlaylistPreview = ({
                 💡 Drag and drop to reorder tracks
               </div>
             </div>
-            
+
             {preview.tracks.map((track, index) => {
               const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
               const isDragging = draggedIndex === index;
               const isDragOver = dragOverIndex === index;
-              
+
               return (
-                <div 
+                <div
                   key={`${track.id}-${index}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, index)}
@@ -247,8 +251,8 @@ const PlaylistPreview = ({
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  style={{ 
-                    padding: '8px 16px', 
+                  style={{
+                    padding: '8px 16px',
                     borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -262,9 +266,9 @@ const PlaylistPreview = ({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                    <div style={{ 
-                      marginRight: '12px', 
-                      fontSize: '16px', 
+                    <div style={{
+                      marginRight: '12px',
+                      fontSize: '16px',
                       opacity: '0.5',
                       cursor: 'grab'
                     }}>
@@ -275,24 +279,59 @@ const PlaylistPreview = ({
                         {index + 1}. {track.name}
                       </div>
                       <div style={{ fontSize: '14px', opacity: '0.7' }}>
-                        {track.artists?.[0]?.name || 'Unknown Artist'} • 
-                        <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
-                          {sourcePlaylist?.name || 'Unknown Playlist'}
+                        {track.artists?.[0]?.name || 'Unknown Artist'} •
+                        <span style={{
+                          color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
+                          marginLeft: '4px'
+                        }}>
+                          {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', opacity: '0.6' }}>
-                    {formatDuration(track.duration_ms || 0)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ fontSize: '12px', opacity: '0.6' }}>
+                      {formatDuration(track.duration_ms || 0)}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveTrack(index);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--mindaro)',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        borderRadius: '3px',
+                        opacity: '0.5',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.opacity = '1';
+                        e.target.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                        e.target.style.color = '#ff6b6b';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.opacity = '0.5';
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = 'var(--mindaro)';
+                      }}
+                      title="Remove track"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
-          
-          <div style={{ 
-            marginTop: '12px', 
-            fontSize: '12px', 
+
+          <div style={{
+            marginTop: '12px',
+            fontSize: '12px',
             opacity: '0.7',
             textAlign: 'center'
           }}>

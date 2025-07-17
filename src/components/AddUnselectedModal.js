@@ -196,20 +196,7 @@ const AddUnselectedModal = ({
     filterUnselectedTracks();
   }, [filterUnselectedTracks]);
 
-  useEffect(() => {
-    if (isOpen) {
-      // Lock body scroll when modal opens
-      document.body.style.overflow = 'hidden';
-    } else {
-      // Unlock body scroll when modal closes
-      document.body.style.overflow = 'unset';
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  // Removed scroll lock - allow page scrolling while modal is open
 
   if (!isOpen) return null;
 
