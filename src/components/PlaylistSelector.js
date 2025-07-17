@@ -93,12 +93,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     }
   };
 
-  const handleRemovePlaylist = (playlistId) => {
-    const playlist = selectedPlaylists.find(p => p.id === playlistId);
-    if (playlist) {
-      onPlaylistSelect(playlist); // This will remove it due to toggle logic
-    }
-  };
+
 
   return (
     <div className="card">
