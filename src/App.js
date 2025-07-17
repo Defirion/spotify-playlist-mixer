@@ -5,8 +5,9 @@ import PlaylistSelector from './components/PlaylistSelector';
 import RatioConfig from './components/RatioConfig';
 import PlaylistMixer from './components/PlaylistMixer';
 import PresetTemplates from './components/PresetTemplates';
-import PlaylistPreview from './components/PlaylistPreview';
-import ErrorHandler from './components/ErrorHandler';
+
+import ToastError from './components/ToastError';
+import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 
@@ -68,7 +69,10 @@ function MainApp() {
     setMixOptions(prev => ({
       ...prev,
       popularityStrategy: strategy,
-      ...settings,
+      recencyBoost: settings.recencyBoost,
+      shuffleWithinGroups: settings.shuffleWithinGroups,
+      useTimeLimit: settings.useTimeLimit || false,
+      targetDuration: settings.targetDuration || prev.targetDuration,
       playlistName: `${presetName} Mix`
     }));
     setError(null);
@@ -81,11 +85,6 @@ function MainApp() {
 
   const handleDismissError = () => {
     setError(null);
-  };
-
-  const handleRetryError = () => {
-    setError(null);
-    // Could add specific retry logic here
   };
 
   if (!accessToken) {
@@ -107,10 +106,9 @@ function MainApp() {
         <p>Mix your playlists with custom ratios</p>
       </div>
 
-      <ErrorHandler 
+      <ToastError 
         error={error} 
         onDismiss={handleDismissError}
-        onRetry={handleRetryError}
       />
 
       <PlaylistSelector
@@ -133,16 +131,7 @@ function MainApp() {
         />
       )}
 
-      {selectedPlaylists.length > 1 && (
-        <PlaylistPreview
-          accessToken={accessToken}
-          selectedPlaylists={selectedPlaylists}
-          ratioConfig={ratioConfig}
-          mixOptions={mixOptions}
-          onCreatePlaylist={handleCreatePlaylist}
-          onError={setError}
-        />
-      )}
+
 
       {selectedPlaylists.length > 1 && (
         <PlaylistMixer
@@ -171,6 +160,8 @@ function MainApp() {
           )}
         </div>
       )}
+
+      <ScrollToBottom />
     </div>
   );
 }

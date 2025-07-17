@@ -261,6 +261,130 @@ input[type="range"]:hover::-moz-range-thumb {
   border: 1px solid var(--fern-green);
 }
 
+.playlist-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  margin-right: 12px;
+  object-fit: cover;
+}
+
+.playlist-info {
+  flex: 1;
+}
+
+.preset-card {
+  background: var(--hunter-green);
+  border: 1px solid var(--fern-green);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.preset-card:hover {
+  background: var(--fern-green);
+  transform: translateY(-2px);
+}
+
+.toast-error {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-content {
+  background: rgba(79, 119, 45, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--fern-green);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(19, 42, 19, 0.3);
+}
+
+.toast-content span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.toast-content button {
+  background: none;
+  border: none;
+  color: var(--moss-green);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.toast-content button:hover {
+  background: rgba(144, 169, 85, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.scroll-to-bottom {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--fern-green);
+  color: var(--mindaro);
+  border: 2px solid var(--moss-green);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(19, 42, 19, 0.3);
+  transition: all 0.3s ease;
+  z-index: 999;
+  animation: bounce 2s infinite;
+}
+
+.scroll-to-bottom:hover {
+  background: var(--moss-green);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(19, 42, 19, 0.4);
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
 .ratio-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

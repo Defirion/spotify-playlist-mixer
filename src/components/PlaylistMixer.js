@@ -5,6 +5,20 @@ import { mixPlaylists } from '../utils/playlistMixer';
 const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
   const [loading, setLoading] = useState(false);
   const [localMixOptions, setLocalMixOptions] = useState(mixOptions);
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Sync localMixOptions with mixOptions when it changes (from presets)
+  React.useEffect(() => {
+    setLocalMixOptions(mixOptions);
+    // Clear preview when settings change so user knows to regenerate
+    setPreview(null);
+  }, [mixOptions]);
+
+  // Clear preview when ratioConfig changes
+  React.useEffect(() => {
+    setPreview(null);
+  }, [ratioConfig]);
 
   const handleMix = async () => {
     try {
@@ -97,6 +111,64 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     }
   };
 
+  const generatePreview = async () => {
+    try {
+      setPreviewLoading(true);
+      setPreview(null);
+      
+      const api = getSpotifyApi(accessToken);
+      
+      const playlistTracks = {};
+      for (const playlist of selectedPlaylists) {
+        const tracks = await fetchAllPlaylistTracks(api, playlist.id);
+        playlistTracks[playlist.id] = tracks;
+      }
+      
+      // Generate preview that maintains proper ratios
+      let previewSongCount;
+      if (localMixOptions.useTimeLimit) {
+        // For time-based: estimate songs needed, then scale down proportionally
+        const estimatedSongs = Math.ceil(localMixOptions.targetDuration / 3.5); // ~3.5 min per song
+        previewSongCount = Math.min(Math.max(estimatedSongs * 0.3, 20), 50); // 30% of estimated, min 20, max 50
+      } else {
+        // For song-count: use proportional sample
+        previewSongCount = Math.min(Math.max(localMixOptions.totalSongs * 0.3, 20), 50); // 30% of total, min 20, max 50
+      }
+      
+      const previewOptions = {
+        ...localMixOptions,
+        totalSongs: Math.round(previewSongCount),
+        useTimeLimit: false // Always use song count for preview performance
+      };
+      
+      const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
+      
+      // Calculate some stats
+      const playlistStats = {};
+      selectedPlaylists.forEach(playlist => {
+        playlistStats[playlist.id] = {
+          name: playlist.name,
+          count: previewTracks.filter(track => track.sourcePlaylist === playlist.id).length,
+          totalDuration: previewTracks
+            .filter(track => track.sourcePlaylist === playlist.id)
+            .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        };
+      });
+      
+      setPreview({
+        tracks: previewTracks,
+        stats: playlistStats,
+        totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+      });
+      
+    } catch (err) {
+      onError('Failed to generate preview: ' + err.message);
+      console.error(err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   const fetchAllPlaylistTracks = async (api, playlistId) => {
     let allTracks = [];
     let offset = 0;
@@ -115,6 +187,19 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     }
     
     return allTracks;
+  };
+
+  const formatDuration = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatTotalDuration = (ms) => {
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
   return (
@@ -247,6 +332,112 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         </div>
       </div>
       
+      {/* Preview Section */}
+      <div style={{ marginBottom: '20px', paddingTop: '20px', borderTop: '1px solid var(--fern-green)' }}>
+        <h3>👀 Preview Your Mix</h3>
+        <p style={{ marginBottom: '16px', fontSize: '14px', opacity: '0.8' }}>
+          See how your playlist will look before creating it
+        </p>
+        
+        <button 
+          className="btn" 
+          onClick={generatePreview}
+          disabled={previewLoading || selectedPlaylists.length < 2}
+          style={{ marginRight: '12px' }}
+        >
+          {previewLoading ? 'Generating Preview...' : '🔍 Generate Preview'}
+        </button>
+      </div>
+
+      {preview && (
+        <div style={{ marginBottom: '20px' }}>
+          {/* Stats Summary */}
+          <div style={{ 
+            background: 'var(--hunter-green)', 
+            padding: '16px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid var(--fern-green)'
+          }}>
+            <h4 style={{ margin: '0 0 12px 0' }}>📊 Preview Stats</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              {Object.entries(preview.stats).map(([playlistId, stats]) => (
+                <div key={playlistId}>
+                  <strong>{stats.name}:</strong><br />
+                  <span style={{ fontSize: '14px', opacity: '0.8' }}>
+                    {stats.count} songs • {formatTotalDuration(stats.totalDuration)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--fern-green)' }}>
+              <strong>Total Preview: {preview.tracks.length} songs • {formatTotalDuration(preview.totalDuration)}</strong>
+            </div>
+          </div>
+
+          {/* Track List */}
+          <div style={{ 
+            background: 'var(--hunter-green)', 
+            borderRadius: '8px', 
+            border: '1px solid var(--fern-green)',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            marginBottom: '16px'
+          }}>
+            <div style={{ 
+              padding: '12px 16px', 
+              borderBottom: '1px solid var(--fern-green)',
+              position: 'sticky',
+              top: 0,
+              background: 'var(--hunter-green)',
+              zIndex: 1
+            }}>
+              <strong>🎵 First {preview.tracks.length} Songs</strong>
+            </div>
+            
+            {preview.tracks.map((track, index) => {
+              const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
+              return (
+                <div 
+                  key={`${track.id}-${index}`}
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '500', fontSize: '14px' }}>
+                      {index + 1}. {track.name}
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                      {track.artists?.[0]?.name || 'Unknown Artist'} • 
+                      <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
+                        {sourcePlaylist?.name || 'Unknown Playlist'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', opacity: '0.6' }}>
+                    {formatDuration(track.duration_ms || 0)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div style={{ 
+            fontSize: '11px', 
+            opacity: '0.7',
+            textAlign: 'center',
+            marginBottom: '16px'
+          }}>
+            This is just a preview. Your full playlist will have {localMixOptions.useTimeLimit ? `${localMixOptions.targetDuration} minutes` : `${localMixOptions.totalSongs} songs`} of music.
+          </div>
+        </div>
+      )}
+
       <button 
         className="btn" 
         onClick={handleMix} 

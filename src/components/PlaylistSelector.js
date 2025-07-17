@@ -44,7 +44,13 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       const response = await api.get(`/playlists/${playlistId}`);
       const playlist = response.data;
       
-      onPlaylistSelect(playlist);
+      // Add cover image URL if available
+      const playlistWithImage = {
+        ...playlist,
+        coverImage: playlist.images?.[0]?.url || null
+      };
+      
+      onPlaylistSelect(playlistWithImage);
       setPlaylistUrl('');
       
     } catch (err) {
@@ -105,10 +111,19 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
           <h3>Selected Playlists ({selectedPlaylists.length})</h3>
           {selectedPlaylists.map(playlist => (
             <div key={playlist.id} className="playlist-item">
-              <div>
-                <strong>{playlist.name}</strong>
-                <div style={{ fontSize: '14px', opacity: '0.8' }}>
-                  {playlist.tracks.total} tracks • by {playlist.owner.display_name}
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {playlist.coverImage && (
+                  <img 
+                    src={playlist.coverImage} 
+                    alt={playlist.name} 
+                    className="playlist-cover" 
+                  />
+                )}
+                <div className="playlist-info">
+                  <strong>{playlist.name}</strong>
+                  <div style={{ fontSize: '14px', opacity: '0.8' }}>
+                    {playlist.tracks.total} tracks • by {playlist.owner.display_name}
+                  </div>
                 </div>
               </div>
               <button

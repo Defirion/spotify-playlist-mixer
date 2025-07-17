@@ -241,15 +241,33 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
   console.log('Valid playlists:', playlistIds.length);
 
+  // Calculate total weight for proper ratio distribution
+  const totalWeight = playlistIds.reduce((sum, id) => sum + (ratioConfig[id].weight || 1), 0);
+  
+  // Calculate target counts for each playlist based on weights
+  const targetCounts = {};
+  const estimatedTotalSongs = useTimeLimit ? Math.ceil(targetDuration / 3.5) : totalSongs;
+  
+  playlistIds.forEach(playlistId => {
+    const weight = ratioConfig[playlistId].weight || 1;
+    const targetRatio = weight / totalWeight;
+    targetCounts[playlistId] = Math.round(estimatedTotalSongs * targetRatio);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🎯 ${playlistId}: weight ${weight}/${totalWeight} = ${Math.round(targetRatio * 100)}% → ~${targetCounts[playlistId]} songs`);
+    }
+  });
+
   const mixedTracks = [];
+  const playlistCounts = {}; // Track songs added from each playlist
   const playlistDurations = {}; // Track total time added from each playlist
   
   // Initialize tracking for each playlist
   playlistIds.forEach(playlistId => {
+    playlistCounts[playlistId] = 0;
     playlistDurations[playlistId] = 0;
   });
 
-  let currentPlaylistIndex = 0;
   let attempts = 0;
   const maxAttempts = (totalSongs || 100) * 10;
 
@@ -261,11 +279,58 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     return mixedTracks.length < totalSongs;
   };
 
+  // Helper function to find which playlist needs more songs/time based on target ratios
+  const getNextPlaylistId = () => {
+    let bestPlaylistId = null;
+    let maxDeficit = -1;
+    
+    for (const playlistId of playlistIds) {
+      const config = ratioConfig[playlistId];
+      const targetRatio = (config.weight || 1) / totalWeight;
+      let currentRatio = 0;
+      
+      if (config.weightType === 'time') {
+        // For time-based balancing, compare duration ratios
+        const totalDurationSoFar = Object.values(playlistDurations).reduce((sum, dur) => sum + dur, 0);
+        if (totalDurationSoFar > 0) {
+          currentRatio = playlistDurations[playlistId] / totalDurationSoFar;
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          const currentMinutes = Math.round(playlistDurations[playlistId] / (1000 * 60));
+          const totalMinutes = Math.round(totalDurationSoFar / (1000 * 60));
+          console.log(`⏱️ ${playlistId}: ${currentMinutes}m/${totalMinutes}m = ${Math.round(currentRatio * 100)}% (target: ${Math.round(targetRatio * 100)}%)`);
+        }
+      } else {
+        // For frequency-based balancing, compare song count ratios
+        if (mixedTracks.length > 0) {
+          currentRatio = playlistCounts[playlistId] / mixedTracks.length;
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🎵 ${playlistId}: ${playlistCounts[playlistId]}/${mixedTracks.length} = ${Math.round(currentRatio * 100)}% (target: ${Math.round(targetRatio * 100)}%)`);
+        }
+      }
+      
+      // Calculate how far behind this playlist is from its target ratio
+      const deficit = targetRatio - currentRatio;
+      
+      if (deficit > maxDeficit && cleanedPlaylistTracks[playlistId].length > 0) {
+        maxDeficit = deficit;
+        bestPlaylistId = playlistId;
+      }
+    }
+    
+    return bestPlaylistId;
+  };
+
   while (shouldContinue() && attempts < maxAttempts) {
     attempts++;
 
-    // Simple alternation - cycle through playlists
-    const selectedPlaylistId = playlistIds[currentPlaylistIndex % playlistIds.length];
+    // Choose playlist based on weight ratios, not simple alternation
+    const selectedPlaylistId = getNextPlaylistId();
+    if (!selectedPlaylistId) break;
+    
     const config = ratioConfig[selectedPlaylistId];
 
     // Get appropriate tracks based on position and strategy
@@ -286,7 +351,6 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
     // Skip if no more tracks available
     if (availableTracks.length === 0) {
-      currentPlaylistIndex++;
       continue;
     }
 
@@ -350,8 +414,9 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
         
         usedTrackIds.add(selectedTrack.id);
         
-        // Track duration for balancing
+        // Track duration and count for balancing
         playlistDurations[selectedPlaylistId] += selectedTrack.duration_ms || 0;
+        playlistCounts[selectedPlaylistId]++;
         songsAdded++;
         
         // Remove used track from available tracks
@@ -365,9 +430,6 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     }
     
     console.log(`Added ${songsAdded} songs. Total: ${mixedTracks.length}`);
-    
-    // Move to next playlist
-    currentPlaylistIndex++;
   }
 
   // Trim to target if using time limit

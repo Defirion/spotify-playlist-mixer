@@ -24,7 +24,32 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
               padding: '16px', 
               borderRadius: '8px' 
             }}>
-              <h4>{playlist.name}</h4>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                {playlist.coverImage && (
+                  <img 
+                    src={playlist.coverImage} 
+                    alt={playlist.name} 
+                    className="playlist-cover" 
+                    style={{ marginRight: '12px' }}
+                  />
+                )}
+                <div className="playlist-info">
+                  <strong style={{ fontSize: '16px' }}>{playlist.name}</strong>
+                  <div style={{ fontSize: '14px', opacity: '0.8', marginTop: '2px' }}>
+                    {playlist.tracks.total} tracks • avg {(() => {
+                      // Calculate average track length based on playlist name
+                      const name = playlist.name.toLowerCase();
+                      if (name.includes('salsa')) {
+                        return '4:30';
+                      } else if (name.includes('bachata')) {
+                        return '3:30';
+                      } else {
+                        return '3:30';
+                      }
+                    })()} per song
+                  </div>
+                </div>
+              </div>
               
               <div className="input-group">
                 <label>Songs per group: {config.min === config.max ? config.min : `${config.min}-${config.max}`}</label>
@@ -98,19 +123,26 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
               
               <div className="input-group">
                 <label>
-                  Frequency: {['Low', 'Normal', 'High', 'Very High'][config.weight - 1] || 'Normal'}
+                  Frequency: {(() => {
+                    const weight = config.weight || 2;
+                    if (weight <= 2) return 'Low';
+                    if (weight <= 4) return 'Normal';
+                    if (weight <= 6) return 'High';
+                    if (weight <= 8) return 'Very High';
+                    return 'Maximum';
+                  })()}
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                   <span style={{ fontSize: '12px', opacity: '0.7' }}>Low</span>
                   <input
                     type="range"
                     min="1"
-                    max="4"
+                    max="10"
                     value={config.weight}
                     onChange={(e) => handleConfigChange(playlist.id, 'weight', e.target.value)}
                     style={{ flex: 1 }}
                   />
-                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Very High</span>
+                  <span style={{ fontSize: '12px', opacity: '0.7' }}>Maximum</span>
                 </div>
                 <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
                   {config.weightType === 'time' 
@@ -129,12 +161,14 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
         <div style={{ fontSize: '14px', marginTop: '8px' }}>
           {selectedPlaylists.map(playlist => {
             const config = ratioConfig[playlist.id] || { min: 1, max: 2, weight: 1 };
-            const frequencyText = {
-              1: 'Low',
-              2: 'Normal', 
-              3: 'High',
-              4: 'Very High'
-            }[config.weight] || 'Normal';
+            const frequencyText = (() => {
+              const weight = config.weight || 2;
+              if (weight <= 2) return 'Low';
+              if (weight <= 4) return 'Normal';
+              if (weight <= 6) return 'High';
+              if (weight <= 8) return 'Very High';
+              return 'Maximum';
+            })();
             
             return (
               <div key={playlist.id} style={{ marginBottom: '4px' }}>
@@ -154,18 +188,49 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
                   return sum + config.weight;
                 }, 0);
                 
+                // Calculate average song duration for each playlist
+                const playlistAvgDurations = {};
+                selectedPlaylists.forEach(playlist => {
+                  // Estimate average song duration (you can make this more accurate by fetching actual data)
+                  // For now, use reasonable estimates: Salsa ~4.5min, Bachata ~3.5min, others ~3.5min
+                  const name = playlist.name.toLowerCase();
+                  if (name.includes('salsa')) {
+                    playlistAvgDurations[playlist.id] = 4.5; // minutes
+                  } else if (name.includes('bachata')) {
+                    playlistAvgDurations[playlist.id] = 3.5; // minutes
+                  } else {
+                    playlistAvgDurations[playlist.id] = 3.5; // minutes - default
+                  }
+                });
+                
                 return selectedPlaylists.map(playlist => {
                   const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
                   const percentage = Math.round((config.weight / totalWeight) * 100);
                   const avgSongs = Math.round((config.min + config.max) / 2);
-                  const estimatedSongs = Math.round((percentage / 100) * 100);
+                  const avgDuration = playlistAvgDurations[playlist.id] || 3.5;
                   const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
                   
-                  return (
-                    <div key={playlist.id}>
-                      • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
-                    </div>
-                  );
+                  if (config.weightType === 'time') {
+                    // For time-balanced, calculate based on duration
+                    const totalMinutes = 100 * 3.5; // Assume 100 songs * 3.5 min average
+                    const playlistMinutes = Math.round((percentage / 100) * totalMinutes);
+                    const estimatedSongs = Math.round(playlistMinutes / avgDuration);
+                    
+                    return (
+                      <div key={playlist.id}>
+                        • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
+                      </div>
+                    );
+                  } else {
+                    // For frequency-based, use song count
+                    const estimatedSongs = Math.round((percentage / 100) * 100);
+                    
+                    return (
+                      <div key={playlist.id}>
+                        • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
+                      </div>
+                    );
+                  }
                 });
               })()}
             </div>
