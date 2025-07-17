@@ -206,26 +206,11 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
   const getTotalAvailableContent = () => {
     const totalSongs = selectedPlaylists.reduce((sum, playlist) => sum + playlist.tracks.total, 0);
     
-    // Estimate total duration based on playlist names and song counts
-    const totalDurationMs = selectedPlaylists.reduce((sum, playlist) => {
-      const name = playlist.name.toLowerCase();
-      let avgDurationMs;
-      if (name.includes('salsa')) {
-        avgDurationMs = 4.5 * 60 * 1000; // 4.5 minutes
-      } else if (name.includes('bachata')) {
-        avgDurationMs = 3.5 * 60 * 1000; // 3.5 minutes
-      } else {
-        avgDurationMs = 3.5 * 60 * 1000; // 3.5 minutes default
-      }
-      return sum + (playlist.tracks.total * avgDurationMs);
-    }, 0);
-    
-    const totalDurationMinutes = Math.round(totalDurationMs / (1000 * 60));
-    
+    // Only show real duration data - no estimates
     return {
       totalSongs,
-      totalDurationMinutes,
-      totalDurationHours: totalDurationMinutes / 60
+      totalDurationMinutes: null, // Will be calculated when real data is available
+      totalDurationHours: null
     };
   };
 
@@ -280,7 +265,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     const ratioBreakdown = getRatioBreakdownPoint();
     
     if (localMixOptions.useTimeLimit) {
-      if (localMixOptions.targetDuration > available.totalDurationMinutes) {
+      // Only show time-based warnings when we have real duration data
+      if (available.totalDurationMinutes !== null && localMixOptions.targetDuration > available.totalDurationMinutes) {
         // Calculate when ratios will break down for time-based playlists
         const perfectRatioMinutes = ratioBreakdown ? Math.round((ratioBreakdown.perfectRatioLimit * 3.5)) : available.totalDurationMinutes;
         
@@ -341,7 +327,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           : `${ratioBreakdown.perfectRatioLimit} songs`,
         totalAvailable: available.totalSongs,
         totalAvailableFormatted: localMixOptions.useTimeLimit
-          ? formatTotalDuration(available.totalDurationMinutes * 60 * 1000)
+          ? (available.totalDurationMinutes !== null ? formatTotalDuration(available.totalDurationMinutes * 60 * 1000) : 'calculating...')
           : `${available.totalSongs} songs`
       };
     }

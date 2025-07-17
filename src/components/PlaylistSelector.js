@@ -44,13 +44,39 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       const response = await api.get(`/playlists/${playlistId}`);
       const playlist = response.data;
       
-      // Add cover image URL if available
-      const playlistWithImage = {
+      // Fetch all tracks to calculate real average duration
+      let allTracks = [];
+      let offset = 0;
+      const limit = 100;
+      
+      while (true) {
+        const tracksResponse = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
+        const tracks = tracksResponse.data.items
+          .filter(item => item.track && item.track.id && item.track.duration_ms) // Filter out null tracks and those without duration
+          .map(item => item.track);
+        
+        allTracks = [...allTracks, ...tracks];
+        
+        if (tracks.length < limit) break;
+        offset += limit;
+      }
+      
+      // Calculate real average duration
+      let realAverageDuration = null;
+      if (allTracks.length > 0) {
+        const totalDurationMs = allTracks.reduce((sum, track) => sum + track.duration_ms, 0);
+        realAverageDuration = Math.round(totalDurationMs / allTracks.length / 1000); // Convert to seconds
+      }
+      
+      // Add cover image URL and real duration data
+      const playlistWithRealData = {
         ...playlist,
-        coverImage: playlist.images?.[0]?.url || null
+        coverImage: playlist.images?.[0]?.url || null,
+        realAverageDurationSeconds: realAverageDuration,
+        tracksWithDuration: allTracks.length // Tracks that have duration data
       };
       
-      onPlaylistSelect(playlistWithImage);
+      onPlaylistSelect(playlistWithRealData);
       setPlaylistUrl('');
       
     } catch (err) {
@@ -96,7 +122,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
               onClick={handleAddPlaylist}
               disabled={loading || !playlistUrl.trim()}
             >
-              {loading ? 'Adding...' : 'Add'}
+              {loading ? 'Adding & Calculating...' : 'Add'}
             </button>
           </div>
         </div>

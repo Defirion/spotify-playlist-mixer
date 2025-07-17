@@ -1,6 +1,14 @@
 import React from 'react';
 
 const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
+  // Helper function to format duration from seconds to MM:SS
+  const formatDurationFromSeconds = (seconds) => {
+    if (!seconds) return null;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   const handleConfigChange = (playlistId, field, value) => {
     const currentConfig = ratioConfig[playlistId] || { min: 1, max: 2, weight: 2, weightType: 'frequency' };
     const newValue = field === 'weightType' ? value : (parseInt(value) || 1);
@@ -36,17 +44,15 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
                 <div className="playlist-info">
                   <strong style={{ fontSize: '16px' }}>{playlist.name}</strong>
                   <div style={{ fontSize: '14px', opacity: '0.8', marginTop: '2px' }}>
-                    {playlist.tracks.total} tracks • avg {(() => {
-                      // Calculate average track length based on playlist name
-                      const name = playlist.name.toLowerCase();
-                      if (name.includes('salsa')) {
-                        return '4:30';
-                      } else if (name.includes('bachata')) {
-                        return '3:30';
-                      } else {
-                        return '3:30';
-                      }
-                    })()} per song
+                    {playlist.tracks.total} tracks
+                    {playlist.realAverageDurationSeconds && (
+                      <span> • avg {formatDurationFromSeconds(playlist.realAverageDurationSeconds)} per song</span>
+                    )}
+                    {playlist.realAverageDurationSeconds && playlist.tracksWithDuration !== playlist.tracks.total && (
+                      <span style={{ fontSize: '12px', opacity: '0.6' }}>
+                        {' '}({playlist.tracksWithDuration} with duration data)
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -188,49 +194,20 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate }) => {
                   return sum + config.weight;
                 }, 0);
                 
-                // Calculate average song duration for each playlist
-                const playlistAvgDurations = {};
-                selectedPlaylists.forEach(playlist => {
-                  // Estimate average song duration (you can make this more accurate by fetching actual data)
-                  // For now, use reasonable estimates: Salsa ~4.5min, Bachata ~3.5min, others ~3.5min
-                  const name = playlist.name.toLowerCase();
-                  if (name.includes('salsa')) {
-                    playlistAvgDurations[playlist.id] = 4.5; // minutes
-                  } else if (name.includes('bachata')) {
-                    playlistAvgDurations[playlist.id] = 3.5; // minutes
-                  } else {
-                    playlistAvgDurations[playlist.id] = 3.5; // minutes - default
-                  }
-                });
+
                 
                 return selectedPlaylists.map(playlist => {
                   const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
                   const percentage = Math.round((config.weight / totalWeight) * 100);
                   const avgSongs = Math.round((config.min + config.max) / 2);
-                  const avgDuration = playlistAvgDurations[playlist.id] || 3.5;
                   const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
+                  const estimatedSongs = Math.round((percentage / 100) * 100);
                   
-                  if (config.weightType === 'time') {
-                    // For time-balanced, calculate based on duration
-                    const totalMinutes = 100 * 3.5; // Assume 100 songs * 3.5 min average
-                    const playlistMinutes = Math.round((percentage / 100) * totalMinutes);
-                    const estimatedSongs = Math.round(playlistMinutes / avgDuration);
-                    
-                    return (
-                      <div key={playlist.id}>
-                        • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
-                      </div>
-                    );
-                  } else {
-                    // For frequency-based, use song count
-                    const estimatedSongs = Math.round((percentage / 100) * 100);
-                    
-                    return (
-                      <div key={playlist.id}>
-                        • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
-                      </div>
-                    );
-                  }
+                  return (
+                    <div key={playlist.id}>
+                      • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
+                    </div>
+                  );
                 });
               })()}
             </div>
