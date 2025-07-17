@@ -212,42 +212,63 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
         
         {selectedPlaylists.length > 1 && (
           <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(29, 185, 84, 0.1)', borderRadius: '4px' }}>
-            <strong>Example Mix (per 100 songs):</strong>
-            <div style={{ fontSize: '13px', marginTop: '4px' }}>
-              {(() => {
-                const totalWeight = selectedPlaylists.reduce((sum, p) => {
-                  const config = ratioConfig[p.id] || { weight: 1 };
-                  return sum + config.weight;
-                }, 0);
-                
-
-                
-                return selectedPlaylists.map(playlist => {
-                  const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
-                  const percentage = Math.round((config.weight / totalWeight) * 100);
-                  const avgSongs = Math.round((config.min + config.max) / 2);
-                  const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
-                  
-                  let estimatedSongs;
-                  if (config.weightType === 'time' && playlist.realAverageDurationSeconds) {
-                    // For time-balanced: calculate based on real average durations
-                    const playlistAvgMinutes = playlist.realAverageDurationSeconds / 60;
-                    const totalMinutes = 100 * 3.5; // Assume 100 songs * 3.5 min average for the mix
-                    const playlistMinutes = Math.round((percentage / 100) * totalMinutes);
-                    estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
-                  } else {
-                    // For frequency-based: use simple percentage
-                    estimatedSongs = Math.round((percentage / 100) * 100);
-                  }
-                  
-                  return (
-                    <div key={playlist.id}>
-                      • <strong>{playlist.name}:</strong> ~{estimatedSongs} songs ({percentage}%) in groups of {avgSongs} ({weightTypeText})
-                    </div>
-                  );
-                });
-              })()}
-            </div>
+            {(() => {
+              const totalWeight = selectedPlaylists.reduce((sum, p) => {
+                const config = ratioConfig[p.id] || { weight: 1 };
+                return sum + config.weight;
+              }, 0);
+              
+              // Check if any playlists use time-balanced weighting
+              const hasTimeBalanced = selectedPlaylists.some(p => {
+                const config = ratioConfig[p.id] || { weightType: 'frequency' };
+                return config.weightType === 'time';
+              });
+              
+              const exampleTitle = hasTimeBalanced ? 'Example Mix (per 60 minutes):' : 'Example Mix (per 100 songs):';
+              const baseAmount = hasTimeBalanced ? 60 : 100; // 60 minutes or 100 songs
+              
+              return (
+                <>
+                  <strong>{exampleTitle}</strong>
+                  <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                    {selectedPlaylists.map(playlist => {
+                      const config = ratioConfig[playlist.id] || { weight: 1, weightType: 'frequency' };
+                      const percentage = Math.round((config.weight / totalWeight) * 100);
+                      const avgSongs = Math.round((config.min + config.max) / 2);
+                      const weightTypeText = config.weightType === 'time' ? 'time-balanced' : 'frequency-based';
+                      
+                      let estimatedSongs, displayText;
+                      
+                      if (hasTimeBalanced && config.weightType === 'time' && playlist.realAverageDurationSeconds) {
+                        // Time-balanced calculation: distribute 60 minutes based on weight percentage
+                        const playlistAvgMinutes = playlist.realAverageDurationSeconds / 60;
+                        const playlistMinutes = (percentage / 100) * baseAmount; // percentage of 60 minutes
+                        estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
+                        const formattedMinutes = playlistMinutes.toFixed(1);
+                        displayText = `~${estimatedSongs} songs (${formattedMinutes} min, ${percentage}%)`;
+                      } else if (hasTimeBalanced && config.weightType === 'frequency') {
+                        // For frequency-based in time context: estimate based on average duration
+                        const playlistAvgMinutes = playlist.realAverageDurationSeconds ? playlist.realAverageDurationSeconds / 60 : 3.5;
+                        const playlistMinutes = (percentage / 100) * baseAmount;
+                        estimatedSongs = Math.round(playlistMinutes / playlistAvgMinutes);
+                        const formattedMinutes = playlistMinutes.toFixed(1);
+                        displayText = `~${estimatedSongs} songs (${formattedMinutes} min, ${percentage}%)`;
+                      } else {
+                        // Pure frequency-based: simple percentage of 100 songs
+                        estimatedSongs = Math.round((percentage / 100) * baseAmount);
+                        displayText = `~${estimatedSongs} songs (${percentage}%)`;
+                      }
+                      
+                      return (
+                        <div key={playlist.id}>
+                          • <strong>{playlist.name}:</strong> {displayText} in groups of {avgSongs} ({weightTypeText})
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
