@@ -124,31 +124,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         playlistTracks[playlist.id] = tracks;
       }
       
-      // Generate preview - use full settings if toggle is enabled
-      let previewOptions;
-      if (localMixOptions.fullSamplePreview) {
-        // Use actual settings for full sample
-        previewOptions = { ...localMixOptions };
-      } else {
-        // Generate limited preview that maintains proper ratios
-        let previewSongCount;
-        if (localMixOptions.useTimeLimit) {
-          // For time-based: estimate songs needed, then scale down proportionally
-          const estimatedSongs = Math.ceil(localMixOptions.targetDuration / 3.5); // ~3.5 min per song
-          previewSongCount = Math.min(Math.max(estimatedSongs * 0.3, 20), 50); // 30% of estimated, min 20, max 50
-        } else {
-          // For song-count: use proportional sample
-          previewSongCount = Math.min(Math.max(localMixOptions.totalSongs * 0.3, 20), 50); // 30% of total, min 20, max 50
-        }
-        
-        previewOptions = {
-          ...localMixOptions,
-          totalSongs: Math.round(previewSongCount),
-          useTimeLimit: false // Always use song count for limited preview performance
-        };
-      }
-      
-      const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
+      // Generate full sample using actual settings
+      const previewTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
       
       // Calculate some stats
       const playlistStats = {};
@@ -652,26 +629,10 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       
       {/* Preview Section */}
       <div style={{ marginBottom: '20px', paddingTop: '20px', borderTop: '1px solid var(--fern-green)' }}>
-        <h3>👀 DEMO Preview Your Mix</h3>
+        <h3>👀 Preview Your Mix</h3>
         <p style={{ marginBottom: '16px', fontSize: '14px', opacity: '0.8' }}>
-          See how your playlist will look before creating it
+          Generate a full sample using your actual settings to see how your playlist will look
         </p>
-        
-        <label style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          cursor: 'pointer', 
-          marginBottom: '12px',
-          fontSize: '14px'
-        }}>
-          <input
-            type="checkbox"
-            checked={localMixOptions.fullSamplePreview || false}
-            onChange={(e) => setLocalMixOptions({...localMixOptions, fullSamplePreview: e.target.checked})}
-          />
-          Generate full sample playlist (uses your actual settings instead of limited preview)
-        </label>
         
         <button 
           className="btn" 
@@ -679,31 +640,24 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           disabled={previewLoading || selectedPlaylists.length < 2}
           style={{ marginRight: '12px' }}
         >
-          {previewLoading ? 
-            (localMixOptions.fullSamplePreview ? 'Generating Full Sample...' : 'Generating DEMO Preview...') : 
-            (localMixOptions.fullSamplePreview ? '🎵 Generate Full Sample' : '🔍 Generate DEMO Preview')
-          }
+          {previewLoading ? 'Generating Preview...' : '🎵 Generate Preview'}
         </button>
       </div>
 
       {preview && (
         <div style={{ marginBottom: '20px' }}>
-          {/* Important Notice - Moved Higher */}
+          {/* Preview Notice */}
           <div style={{ 
             fontSize: '13px', 
             opacity: '0.9',
             textAlign: 'center',
             marginBottom: '16px',
             padding: '12px',
-            background: localMixOptions.fullSamplePreview ? 'rgba(29, 185, 84, 0.15)' : 'rgba(144, 169, 85, 0.15)',
+            background: 'rgba(29, 185, 84, 0.15)',
             borderRadius: '8px',
-            border: localMixOptions.fullSamplePreview ? '1px solid #1DB954' : '1px solid var(--moss-green)'
+            border: '1px solid #1DB954'
           }}>
-            {localMixOptions.fullSamplePreview ? (
-              <><strong>🎵 FULL SAMPLE:</strong> This is your complete playlist using your actual settings ({localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`}).</>
-            ) : (
-              <><strong>📋 DEMO PREVIEW:</strong> This shows a sample of your mix. Your full playlist will have {localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`} of music with the same ratios and strategy.</>
-            )}
+            <strong>🎵 PREVIEW:</strong> This is your complete playlist using your actual settings ({localMixOptions.useTimeLimit ? `${(localMixOptions.targetDuration / 60).toFixed(1)} hours` : `${localMixOptions.totalSongs} songs`}).
           </div>
 
           {/* Stats Summary */}
@@ -714,7 +668,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             marginBottom: '16px',
             border: '1px solid var(--fern-green)'
           }}>
-            <h4 style={{ margin: '0 0 12px 0' }}>📊 DEMO Preview Stats</h4>
+            <h4 style={{ margin: '0 0 12px 0' }}>📊 Preview Stats</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               {Object.entries(preview.stats).map(([playlistId, stats]) => (
                 <div key={playlistId}>
@@ -907,27 +861,72 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             })()}
           </div>
           
-          {!localMixOptions.fullSamplePreview && (
-            <div style={{ 
-              fontSize: '11px', 
-              opacity: '0.7',
-              textAlign: 'center',
-              marginBottom: '16px'
-            }}>
-              This is just a preview. Your full playlist will have {localMixOptions.useTimeLimit ? `${localMixOptions.targetDuration} minutes` : `${localMixOptions.totalSongs} songs`} of music.
-            </div>
-          )}
+
         </div>
       )}
 
-      <button 
-        className="btn" 
-        onClick={handleMix} 
-        disabled={loading || selectedPlaylists.length < 2}
-        style={{ width: '100%', padding: '16px', fontSize: '18px' }}
-      >
-        {loading ? 'Creating Mixed Playlist...' : '🎵 Create Mixed Playlist'}
-      </button>
+      {preview && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            opacity: '0.8',
+            textAlign: 'center',
+            marginBottom: '16px',
+            padding: '12px',
+            background: 'rgba(255, 193, 7, 0.1)',
+            borderRadius: '6px',
+            border: '1px solid rgba(255, 193, 7, 0.3)'
+          }}>
+            <strong>⚠️ Note:</strong> This is a temporary preview playlist. Each generation creates a new mix with the same settings but different track selection and order.
+          </div>
+          
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <button 
+              className="btn" 
+              onClick={handleMix}
+              disabled={loading}
+              style={{ 
+                fontWeight: 'bold',
+                padding: '16px 32px',
+                fontSize: '18px',
+                width: '100%'
+              }}
+            >
+              {loading ? 'Creating Playlist...' : '🎵 Create This Playlist in Spotify'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {preview ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', opacity: '0.7', marginBottom: '8px' }}>
+            Not happy with this mix?
+          </div>
+          <button 
+            className="btn" 
+            onClick={generatePreview} 
+            disabled={previewLoading}
+            style={{ 
+              padding: '8px 16px', 
+              fontSize: '14px',
+              background: 'var(--moss-green)',
+              border: '2px solid var(--fern-green)'
+            }}
+          >
+            {previewLoading ? 'Regenerating...' : '🔄 Regenerate Preview'}
+          </button>
+        </div>
+      ) : (
+        <button 
+          className="btn" 
+          onClick={handleMix} 
+          disabled={loading || selectedPlaylists.length < 2}
+          style={{ width: '100%', padding: '16px', fontSize: '18px' }}
+        >
+          {loading ? 'Creating Mixed Playlist...' : '🎲 Mix & Create New Playlist'}
+        </button>
+      )}
       
       {loading && (
         <div style={{ marginTop: '16px', textAlign: 'center', opacity: '0.8' }}>
