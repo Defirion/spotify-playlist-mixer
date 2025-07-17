@@ -99,6 +99,17 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     setDropLinePosition(null);
   };
 
+  const handleRemoveTrack = (index) => {
+    const newTracks = [...localTracks];
+    newTracks.splice(index, 1);
+    setLocalTracks(newTracks);
+    
+    // Notify parent component of the new track list
+    if (onTrackOrderChange) {
+      onTrackOrderChange(newTracks);
+    }
+  };
+
   // Calculate relative popularity quadrants for track labeling
   const tracksWithPop = localTracks.filter(t => t.popularity !== undefined);
   const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
@@ -132,7 +143,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       }}>
         <strong>🎵 {localTracks.length} Songs</strong>
         <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-          💡 Drag and drop to reorder tracks before creating your playlist
+          💡 Drag and drop to reorder • Click ✕ to remove tracks
         </div>
       </div>
       
@@ -235,8 +246,36 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                 </div>
               </div>
             </div>
-            <div style={{ fontSize: '11px', opacity: '0.6' }}>
-              {formatDuration(track.duration_ms || 0)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '11px', opacity: '0.6' }}>
+                {formatDuration(track.duration_ms || 0)}
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveTrack(index);
+                }}
+                style={{
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#cc0000'}
+                onMouseLeave={(e) => e.target.style.background = '#ff4444'}
+                title="Remove track from playlist"
+              >
+                ×
+              </button>
             </div>
             
             {/* Drop line below - positioned absolutely within the track element */}

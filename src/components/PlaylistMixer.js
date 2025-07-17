@@ -26,6 +26,29 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
   const handlePreviewOrderChange = (reorderedTracks) => {
     setCustomTrackOrder(reorderedTracks);
+    
+    // Recalculate stats for the updated track list
+    if (preview && reorderedTracks) {
+      const updatedStats = {};
+      selectedPlaylists.forEach(playlist => {
+        updatedStats[playlist.id] = {
+          name: playlist.name,
+          count: reorderedTracks.filter(track => track.sourcePlaylist === playlist.id).length,
+          totalDuration: reorderedTracks
+            .filter(track => track.sourcePlaylist === playlist.id)
+            .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        };
+      });
+      
+      const updatedPreview = {
+        ...preview,
+        tracks: reorderedTracks,
+        stats: updatedStats,
+        totalDuration: reorderedTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+      };
+      
+      setPreview(updatedPreview);
+    }
   };
 
   const handleMix = async () => {
@@ -157,7 +180,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
-        totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0),
+        usedStrategy: localMixOptions.popularityStrategy
       });
       
     } catch (err) {
@@ -700,7 +724,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           </div>
 
           {/* Popularity Quadrants Analysis */}
-          {localMixOptions.popularityStrategy !== 'mixed' && (
+          {preview.usedStrategy !== 'mixed' && (
             <div style={{ 
               background: 'var(--hunter-green)', 
               padding: '16px', 
@@ -774,7 +798,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 );
               })()}
               <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '12px', textAlign: 'center' }}>
-                Strategy: <strong>{localMixOptions.popularityStrategy}</strong>
+                Strategy: <strong>{preview.usedStrategy}</strong>
                 {(() => {
                   const tracksWithPopularity = preview.tracks.filter(track => track.popularity !== undefined);
                   return tracksWithPopularity.length < preview.tracks.length && 

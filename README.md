@@ -1,6 +1,6 @@
 # 🎵 Spotify Playlist Mixer
 
-Create custom playlists with perfect ratios from your favorite Spotify playlists! Mix genres with intelligent popularity strategies and time balancing.
+Create custom playlists with perfect ratios from your favorite Spotify playlists! Mix genres with intelligent popularity strategies, drag-and-drop customization, and real-time preview capabilities.
 
 ## ✨ Features
 
@@ -31,12 +31,17 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 
 ### 🎨 **Enhanced User Experience**
 - **Playlist cover images**: Visual identification throughout the interface
-- **Live preview**: See your mix before creating the full playlist
+- **Interactive Preview System**: Full playlist preview with drag-and-drop customization
+- **Album Artwork Display**: 40x40px album covers next to each track for easy identification
+- **Drag & Drop Reordering**: Precise drop line indicators show exactly where tracks will be placed
+- **Track Removal**: Red X buttons to remove unwanted tracks from preview
+- **Real-time Stats Updates**: Preview stats and popularity distribution update instantly when tracks are modified
 - **Popularity quadrant analysis**: Visual breakdown of track distribution across popularity levels
 - **Color-coded track labels**: Easy identification of hits vs deep cuts with improved contrast
-- **Toast notifications**: Non-intrusive error handling
+- **Persistent Success Toasts**: Multiple playlist notifications stack in top-left with timestamps
 - **Smart scroll indicator**: Never miss newly created playlists
 - **Rich playlist info**: Track counts and average song lengths
+- **Enhanced Slider Design**: Square handles with three-state interaction feedback (default/hover/active)
 
 ### 🚀 **Advanced Features**
 - **Relative popularity**: Each playlist's hits are ranked within that genre
@@ -70,7 +75,9 @@ Create custom playlists with perfect ratios from your favorite Spotify playlists
 3. **Configure Ratios**: Set song ranges and frequency for each playlist
 4. **Choose Strategy**: Select popularity strategy (Mid-peak recommended for parties)
 5. **Set Duration**: Choose song count or time limit
-6. **Create Mix**: Generate your custom playlist!
+6. **Generate Preview**: See your complete playlist with album artwork and track details
+7. **Customize**: Drag and drop to reorder tracks, remove unwanted songs with red X buttons
+8. **Create Mix**: Generate your perfectly customized playlist in Spotify!
 
 ## 🎵 Example Use Case
 

@@ -152,7 +152,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   background: var(--moss-green);
-  border-radius: 50%;
+  border-radius: 4px;
   cursor: pointer;
   border: 2px solid var(--mindaro);
   box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
@@ -162,7 +162,7 @@ input[type="range"]::-moz-range-thumb {
   width: 18px;
   height: 18px;
   background: var(--moss-green);
-  border-radius: 50%;
+  border-radius: 4px;
   cursor: pointer;
   border: 2px solid var(--mindaro);
   box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
@@ -176,6 +176,16 @@ input[type="range"]:hover::-webkit-slider-thumb {
 input[type="range"]:hover::-moz-range-thumb {
   background: var(--fern-green);
   transform: scale(1.1);
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.05);
+}
+
+input[type="range"]:active::-moz-range-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.05);
 }
 
 /* Dual Range Slider (Tinder-style) */
@@ -199,7 +209,7 @@ input[type="range"]:hover::-moz-range-thumb {
   width: 18px;
   height: 18px;
   background: var(--moss-green);
-  border-radius: 50%;
+  border-radius: 4px;
   border: 2px solid var(--mindaro);
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
@@ -211,7 +221,7 @@ input[type="range"]:hover::-moz-range-thumb {
   width: 18px;
   height: 18px;
   background: var(--moss-green);
-  border-radius: 50%;
+  border-radius: 4px;
   border: 2px solid var(--mindaro);
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
@@ -248,6 +258,46 @@ input[type="range"]:hover::-moz-range-thumb {
   background: var(--moss-green);
   position: relative;
   z-index: 3;
+}
+
+.dual-range-slider .range-min:hover::-webkit-slider-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.1);
+}
+
+.dual-range-slider .range-max:hover::-webkit-slider-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+.dual-range-slider .range-min:hover::-moz-range-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.1);
+}
+
+.dual-range-slider .range-max:hover::-moz-range-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+.dual-range-slider .range-min:active::-webkit-slider-thumb {
+  background: var(--dark-green);
+  transform: scale(1.05);
+}
+
+.dual-range-slider .range-max:active::-webkit-slider-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.05);
+}
+
+.dual-range-slider .range-min:active::-moz-range-thumb {
+  background: var(--dark-green);
+  transform: scale(1.05);
+}
+
+.dual-range-slider .range-max:active::-moz-range-thumb {
+  background: var(--hunter-green);
+  transform: scale(1.05);
 }
 
 .playlist-item {
