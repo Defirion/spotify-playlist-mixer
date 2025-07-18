@@ -150,7 +150,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
 
 
   return (
-    <div className="card">
+    <div className="card" style={{ position: 'relative', zIndex: showSearchResults ? 9999 : 'auto' }}>
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -201,7 +201,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
             top: '100%', // Position below the input
             left: 0,
             right: 0,
-            zIndex: 10, // Ensure it's above other content
+            zIndex: 9999, // Ensure it's above other content
             background: 'var(--hunter-green)',
             border: '1px solid var(--fern-green)',
             borderRadius: '0 0 8px 8px',
