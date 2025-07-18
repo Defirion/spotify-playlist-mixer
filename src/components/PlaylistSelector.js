@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 
 const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onError }) => {
@@ -40,7 +40,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     return patterns.some(pattern => pattern.test(trimmedInput));
   };
 
-  const searchPlaylists = async (query) => {
+  const searchPlaylists = useCallback(async (query) => {
     if (!query.trim() || isValidSpotifyLink(query)) {
       setSearchResults([]);
       setLoading(false);
@@ -60,7 +60,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken, onError]);
 
   // Debounce search query
   useEffect(() => {
