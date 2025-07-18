@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 
 const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onError }) => {
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [playlistInput, setPlaylistInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -23,6 +24,12 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     return null;
   };
 
+  const isValidSpotifyLink = (input) => {
+    const spotifyUrlRegex = /^(https?:\/\/(open\.)?spotify\.com\/(playlist|track|album)\/[a-zA-Z0-9]+(\?.*)?)$/;
+    const spotifyUriRegex = /^spotify:(playlist|track|album):[a-zA-Z0-9]+$/;
+    return spotifyUrlRegex.test(input) || spotifyUriRegex.test(input);
+  };
+
   const isValidPlaylistUrl = (input) => {
     const trimmedInput = input.trim();
     const patterns = [
@@ -34,6 +41,12 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
   };
 
   const searchPlaylists = async (query) => {
+    if (!query.trim() || isValidSpotifyLink(query)) {
+      setSearchResults([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const api = getSpotifyApi(accessToken);
@@ -49,15 +62,27 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     }
   };
 
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      searchPlaylists(playlistInput);
+    }, 150); // 150ms debounce time
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [playlistInput, accessToken]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setPlaylistInput(value);
     
-    // Detect input type for dynamic UI
-    if (isValidPlaylistUrl(value.trim())) {
+    if (isValidSpotifyLink(value.trim())) {
       setInputType('url');
+      setShowSearchResults(false); // Hide search results if it's a URL
     } else {
       setInputType('search');
+      // Search will be triggered by the useEffect debounce
     }
   };
 
@@ -69,11 +94,12 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
 
     const input = playlistInput.trim();
     
-    // Check if it's a valid playlist URL/ID
+    // If it's a valid Spotify URL/ID, add it directly
     if (isValidPlaylistUrl(input)) {
       await handleAddPlaylistByUrl(input);
     } else {
-      // It's a search term, search for playlists
+      // If it's not a URL, and not handled by continuous search, initiate a search
+      // This case might be less frequent with continuous search, but good as a fallback
       await searchPlaylists(input);
     }
   };
@@ -131,6 +157,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       
       onPlaylistSelect(playlistWithRealData);
       setPlaylistInput('');
+      setSearchResults([]); // Clear search results after adding
       setShowSearchResults(false);
       
     } catch (err) {
@@ -148,6 +175,32 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
   };
 
 
+
+  const handleKeyDown = (e) => {
+    if (searchResults.length > 0 && showSearchResults) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          Math.min(prevIndex + 1, searchResults.length - 1)
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (highlightedIndex !== -1) {
+          handleAddPlaylistByUrl(searchResults[highlightedIndex].id);
+        } else {
+          handleInputSubmit();
+        }
+      }
+    }
+  };
+
+  // Reset highlighted index when search results change or modal closes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchResults, showSearchResults]);
 
   return (
     <div className="card" style={{ position: 'relative', zIndex: showSearchResults ? 9999 : 'auto' }}>
@@ -180,14 +233,14 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
               onChange={handleInputChange}
               placeholder="Try: 'salsa romantica', 'bachata sensual' or paste Spotify URL..."
               style={{ flex: 1 }}
-              onKeyDown={(e) => e.key === 'Enter' && handleInputSubmit()}
-              onFocus={() => playlistInput.trim() && setSearchResults([]) && setShowSearchResults(true)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => playlistInput.trim() && setShowSearchResults(true)}
               onBlur={() => setTimeout(() => setShowSearchResults(false), 100)} // Delay to allow click on results
             />
             <button 
               className="btn" 
               onClick={handleInputSubmit}
-              disabled={loading || !playlistInput.trim()}
+              disabled={loading || !playlistInput.trim() || (inputType === 'url' && !isValidPlaylistUrl(playlistInput))}
             >
               {loading ? 'Searching...' : inputType === 'url' ? 'Add' : 'Search'}
             </button>
@@ -212,7 +265,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
           }}>
             {searchResults
               .filter(playlist => playlist && playlist.id) // Filter out null playlists
-              .map((playlist) => (
+              .map((playlist, index) => (
               <div
                 key={playlist.id}
                 onClick={() => handleAddPlaylistByUrl(playlist.id)}
@@ -222,20 +275,12 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
                   padding: '8px 16px',
                   cursor: 'pointer',
                   borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  backgroundColor: selectedPlaylists.find(p => p.id === playlist.id) ? 'rgba(79, 119, 45, 0.3)' : 'transparent',
+                  backgroundColor: selectedPlaylists.find(p => p.id === playlist.id) ? 'rgba(79, 119, 45, 0.3)' : (index === highlightedIndex ? 'rgba(79, 119, 45, 0.2)' : 'transparent'),
                   opacity: selectedPlaylists.find(p => p.id === playlist.id) ? 0.7 : 1,
                   transition: 'background-color 0.2s, opacity 0.2s'
                 }}
-                onMouseEnter={(e) => {
-                  if (!selectedPlaylists.find(p => p.id === playlist.id)) {
-                    e.currentTarget.style.backgroundColor = 'rgba(79, 119, 45, 0.2)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!selectedPlaylists.find(p => p.id === playlist.id)) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
+                onMouseEnter={() => setHighlightedIndex(index)}
+                onMouseLeave={() => setHighlightedIndex(-1)}
               >
                 {playlist?.images?.[0]?.url && (
                   <img
