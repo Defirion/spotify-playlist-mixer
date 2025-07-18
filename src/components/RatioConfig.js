@@ -94,9 +94,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
           }
           
           .dual-range-slider {
-            position: relative !important;
             width: 100% !important;
-            height: 20px !important;
           }
           
           .dual-range-slider::before {
@@ -292,7 +290,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                           width: '100%',
                           height: '6px',
                           position: 'relative',
-                          marginTop: '14px'
                         }}>
                         <input
                           type="range"
