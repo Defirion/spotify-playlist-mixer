@@ -217,8 +217,8 @@ const PlaylistPreview = ({
   return (
     <div className="card">
       <h2>🎵 Your Mix Preview</h2>
-      <p style={{ marginBottom: '20px', opacity: '0.8' }}>
-        Take a look at your mix and make any adjustments
+      <p style={{ marginBottom: '20px', opacity: '0.8', fontSize: '0.9em' }}>
+        Review and adjust your mix preview.
       </p>
 
       <div style={{
@@ -333,7 +333,7 @@ const PlaylistPreview = ({
                   🎵 Your Songs ({preview.tracks.length})
                 </h4>
                 <div style={{ fontSize: '12px', opacity: '0.7', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  ⋮⋮ Drag to reorder
+                  ⋮⋮ Reorder
                 </div>
               </div>
             </div>
@@ -353,7 +353,7 @@ const PlaylistPreview = ({
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                   style={{
-                    padding: '8px 16px',
+                    padding: '8px 8px',
                     borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -366,20 +366,20 @@ const PlaylistPreview = ({
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0 }}>
                     <div style={{
-                      marginRight: '12px',
+                      marginRight: '8px',
                       fontSize: '16px',
                       opacity: '0.5',
                       cursor: 'grab'
                     }}>
                       ⋮⋮
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '500' }}>
+                    <div style={{ flex: 1, marginRight: '8px' }}>
+                      <div style={{ fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {index + 1}. {track.name}
                       </div>
-                      <div style={{ fontSize: '14px', opacity: '0.7' }}>
+                      <div style={{ fontSize: '14px', opacity: '0.7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {track.artists?.[0]?.name || 'Unknown Artist'} •
                         <span style={{
                           color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
@@ -390,7 +390,7 @@ const PlaylistPreview = ({
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                     <div style={{ fontSize: '12px', opacity: '0.6' }}>
                       {formatDuration(track.duration_ms || 0)}
                     </div>
@@ -403,9 +403,9 @@ const PlaylistPreview = ({
                         background: 'transparent',
                         border: 'none',
                         color: 'var(--mindaro)',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         cursor: 'pointer',
-                        padding: '2px 4px',
+                        padding: '1px 2px',
                         borderRadius: '3px',
                         opacity: '0.5',
                         transition: 'all 0.2s'
@@ -436,7 +436,7 @@ const PlaylistPreview = ({
             opacity: '0.7',
             textAlign: 'center'
           }}>
-            This is just a preview. Your full playlist will have {mixOptions.useTimeLimit ? `${mixOptions.targetDuration} minutes` : `${mixOptions.totalSongs} songs`} of music.
+            Full playlist will have {mixOptions.useTimeLimit ? `${mixOptions.targetDuration} min` : `${mixOptions.totalSongs} songs`}.
           </div>
         </div>
       )}
