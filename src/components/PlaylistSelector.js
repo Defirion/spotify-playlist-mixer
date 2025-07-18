@@ -71,7 +71,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     return () => {
       clearTimeout(handler);
     };
-  }, [playlistInput, accessToken]);
+  }, [playlistInput, accessToken, searchPlaylists]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
