@@ -14,8 +14,6 @@ const PlaylistPreview = ({
   const [loading, setLoading] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [showQuickStart, setShowQuickStart] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const generatePreview = async () => {
     try {
