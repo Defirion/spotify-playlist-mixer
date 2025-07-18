@@ -98,7 +98,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
           }
           
           .dual-range-slider::before {
-            content: 'none' !important;
             position: absolute !important;
             top: 50% !important;
             left: 0 !important;
@@ -173,7 +172,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
           @media (max-width: 768px) {
             .ratio-grid {
               grid-template-columns: 1fr !important;
-              text-align: center;
             }
             .ratio-grid > * {
               grid-column: 1 / -1 !important;
