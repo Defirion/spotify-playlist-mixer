@@ -116,7 +116,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
             position: absolute !important;
             width: 100% !important;
             height: 6px !important;
-            background: var(--hunter-green) !important;
+            background: transparent !important;
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
@@ -171,6 +171,26 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
             background: var(--moss-green) !important;
             z-index: 3 !important;
           }
+
+          @media (max-width: 768px) {
+            .ratio-grid {
+              grid-template-columns: 1fr !important;
+              text-align: center;
+            }
+            .ratio-grid > * {
+              grid-column: 1 / -1 !important;
+            }
+            .playlist-cover {
+              margin: 0 auto 16px;
+            }
+            .slider-container {
+              width: 100%;
+            }
+            .remove-button-cell {
+              justify-self: center;
+              margin-top: 10px;
+            }
+          }
         `}
       </style>
       <h2>🎛️ Customize Your Mix</h2>
@@ -220,13 +240,16 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
               padding: '16px', 
               borderRadius: '8px' 
             }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: playlist.coverImage ? 'auto minmax(200px, 300px) 1fr auto' : 'minmax(200px, 300px) 1fr auto',
-                alignItems: 'center', 
-                gap: '16px', 
-                width: '100%' 
-              }}>
+              <div 
+                className="ratio-grid"
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: playlist.coverImage ? 'auto auto 1fr auto' : 'auto 1fr auto',
+                  alignItems: 'center', 
+                  gap: '16px', 
+                  width: '100%' 
+                }}
+              >
                 {playlist.coverImage && (
                   <img 
                     src={playlist.coverImage} 
@@ -250,7 +273,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                 </div>
                 
                 {/* Inline Sliders */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '280px' }}>
+                <div className="slider-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontSize: '12px', opacity: '0.8', textAlign: 'center' }}>
                     🎵 Play together: {config.min === config.max ? `${config.min} song${config.min > 1 ? 's' : ''}` : `${config.min}-${config.max} songs`}
                   </div>
