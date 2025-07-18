@@ -291,6 +291,87 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
   const exceedsLimit = getExceedsLimitWarning();
 
+  const getRatioImbalanceWarning = () => {
+    if (selectedPlaylists.length < 2 || !ratioConfig) {
+      return null;
+    }
+
+    const { totalSongs, useTimeLimit, targetDuration } = localMixOptions;
+    const playlistIdsWithWeights = Object.keys(ratioConfig).filter(id => ratioConfig[id] && ratioConfig[id].weight > 0);
+
+    if (playlistIdsWithWeights.length < 2) {
+      return null;
+    }
+
+    const totalWeight = playlistIdsWithWeights.reduce((sum, id) => sum + ratioConfig[id].weight, 0);
+
+    if (totalWeight === 0) {
+      return null;
+    }
+
+    let minExhaustionPoint = Infinity;
+    let limitingPlaylistName = '';
+
+    for (const playlistId of playlistIdsWithWeights) {
+      const playlist = selectedPlaylists.find(p => p.id === playlistId);
+      if (!playlist) continue;
+
+      const config = ratioConfig[playlistId];
+      const weight = config.weight;
+      let exhaustionPoint = Infinity;
+
+      if (useTimeLimit) {
+        const availableDurationMs = (playlist.realAverageDurationSeconds * playlist.tracks.total * 1000) || 0;
+        if (availableDurationMs === 0) {
+          exhaustionPoint = 0;
+        } else {
+          // Calculate how much total mix duration can be achieved before this playlist runs out
+          // based on its available duration and its weight in the total mix.
+          exhaustionPoint = Math.floor(availableDurationMs * (totalWeight / weight));
+        }
+      } else {
+        const availableCount = playlist.tracks.total;
+        if (availableCount === 0) {
+          exhaustionPoint = 0;
+        } else {
+          // Calculate how many total songs can be achieved before this playlist runs out
+          // based on its available songs and its weight in the total mix.
+          exhaustionPoint = Math.floor(availableCount * (totalWeight / weight));
+        }
+      }
+
+      if (exhaustionPoint < minExhaustionPoint) {
+        minExhaustionPoint = exhaustionPoint;
+        limitingPlaylistName = playlist.name;
+      }
+    }
+
+    // Determine the target length (songs or duration) for comparison
+    const targetLength = useTimeLimit ? targetDuration * 60 * 1000 : totalSongs;
+
+    // Only show warning if the estimated mix length is greater than the exhaustion point
+    // and the exhaustion point is significantly less than the target length (e.g., < 90%)
+    if (targetLength > minExhaustionPoint && minExhaustionPoint < targetLength * 0.9) {
+      let displayValue = minExhaustionPoint;
+      let unit = 'songs';
+
+      if (useTimeLimit) {
+        displayValue = formatTotalDuration(minExhaustionPoint); // Convert ms to HHh MMm format
+        unit = ''; // Unit is already part of the formatted string
+      }
+
+      return {
+        limitingPlaylistName,
+        mixWillBecomeImbalancedAt: displayValue,
+        unit: unit,
+      };
+    }
+
+    return null;
+  };
+
+  const ratioImbalance = getRatioImbalanceWarning();
+
   return (
     <div className="card">
       <h2>🎵 Create Your Mix</h2>
@@ -460,6 +541,30 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
                 You want <strong>{exceedsLimit.requestedFormatted}</strong> but only have <strong>{exceedsLimit.availableFormatted}</strong> available. 
                 We'll use everything you've got!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ratio Imbalance Warning */}
+      {ratioImbalance && (
+        <div style={{
+          marginBottom: '20px',
+          padding: '16px',
+          background: 'rgba(23, 162, 184, 0.1)',
+          border: '1px solid rgba(23, 162, 184, 0.3)',
+          borderRadius: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>🤔</span>
+            <div>
+              <h4 style={{ margin: '0 0 8px 0', color: '#17a2b8' }}>
+                Ratio Imbalance Alert
+              </h4>
+              <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
+                With your current ratio settings, we'll run out of songs from <strong>{ratioImbalance.limitingPlaylistName}</strong> after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
+                The rest of your mix will be filled with songs from the other playlists.
               </p>
             </div>
           </div>
