@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import LoadingOverlay from './LoadingOverlay';
 import { getSpotifyApi } from '../utils/spotify';
 
 const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onError }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [playlistInput, setPlaylistInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [inputType, setInputType] = useState('search'); // 'search' or 'url'
@@ -48,7 +50,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     }
 
     try {
-      setLoading(true);
+      setSearching(true);
       const api = getSpotifyApi(accessToken);
       const response = await api.get(`/search?q=${encodeURIComponent(query)}&type=playlist&limit=10`);
       setSearchResults(response.data.playlists.items || []);
@@ -58,7 +60,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       onError('Failed to search playlists. Please try again.');
       setSearchResults([]);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   }, [accessToken, onError]);
 
@@ -118,7 +120,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     }
 
     try {
-      setLoading(true);
+      setLoading(true); // Set loading true when starting to add a playlist
       const api = getSpotifyApi(accessToken);
       const response = await api.get(`/playlists/${playlistId}`);
       const playlist = response.data;
@@ -170,7 +172,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       }
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading false after playlist addition is complete or fails
     }
   };
 
@@ -204,6 +206,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
 
   return (
     <div className="card" style={{ position: 'relative', zIndex: showSearchResults ? 9999 : 'auto' }}>
+      {loading && <LoadingOverlay />}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -240,9 +243,9 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
             <button 
               className="btn" 
               onClick={handleInputSubmit}
-              disabled={loading || !playlistInput.trim() || (inputType === 'url' && !isValidPlaylistUrl(playlistInput))}
+              disabled={searching || !playlistInput.trim() || (inputType === 'url' && !isValidPlaylistUrl(playlistInput))}
             >
-              {loading ? 'Searching...' : inputType === 'url' ? 'Add' : 'Search'}
+              {searching ? 'Searching...' : (inputType === 'url' ? 'Add' : 'Search')}
             </button>
           </div>
         </div>
