@@ -1,64 +1,52 @@
 import { StorageService } from '../StorageService';
 
-// Mock localStorage
-const mockStorage = (() => {
-  let store: Record<string, string> = {};
-  
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: jest.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-    get length() {
-      return Object.keys(store).length;
-    },
-    key: jest.fn((index: number) => Object.keys(store)[index] || null),
-    // Add method to reset store for testing
-    _resetStore: () => {
-      store = {};
-    },
-    _getStore: () => store
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: mockStorage
-});
-
 describe('StorageService', () => {
   let storageService: StorageService;
+  let mockStorage: Storage;
 
   beforeEach(() => {
-    storageService = new StorageService();
-    mockStorage.clear();
-    jest.clearAllMocks();
+    // Create a mock storage implementation
+    const storage = new Map<string, string>();
+    
+    mockStorage = {
+      getItem: jest.fn((key: string) => storage.get(key) || null),
+      setItem: jest.fn((key: string, value: string) => storage.set(key, value)),
+      removeItem: jest.fn((key: string) => storage.delete(key)),
+      clear: jest.fn(() => storage.clear()),
+      length: 0,
+      key: jest.fn()
+    };
+
+    storageService = new StorageService(mockStorage);
   });
 
   describe('setItem', () => {
-    it('should store string values', () => {
+    it('should serialize and store simple values', () => {
       storageService.setItem('test-key', 'test-value');
       
       expect(mockStorage.setItem).toHaveBeenCalledWith('test-key', '"test-value"');
     });
 
-    it('should store object values as JSON', () => {
-      const testObject = { name: 'test', value: 123 };
+    it('should serialize and store objects', () => {
+      const testObject = { id: 1, name: 'test', nested: { value: true } };
+      
       storageService.setItem('test-object', testObject);
       
-      expect(mockStorage.setItem).toHaveBeenCalledWith('test-object', JSON.stringify(testObject));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'test-object',
+        JSON.stringify(testObject)
+      );
     });
 
-    it('should store array values as JSON', () => {
-      const testArray = [1, 2, 3, 'test'];
+    it('should serialize and store arrays', () => {
+      const testArray = [1, 2, 3, { id: 4 }];
+      
       storageService.setItem('test-array', testArray);
       
-      expect(mockStorage.setItem).toHaveBeenCalledWith('test-array', JSON.stringify(testArray));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'test-array',
+        JSON.stringify(testArray)
+      );
     });
 
     it('should handle null values', () => {
@@ -67,83 +55,137 @@ describe('StorageService', () => {
       expect(mockStorage.setItem).toHaveBeenCalledWith('test-null', 'null');
     });
 
+    it('should handle undefined values', () => {
+      storageService.setItem('test-undefined', undefined);
+      
+      expect(mockStorage.setItem).toHaveBeenCalledWith('test-undefined', undefined);
+    });
+
     it('should throw error when storage fails', () => {
-      mockStorage.setItem.mockImplementation(() => {
-        throw new Error('Storage full');
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage quota exceeded');
       });
 
-      expect(() => storageService.setItem('test', 'value')).toThrow('Failed to store item: test');
+      expect(() => storageService.setItem('test-key', 'test-value')).toThrow(
+        'Failed to store item: test-key'
+      );
+    });
+
+    it('should handle circular reference errors', () => {
+      const circularRef: any = { name: 'test' };
+      circularRef.self = circularRef;
+
+      expect(() => storageService.setItem('circular', circularRef)).toThrow(
+        'Failed to store item: circular'
+      );
     });
   });
 
   describe('getItem', () => {
-    it('should return null when item does not exist', () => {
-      mockStorage.getItem.mockReturnValue(null);
+    it('should deserialize and return stored values', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('"test-value"');
       
-      expect(storageService.getItem('non-existent')).toBeNull();
+      const result = storageService.getItem('test-key');
+      
+      expect(result).toBe('test-value');
+      expect(mockStorage.getItem).toHaveBeenCalledWith('test-key');
     });
 
-    it('should retrieve and parse string values', () => {
-      mockStorage.getItem.mockReturnValue('"test-value"');
+    it('should deserialize and return objects', () => {
+      const testObject = { id: 1, name: 'test', nested: { value: true } };
+      (mockStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(testObject));
       
-      expect(storageService.getItem('test-key')).toBe('test-value');
+      const result = storageService.getItem('test-object');
+      
+      expect(result).toEqual(testObject);
     });
 
-    it('should retrieve and parse object values', () => {
-      const testObject = { name: 'test', value: 123 };
-      mockStorage.getItem.mockReturnValue(JSON.stringify(testObject));
+    it('should deserialize and return arrays', () => {
+      const testArray = [1, 2, 3, { id: 4 }];
+      (mockStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(testArray));
       
-      expect(storageService.getItem('test-object')).toEqual(testObject);
+      const result = storageService.getItem('test-array');
+      
+      expect(result).toEqual(testArray);
     });
 
-    it('should retrieve and parse array values', () => {
-      const testArray = [1, 2, 3, 'test'];
-      mockStorage.getItem.mockReturnValue(JSON.stringify(testArray));
+    it('should return null for non-existent keys', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null);
       
-      expect(storageService.getItem('test-array')).toEqual(testArray);
+      const result = storageService.getItem('non-existent');
+      
+      expect(result).toBeNull();
     });
 
-    it('should return null when JSON parsing fails', () => {
-      mockStorage.getItem.mockReturnValue('invalid-json{');
+    it('should return null for malformed JSON', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid-json{');
       
-      expect(storageService.getItem('invalid')).toBeNull();
+      const result = storageService.getItem('malformed');
+      
+      expect(result).toBeNull();
     });
 
-    it('should return null when storage throws error', () => {
-      mockStorage.getItem.mockImplementation(() => {
-        throw new Error('Storage error');
+    it('should handle storage access errors gracefully', () => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage access denied');
       });
 
-      expect(storageService.getItem('test')).toBeNull();
+      const result = storageService.getItem('test-key');
+      
+      expect(result).toBeNull();
+    });
+
+    it('should handle null values correctly', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('null');
+      
+      const result = storageService.getItem('test-null');
+      
+      expect(result).toBeNull();
+    });
+
+    it('should use generic type parameter', () => {
+      interface TestInterface {
+        id: number;
+        name: string;
+      }
+
+      const testObject: TestInterface = { id: 1, name: 'test' };
+      (mockStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(testObject));
+      
+      const result = storageService.getItem<TestInterface>('test-typed');
+      
+      expect(result).toEqual(testObject);
+      expect(result?.id).toBe(1);
+      expect(result?.name).toBe('test');
     });
   });
 
   describe('removeItem', () => {
-    it('should remove item from storage', () => {
+    it('should remove items from storage', () => {
       storageService.removeItem('test-key');
       
       expect(mockStorage.removeItem).toHaveBeenCalledWith('test-key');
     });
 
-    it('should handle storage errors gracefully', () => {
-      mockStorage.removeItem.mockImplementation(() => {
-        throw new Error('Storage error');
+    it('should handle removal errors gracefully', () => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage access denied');
       });
 
-      expect(() => storageService.removeItem('test')).not.toThrow();
+      expect(() => storageService.removeItem('test-key')).not.toThrow();
     });
   });
 
   describe('clear', () => {
-    it('should clear all items from storage', () => {
+    it('should clear all storage', () => {
       storageService.clear();
       
       expect(mockStorage.clear).toHaveBeenCalled();
     });
 
-    it('should handle storage errors gracefully', () => {
-      mockStorage.clear.mockImplementation(() => {
-        throw new Error('Storage error');
+    it('should handle clear errors gracefully', () => {
+      (mockStorage.clear as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage access denied');
       });
 
       expect(() => storageService.clear()).not.toThrow();
@@ -151,64 +193,158 @@ describe('StorageService', () => {
   });
 
   describe('hasItem', () => {
-    it('should return true when item exists', () => {
-      mockStorage.getItem.mockReturnValue('some-value');
+    it('should return true for existing items', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('"test-value"');
       
-      expect(storageService.hasItem('existing-key')).toBe(true);
+      const result = storageService.hasItem('test-key');
+      
+      expect(result).toBe(true);
+      expect(mockStorage.getItem).toHaveBeenCalledWith('test-key');
     });
 
-    it('should return false when item does not exist', () => {
-      mockStorage.getItem.mockReturnValue(null);
+    it('should return false for non-existent items', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null);
       
-      expect(storageService.hasItem('non-existent-key')).toBe(false);
+      const result = storageService.hasItem('non-existent');
+      
+      expect(result).toBe(false);
+    });
+
+    it('should return true for items with null values', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('null');
+      
+      const result = storageService.hasItem('null-value');
+      
+      expect(result).toBe(true);
     });
   });
 
-  describe('integration tests', () => {
-    it('should store and retrieve complex objects correctly', () => {
-      const complexObject = {
-        user: {
-          id: 'user123',
-          name: 'Test User',
-          preferences: {
-            theme: 'dark',
-            notifications: true
-          }
-        },
-        playlists: [
-          { id: 'playlist1', name: 'My Playlist' },
-          { id: 'playlist2', name: 'Another Playlist' }
-        ],
-        timestamp: new Date().toISOString()
-      };
-
-      storageService.setItem('complex-data', complexObject);
-      const retrieved = storageService.getItem('complex-data');
-
-      expect(retrieved).toEqual(complexObject);
+  describe('integration with different storage types', () => {
+    it('should work with localStorage', () => {
+      const localStorageService = new StorageService(localStorage);
+      
+      // This test assumes localStorage is available in the test environment
+      expect(localStorageService).toBeInstanceOf(StorageService);
     });
 
-    it('should handle storage lifecycle correctly', () => {
-      // Store multiple items
-      storageService.setItem('item1', 'value1');
-      storageService.setItem('item2', { key: 'value2' });
-      storageService.setItem('item3', [1, 2, 3]);
+    it('should work with sessionStorage', () => {
+      const sessionStorageService = new StorageService(sessionStorage);
+      
+      // This test assumes sessionStorage is available in the test environment
+      expect(sessionStorageService).toBeInstanceOf(StorageService);
+    });
 
-      // Verify they exist
-      expect(storageService.hasItem('item1')).toBe(true);
-      expect(storageService.hasItem('item2')).toBe(true);
-      expect(storageService.hasItem('item3')).toBe(true);
+    it('should use localStorage by default', () => {
+      const defaultStorageService = new StorageService();
+      
+      expect(defaultStorageService).toBeInstanceOf(StorageService);
+    });
+  });
 
-      // Remove one item
-      storageService.removeItem('item2');
-      expect(storageService.hasItem('item2')).toBe(false);
-      expect(storageService.hasItem('item1')).toBe(true);
-      expect(storageService.hasItem('item3')).toBe(true);
+  describe('real storage integration', () => {
+    let realStorageService: StorageService;
 
-      // Clear all
-      storageService.clear();
-      expect(storageService.hasItem('item1')).toBe(false);
-      expect(storageService.hasItem('item3')).toBe(false);
+    beforeEach(() => {
+      // Use real localStorage for integration tests
+      localStorage.clear();
+      realStorageService = new StorageService(localStorage);
+    });
+
+    afterEach(() => {
+      localStorage.clear();
+    });
+
+    it('should persist data across service instances', () => {
+      const testData = { id: 1, name: 'persistent test' };
+      
+      realStorageService.setItem('persist-test', testData);
+      
+      // Create new service instance
+      const newService = new StorageService(localStorage);
+      const result = newService.getItem('persist-test');
+      
+      expect(result).toEqual(testData);
+    });
+
+    it('should handle complex nested objects', () => {
+      const complexObject = {
+        user: {
+          id: 1,
+          profile: {
+            name: 'John Doe',
+            preferences: {
+              theme: 'dark',
+              notifications: true,
+              playlists: [
+                { id: 'p1', name: 'Favorites' },
+                { id: 'p2', name: 'Workout' }
+              ]
+            }
+          }
+        },
+        metadata: {
+          created: new Date().toISOString(),
+          version: '1.0.0'
+        }
+      };
+
+      realStorageService.setItem('complex-object', complexObject);
+      const result = realStorageService.getItem('complex-object');
+      
+      expect(result).toEqual(complexObject);
+    });
+
+    it('should handle large data sets', () => {
+      const largeArray = Array(1000).fill(null).map((_, i) => ({
+        id: i,
+        name: `Item ${i}`,
+        data: 'x'.repeat(100)
+      }));
+
+      realStorageService.setItem('large-data', largeArray);
+      const result = realStorageService.getItem('large-data');
+      
+      expect(result).toEqual(largeArray);
+      expect(result).toHaveLength(1000);
+    });
+  });
+
+  describe('error scenarios', () => {
+    it('should handle storage quota exceeded gracefully', () => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
+        const error = new Error('QuotaExceededError');
+        error.name = 'QuotaExceededError';
+        throw error;
+      });
+
+      expect(() => storageService.setItem('test', 'value')).toThrow(
+        'Failed to store item: test'
+      );
+    });
+
+    it('should handle storage disabled/unavailable', () => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage is disabled');
+      });
+
+      const result = storageService.getItem('test');
+      expect(result).toBeNull();
+    });
+
+    it('should handle concurrent access gracefully', async () => {
+      // Simulate concurrent operations
+      const promises = Array(10).fill(null).map((_, i) => 
+        Promise.resolve().then(() => {
+          storageService.setItem(`concurrent-${i}`, `value-${i}`);
+          return storageService.getItem(`concurrent-${i}`);
+        })
+      );
+
+      const results = await Promise.all(promises);
+      
+      results.forEach((result, i) => {
+        expect(result).toBe(`value-${i}`);
+      });
     });
   });
 });

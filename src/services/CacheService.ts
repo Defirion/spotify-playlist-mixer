@@ -111,6 +111,8 @@ export class CacheService {
   }
 
   private handleMemoryCleanup(event: CustomEvent): void {
+    if (!event.detail) return;
+    
     const { key } = event.detail;
     if (key && this.cache.has(key)) {
       this.cache.delete(key);

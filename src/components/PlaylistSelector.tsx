@@ -290,9 +290,10 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({ onError }) => {
       
       <div style={{ marginBottom: '20px' }}>
         <div className="input-group">
-          <label>Search playlists or paste URL:</label>
+          <label htmlFor="playlist-search-input">Search playlists or paste URL:</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
+              id="playlist-search-input"
               type="text"
               value={playlistInput}
               onChange={handleInputChange}

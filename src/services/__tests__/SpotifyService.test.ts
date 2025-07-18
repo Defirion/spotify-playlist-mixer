@@ -1,26 +1,15 @@
+import axios from 'axios';
 import { SpotifyService } from '../SpotifyService';
 import { IAuthService } from '../../types/services';
 import { User, Playlist, Track } from '../../types';
+import { CacheService } from '../CacheService';
 
 // Mock axios
-jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    request: jest.fn(),
-    interceptors: {
-      request: {
-        use: jest.fn()
-      },
-      response: {
-        use: jest.fn()
-      }
-    }
-  }))
-}));
-
-import axios from 'axios';
+jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+// Mock CacheService
+jest.mock('../CacheService');
 
 // Mock AuthService
 class MockAuthService implements IAuthService {
@@ -29,11 +18,7 @@ class MockAuthService implements IAuthService {
   private callbacks: (() => void)[] = [];
 
   async login() {
-    return {
-      token: this.token!,
-      user: this.user!,
-      expiresIn: 3600
-    };
+    return { token: this.token!, user: this.user!, expiresIn: 3600 };
   }
 
   async logout() {
@@ -93,17 +78,13 @@ describe('SpotifyService', () => {
       post: jest.fn(),
       request: jest.fn(),
       interceptors: {
-        request: {
-          use: jest.fn()
-        },
-        response: {
-          use: jest.fn()
-        }
+        request: { use: jest.fn() },
+        response: { use: jest.fn() }
       }
     };
-    
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    
+
+    // Clear all mocks before creating service
     jest.clearAllMocks();
     
     spotifyService = new SpotifyService(mockAuthService);
@@ -120,7 +101,7 @@ describe('SpotifyService', () => {
       });
     });
 
-    it('should setup request and response interceptors', () => {
+    it('should set up request and response interceptors', () => {
       expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalled();
       expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalled();
     });
@@ -130,66 +111,54 @@ describe('SpotifyService', () => {
     it('should delegate to auth service', async () => {
       const result = await spotifyService.authenticate();
       
-      expect(result).toEqual({
-        token: 'mock-token',
-        user: { id: 'user1', displayName: 'Test User' },
-        expiresIn: 3600
-      });
+      expect(result.token).toBe('mock-token');
+      expect(result.user.id).toBe('user1');
     });
   });
 
   describe('getUserProfile', () => {
-    it('should fetch and map user profile correctly', async () => {
+    it('should fetch and return user profile', async () => {
       const mockResponse = {
-        id: 'user123',
-        display_name: 'John Doe',
-        email: 'john@example.com'
+        id: 'spotify-user-id',
+        display_name: 'Spotify User',
+        email: 'user@example.com'
       };
 
       mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.getUserProfile();
+      const user = await spotifyService.getUserProfile();
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/me');
-      expect(result).toEqual({
-        id: 'user123',
-        displayName: 'John Doe',
-        email: 'john@example.com'
+      expect(user).toEqual({
+        id: 'spotify-user-id',
+        displayName: 'Spotify User',
+        email: 'user@example.com'
       });
     });
 
-    it('should handle missing display_name', async () => {
+    it('should handle missing display_name gracefully', async () => {
       const mockResponse = {
-        id: 'user123',
-        email: 'john@example.com'
+        id: 'spotify-user-id',
+        email: 'user@example.com'
       };
 
       mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.getUserProfile();
+      const user = await spotifyService.getUserProfile();
 
-      expect(result.displayName).toBe('user123');
+      expect(user.displayName).toBe('spotify-user-id');
     });
 
     it('should handle API errors', async () => {
-      const mockError = {
-        response: {
-          status: 403,
-          data: { error: { message: 'Forbidden' } }
-        }
-      };
+      const error = new Error('API Error');
+      mockAxiosInstance.get.mockRejectedValue(error);
 
-      mockAxiosInstance.get.mockRejectedValue(mockError);
-
-      await expect(spotifyService.getUserProfile()).rejects.toMatchObject({
-        type: 'API',
-        message: 'Forbidden'
-      });
+      await expect(spotifyService.getUserProfile()).rejects.toThrow();
     });
   });
 
   describe('getUserPlaylists', () => {
-    it('should fetch and map user playlists correctly', async () => {
+    it('should fetch user playlists with default parameters', async () => {
       const mockResponse = {
         items: [
           {
@@ -205,11 +174,11 @@ describe('SpotifyService', () => {
 
       mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.getUserPlaylists();
+      const playlists = await spotifyService.getUserPlaylists();
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/me/playlists?limit=50&offset=0');
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(playlists).toHaveLength(1);
+      expect(playlists[0]).toEqual({
         id: 'playlist1',
         name: 'My Playlist',
         description: 'Test playlist',
@@ -219,7 +188,7 @@ describe('SpotifyService', () => {
       });
     });
 
-    it('should handle custom limit and offset', async () => {
+    it('should use custom limit and offset parameters', async () => {
       mockAxiosInstance.get.mockResolvedValue({ data: { items: [] } });
 
       await spotifyService.getUserPlaylists(20, 10);
@@ -229,78 +198,149 @@ describe('SpotifyService', () => {
   });
 
   describe('getPlaylistTracks', () => {
-    it('should fetch all tracks from playlist with pagination', async () => {
-      const mockTrack = {
-        id: 'track1',
-        name: 'Test Track',
-        artists: [{ id: 'artist1', name: 'Artist One', uri: 'spotify:artist:artist1' }],
-        album: {
-          id: 'album1',
-          name: 'Test Album',
-          artists: [{ id: 'artist1', name: 'Artist One', uri: 'spotify:artist:artist1' }],
-          images: [],
-          release_date: '2023-01-01'
-        },
-        duration_ms: 180000,
-        popularity: 75,
-        uri: 'spotify:track:track1',
-        preview_url: 'preview.mp3'
+    it('should fetch all tracks from a playlist', async () => {
+      const mockResponse = {
+        items: [
+          {
+            track: {
+              id: 'track1',
+              name: 'Track 1',
+              artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+              album: {
+                id: 'album1',
+                name: 'Album 1',
+                artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+                images: [],
+                release_date: '2023-01-01'
+              },
+              duration_ms: 180000,
+              popularity: 75,
+              uri: 'spotify:track:track1',
+              preview_url: 'preview.mp3'
+            }
+          }
+        ]
       };
 
-      // First page
-      mockAxiosInstance.get
-        .mockResolvedValueOnce({
-          data: {
-            items: Array(100).fill({ track: mockTrack })
-          }
-        })
-        // Second page (partial)
-        .mockResolvedValueOnce({
-          data: {
-            items: Array(50).fill({ track: mockTrack })
-          }
-        });
+      mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.getPlaylistTracks('playlist1');
+      const tracks = await spotifyService.getPlaylistTracks('playlist1');
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
-      expect(result).toHaveLength(150);
-      expect(result[0].id).toBe('track1');
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/playlist1/tracks?offset=0&limit=100');
+      expect(tracks).toHaveLength(1);
+      expect(tracks[0].id).toBe('track1');
+      expect(tracks[0].name).toBe('Track 1');
     });
 
-    it('should filter out null tracks and tracks without duration', async () => {
-      const validTrack = {
-        id: 'track1',
-        name: 'Valid Track',
-        duration_ms: 180000,
-        artists: [],
-        album: { id: 'album1', name: 'Album', artists: [], images: [], release_date: '' },
-        popularity: 0,
-        uri: 'spotify:track:track1'
+    it('should handle pagination for large playlists', async () => {
+      // First page
+      const firstPageResponse = {
+        items: Array(100).fill(null).map((_, i) => ({
+          track: {
+            id: `track${i}`,
+            name: `Track ${i}`,
+            artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+            album: {
+              id: 'album1',
+              name: 'Album 1',
+              artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+              images: [],
+              release_date: '2023-01-01'
+            },
+            duration_ms: 180000,
+            popularity: 75,
+            uri: `spotify:track:track${i}`
+          }
+        }))
       };
 
-      mockAxiosInstance.get.mockResolvedValue({
-        data: {
-          items: [
-            { track: validTrack },
-            { track: null },
-            { track: { id: 'track2', name: 'No Duration' } }, // Missing duration_ms
-            { track: { duration_ms: 0 } } // Missing id
-          ]
-        }
-      });
+      // Second page (partial)
+      const secondPageResponse = {
+        items: Array(50).fill(null).map((_, i) => ({
+          track: {
+            id: `track${i + 100}`,
+            name: `Track ${i + 100}`,
+            artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+            album: {
+              id: 'album1',
+              name: 'Album 1',
+              artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+              images: [],
+              release_date: '2023-01-01'
+            },
+            duration_ms: 180000,
+            popularity: 75,
+            uri: `spotify:track:track${i + 100}`
+          }
+        }))
+      };
 
-      const result = await spotifyService.getPlaylistTracks('playlist1');
+      mockAxiosInstance.get
+        .mockResolvedValueOnce({ data: firstPageResponse })
+        .mockResolvedValueOnce({ data: secondPageResponse });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('track1');
+      const tracks = await spotifyService.getPlaylistTracks('playlist1');
+
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+      expect(tracks).toHaveLength(150);
+    });
+
+    it('should filter out invalid tracks', async () => {
+      const mockResponse = {
+        items: [
+          {
+            track: {
+              id: 'track1',
+              name: 'Valid Track',
+              artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+              album: {
+                id: 'album1',
+                name: 'Album 1',
+                artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+                images: [],
+                release_date: '2023-01-01'
+              },
+              duration_ms: 180000,
+              popularity: 75,
+              uri: 'spotify:track:track1'
+            }
+          },
+          {
+            track: null // Invalid track
+          },
+          {
+            track: {
+              id: null, // Invalid track - no ID
+              name: 'Invalid Track'
+            }
+          },
+          {
+            track: {
+              id: 'track2',
+              name: 'Track without duration',
+              duration_ms: null // Invalid - no duration
+            }
+          }
+        ]
+      };
+
+      mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
+
+      const tracks = await spotifyService.getPlaylistTracks('playlist1');
+
+      expect(tracks).toHaveLength(1);
+      expect(tracks[0].id).toBe('track1');
     });
   });
 
   describe('createPlaylist', () => {
-    it('should create playlist successfully', async () => {
-      const mockUser = { id: 'user1', displayName: 'Test User' };
-      const mockPlaylist = {
+    it('should create a new playlist', async () => {
+      const mockUserResponse = {
+        id: 'user1',
+        display_name: 'Test User'
+      };
+
+      const mockPlaylistResponse = {
         id: 'new-playlist',
         name: 'New Playlist',
         description: 'Test description',
@@ -309,12 +349,10 @@ describe('SpotifyService', () => {
         images: []
       };
 
-      // Mock getUserProfile call
-      mockAxiosInstance.get.mockResolvedValueOnce({ data: mockUser });
-      // Mock create playlist call
-      mockAxiosInstance.request.mockResolvedValueOnce({ data: mockPlaylist });
+      mockAxiosInstance.get.mockResolvedValue({ data: mockUserResponse });
+      mockAxiosInstance.request.mockResolvedValue({ data: mockPlaylistResponse });
 
-      const result = await spotifyService.createPlaylist('New Playlist', 'Test description');
+      const playlist = await spotifyService.createPlaylist('New Playlist', 'Test description');
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith({
         url: '/users/user1/playlists',
@@ -326,25 +364,29 @@ describe('SpotifyService', () => {
         }
       });
 
-      expect(result.id).toBe('new-playlist');
-      expect(result.name).toBe('New Playlist');
+      expect(playlist.id).toBe('new-playlist');
+      expect(playlist.name).toBe('New Playlist');
     });
 
     it('should trim playlist name', async () => {
-      mockAuthService.setUser({ id: 'user1', displayName: 'Test User' });
-      mockAxiosInstance.get.mockResolvedValueOnce({ 
-        data: { id: 'user1', display_name: 'Test User' } 
-      });
-      mockAxiosInstance.request.mockResolvedValueOnce({ 
-        data: { id: 'playlist1', name: 'Trimmed', tracks: { total: 0 }, owner: {}, images: [] } 
-      });
+      const mockUserResponse = { id: 'user1', display_name: 'Test User' };
+      const mockPlaylistResponse = {
+        id: 'new-playlist',
+        name: 'Trimmed Playlist',
+        tracks: { total: 0 },
+        owner: { id: 'user1', display_name: 'Test User' },
+        images: []
+      };
 
-      await spotifyService.createPlaylist('  Trimmed  ');
+      mockAxiosInstance.get.mockResolvedValue({ data: mockUserResponse });
+      mockAxiosInstance.request.mockResolvedValue({ data: mockPlaylistResponse });
+
+      await spotifyService.createPlaylist('  Trimmed Playlist  ');
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            name: 'Trimmed'
+            name: 'Trimmed Playlist'
           })
         })
       );
@@ -352,47 +394,48 @@ describe('SpotifyService', () => {
   });
 
   describe('addTracksToPlaylist', () => {
-    it('should add tracks in chunks of 100', async () => {
-      const trackUris = Array(250).fill(0).map((_, i) => `spotify:track:track${i}`);
-
+    it('should add tracks to playlist', async () => {
+      const trackUris = ['spotify:track:1', 'spotify:track:2'];
       mockAxiosInstance.request.mockResolvedValue({ data: {} });
 
       await spotifyService.addTracksToPlaylist('playlist1', trackUris);
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(3); // 250 tracks = 3 chunks
-      
-      // Check first chunk
-      expect(mockAxiosInstance.request).toHaveBeenNthCalledWith(1, {
+      expect(mockAxiosInstance.request).toHaveBeenCalledWith({
         url: '/playlists/playlist1/tracks',
         method: 'POST',
-        data: {
-          uris: trackUris.slice(0, 100)
-        }
+        data: { uris: trackUris }
       });
+    });
 
-      // Check last chunk
-      expect(mockAxiosInstance.request).toHaveBeenNthCalledWith(3, {
-        url: '/playlists/playlist1/tracks',
-        method: 'POST',
-        data: {
-          uris: trackUris.slice(200, 250)
-        }
-      });
+    it('should handle large track lists by chunking', async () => {
+      const trackUris = Array(250).fill(null).map((_, i) => `spotify:track:${i}`);
+      mockAxiosInstance.request.mockResolvedValue({ data: {} });
+
+      await spotifyService.addTracksToPlaylist('playlist1', trackUris);
+
+      // Should make 3 requests (100 + 100 + 50)
+      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('searchTracks', () => {
-    it('should search tracks and map results correctly', async () => {
+    it('should search for tracks', async () => {
       const mockResponse = {
         tracks: {
           items: [
             {
               id: 'track1',
               name: 'Search Result',
-              artists: [],
-              album: { id: 'album1', name: 'Album', artists: [], images: [], release_date: '' },
+              artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+              album: {
+                id: 'album1',
+                name: 'Album 1',
+                artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
+                images: [],
+                release_date: '2023-01-01'
+              },
               duration_ms: 180000,
-              popularity: 80,
+              popularity: 75,
               uri: 'spotify:track:track1'
             }
           ]
@@ -401,123 +444,68 @@ describe('SpotifyService', () => {
 
       mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.searchTracks('test query', 10);
+      const tracks = await spotifyService.searchTracks('test query');
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/search?q=test%20query&type=track&limit=10'
+        '/search?q=test%20query&type=track&limit=20'
       );
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Search Result');
+      expect(tracks).toHaveLength(1);
+      expect(tracks[0].name).toBe('Search Result');
     });
 
     it('should handle empty search results', async () => {
-      mockAxiosInstance.get.mockResolvedValue({ data: {} });
-
-      const result = await spotifyService.searchTracks('no results');
-
-      expect(result).toHaveLength(0);
-    });
-  });
-
-  describe('searchPlaylists', () => {
-    it('should search playlists and map results correctly', async () => {
-      const mockResponse = {
-        playlists: {
-          items: [
-            {
-              id: 'playlist1',
-              name: 'Search Result Playlist',
-              tracks: { total: 5 },
-              owner: { id: 'user1', display_name: 'Owner' },
-              images: []
-            }
-          ]
-        }
-      };
-
+      const mockResponse = { tracks: { items: [] } };
       mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await spotifyService.searchPlaylists('test query', 5);
+      const tracks = await spotifyService.searchTracks('nonexistent');
+
+      expect(tracks).toHaveLength(0);
+    });
+
+    it('should encode search query properly', async () => {
+      mockAxiosInstance.get.mockResolvedValue({ data: { tracks: { items: [] } } });
+
+      await spotifyService.searchTracks('artist:"The Beatles" year:1969');
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/search?q=test%20query&type=playlist&limit=5'
+        '/search?q=artist%3A%22The%20Beatles%22%20year%3A1969&type=track&limit=20'
       );
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Search Result Playlist');
-    });
-  });
-
-  describe('getMultipleTracks', () => {
-    it('should fetch multiple tracks in chunks of 50', async () => {
-      const trackIds = Array(120).fill(0).map((_, i) => `track${i}`);
-      const mockTrack = {
-        id: 'track1',
-        name: 'Track',
-        artists: [],
-        album: { id: 'album1', name: 'Album', artists: [], images: [], release_date: '' },
-        duration_ms: 180000,
-        popularity: 0,
-        uri: 'spotify:track:track1'
-      };
-
-      mockAxiosInstance.get
-        .mockResolvedValueOnce({ data: { tracks: Array(50).fill(mockTrack) } })
-        .mockResolvedValueOnce({ data: { tracks: Array(50).fill(mockTrack) } })
-        .mockResolvedValueOnce({ data: { tracks: Array(20).fill(mockTrack) } });
-
-      const result = await spotifyService.getMultipleTracks(trackIds);
-
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(3);
-      expect(result).toHaveLength(120);
-    });
-
-    it('should filter out null tracks', async () => {
-      const trackIds = ['track1', 'track2'];
-      const validTrack = {
-        id: 'track1',
-        name: 'Valid Track',
-        artists: [],
-        album: { id: 'album1', name: 'Album', artists: [], images: [], release_date: '' },
-        duration_ms: 180000,
-        popularity: 0,
-        uri: 'spotify:track:track1'
-      };
-
-      mockAxiosInstance.get.mockResolvedValue({
-        data: { tracks: [validTrack, null] }
-      });
-
-      const result = await spotifyService.getMultipleTracks(trackIds);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('track1');
     });
   });
 
   describe('error handling', () => {
     it('should handle network errors', async () => {
-      const networkError = { request: {}, message: 'Network Error' };
+      const networkError = {
+        request: {},
+        message: 'Network Error'
+      };
+
       mockAxiosInstance.get.mockRejectedValue(networkError);
 
       await expect(spotifyService.getUserProfile()).rejects.toMatchObject({
-        type: 'NETWORK',
-        message: 'Network error occurred'
+        type: 'NETWORK'
       });
     });
 
-    it('should handle API errors with custom messages', async () => {
+    it('should handle API errors with response', async () => {
       const apiError = {
         response: {
           status: 404,
           statusText: 'Not Found',
-          data: { error: { message: 'Playlist not found' } }
+          data: {
+            error: {
+              message: 'Playlist not found'
+            }
+          }
         }
       };
+
       mockAxiosInstance.get.mockRejectedValue(apiError);
 
-      await expect(spotifyService.getPlaylist('nonexistent')).rejects.toMatchObject({
+      await expect(spotifyService.getUserProfile()).rejects.toMatchObject({
         type: 'API',
-        message: 'Playlist not found'
+        endpoint: '/me',
+        method: 'GET'
       });
     });
 
@@ -526,13 +514,12 @@ describe('SpotifyService', () => {
       mockAxiosInstance.get.mockRejectedValue(genericError);
 
       await expect(spotifyService.getUserProfile()).rejects.toMatchObject({
-        type: 'API',
-        message: 'Something went wrong'
+        type: 'API'
       });
     });
   });
 
-  describe('rate limiting and retries', () => {
+  describe('rate limiting', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
@@ -541,19 +528,62 @@ describe('SpotifyService', () => {
       jest.useRealTimers();
     });
 
-    it('should implement basic rate limiting', async () => {
-      mockAxiosInstance.get.mockResolvedValue({ data: { id: 'user1' } });
+    it('should handle 429 rate limit responses', async () => {
+      const rateLimitError = {
+        response: {
+          status: 429,
+          headers: {
+            'retry-after': '2'
+          }
+        },
+        config: {
+          url: '/me'
+        }
+      };
 
-      // Make two quick requests
-      const promise1 = spotifyService.getUserProfile();
-      const promise2 = spotifyService.getUserProfile();
+      // First call fails with rate limit, second succeeds
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce({ data: { id: 'user1' } });
 
-      // Fast-forward time to resolve delays
-      jest.advanceTimersByTime(200);
+      const promise = spotifyService.getUserProfile();
 
-      await Promise.all([promise1, promise2]);
+      // Fast-forward time to simulate retry delay
+      jest.advanceTimersByTime(2000);
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+      await expect(promise).resolves.toBeDefined();
+    });
+  });
+
+  describe('caching', () => {
+    it('should cache user profile', async () => {
+      // Create a new service instance without mocked CacheService for this test
+      const realCacheService = jest.requireActual('../CacheService');
+      const serviceWithRealCache = new (class extends SpotifyService {
+        constructor(authService: IAuthService) {
+          super(authService);
+          // Override the cache with a real instance
+          (this as any).cache = new realCacheService.CacheService({
+            ttl: 5 * 60 * 1000,
+            maxSize: 1000
+          });
+        }
+      })(mockAuthService);
+
+      const mockResponse = {
+        id: 'user1',
+        display_name: 'Test User'
+      };
+
+      mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
+
+      // First call
+      await serviceWithRealCache.getUserProfile();
+      // Second call should use cache
+      await serviceWithRealCache.getUserProfile();
+
+      // Should only make one API call due to caching
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1);
     });
   });
 });

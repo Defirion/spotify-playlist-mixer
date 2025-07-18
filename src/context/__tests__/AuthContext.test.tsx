@@ -9,36 +9,33 @@ import { createAuthError } from '../../types/errors';
 class MockAuthService implements IAuthService {
   private token: string | null = null;
   private user: User | null = null;
-  private authenticated = false;
   private callbacks: (() => void)[] = [];
-  
-  // Test control methods
-  setMockState(token: string | null, user: User | null, authenticated: boolean) {
-    this.token = token;
-    this.user = user;
-    this.authenticated = authenticated;
-  }
-  
-  triggerTokenExpiration() {
-    this.callbacks.forEach(callback => callback());
-  }
+  private shouldFailLogin = false;
+  private shouldFailLogout = false;
+  private shouldFailRefresh = false;
 
   async login(): Promise<AuthResult> {
-    if (this.token && this.user) {
-      this.authenticated = true;
-      return {
-        token: this.token,
-        user: this.user,
-        expiresIn: 3600
-      };
+    if (this.shouldFailLogin) {
+      throw createAuthError('Login failed', 'LOGIN_FAILED');
     }
-    throw createAuthError('Login failed', 'LOGIN_FAILED');
+    
+    this.token = 'mock-token';
+    this.user = { id: 'user1', displayName: 'Test User' };
+    
+    return {
+      token: this.token,
+      user: this.user,
+      expiresIn: 3600
+    };
   }
 
   async logout(): Promise<void> {
+    if (this.shouldFailLogout) {
+      throw new Error('Logout failed');
+    }
+    
     this.token = null;
     this.user = null;
-    this.authenticated = false;
   }
 
   getToken(): string | null {
@@ -46,7 +43,7 @@ class MockAuthService implements IAuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.authenticated;
+    return this.token !== null;
   }
 
   getCurrentUser(): User | null {
@@ -54,10 +51,12 @@ class MockAuthService implements IAuthService {
   }
 
   async refreshToken(): Promise<string> {
-    if (this.token) {
-      return this.token;
+    if (this.shouldFailRefresh) {
+      throw createAuthError('Token refresh failed', 'TOKEN_EXPIRED');
     }
-    throw createAuthError('Token refresh failed', 'TOKEN_EXPIRED');
+    
+    this.token = 'refreshed-token';
+    return this.token;
   }
 
   onTokenExpired(callback: () => void): void {
@@ -67,274 +66,393 @@ class MockAuthService implements IAuthService {
   clearTokenExpiredCallbacks(): void {
     this.callbacks = [];
   }
+
+  // Test helpers
+  setToken(token: string | null) {
+    this.token = token;
+  }
+
+  setUser(user: User | null) {
+    this.user = user;
+  }
+
+  setShouldFailLogin(shouldFail: boolean) {
+    this.shouldFailLogin = shouldFail;
+  }
+
+  setShouldFailLogout(shouldFail: boolean) {
+    this.shouldFailLogout = shouldFail;
+  }
+
+  setShouldFailRefresh(shouldFail: boolean) {
+    this.shouldFailRefresh = shouldFail;
+  }
+
+  triggerTokenExpired() {
+    this.callbacks.forEach(cb => cb());
+  }
+
+  handleAuthCallback() {
+    return {
+      token: 'callback-token',
+      user: { id: 'callback-user', displayName: 'Callback User' },
+      expiresIn: 3600
+    };
+  }
 }
 
 // Test component that uses the auth context
 function TestComponent() {
-  const { state, login, logout, refreshToken, clearError } = useAuth();
-  
-  const handleLogin = async () => {
-    try {
-      await login();
-    } catch (error) {
-      // Error is handled by the context
-    }
-  };
+  const {
+    user,
+    token,
+    isAuthenticated,
+    isLoading,
+    error,
+    login,
+    logout,
+    refreshToken,
+    clearError,
+    checkAuthStatus
+  } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      // Error is handled by the context
-    }
-  };
-
-  const handleRefresh = async () => {
-    try {
-      await refreshToken();
-    } catch (error) {
-      // Error is handled by the context
-    }
-  };
-  
   return (
     <div>
-      <div data-testid="auth-state">
-        {JSON.stringify({
-          isAuthenticated: state.isAuthenticated,
-          isLoading: state.isLoading,
-          hasUser: !!state.user,
-          hasToken: !!state.token,
-          error: state.error
-        })}
-      </div>
-      <button onClick={handleLogin} data-testid="login-btn">Login</button>
-      <button onClick={handleLogout} data-testid="logout-btn">Logout</button>
-      <button onClick={handleRefresh} data-testid="refresh-btn">Refresh</button>
-      <button onClick={clearError} data-testid="clear-error-btn">Clear Error</button>
+      <div data-testid="user">{user?.displayName || 'No user'}</div>
+      <div data-testid="token">{token || 'No token'}</div>
+      <div data-testid="isAuthenticated">{isAuthenticated.toString()}</div>
+      <div data-testid="isLoading">{isLoading.toString()}</div>
+      <div data-testid="error">{error || 'No error'}</div>
+      
+      <button data-testid="login" onClick={login}>Login</button>
+      <button data-testid="logout" onClick={logout}>Logout</button>
+      <button data-testid="refresh" onClick={refreshToken}>Refresh</button>
+      <button data-testid="clearError" onClick={clearError}>Clear Error</button>
+      <button data-testid="checkStatus" onClick={checkAuthStatus}>Check Status</button>
     </div>
   );
 }
 
-describe('AuthContext', () => {
+describe('AuthContext Integration Tests', () => {
   let mockAuthService: MockAuthService;
 
   beforeEach(() => {
     mockAuthService = new MockAuthService();
   });
 
-  const renderWithProvider = (children: React.ReactNode) => {
+  const renderWithProvider = (authService = mockAuthService) => {
     return render(
-      <AuthProvider authService={mockAuthService}>
-        {children}
+      <AuthProvider authService={authService}>
+        <TestComponent />
       </AuthProvider>
     );
   };
 
-  it('should provide initial unauthenticated state', () => {
-    renderWithProvider(<TestComponent />);
-    
-    const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-    expect(authState).toEqual({
-      isAuthenticated: false,
-      isLoading: false,
-      hasUser: false,
-      hasToken: false,
-      error: undefined
+  describe('Initial State', () => {
+    it('should initialize with unauthenticated state', () => {
+      renderWithProvider();
+
+      expect(screen.getByTestId('user')).toHaveTextContent('No user');
+      expect(screen.getByTestId('token')).toHaveTextContent('No token');
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+      expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      expect(screen.getByTestId('error')).toHaveTextContent('No error');
+    });
+
+    it('should check auth status on mount', () => {
+      mockAuthService.setToken('existing-token');
+      mockAuthService.setUser({ id: 'existing-user', displayName: 'Existing User' });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('user')).toHaveTextContent('Existing User');
+      expect(screen.getByTestId('token')).toHaveTextContent('existing-token');
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+    });
+
+    it('should handle auth callback on mount', () => {
+      // Mock URL hash scenario
+      const originalLocation = window.location;
+      delete (window as any).location;
+      (window as any).location = { ...originalLocation, hash: '#access_token=callback-token' };
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('user')).toHaveTextContent('Callback User');
+      expect(screen.getByTestId('token')).toHaveTextContent('callback-token');
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+
+      // Restore location
+      (window as any).location = originalLocation;
     });
   });
 
-  it('should initialize with authenticated state when service has valid token', () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('valid-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-    expect(authState).toEqual({
-      isAuthenticated: true,
-      isLoading: false,
-      hasUser: true,
-      hasToken: true,
-      error: undefined
+  describe('Login Flow', () => {
+    it('should handle successful login', async () => {
+      renderWithProvider();
+
+      const loginButton = screen.getByTestId('login');
+
+      await act(async () => {
+        loginButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('user')).toHaveTextContent('Test User');
+        expect(screen.getByTestId('token')).toHaveTextContent('mock-token');
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
+    });
+
+    it('should handle login failure', async () => {
+      mockAuthService.setShouldFailLogin(true);
+      renderWithProvider();
+
+      const loginButton = screen.getByTestId('login');
+
+      await act(async () => {
+        loginButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('Login failed');
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
+    });
+
+    it('should show loading state during login', async () => {
+      renderWithProvider();
+
+      const loginButton = screen.getByTestId('login');
+
+      act(() => {
+        loginButton.click();
+      });
+
+      // Check loading state immediately
+      expect(screen.getByTestId('isLoading')).toHaveTextContent('true');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
     });
   });
 
-  it('should handle successful login', async () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('new-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    const loginBtn = screen.getByTestId('login-btn');
-    
-    await act(async () => {
-      loginBtn.click();
+  describe('Logout Flow', () => {
+    beforeEach(async () => {
+      renderWithProvider();
+      
+      // Login first
+      await act(async () => {
+        screen.getByTestId('login').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+      });
     });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(true);
-      expect(authState.hasUser).toBe(true);
-      expect(authState.hasToken).toBe(true);
-      expect(authState.isLoading).toBe(false);
+
+    it('should handle successful logout', async () => {
+      const logoutButton = screen.getByTestId('logout');
+
+      await act(async () => {
+        logoutButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('user')).toHaveTextContent('No user');
+        expect(screen.getByTestId('token')).toHaveTextContent('No token');
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
+    });
+
+    it('should handle logout failure', async () => {
+      mockAuthService.setShouldFailLogout(true);
+      const logoutButton = screen.getByTestId('logout');
+
+      await act(async () => {
+        logoutButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('Logout failed');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
     });
   });
 
-  it('should handle login failure', async () => {
-    mockAuthService.setMockState(null, null, false);
-    
-    renderWithProvider(<TestComponent />);
-    
-    const loginBtn = screen.getByTestId('login-btn');
-    
-    await act(async () => {
-      try {
-        loginBtn.click();
-      } catch (error) {
-        // Expected to throw
-      }
+  describe('Token Refresh Flow', () => {
+    beforeEach(async () => {
+      renderWithProvider();
+      
+      // Login first
+      await act(async () => {
+        screen.getByTestId('login').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+      });
     });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(false);
-      expect(authState.isLoading).toBe(false);
-      expect(authState.error).toBeDefined();
+
+    it('should handle successful token refresh', async () => {
+      const refreshButton = screen.getByTestId('refresh');
+
+      await act(async () => {
+        refreshButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('token')).toHaveTextContent('refreshed-token');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
+    });
+
+    it('should handle token refresh failure', async () => {
+      mockAuthService.setShouldFailRefresh(true);
+      const refreshButton = screen.getByTestId('refresh');
+
+      await act(async () => {
+        refreshButton.click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('Token refresh failed');
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
     });
   });
 
-  it('should handle successful logout', async () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('valid-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    // Wait for initial auth state
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(true);
-    });
-    
-    const logoutBtn = screen.getByTestId('logout-btn');
-    
-    await act(async () => {
-      logoutBtn.click();
-    });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(false);
-      expect(authState.hasUser).toBe(false);
-      expect(authState.hasToken).toBe(false);
-      expect(authState.isLoading).toBe(false);
+  describe('Token Expiration Handling', () => {
+    it('should handle token expiration callback', async () => {
+      renderWithProvider();
+
+      // Login first
+      await act(async () => {
+        screen.getByTestId('login').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+      });
+
+      // Trigger token expiration
+      act(() => {
+        mockAuthService.triggerTokenExpired();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('user')).toHaveTextContent('No user');
+        expect(screen.getByTestId('token')).toHaveTextContent('No token');
+      });
     });
   });
 
-  it('should handle token refresh', async () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('valid-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    const refreshBtn = screen.getByTestId('refresh-btn');
-    
-    await act(async () => {
-      refreshBtn.click();
-    });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isLoading).toBe(false);
-      expect(authState.error).toBeUndefined();
+  describe('Error Handling', () => {
+    it('should clear errors', async () => {
+      mockAuthService.setShouldFailLogin(true);
+      renderWithProvider();
+
+      // Trigger error
+      await act(async () => {
+        screen.getByTestId('login').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('Login failed');
+      });
+
+      // Clear error
+      act(() => {
+        screen.getByTestId('clearError').click();
+      });
+
+      expect(screen.getByTestId('error')).toHaveTextContent('No error');
     });
   });
 
-  it('should handle token expiration callback', async () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('valid-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    // Wait for initial auth state
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(true);
-    });
-    
-    // Trigger token expiration
-    act(() => {
-      mockAuthService.triggerTokenExpiration();
-    });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.isAuthenticated).toBe(false);
-      expect(authState.hasUser).toBe(false);
-      expect(authState.hasToken).toBe(false);
+  describe('Auth Status Check', () => {
+    it('should manually check auth status', () => {
+      mockAuthService.setToken('manual-token');
+      mockAuthService.setUser({ id: 'manual-user', displayName: 'Manual User' });
+      
+      renderWithProvider();
+
+      // Initially should be unauthenticated
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+
+      // Manually check status
+      act(() => {
+        screen.getByTestId('checkStatus').click();
+      });
+
+      expect(screen.getByTestId('user')).toHaveTextContent('Manual User');
+      expect(screen.getByTestId('token')).toHaveTextContent('manual-token');
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
     });
   });
 
-  it('should clear error state', async () => {
-    mockAuthService.setMockState(null, null, false);
-    
-    renderWithProvider(<TestComponent />);
-    
-    // Trigger login failure to set error
-    const loginBtn = screen.getByTestId('login-btn');
-    await act(async () => {
-      loginBtn.click();
-    });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.error).toBeDefined();
-    });
-    
-    // Clear error
-    const clearErrorBtn = screen.getByTestId('clear-error-btn');
-    act(() => {
-      clearErrorBtn.click();
-    });
-    
-    await waitFor(() => {
-      const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(authState.error).toBeUndefined();
+  describe('Context Error Handling', () => {
+    it('should throw error when used outside provider', () => {
+      // Suppress console.error for this test
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(() => {
+        render(<TestComponent />);
+      }).toThrow('useAuth must be used within an AuthProvider');
+
+      consoleSpy.mockRestore();
     });
   });
 
-  it('should throw error when useAuth is used outside provider', () => {
-    // Suppress console.error for this test
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
-    expect(() => {
-      render(<TestComponent />);
-    }).toThrow('useAuth must be used within an AuthProvider');
-    
-    consoleSpy.mockRestore();
+  describe('Cleanup', () => {
+    it('should cleanup token expiration callbacks on unmount', () => {
+      const clearCallbacksSpy = jest.spyOn(mockAuthService, 'clearTokenExpiredCallbacks');
+      
+      const { unmount } = renderWithProvider();
+      
+      unmount();
+      
+      expect(clearCallbacksSpy).toHaveBeenCalled();
+    });
   });
 
-  it('should handle loading states correctly', async () => {
-    const mockUser: User = { id: '123', displayName: 'Test User' };
-    mockAuthService.setMockState('valid-token', mockUser, true);
-    
-    renderWithProvider(<TestComponent />);
-    
-    const loginBtn = screen.getByTestId('login-btn');
-    
-    // Start login
-    act(() => {
-      loginBtn.click();
-    });
-    
-    // Should show loading state briefly
-    const authState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-    expect(authState.isLoading).toBe(true);
-    
-    // Wait for completion
-    await waitFor(() => {
-      const finalState = JSON.parse(screen.getByTestId('auth-state').textContent || '{}');
-      expect(finalState.isLoading).toBe(false);
+  describe('State Transitions', () => {
+    it('should handle complex state transitions correctly', async () => {
+      renderWithProvider();
+
+      // Initial state
+      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+      expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+
+      // Start login
+      act(() => {
+        screen.getByTestId('login').click();
+      });
+      expect(screen.getByTestId('isLoading')).toHaveTextContent('true');
+
+      // Complete login
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
+
+      // Start logout
+      act(() => {
+        screen.getByTestId('logout').click();
+      });
+      expect(screen.getByTestId('isLoading')).toHaveTextContent('true');
+
+      // Complete logout
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
     });
   });
 });

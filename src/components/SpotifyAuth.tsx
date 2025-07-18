@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const SpotifyAuth: React.FC = React.memo(() => {
+const SpotifyAuth: React.FC = () => {
   const { state, login, clearError } = useAuth();
 
   const handleLogin = useCallback(async () => {

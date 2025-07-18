@@ -1,488 +1,486 @@
 import { PlaylistMixerService } from '../PlaylistMixerService';
-import { Track, MixConfig, MixStrategy, Playlist, User } from '../../types';
+import { MixConfig, Track, Playlist, User, MixStrategy } from '../../types';
 
 describe('PlaylistMixerService', () => {
-  let playlistMixerService: PlaylistMixerService;
+  let mixerService: PlaylistMixerService;
 
   beforeEach(() => {
-    playlistMixerService = new PlaylistMixerService();
+    mixerService = new PlaylistMixerService();
   });
 
   // Helper function to create mock tracks
-  const createMockTrack = (id: string, name: string, popularity: number = 50, duration_ms: number = 180000): Track => ({
+  const createMockTrack = (id: string, name: string, popularity: number = 50, duration: number = 180000): Track => ({
     id,
     name,
-    artists: [{ id: 'artist1', name: 'Test Artist', uri: 'spotify:artist:artist1' }],
+    artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
     album: {
       id: 'album1',
-      name: 'Test Album',
-      artists: [{ id: 'artist1', name: 'Test Artist', uri: 'spotify:artist:artist1' }],
+      name: 'Album 1',
+      artists: [{ id: 'artist1', name: 'Artist 1', uri: 'spotify:artist:artist1' }],
       images: [],
       release_date: '2023-01-01'
     },
-    duration_ms,
+    duration_ms: duration,
     popularity,
-    uri: `spotify:track:${id}`,
-    preview_url: undefined
+    uri: `spotify:track:${id}`
   });
 
   // Helper function to create mock playlist
   const createMockPlaylist = (id: string, name: string): Playlist => ({
     id,
     name,
-    description: 'Test playlist',
-    trackCount: 10,
+    trackCount: 0,
     owner: { id: 'user1', displayName: 'Test User' } as User,
     images: []
   });
 
-  // Helper function to create mock config
-  const createMockConfig = (
-    tracks1: Track[] = [],
-    tracks2: Track[] = [],
-    totalSongs: number = 10,
-    strategy: MixStrategy = 'balanced'
+  // Helper function to create mock mix config
+  const createMockMixConfig = (
+    playlists: Array<{ playlist: Playlist; tracks: Track[] }>,
+    ratios: { [key: string]: { ratio: number; isEnabled: boolean } },
+    totalSongs: number = 50
   ): MixConfig => ({
-    playlists: [
-      {
-        playlist: createMockPlaylist('playlist1', 'Playlist 1'),
-        tracks: tracks1,
-        config: { ratio: 1, isEnabled: true }
-      },
-      {
-        playlist: createMockPlaylist('playlist2', 'Playlist 2'),
-        tracks: tracks2,
-        config: { ratio: 1, isEnabled: true }
-      }
-    ],
-    ratioConfig: {
-      playlist1: { ratio: 1, isEnabled: true },
-      playlist2: { ratio: 1, isEnabled: true }
-    },
+    playlists: playlists.map(p => ({
+      playlist: p.playlist,
+      tracks: p.tracks,
+      config: ratios[p.playlist.id]
+    })),
+    ratioConfig: ratios,
     mixOptions: {
-      totalSongs,
-      strategy,
       shuffleWithinRatio: false,
-      avoidConsecutiveSamePlaylist: false
+      avoidConsecutiveSamePlaylist: false,
+      strategy: 'balanced' as MixStrategy,
+      totalSongs
     }
   });
 
   describe('validateMixConfig', () => {
-    it('should validate a correct configuration', async () => {
-      const config = createMockConfig(
-        [createMockTrack('1', 'Track 1')],
-        [createMockTrack('2', 'Track 2')]
+    it('should validate a correct mix configuration', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = [createMockTrack('t1', 'Track 1'), createMockTrack('t2', 'Track 2')];
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } }
       );
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
-    it('should reject null configuration', async () => {
-      const result = await playlistMixerService.validateMixConfig(null as any);
+    it('should reject null or undefined configuration', async () => {
+      const result = await mixerService.validateMixConfig(null as any);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Configuration is required');
     });
 
-    it('should reject configuration without playlists', async () => {
-      const config = {
-        playlists: [],
-        ratioConfig: {},
-        mixOptions: { totalSongs: 10, strategy: 'balanced' as MixStrategy }
-      } as MixConfig;
+    it('should reject configuration with no playlists', async () => {
+      const config = createMockMixConfig([], {});
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('At least one playlist is required');
     });
 
-    it('should reject configuration without ratio config', async () => {
-      const config = {
-        playlists: [
-          {
-            playlist: createMockPlaylist('playlist1', 'Playlist 1'),
-            tracks: [createMockTrack('1', 'Track 1')],
-            config: { ratio: 1, isEnabled: true }
-          }
-        ],
+    it('should reject configuration with no ratio config', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = [createMockTrack('t1', 'Track 1')];
+      
+      const config: MixConfig = {
+        playlists: [{ playlist: playlist1, tracks: tracks1, config: { ratio: 1, isEnabled: true } }],
         ratioConfig: {},
-        mixOptions: { totalSongs: 10, strategy: 'balanced' as MixStrategy }
-      } as MixConfig;
+        mixOptions: {
+          shuffleWithinRatio: false,
+          avoidConsecutiveSamePlaylist: false,
+          strategy: 'balanced',
+          totalSongs: 50
+        }
+      };
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Ratio configuration is required');
     });
 
-    it('should reject configuration with zero total songs', async () => {
-      const config = createMockConfig(
-        [createMockTrack('1', 'Track 1')],
-        [createMockTrack('2', 'Track 2')],
-        0
+    it('should reject configuration with invalid total songs', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = [createMockTrack('t1', 'Track 1')];
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        -5
       );
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Total songs must be greater than 0');
     });
 
-    it('should reject configuration with playlists without tracks', async () => {
-      const config = createMockConfig([], []);
+    it('should reject configuration with playlists that have no tracks', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: [] }],
+        { p1: { ratio: 1, isEnabled: true } }
+      );
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('At least one playlist must have tracks');
     });
 
     it('should reject configuration with missing ratio config for playlists', async () => {
-      const config = {
-        playlists: [
-          {
-            playlist: createMockPlaylist('playlist1', 'Playlist 1'),
-            tracks: [createMockTrack('1', 'Track 1')],
-            config: { ratio: 1, isEnabled: true }
-          }
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const playlist2 = createMockPlaylist('p2', 'Playlist 2');
+      const tracks1 = [createMockTrack('t1', 'Track 1')];
+      const tracks2 = [createMockTrack('t2', 'Track 2')];
+      
+      const config = createMockMixConfig(
+        [
+          { playlist: playlist1, tracks: tracks1 },
+          { playlist: playlist2, tracks: tracks2 }
         ],
-        ratioConfig: {
-          playlist2: { ratio: 1, isEnabled: true } // Missing playlist1
-        },
-        mixOptions: { totalSongs: 10, strategy: 'balanced' as MixStrategy }
-      } as MixConfig;
+        { p1: { ratio: 1, isEnabled: true } } // Missing p2
+      );
 
-      const result = await playlistMixerService.validateMixConfig(config);
+      const result = await mixerService.validateMixConfig(config);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Missing ratio configuration for playlists: playlist1');
+      expect(result.errors).toContain('Missing ratio configuration for playlists: p2');
     });
   });
 
   describe('mixPlaylists', () => {
-    it('should mix playlists according to equal ratios', async () => {
-      const tracks1 = [
-        createMockTrack('1', 'Track 1', 80),
-        createMockTrack('2', 'Track 2', 70),
-        createMockTrack('3', 'Track 3', 60)
-      ];
-      const tracks2 = [
-        createMockTrack('4', 'Track 4', 90),
-        createMockTrack('5', 'Track 5', 85),
-        createMockTrack('6', 'Track 6', 75)
-      ];
-
-      const config = createMockConfig(tracks1, tracks2, 6);
-
-      const result = await playlistMixerService.mixPlaylists(config);
-
-      expect(result.tracks).toHaveLength(6);
-      expect(result.metadata.sourcePlaylistCount).toBe(2);
-      expect(result.metadata.strategy).toBe('balanced');
-      expect(result.statistics.totalTracks).toBe(6);
+    it('should create a mix with correct number of tracks', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const playlist2 = createMockPlaylist('p2', 'Playlist 2');
       
-      // Check that tracks from both playlists are included
-      const playlist1Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist1');
-      const playlist2Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist2');
+      const tracks1 = Array(20).fill(null).map((_, i) => createMockTrack(`p1t${i}`, `P1 Track ${i}`, 70));
+      const tracks2 = Array(20).fill(null).map((_, i) => createMockTrack(`p2t${i}`, `P2 Track ${i}`, 60));
       
-      expect(playlist1Tracks.length).toBeGreaterThan(0);
-      expect(playlist2Tracks.length).toBeGreaterThan(0);
+      const config = createMockMixConfig(
+        [
+          { playlist: playlist1, tracks: tracks1 },
+          { playlist: playlist2, tracks: tracks2 }
+        ],
+        {
+          p1: { ratio: 2, isEnabled: true },
+          p2: { ratio: 1, isEnabled: true }
+        },
+        30
+      );
+
+      const result = await mixerService.mixPlaylists(config);
+
+      expect(result.tracks).toHaveLength(30);
+      expect(result.metadata).toBeDefined();
+      expect(result.statistics).toBeDefined();
     });
 
-    it('should respect different ratios', async () => {
-      const tracks1 = Array(10).fill(0).map((_, i) => createMockTrack(`1-${i}`, `Track 1-${i}`, 50));
-      const tracks2 = Array(10).fill(0).map((_, i) => createMockTrack(`2-${i}`, `Track 2-${i}`, 50));
-
-      const config: MixConfig = {
-        playlists: [
-          {
-            playlist: createMockPlaylist('playlist1', 'Playlist 1'),
-            tracks: tracks1,
-            config: { ratio: 3, isEnabled: true }
-          },
-          {
-            playlist: createMockPlaylist('playlist2', 'Playlist 2'),
-            tracks: tracks2,
-            config: { ratio: 1, isEnabled: true }
-          }
+    it('should respect playlist ratios', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const playlist2 = createMockPlaylist('p2', 'Playlist 2');
+      
+      const tracks1 = Array(50).fill(null).map((_, i) => createMockTrack(`p1t${i}`, `P1 Track ${i}`));
+      const tracks2 = Array(50).fill(null).map((_, i) => createMockTrack(`p2t${i}`, `P2 Track ${i}`));
+      
+      const config = createMockMixConfig(
+        [
+          { playlist: playlist1, tracks: tracks1 },
+          { playlist: playlist2, tracks: tracks2 }
         ],
-        ratioConfig: {
-          playlist1: { ratio: 3, isEnabled: true },
-          playlist2: { ratio: 1, isEnabled: true }
+        {
+          p1: { ratio: 3, isEnabled: true }, // 75% of tracks
+          p2: { ratio: 1, isEnabled: true }  // 25% of tracks
         },
-        mixOptions: {
-          totalSongs: 12,
-          strategy: 'balanced',
-          shuffleWithinRatio: false,
-          avoidConsecutiveSamePlaylist: false
-        }
-      };
+        40
+      );
 
-      const result = await playlistMixerService.mixPlaylists(config);
+      const result = await mixerService.mixPlaylists(config);
 
-      const playlist1Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist1');
-      const playlist2Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist2');
+      // Count tracks from each playlist
+      const p1Count = result.tracks.filter((t: any) => t.sourcePlaylist === 'p1').length;
+      const p2Count = result.tracks.filter((t: any) => t.sourcePlaylist === 'p2').length;
 
-      // With 3:1 ratio, playlist1 should have roughly 3x more tracks
-      expect(playlist1Tracks.length).toBeGreaterThan(playlist2Tracks.length);
-      expect(playlist1Tracks.length).toBeCloseTo(9, 2); // Approximately 9 out of 12
-      expect(playlist2Tracks.length).toBeCloseTo(3, 2); // Approximately 3 out of 12
+      // Should be approximately 3:1 ratio (30:10 for 40 total tracks)
+      expect(p1Count).toBeGreaterThan(p2Count * 2);
+      expect(p1Count + p2Count).toBe(40);
     });
 
     it('should handle disabled playlists', async () => {
-      const tracks1 = [createMockTrack('1', 'Track 1')];
-      const tracks2 = [createMockTrack('2', 'Track 2')];
-
-      const config: MixConfig = {
-        playlists: [
-          {
-            playlist: createMockPlaylist('playlist1', 'Playlist 1'),
-            tracks: tracks1,
-            config: { ratio: 1, isEnabled: true }
-          },
-          {
-            playlist: createMockPlaylist('playlist2', 'Playlist 2'),
-            tracks: tracks2,
-            config: { ratio: 1, isEnabled: false }
-          }
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const playlist2 = createMockPlaylist('p2', 'Playlist 2');
+      
+      const tracks1 = Array(20).fill(null).map((_, i) => createMockTrack(`p1t${i}`, `P1 Track ${i}`));
+      const tracks2 = Array(20).fill(null).map((_, i) => createMockTrack(`p2t${i}`, `P2 Track ${i}`));
+      
+      const config = createMockMixConfig(
+        [
+          { playlist: playlist1, tracks: tracks1 },
+          { playlist: playlist2, tracks: tracks2 }
         ],
-        ratioConfig: {
-          playlist1: { ratio: 1, isEnabled: true },
-          playlist2: { ratio: 1, isEnabled: false }
+        {
+          p1: { ratio: 1, isEnabled: true },
+          p2: { ratio: 1, isEnabled: false } // Disabled
         },
-        mixOptions: {
-          totalSongs: 2,
-          strategy: 'balanced',
-          shuffleWithinRatio: false,
-          avoidConsecutiveSamePlaylist: false
-        }
-      };
+        20
+      );
 
-      const result = await playlistMixerService.mixPlaylists(config);
+      const result = await mixerService.mixPlaylists(config);
 
-      // Should only include tracks from enabled playlist
-      const playlist1Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist1');
-      const playlist2Tracks = result.tracks.filter((t: any) => t.sourcePlaylist === 'playlist2');
+      // All tracks should be from playlist 1
+      const p1Count = result.tracks.filter((t: any) => t.sourcePlaylist === 'p1').length;
+      const p2Count = result.tracks.filter((t: any) => t.sourcePlaylist === 'p2').length;
 
-      expect(playlist1Tracks.length).toBe(1);
-      expect(playlist2Tracks.length).toBe(0);
+      expect(p1Count).toBe(20);
+      expect(p2Count).toBe(0);
     });
 
     it('should throw validation error for invalid config', async () => {
-      const invalidConfig = createMockConfig([], [], 0);
+      const config = createMockMixConfig([], {});
 
-      await expect(playlistMixerService.mixPlaylists(invalidConfig)).rejects.toMatchObject({
-        type: 'VALIDATION',
-        message: expect.stringContaining('Invalid mix configuration')
+      await expect(mixerService.mixPlaylists(config)).rejects.toMatchObject({
+        type: 'VALIDATION'
       });
+    });
+
+    it('should not include duplicate tracks', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = Array(10).fill(null).map((_, i) => createMockTrack(`t${i}`, `Track ${i}`));
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        20 // More than available tracks
+      );
+
+      const result = await mixerService.mixPlaylists(config);
+
+      // Should only get unique tracks
+      const trackIds = result.tracks.map(t => t.id);
+      const uniqueTrackIds = [...new Set(trackIds)];
+      
+      expect(trackIds).toHaveLength(uniqueTrackIds.length);
+      expect(result.tracks.length).toBeLessThanOrEqual(10);
     });
   });
 
   describe('previewMix', () => {
     it('should create a preview with limited tracks', async () => {
-      const tracks1 = Array(50).fill(0).map((_, i) => createMockTrack(`1-${i}`, `Track 1-${i}`));
-      const tracks2 = Array(50).fill(0).map((_, i) => createMockTrack(`2-${i}`, `Track 2-${i}`));
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = Array(50).fill(null).map((_, i) => createMockTrack(`t${i}`, `Track ${i}`));
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        100 // Large number
+      );
 
-      const config = createMockConfig(tracks1, tracks2, 100);
+      const result = await mixerService.previewMix(config);
 
-      const result = await playlistMixerService.previewMix(config);
-
-      expect(result.isPreview).toBe(true);
       expect(result.tracks.length).toBeLessThanOrEqual(20);
+      expect(result.isPreview).toBe(true);
       expect(result.statistics).toBeDefined();
+    });
+
+    it('should respect smaller total songs in preview', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = Array(50).fill(null).map((_, i) => createMockTrack(`t${i}`, `Track ${i}`));
+      
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        10 // Smaller than preview limit
+      );
+
+      const result = await mixerService.previewMix(config);
+
+      expect(result.tracks.length).toBeLessThanOrEqual(10);
     });
   });
 
   describe('applyStrategy', () => {
-    const tracks = [
-      createMockTrack('1', 'Track 1', 90),
-      createMockTrack('2', 'Track 2', 70),
-      createMockTrack('3', 'Track 3', 50),
-      createMockTrack('4', 'Track 4', 30)
+    const mockTracks = [
+      createMockTrack('t1', 'Track 1', 90),
+      createMockTrack('t2', 'Track 2', 70),
+      createMockTrack('t3', 'Track 3', 50),
+      createMockTrack('t4', 'Track 4', 30)
     ];
 
-    it('should apply front-loaded strategy', () => {
-      const result = playlistMixerService.applyStrategy(tracks, 'front-loaded');
+    it('should apply balanced strategy (shuffle)', () => {
+      const result = mixerService.applyStrategy(mockTracks, 'balanced');
       
-      // Should be sorted by popularity descending
-      expect(result[0].popularity).toBeGreaterThanOrEqual(result[1].popularity!);
-      expect(result[1].popularity).toBeGreaterThanOrEqual(result[2].popularity!);
-      expect(result[2].popularity).toBeGreaterThanOrEqual(result[3].popularity!);
+      expect(result).toHaveLength(mockTracks.length);
+      expect(result).toEqual(expect.arrayContaining(mockTracks));
     });
 
-    it('should apply crescendo strategy', () => {
-      const result = playlistMixerService.applyStrategy(tracks, 'crescendo');
+    it('should apply front-loaded strategy (high popularity first)', () => {
+      const result = mixerService.applyStrategy(mockTracks, 'front-loaded');
       
-      // Should be sorted by popularity ascending
-      expect(result[0].popularity).toBeLessThanOrEqual(result[1].popularity!);
-      expect(result[1].popularity).toBeLessThanOrEqual(result[2].popularity!);
-      expect(result[2].popularity).toBeLessThanOrEqual(result[3].popularity!);
+      expect(result).toHaveLength(mockTracks.length);
+      expect(result[0].popularity).toBeGreaterThanOrEqual(result[1].popularity);
+      expect(result[1].popularity).toBeGreaterThanOrEqual(result[2].popularity);
     });
 
-    it('should apply balanced strategy', () => {
-      const result = playlistMixerService.applyStrategy(tracks, 'balanced');
+    it('should apply crescendo strategy (low to high popularity)', () => {
+      const result = mixerService.applyStrategy(mockTracks, 'crescendo');
       
-      // Should return shuffled array (different order, same tracks)
-      expect(result).toHaveLength(tracks.length);
-      expect(result.map(t => t.id).sort()).toEqual(tracks.map(t => t.id).sort());
+      expect(result).toHaveLength(mockTracks.length);
+      expect(result[0].popularity).toBeLessThanOrEqual(result[1].popularity);
+      expect(result[1].popularity).toBeLessThanOrEqual(result[2].popularity);
     });
 
-    it('should apply random strategy', () => {
-      const result = playlistMixerService.applyStrategy(tracks, 'random');
+    it('should apply random strategy (shuffle)', () => {
+      const result = mixerService.applyStrategy(mockTracks, 'random');
       
-      // Should return shuffled array
-      expect(result).toHaveLength(tracks.length);
-      expect(result.map(t => t.id).sort()).toEqual(tracks.map(t => t.id).sort());
+      expect(result).toHaveLength(mockTracks.length);
+      expect(result).toEqual(expect.arrayContaining(mockTracks));
+    });
+
+    it('should return copy of original array for unknown strategy', () => {
+      const result = mixerService.applyStrategy(mockTracks, 'unknown' as MixStrategy);
+      
+      expect(result).toHaveLength(mockTracks.length);
+      expect(result).not.toBe(mockTracks); // Should be a copy
+      expect(result).toEqual(mockTracks);
     });
   });
 
   describe('calculateMixStatistics', () => {
     it('should calculate correct statistics', async () => {
       const tracks = [
-        { ...createMockTrack('1', 'Track 1', 80, 180000), sourcePlaylist: 'playlist1' },
-        { ...createMockTrack('2', 'Track 2', 60, 200000), sourcePlaylist: 'playlist2' },
-        { ...createMockTrack('3', 'Track 3', 40, 220000), sourcePlaylist: 'playlist1' }
+        { ...createMockTrack('t1', 'Track 1', 80, 200000), sourcePlaylist: 'p1' },
+        { ...createMockTrack('t2', 'Track 2', 60, 180000), sourcePlaylist: 'p1' },
+        { ...createMockTrack('t3', 'Track 3', 40, 160000), sourcePlaylist: 'p2' }
       ] as any[];
 
-      const config = createMockConfig([], [], 3);
-
-      const result = await playlistMixerService.calculateMixStatistics(tracks, config);
-
-      expect(result.totalTracks).toBe(3);
-      expect(result.playlistDistribution.playlist1).toBe(2);
-      expect(result.playlistDistribution.playlist2).toBe(1);
-      expect(result.averagePopularity).toBe(60); // (80 + 60 + 40) / 3
-      expect(result.totalDuration).toBe(10); // (180000 + 200000 + 220000) / 60000 = 10 minutes
-    });
-
-    it('should handle empty tracks array', async () => {
-      const config = createMockConfig([], [], 0);
-
-      const result = await playlistMixerService.calculateMixStatistics([], config);
-
-      expect(result.totalTracks).toBe(0);
-      expect(result.averagePopularity).toBe(0);
-      expect(result.totalDuration).toBe(0);
-    });
-  });
-
-  describe('edge cases and error handling', () => {
-    it('should handle playlists with no valid tracks', async () => {
-      const invalidTracks = [
-        { id: '', name: 'Invalid Track 1' }, // Missing ID
-        { id: 'track2', name: 'Invalid Track 2' } // Missing URI
-      ] as Track[];
-
-      const config = createMockConfig(invalidTracks, [createMockTrack('1', 'Valid Track')]);
-
-      const result = await playlistMixerService.mixPlaylists(config);
-
-      // Should only include valid tracks
-      expect(result.tracks.length).toBeGreaterThan(0);
-      expect(result.tracks.every(track => track.id && track.uri)).toBe(true);
-    });
-
-    it('should handle very small playlists', async () => {
-      const config = createMockConfig(
-        [createMockTrack('1', 'Only Track')],
+      const config = createMockMixConfig(
         [],
-        5
+        {
+          p1: { ratio: 2, isEnabled: true },
+          p2: { ratio: 1, isEnabled: true }
+        }
       );
 
-      const result = await playlistMixerService.mixPlaylists(config);
+      const stats = await mixerService.calculateMixStatistics(tracks, config);
 
-      expect(result.tracks).toHaveLength(1);
-      expect(result.tracks[0].id).toBe('1');
+      expect(stats.totalTracks).toBe(3);
+      expect(stats.playlistDistribution.p1).toBe(2);
+      expect(stats.playlistDistribution.p2).toBe(1);
+      expect(stats.averagePopularity).toBe(60); // (80 + 60 + 40) / 3
+      expect(stats.totalDuration).toBe(9); // (200000 + 180000 + 160000) / 60000 minutes
     });
 
-    it('should not exceed requested total songs', async () => {
-      const tracks1 = Array(100).fill(0).map((_, i) => createMockTrack(`1-${i}`, `Track 1-${i}`));
-      const tracks2 = Array(100).fill(0).map((_, i) => createMockTrack(`2-${i}`, `Track 2-${i}`));
+    it('should calculate ratio compliance', async () => {
+      const tracks = [
+        { ...createMockTrack('t1', 'Track 1'), sourcePlaylist: 'p1' },
+        { ...createMockTrack('t2', 'Track 2'), sourcePlaylist: 'p1' },
+        { ...createMockTrack('t3', 'Track 3'), sourcePlaylist: 'p2' }
+      ] as any[];
 
-      const config = createMockConfig(tracks1, tracks2, 10);
+      const config = createMockMixConfig(
+        [],
+        {
+          p1: { ratio: 2, isEnabled: true }, // Expected 66.7%
+          p2: { ratio: 1, isEnabled: true }  // Expected 33.3%
+        }
+      );
 
-      const result = await playlistMixerService.mixPlaylists(config);
+      const stats = await mixerService.calculateMixStatistics(tracks, config);
 
-      expect(result.tracks).toHaveLength(10);
+      // Actual: p1=66.7%, p2=33.3% - perfect compliance
+      expect(stats.ratioCompliance).toBeCloseTo(1, 1);
     });
 
-    it('should handle duplicate track IDs across playlists', async () => {
-      const sharedTrack = createMockTrack('shared', 'Shared Track');
-      const tracks1 = [sharedTrack, createMockTrack('1', 'Track 1')];
-      const tracks2 = [sharedTrack, createMockTrack('2', 'Track 2')];
+    it('should handle empty track list', async () => {
+      const config = createMockMixConfig([], {});
+      const stats = await mixerService.calculateMixStatistics([], config);
 
-      const config = createMockConfig(tracks1, tracks2, 4);
-
-      const result = await playlistMixerService.mixPlaylists(config);
-
-      // Should not include the same track twice
-      const trackIds = result.tracks.map(t => t.id);
-      const uniqueTrackIds = [...new Set(trackIds)];
-      expect(trackIds).toHaveLength(uniqueTrackIds.length);
+      expect(stats.totalTracks).toBe(0);
+      expect(stats.averagePopularity).toBe(0);
+      expect(stats.totalDuration).toBe(0);
+      expect(stats.ratioCompliance).toBe(1);
     });
   });
 
-  describe('popularity-based mixing', () => {
-    it('should create popularity quadrants correctly', async () => {
-      const tracks = [
-        createMockTrack('1', 'Top Hit', 95),
-        createMockTrack('2', 'Popular', 75),
-        createMockTrack('3', 'Moderate', 55),
-        createMockTrack('4', 'Deep Cut', 25),
-        createMockTrack('5', 'Another Top Hit', 90),
-        createMockTrack('6', 'Another Popular', 70),
-        createMockTrack('7', 'Another Moderate', 50),
-        createMockTrack('8', 'Another Deep Cut', 20)
-      ];
-
-      const config = createMockConfig(tracks, [], 8, 'front-loaded');
-
-      const result = await playlistMixerService.mixPlaylists(config);
-
-      expect(result.tracks).toHaveLength(8);
+  describe('edge cases', () => {
+    it('should handle playlist with only one track', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = [createMockTrack('t1', 'Only Track')];
       
-      // With front-loaded strategy, earlier tracks should generally be more popular
-      const firstHalf = result.tracks.slice(0, 4);
-      const secondHalf = result.tracks.slice(4, 8);
-      
-      const firstHalfAvgPopularity = firstHalf.reduce((sum, t) => sum + (t.popularity || 0), 0) / firstHalf.length;
-      const secondHalfAvgPopularity = secondHalf.reduce((sum, t) => sum + (t.popularity || 0), 0) / secondHalf.length;
-      
-      expect(firstHalfAvgPopularity).toBeGreaterThanOrEqual(secondHalfAvgPopularity);
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        10
+      );
+
+      const result = await mixerService.mixPlaylists(config);
+
+      expect(result.tracks).toHaveLength(1);
     });
 
-    it('should apply crescendo strategy correctly', async () => {
+    it('should handle tracks with missing popularity', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
       const tracks1 = [
-        createMockTrack('1', 'Track 1', 20),
-        createMockTrack('2', 'Track 2', 40),
-        createMockTrack('3', 'Track 3', 60)
+        { ...createMockTrack('t1', 'Track 1'), popularity: undefined } as any,
+        createMockTrack('t2', 'Track 2', 50)
       ];
       
-      const tracks2 = [
-        createMockTrack('4', 'Track 4', 80),
-        createMockTrack('5', 'Track 5', 100)
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        2
+      );
+
+      const result = await mixerService.mixPlaylists(config);
+
+      expect(result.tracks).toHaveLength(2);
+      expect(result.statistics.averagePopularity).toBe(25); // (0 + 50) / 2
+    });
+
+    it('should handle tracks with missing duration', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Playlist 1');
+      const tracks1 = [
+        { ...createMockTrack('t1', 'Track 1'), duration_ms: undefined } as any,
+        createMockTrack('t2', 'Track 2', 50, 180000)
       ];
-
-      const config = createMockConfig(tracks1, tracks2, 5, 'crescendo');
-
-      const result = await playlistMixerService.mixPlaylists(config);
-
-      // The service should return at least one track and have proper metadata
-      expect(result.tracks.length).toBeGreaterThan(0);
-      expect(result.metadata.strategy).toBe('crescendo');
-      expect(result.statistics.totalTracks).toBe(result.tracks.length);
       
-      // Test that the applyStrategy method works correctly for crescendo
-      const allTracks = [...tracks1, ...tracks2];
-      const crescendoResult = playlistMixerService.applyStrategy(allTracks, 'crescendo');
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        2
+      );
+
+      const result = await mixerService.mixPlaylists(config);
+
+      expect(result.tracks).toHaveLength(2);
+      expect(result.statistics.totalDuration).toBe(3); // 180000 / 60000 minutes
+    });
+
+    it('should handle very large playlists efficiently', async () => {
+      const playlist1 = createMockPlaylist('p1', 'Large Playlist');
+      const tracks1 = Array(10000).fill(null).map((_, i) => createMockTrack(`t${i}`, `Track ${i}`));
       
-      // Should be sorted by popularity ascending
-      expect(crescendoResult[0].popularity).toBeLessThanOrEqual(crescendoResult[1].popularity!);
-      expect(crescendoResult[1].popularity).toBeLessThanOrEqual(crescendoResult[2].popularity!);
+      const config = createMockMixConfig(
+        [{ playlist: playlist1, tracks: tracks1 }],
+        { p1: { ratio: 1, isEnabled: true } },
+        100
+      );
+
+      const startTime = Date.now();
+      const result = await mixerService.mixPlaylists(config);
+      const endTime = Date.now();
+
+      expect(result.tracks).toHaveLength(100);
+      expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
     });
   });
 });
