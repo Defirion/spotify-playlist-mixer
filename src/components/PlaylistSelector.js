@@ -170,7 +170,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
         </div>
       </div>
       
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', position: 'relative' }}>
         <div className="input-group">
           <label>Search playlists or paste URL:</label>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -181,6 +181,8 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
               placeholder="Try: 'salsa romantica', 'bachata sensual' or paste Spotify URL..."
               style={{ flex: 1 }}
               onKeyDown={(e) => e.key === 'Enter' && handleInputSubmit()}
+              onFocus={() => playlistInput.trim() && setSearchResults([]) && setShowSearchResults(true)}
+              onBlur={() => setTimeout(() => setShowSearchResults(false), 100)} // Delay to allow click on results
             />
             <button 
               className="btn" 
@@ -191,116 +193,85 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
             </button>
           </div>
         </div>
-        
 
-      </div>
-
-      {/* Search Results */}
-      {showSearchResults && (
-        <div style={{ 
-          marginBottom: '20px',
-          background: 'var(--hunter-green)',
-          border: '1px solid var(--fern-green)',
-          borderRadius: '8px',
-          padding: '16px'
-        }}>
+        {/* Search Results */}
+        {showSearchResults && searchResults.length > 0 && (
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '12px'
+            position: 'absolute',
+            top: '100%', // Position below the input
+            left: 0,
+            right: 0,
+            zIndex: 10, // Ensure it's above other content
+            background: 'var(--hunter-green)',
+            border: '1px solid var(--fern-green)',
+            borderRadius: '0 0 8px 8px',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
+            padding: '8px 0'
           }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>
-              🔍 Found {searchResults.length} playlists
-            </h3>
-            <button
-              onClick={() => {
-                setShowSearchResults(false);
-                setSearchResults([]);
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--mindaro)',
-                fontSize: '18px',
-                cursor: 'pointer',
-                padding: '2px'
-              }}
-            >
-              ×
-            </button>
-          </div>
-          
-          {searchResults.length === 0 ? (
-            <div style={{ textAlign: 'center', opacity: '0.7', padding: '20px' }}>
-              No playlists found. Try a different search term.
-            </div>
-          ) : (
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {searchResults
-                .filter(playlist => playlist && playlist.id) // Filter out null playlists
-                .map((playlist, index) => (
-                <div
-                  key={playlist.id}
-                  onClick={() => handleAddPlaylistByUrl(playlist.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '8px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    marginBottom: '4px',
-                    border: selectedPlaylists.find(p => p.id === playlist.id) 
-                      ? '2px solid var(--moss-green)' 
-                      : '1px solid transparent',
-                    opacity: selectedPlaylists.find(p => p.id === playlist.id) ? 0.5 : 1,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!selectedPlaylists.find(p => p.id === playlist.id)) {
-                      e.target.style.backgroundColor = 'rgba(79, 119, 45, 0.2)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  {playlist?.images?.[0]?.url && (
-                    <img
-                      src={playlist.images[0].url}
-                      alt={playlist.name || 'Playlist'}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '4px',
-                        marginRight: '12px',
-                        objectFit: 'cover'
-                      }}
-                    />
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                      {playlist?.name || 'Untitled Playlist'}
-                    </div>
-                    <div style={{ fontSize: '12px', opacity: '0.7' }}>
-                      by {playlist?.owner?.display_name || 'Unknown'} • {playlist?.tracks?.total || 0} tracks
-                    </div>
+            {searchResults
+              .filter(playlist => playlist && playlist.id) // Filter out null playlists
+              .map((playlist) => (
+              <div
+                key={playlist.id}
+                onClick={() => handleAddPlaylistByUrl(playlist.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  backgroundColor: selectedPlaylists.find(p => p.id === playlist.id) ? 'rgba(79, 119, 45, 0.3)' : 'transparent',
+                  opacity: selectedPlaylists.find(p => p.id === playlist.id) ? 0.7 : 1,
+                  transition: 'background-color 0.2s, opacity 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  if (!selectedPlaylists.find(p => p.id === playlist.id)) {
+                    e.currentTarget.style.backgroundColor = 'rgba(79, 119, 45, 0.2)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!selectedPlaylists.find(p => p.id === playlist.id)) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                {playlist?.images?.[0]?.url && (
+                  <img
+                    src={playlist.images[0].url}
+                    alt={playlist.name || 'Playlist'}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '4px',
+                      marginRight: '12px',
+                      objectFit: 'cover'
+                    }}
+                  />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>
+                    {playlist?.name || 'Untitled Playlist'}
                   </div>
-                  {selectedPlaylists.find(p => p.id === playlist.id) && (
-                    <div style={{ 
-                      color: 'var(--moss-green)', 
-                      fontSize: '16px',
-                      marginLeft: '8px'
-                    }}>
-                      ✓
-                    </div>
-                  )}
+                  <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                    by {playlist?.owner?.display_name || 'Unknown'} • {playlist?.tracks?.total || 0} tracks
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                {selectedPlaylists.find(p => p.id === playlist.id) && (
+                  <div style={{ 
+                    color: 'var(--moss-green)', 
+                    fontSize: '16px',
+                    marginLeft: '8px'
+                  }}>
+                    ✓
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       
 
       
