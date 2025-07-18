@@ -100,7 +100,7 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
           }
           
           .dual-range-slider::before {
-            content: '' !important;
+            content: 'none' !important;
             position: absolute !important;
             top: 50% !important;
             left: 0 !important;
