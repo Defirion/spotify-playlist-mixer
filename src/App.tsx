@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
@@ -158,9 +158,6 @@ function MainAppContent() {
 
       <PlaylistErrorBoundary onError={setError}>
         <PlaylistSelector
-          accessToken={authState.token}
-          selectedPlaylists={selectedPlaylists}
-          onPlaylistSelect={handlePlaylistSelection}
           onError={setError}
         />
       </PlaylistErrorBoundary>

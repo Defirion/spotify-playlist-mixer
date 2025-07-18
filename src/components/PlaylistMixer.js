@@ -1,71 +1,52 @@
-import React, { useState } from 'react';
-import { getSpotifyApi } from '../utils/spotify';
-import { mixPlaylists } from '../utils/playlistMixer';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useMixer } from '../context/MixerContext';
 import DraggableTrackList from './DraggableTrackList';
+import { MixConfig, SelectedPlaylist, MixOptions, MixStrategy } from '../types';
 
 const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
-  const [loading, setLoading] = useState(false);
+  const {
+    state: { isGenerating, previewMix, error },
+    generateMix,
+    generatePreview,
+    saveMix,
+    clearPreviewMix,
+    clearError
+  } = useMixer();
+
   const [localMixOptions, setLocalMixOptions] = useState(mixOptions);
-  const [preview, setPreview] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
   const [customTrackOrder, setCustomTrackOrder] = useState(null);
 
   // Sync localMixOptions with mixOptions when it changes (from presets)
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalMixOptions(mixOptions);
     // Clear preview when settings change so user knows to regenerate
-    setPreview(null);
+    clearPreviewMix();
     setCustomTrackOrder(null);
-  }, [mixOptions]);
+  }, [mixOptions, clearPreviewMix]);
 
   // Clear preview when ratioConfig changes
-  React.useEffect(() => {
-    setPreview(null);
+  useEffect(() => {
+    clearPreviewMix();
     setCustomTrackOrder(null);
-  }, [ratioConfig]);
+  }, [ratioConfig, clearPreviewMix]);
 
-  const handlePreviewOrderChange = (reorderedTracks) => {
+  // Handle errors from context
+  useEffect(() => {
+    if (error) {
+      onError(error);
+      clearError();
+    }
+  }, [error, onError, clearError]);
+
+  const handlePreviewOrderChange = useCallback((reorderedTracks) => {
     setCustomTrackOrder(reorderedTracks);
     
-    // Recalculate stats for the updated track list
-    if (preview && reorderedTracks) {
-      const updatedStats = {};
-      selectedPlaylists.forEach(playlist => {
-        updatedStats[playlist.id] = {
-          name: playlist.name,
-          count: reorderedTracks.filter(track => track.sourcePlaylist === playlist.id).length,
-          totalDuration: reorderedTracks
-            .filter(track => track.sourcePlaylist === playlist.id)
-            .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
-        };
-      });
+    // Note: In the new architecture, preview updates would be handled by the context
+    // For now, we'll store the custom order and let the context manage the preview state
+  }, []);
 
-      // Add Spotify Search stats if there are any search tracks
-      const searchTracks = reorderedTracks.filter(track => track.sourcePlaylist === 'search');
-      if (searchTracks.length > 0) {
-        updatedStats['search'] = {
-          name: '🔍 Spotify Search',
-          count: searchTracks.length,
-          totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
-        };
-      }
-      
-      const updatedPreview = {
-        ...preview,
-        tracks: reorderedTracks,
-        stats: updatedStats,
-        totalDuration: reorderedTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
-      };
-      
-      setPreview(updatedPreview);
-    }
-  };
-
-  const handleMix = async () => {
+  const handleMix = useCallback(async () => {
     try {
-      setLoading(true);
-      const api = getSpotifyApi(accessToken);
-      
       // Validate inputs
       if (!selectedPlaylists || selectedPlaylists.length < 2) {
         throw new Error('Please select at least 2 playlists');
@@ -74,153 +55,130 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       if (!localMixOptions.playlistName.trim()) {
         throw new Error('Please enter a playlist name');
       }
-      
-      // Fetch all tracks from selected playlists
-      const playlistTracks = {};
-      for (const playlist of selectedPlaylists) {
-        try {
-          const tracks = await fetchAllPlaylistTracks(api, playlist.id);
-          if (tracks.length === 0) {
-            console.warn(`Playlist ${playlist.name} has no tracks`);
-          }
-          playlistTracks[playlist.id] = tracks;
-        } catch (err) {
-          console.error(`Failed to fetch tracks from ${playlist.name}:`, err);
-          playlistTracks[playlist.id] = []; // Continue with empty array
+
+      // Create MixConfig from current state
+      const mixConfig = {
+        playlists: selectedPlaylists.map(playlist => ({
+          playlist: {
+            id: playlist.id,
+            name: playlist.name,
+            description: playlist.description,
+            trackCount: playlist.tracks?.total || 0,
+            owner: playlist.owner,
+            images: playlist.images || [],
+            tracks: playlist.tracks || []
+          },
+          tracks: playlist.tracks || [],
+          config: ratioConfig[playlist.id] || { ratio: 1, isEnabled: true }
+        })),
+        ratioConfig,
+        mixOptions: {
+          shuffleWithinRatio: localMixOptions.shuffleWithinRatio || false,
+          avoidConsecutiveSamePlaylist: localMixOptions.avoidConsecutiveSamePlaylist || true,
+          strategy: localMixOptions.popularityStrategy || 'balanced',
+          totalSongs: localMixOptions.totalSongs,
+          targetDuration: localMixOptions.targetDuration,
+          useTimeLimit: localMixOptions.useTimeLimit
         }
-      }
-      
-      // Check if we have any tracks
-      const totalAvailableTracks = Object.values(playlistTracks).reduce((sum, tracks) => sum + tracks.length, 0);
-      if (totalAvailableTracks === 0) {
-        throw new Error('No tracks found in selected playlists');
-      }
-      
-      // Use custom track order if available, otherwise mix the playlists according to ratios
-      let mixedTracks;
+      };
+
+      // Use custom track order if available, otherwise generate new mix
       if (customTrackOrder && customTrackOrder.length > 0) {
-        // Use the custom reordered tracks from preview
-        mixedTracks = customTrackOrder;
+        // Create a mix result from custom track order
+        const mixResult = {
+          tracks: customTrackOrder,
+          metadata: {
+            generatedAt: new Date(),
+            strategy: localMixOptions.popularityStrategy || 'balanced',
+            sourcePlaylistCount: selectedPlaylists.length,
+            configHash: JSON.stringify(mixConfig)
+          },
+          statistics: {
+            totalTracks: customTrackOrder.length,
+            playlistDistribution: {},
+            ratioCompliance: 1.0,
+            averagePopularity: customTrackOrder.reduce((sum, track) => sum + track.popularity, 0) / customTrackOrder.length,
+            totalDuration: customTrackOrder.reduce((sum, track) => sum + track.duration_ms, 0)
+          }
+        };
+
+        // Save the mix using context
+        const playlistId = await saveMix(mixResult, localMixOptions.playlistName.trim());
+        
+        // Calculate total duration for display
+        const totalDuration = customTrackOrder.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+        const durationMinutes = Math.round(totalDuration / (1000 * 60));
+        
+        onMixedPlaylist({
+          id: playlistId,
+          name: localMixOptions.playlistName.trim(),
+          tracks: { total: customTrackOrder.length },
+          duration: durationMinutes
+        });
       } else {
-        // Generate new mix using the standard algorithm
-        mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
-      }
-      
-      if (mixedTracks.length === 0) {
-        throw new Error('Failed to mix playlists - no tracks generated');
-      }
-      
-      // Create new playlist
-      const userResponse = await api.get('/me');
-      const userId = userResponse.data.id;
-      
-      const playlistResponse = await api.post(`/users/${userId}/playlists`, {
-        name: localMixOptions.playlistName.trim(),
-        description: `Mixed from: ${selectedPlaylists.map(p => p.name).join(', ')}`,
-        public: false
-      });
-      
-      const newPlaylist = playlistResponse.data;
-      
-      // Add tracks to playlist (Spotify API limit: 100 tracks per request)
-      const trackUris = mixedTracks.filter(track => track.uri).map(track => track.uri);
-      
-      if (trackUris.length === 0) {
-        throw new Error('No valid track URIs found');
-      }
-      
-      const chunks = [];
-      for (let i = 0; i < trackUris.length; i += 100) {
-        chunks.push(trackUris.slice(i, i + 100));
-      }
-      
-      for (const chunk of chunks) {
-        await api.post(`/playlists/${newPlaylist.id}/tracks`, {
-          uris: chunk
+        // Generate new mix using context
+        const mixResult = await generateMix(mixConfig);
+        
+        // Save the mix using context
+        const playlistId = await saveMix(mixResult, localMixOptions.playlistName.trim());
+        
+        // Calculate total duration for display
+        const totalDuration = mixResult.tracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+        const durationMinutes = Math.round(totalDuration / (1000 * 60));
+        
+        onMixedPlaylist({
+          id: playlistId,
+          name: localMixOptions.playlistName.trim(),
+          tracks: { total: mixResult.tracks.length },
+          duration: durationMinutes
         });
       }
       
-      // Calculate total duration for display
-      const totalDuration = mixedTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
-      const durationMinutes = Math.round(totalDuration / (1000 * 60));
-      
-      onMixedPlaylist({
-        ...newPlaylist,
-        tracks: { total: trackUris.length },
-        duration: durationMinutes
-      });
-      
     } catch (err) {
-      const errorMessage = err.response?.data?.error?.message || err.message || 'Unknown error occurred';
+      const errorMessage = err.message || 'Unknown error occurred';
       onError('Failed to create mixed playlist: ' + errorMessage);
       console.error('Playlist mixing error:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [selectedPlaylists, localMixOptions, ratioConfig, customTrackOrder, generateMix, saveMix, onMixedPlaylist, onError]);
 
-  const generatePreview = async () => {
+  const handleGeneratePreview = useCallback(async () => {
     try {
-      setPreviewLoading(true);
-      setPreview(null);
-      
-      const api = getSpotifyApi(accessToken);
-      
-      const playlistTracks = {};
-      for (const playlist of selectedPlaylists) {
-        const tracks = await fetchAllPlaylistTracks(api, playlist.id);
-        playlistTracks[playlist.id] = tracks;
-      }
-      
-      // Generate full sample using actual settings
-      const previewTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
-      
-      // Calculate some stats
-      const playlistStats = {};
-      selectedPlaylists.forEach(playlist => {
-        playlistStats[playlist.id] = {
-          name: playlist.name,
-          count: previewTracks.filter(track => track.sourcePlaylist === playlist.id).length,
-          totalDuration: previewTracks
-            .filter(track => track.sourcePlaylist === playlist.id)
-            .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
-        };
-      });
-      
-      setPreview({
-        tracks: previewTracks,
-        stats: playlistStats,
-        totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0),
-        usedStrategy: localMixOptions.popularityStrategy
-      });
+      // Create MixConfig from current state
+      const mixConfig = {
+        playlists: selectedPlaylists.map(playlist => ({
+          playlist: {
+            id: playlist.id,
+            name: playlist.name,
+            description: playlist.description,
+            trackCount: playlist.tracks?.total || 0,
+            owner: playlist.owner,
+            images: playlist.images || [],
+            tracks: playlist.tracks || []
+          },
+          tracks: playlist.tracks || [],
+          config: ratioConfig[playlist.id] || { ratio: 1, isEnabled: true }
+        })),
+        ratioConfig,
+        mixOptions: {
+          shuffleWithinRatio: localMixOptions.shuffleWithinRatio || false,
+          avoidConsecutiveSamePlaylist: localMixOptions.avoidConsecutiveSamePlaylist || true,
+          strategy: localMixOptions.popularityStrategy || 'balanced',
+          totalSongs: localMixOptions.totalSongs,
+          targetDuration: localMixOptions.targetDuration,
+          useTimeLimit: localMixOptions.useTimeLimit
+        }
+      };
+
+      // Generate preview using context
+      await generatePreview(mixConfig);
       
     } catch (err) {
       onError('Failed to generate preview: ' + err.message);
       console.error(err);
-    } finally {
-      setPreviewLoading(false);
     }
-  };
+  }, [selectedPlaylists, ratioConfig, localMixOptions, generatePreview, onError]);
 
-  const fetchAllPlaylistTracks = async (api, playlistId) => {
-    let allTracks = [];
-    let offset = 0;
-    const limit = 100;
-    
-    while (true) {
-      const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
-      const tracks = response.data.items
-        .filter(item => item.track && item.track.id) // Filter out null tracks
-        .map(item => item.track);
-      
-      allTracks = [...allTracks, ...tracks];
-      
-      if (tracks.length < limit) break;
-      offset += limit;
-    }
-    
-    return allTracks;
-  };
+
 
   const formatDuration = (ms) => {
     const minutes = Math.floor(ms / 60000);
@@ -558,7 +516,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       </div>
       
       {/* Action Buttons - Only show when no preview */}
-      {!preview && (
+      {!previewMix && (
         <div style={{ 
           background: 'var(--hunter-green)', 
           padding: '20px', 
@@ -574,8 +532,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
               className="btn" 
-              onClick={generatePreview}
-              disabled={previewLoading || selectedPlaylists.length < 2}
+              onClick={handleGeneratePreview}
+              disabled={isGenerating || selectedPlaylists.length < 2}
               style={{ 
                 background: 'var(--moss-green)',
                 border: '2px solid var(--mindaro)',
@@ -586,7 +544,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 gap: '8px'
               }}
             >
-              {previewLoading ? (
+              {isGenerating ? (
                 <>⏳ Generating Preview...</>
               ) : (
                 <>👀 Preview First</>
@@ -596,7 +554,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             <button
               className="btn"
               onClick={handleMix}
-              disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
+              disabled={isGenerating || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
               style={{ 
                 background: 'var(--fern-green)',
                 border: '2px solid var(--moss-green)',
@@ -608,7 +566,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 gap: '8px'
               }}
             >
-              {loading ? (
+              {isGenerating ? (
                 <>⏳ Creating Playlist...</>
               ) : (
                 <>✨ Create My Mix</>
@@ -622,7 +580,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         </div>
       )}
 
-      {preview && (
+      {previewMix && (
         <div style={{ marginBottom: '20px' }}>
           {/* Preview Header */}
           <div style={{ 
@@ -637,27 +595,30 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 🎵 Your Mix Preview
               </h3>
               <div style={{ fontSize: '14px', opacity: '0.8' }}>
-                {localMixOptions.useTimeLimit ? `${formatTotalDuration(preview.totalDuration)}` : `${preview.tracks.length} songs`}
+                {localMixOptions.useTimeLimit ? `${formatTotalDuration(previewMix.statistics.totalDuration)}` : `${previewMix.tracks.length} songs`}
               </div>
             </div>
             
             {/* Quick Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-              {Object.entries(preview.stats).map(([playlistId, stats]) => (
-                <div key={playlistId} style={{ 
-                  background: 'rgba(0,0,0,0.2)', 
-                  padding: '8px 12px', 
-                  borderRadius: '6px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '12px', opacity: '0.7', marginBottom: '2px' }}>
-                    {stats.name.length > 20 ? stats.name.substring(0, 20) + '...' : stats.name}
+              {Object.entries(previewMix.statistics.playlistDistribution).map(([playlistId, count]) => {
+                const playlist = selectedPlaylists.find(p => p.id === playlistId);
+                return (
+                  <div key={playlistId} style={{ 
+                    background: 'rgba(0,0,0,0.2)', 
+                    padding: '8px 12px', 
+                    borderRadius: '6px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '12px', opacity: '0.7', marginBottom: '2px' }}>
+                      {playlist ? (playlist.name.length > 20 ? playlist.name.substring(0, 20) + '...' : playlist.name) : 'Unknown'}
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                      {count} songs
+                    </div>
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>
-                    {stats.count} songs
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <div style={{ 
@@ -668,15 +629,15 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               background: 'rgba(29, 185, 84, 0.2)',
               borderRadius: '6px'
             }}>
-              ✨ Using <strong>{preview.usedStrategy === 'mixed' ? 'Random Mix' : 
-                preview.usedStrategy === 'front-loaded' ? 'Hits First' :
-                preview.usedStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
+              ✨ Using <strong>{localMixOptions.popularityStrategy === 'mixed' ? 'Random Mix' : 
+                localMixOptions.popularityStrategy === 'front-loaded' ? 'Hits First' :
+                localMixOptions.popularityStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
             </div>
           </div>
           
           {/* Track List Preview */}
           <DraggableTrackList
-            tracks={preview.tracks}
+            tracks={previewMix.tracks}
             selectedPlaylists={selectedPlaylists}
             onTrackOrderChange={handlePreviewOrderChange}
             formatDuration={formatDuration}
@@ -697,8 +658,8 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
               <button 
                 className="btn" 
-                onClick={generatePreview}
-                disabled={previewLoading || selectedPlaylists.length < 2}
+                onClick={handleGeneratePreview}
+                disabled={isGenerating || selectedPlaylists.length < 2}
                 style={{ 
                   background: 'var(--moss-green)',
                   border: '2px solid var(--mindaro)',
@@ -709,7 +670,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   gap: '6px'
                 }}
               >
-                {previewLoading ? (
+                {isGenerating ? (
                   <>⏳ Regenerating...</>
                 ) : (
                   <>🔄 Regenerate</>
@@ -719,7 +680,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               <button
                 className="btn"
                 onClick={handleMix}
-                disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
+                disabled={isGenerating || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
                 style={{ 
                   background: 'var(--fern-green)',
                   border: '2px solid var(--moss-green)',
@@ -731,7 +692,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   gap: '8px'
                 }}
               >
-                {loading ? (
+                {isGenerating ? (
                   <>⏳ Creating Playlist...</>
                 ) : (
                   <>✨ Create This Playlist</>
