@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, ReactNode, useEffect, useRef } from 'react';
 import { PlaylistState, Playlist, Track, SelectedPlaylist, PlaylistRatioConfig } from '../types';
 import { ISpotifyService } from '../types/services';
 
@@ -177,6 +177,8 @@ interface PlaylistProviderProps {
 // Playlist Provider Component
 export function PlaylistProvider({ children, spotifyService }: PlaylistProviderProps) {
   const [state, dispatch] = useReducer(playlistReducer, initialState);
+  const prefetchQueueRef = useRef<Set<string>>(new Set());
+  const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchUserPlaylists = useCallback(async (): Promise<void> => {
     try {
@@ -295,6 +297,60 @@ export function PlaylistProvider({ children, spotifyService }: PlaylistProviderP
   const getSelectedPlaylist = useCallback((playlistId: string): SelectedPlaylist | undefined => {
     return state.selectedPlaylists.find(sp => sp.playlist.id === playlistId);
   }, [state.selectedPlaylists]);
+
+  // Background prefetching for playlist tracks
+  const prefetchPlaylistTracks = useCallback((playlistId: string): void => {
+    if (prefetchQueueRef.current.has(playlistId)) {
+      return; // Already queued for prefetch
+    }
+
+    prefetchQueueRef.current.add(playlistId);
+
+    // Clear existing timeout
+    if (prefetchTimeoutRef.current) {
+      clearTimeout(prefetchTimeoutRef.current);
+    }
+
+    // Debounce prefetch requests
+    prefetchTimeoutRef.current = setTimeout(async () => {
+      const playlistsToFetch = Array.from(prefetchQueueRef.current);
+      prefetchQueueRef.current.clear();
+
+      // Prefetch tracks for queued playlists (without updating UI state)
+      for (const id of playlistsToFetch) {
+        try {
+          await spotifyService.getPlaylistTracks(id);
+        } catch (error) {
+          // Silently fail for prefetch operations
+          console.debug(`Failed to prefetch tracks for playlist ${id}:`, error);
+        }
+      }
+    }, 500); // 500ms debounce
+  }, [spotifyService]);
+
+  // Auto-prefetch tracks for user playlists when they're loaded
+  useEffect(() => {
+    if (state.userPlaylists.length > 0) {
+      // Prefetch tracks for the first few playlists (most likely to be used)
+      const playlistsToPrefetch = state.userPlaylists
+        .slice(0, 5) // Prefetch first 5 playlists
+        .filter(playlist => !playlist.tracks || playlist.tracks.length === 0)
+        .map(playlist => playlist.id);
+
+      playlistsToPrefetch.forEach(playlistId => {
+        prefetchPlaylistTracks(playlistId);
+      });
+    }
+  }, [state.userPlaylists, prefetchPlaylistTracks]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const contextValue: PlaylistContextType = {
     state,

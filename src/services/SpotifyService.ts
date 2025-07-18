@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ISpotifyService, IAuthService } from '../types/services';
 import { User, Playlist, Track, AuthResult } from '../types';
 import { createAPIError, createNetworkError, APIError, NetworkError } from '../types/errors';
+import { CacheService } from './CacheService';
 
 export class SpotifyService implements ISpotifyService {
   private static readonly API_BASE_URL = 'https://api.spotify.com/v1';
@@ -13,8 +14,14 @@ export class SpotifyService implements ISpotifyService {
   private axiosInstance: AxiosInstance;
   private requestCount = 0;
   private lastRequestTime = 0;
+  private cache: CacheService;
 
   constructor(private authService: IAuthService) {
+    this.cache = new CacheService({
+      ttl: 5 * 60 * 1000, // 5 minutes
+      maxSize: 1000
+    });
+    
     this.axiosInstance = axios.create({
       baseURL: SpotifyService.API_BASE_URL,
       timeout: 10000,
@@ -31,14 +38,26 @@ export class SpotifyService implements ISpotifyService {
   }
 
   async getUserProfile(): Promise<User> {
+    const cacheKey = 'user_profile';
+    const cached = this.cache.get<User>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
     try {
       const response = await this.makeRequest<any>('/me');
       
-      return {
+      const user: User = {
         id: response.id,
         displayName: response.display_name || response.id,
         email: response.email
       };
+
+      // Cache user profile for 10 minutes
+      this.cache.set(cacheKey, user, 10 * 60 * 1000);
+      
+      return user;
     } catch (error) {
       throw this.handleError(error, 'Failed to get user profile', '/me', 'GET');
     }
@@ -55,6 +74,12 @@ export class SpotifyService implements ISpotifyService {
   }
 
   async getPlaylistTracks(playlistId: string): Promise<Track[]> {
+    // Check cache first
+    const cached = this.cache.getPlaylistTracks(playlistId);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const tracks: Track[] = [];
       let offset = 0;
@@ -77,6 +102,9 @@ export class SpotifyService implements ISpotifyService {
 
         offset += limit;
       }
+
+      // Cache the tracks for 10 minutes
+      this.cache.setPlaylistTracks(playlistId, tracks, 10 * 60 * 1000);
 
       return tracks;
     } catch (error) {
@@ -123,33 +151,66 @@ export class SpotifyService implements ISpotifyService {
   }
 
   async searchTracks(query: string, limit: number = 20): Promise<Track[]> {
+    // Check cache first (shorter TTL for search results)
+    const cached = this.cache.getSearchResults<Track>(query, 'tracks');
+    if (cached) {
+      return cached.slice(0, limit); // Respect the limit parameter
+    }
+
     try {
       const response = await this.makeRequest<any>(
         `/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`
       );
 
-      return (response.tracks?.items || []).map((track: any) => this.mapToTrack(track));
+      const tracks = (response.tracks?.items || []).map((track: any) => this.mapToTrack(track));
+      
+      // Cache search results for 2 minutes
+      this.cache.setSearchResults(query, 'tracks', tracks, 2 * 60 * 1000);
+
+      return tracks;
     } catch (error) {
       throw this.handleError(error, 'Failed to search tracks', '/search', 'GET');
     }
   }
 
   async searchPlaylists(query: string, limit: number = 10): Promise<Playlist[]> {
+    // Check cache first (shorter TTL for search results)
+    const cached = this.cache.getSearchResults<Playlist>(query, 'playlists');
+    if (cached) {
+      return cached.slice(0, limit); // Respect the limit parameter
+    }
+
     try {
       const response = await this.makeRequest<any>(
         `/search?q=${encodeURIComponent(query)}&type=playlist&limit=${limit}`
       );
 
-      return (response.playlists?.items || []).map((playlist: any) => this.mapToPlaylist(playlist));
+      const playlists = (response.playlists?.items || []).map((playlist: any) => this.mapToPlaylist(playlist));
+      
+      // Cache search results for 2 minutes
+      this.cache.setSearchResults(query, 'playlists', playlists, 2 * 60 * 1000);
+
+      return playlists;
     } catch (error) {
       throw this.handleError(error, 'Failed to search playlists', '/search', 'GET');
     }
   }
 
   async getPlaylist(playlistId: string): Promise<Playlist> {
+    // Check cache first
+    const cached = this.cache.getPlaylist(playlistId);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const response = await this.makeRequest<any>(`/playlists/${playlistId}`);
-      return this.mapToPlaylist(response);
+      const playlist = this.mapToPlaylist(response);
+      
+      // Cache playlist for 5 minutes
+      this.cache.setPlaylist(playlist, 5 * 60 * 1000);
+      
+      return playlist;
     } catch (error) {
       throw this.handleError(error, 'Failed to get playlist', `/playlists/${playlistId}`, 'GET');
     }

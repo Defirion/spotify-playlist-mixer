@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, ReactNode, useMemo } from 'react';
 import { MixerState, MixConfig, MixResult, MixPreview, MixOptions, MixStrategy } from '../types';
 import { IPlaylistMixerService, ISpotifyService } from '../types/services';
+import { CacheService } from '../services/CacheService';
 
 // Mixer Actions
 export type MixerAction =
@@ -163,10 +164,34 @@ interface MixerProviderProps {
 // Mixer Provider Component
 export function MixerProvider({ children, playlistMixerService, spotifyService }: MixerProviderProps) {
   const [state, dispatch] = useReducer(mixerReducer, initialState);
+  
+  // Create cache instance for mix results
+  const mixCache = useMemo(() => new CacheService({
+    ttl: 10 * 60 * 1000, // 10 minutes for mix results
+    maxSize: 50 // Store up to 50 mix results
+  }), []);
 
   const generateMix = useCallback(async (config: MixConfig): Promise<MixResult> => {
     try {
       dispatch({ type: 'GENERATE_MIX_START' });
+      
+      // Generate cache key based on config
+      const configHash = JSON.stringify({
+        playlists: config.playlists.map(p => p.playlist.id),
+        ratios: config.ratioConfig,
+        options: config.mixOptions
+      });
+      const cacheKey = `mix:${btoa(configHash).slice(0, 32)}`;
+      
+      // Check cache first
+      const cachedResult = mixCache.get<MixResult>(cacheKey);
+      if (cachedResult) {
+        dispatch({
+          type: 'GENERATE_MIX_SUCCESS',
+          payload: { mixResult: cachedResult }
+        });
+        return cachedResult;
+      }
       
       // Validate config first
       const validation = await playlistMixerService.validateMixConfig(config);
@@ -175,6 +200,9 @@ export function MixerProvider({ children, playlistMixerService, spotifyService }
       }
       
       const mixResult = await playlistMixerService.mixPlaylists(config);
+      
+      // Cache the result
+      mixCache.set(cacheKey, mixResult);
       
       dispatch({
         type: 'GENERATE_MIX_SUCCESS',
@@ -190,7 +218,7 @@ export function MixerProvider({ children, playlistMixerService, spotifyService }
       });
       throw error;
     }
-  }, [playlistMixerService]);
+  }, [playlistMixerService, mixCache]);
 
   const generatePreview = useCallback(async (config: MixConfig): Promise<MixPreview> => {
     try {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
-const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove }) => {
+const RatioConfig = React.memo(({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove }) => {
   const [globalBalanceMethod, setGlobalBalanceMethod] = useState('frequency');
 
   // Update global balance method when ratioConfig changes (from presets)
@@ -19,30 +19,31 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
       }
     }
   }, [ratioConfig, selectedPlaylists, globalBalanceMethod]);
+  
   // Helper function to format duration from seconds to MM:SS
-  const formatDurationFromSeconds = (seconds) => {
+  const formatDurationFromSeconds = useCallback((seconds) => {
     if (!seconds) return null;
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const handleConfigChange = (playlistId, field, value) => {
+  const handleConfigChange = useCallback((playlistId, field, value) => {
     const currentConfig = ratioConfig[playlistId] || { min: 1, max: 2, weight: 2, weightType: 'frequency' };
     const newValue = field === 'weightType' ? value : (parseInt(value) || 1);
     onRatioUpdate(playlistId, {
       ...currentConfig,
       [field]: newValue
     });
-  };
+  }, [ratioConfig, onRatioUpdate]);
 
-  const handleGlobalBalanceMethodChange = (method) => {
+  const handleGlobalBalanceMethodChange = useCallback((method) => {
     setGlobalBalanceMethod(method);
     // Update all playlists to use the new balance method
     selectedPlaylists.forEach(playlist => {
       handleConfigChange(playlist.id, 'weightType', method);
     });
-  };
+  }, [selectedPlaylists, handleConfigChange]);
 
   return (
     <div className="card">
@@ -431,6 +432,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
       )}
     </div>
   );
-};
+});
 
 export default RatioConfig;

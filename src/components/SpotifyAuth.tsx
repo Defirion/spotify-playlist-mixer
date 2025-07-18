@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const SpotifyAuth: React.FC = () => {
+const SpotifyAuth: React.FC = React.memo(() => {
   const { state, login, clearError } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     try {
       clearError();
       await login();
@@ -12,7 +12,7 @@ const SpotifyAuth: React.FC = () => {
       // Error is handled by the AuthContext
       console.error('Login failed:', error);
     }
-  };
+  }, [clearError, login]);
 
   return (
     <div className="card">

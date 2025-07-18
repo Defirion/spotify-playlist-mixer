@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMixer } from '../context/MixerContext';
 import DraggableTrackList from './DraggableTrackList';
 import { MixConfig, SelectedPlaylist, MixOptions, MixStrategy } from '../types';
 
-const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
+const PlaylistMixer = React.memo(({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
   const {
     state: { isGenerating, previewMix, error },
     generateMix,
@@ -180,21 +180,21 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
 
 
-  const formatDuration = (ms) => {
+  const formatDuration = useCallback((ms) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const formatTotalDuration = (ms) => {
+  const formatTotalDuration = useCallback((ms) => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  };
+  }, []);
 
-  // Calculate total available content from selected playlists
-  const getTotalAvailableContent = () => {
+  // Memoized calculation of total available content from selected playlists
+  const totalAvailableContent = useMemo(() => {
     const totalSongs = selectedPlaylists.reduce((sum, playlist) => sum + playlist.tracks.total, 0);
     
     // Calculate real total duration using actual average duration data
@@ -214,40 +214,36 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       totalSongs,
       totalDurationMinutes: Math.round(totalDurationMinutes)
     };
-  };
+  }, [selectedPlaylists]);
 
-  // Check if current settings exceed available content
-  const getExceedsLimitWarning = () => {
+  // Memoized check if current settings exceed available content
+  const exceedsLimit = useMemo(() => {
     if (selectedPlaylists.length === 0) return null;
     
-    const available = getTotalAvailableContent();
-    
     if (localMixOptions.useTimeLimit) {
-      if (available.totalDurationMinutes !== null && localMixOptions.targetDuration > available.totalDurationMinutes) {
+      if (totalAvailableContent.totalDurationMinutes !== null && localMixOptions.targetDuration > totalAvailableContent.totalDurationMinutes) {
         return {
           type: 'time',
           requested: localMixOptions.targetDuration,
-          available: available.totalDurationMinutes,
-          availableFormatted: formatTotalDuration(available.totalDurationMinutes * 60 * 1000),
+          available: totalAvailableContent.totalDurationMinutes,
+          availableFormatted: formatTotalDuration(totalAvailableContent.totalDurationMinutes * 60 * 1000),
           requestedFormatted: `${(localMixOptions.targetDuration / 60).toFixed(1)}h`
         };
       }
     } else {
-      if (localMixOptions.totalSongs > available.totalSongs) {
+      if (localMixOptions.totalSongs > totalAvailableContent.totalSongs) {
         return {
           type: 'songs',
           requested: localMixOptions.totalSongs,
-          available: available.totalSongs,
-          availableFormatted: `${available.totalSongs} songs`,
+          available: totalAvailableContent.totalSongs,
+          availableFormatted: `${totalAvailableContent.totalSongs} songs`,
           requestedFormatted: `${localMixOptions.totalSongs} songs`
         };
       }
     }
     
     return null;
-  };
-
-  const exceedsLimit = getExceedsLimitWarning();
+  }, [selectedPlaylists.length, localMixOptions.useTimeLimit, localMixOptions.targetDuration, localMixOptions.totalSongs, totalAvailableContent, formatTotalDuration]);
 
   return (
     <div className="card">
@@ -708,6 +704,6 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       )}
     </div>
   );
-};
+});
 
 export default PlaylistMixer;

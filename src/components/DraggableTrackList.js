@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 
-const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
+const DraggableTrackList = React.memo(({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
@@ -18,13 +18,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     setLocalTracks(tracks);
   }, [tracks]);
 
-  const handleDragStart = (e, index) => {
+  const handleDragStart = useCallback((e, index) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.target.outerHTML);
-  };
+  }, []);
 
-  const handleDragOver = (e, index) => {
+  const handleDragOver = useCallback((e, index) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
@@ -53,9 +53,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
     
     setDropLinePosition({ index: insertPosition, isTopHalf });
-  };
+  }, [draggedIndex]);
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = useCallback((e) => {
     // Store references before setTimeout to avoid null issues
     const currentTarget = e.currentTarget;
     const relatedTarget = e.relatedTarget;
@@ -70,9 +70,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         }
       }
     }, 10);
-  };
+  }, [draggedIndex]);
 
-  const handleDrop = (e, dropIndex) => {
+  const handleDrop = useCallback((e, dropIndex) => {
     e.preventDefault();
     
     // Check if it's a track from the modal or search results
@@ -137,14 +137,14 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     
     setDraggedIndex(null);
     setDropLinePosition(null);
-  };
+  }, [localTracks, dropLinePosition, draggedIndex, onTrackOrderChange]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedIndex(null);
     setDropLinePosition(null);
-  };
+  }, []);
 
-  const handleRemoveTrack = (index) => {
+  const handleRemoveTrack = useCallback((index) => {
     const newTracks = [...localTracks];
     newTracks.splice(index, 1);
     setLocalTracks(newTracks);
@@ -153,15 +153,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     if (onTrackOrderChange) {
       onTrackOrderChange(newTracks);
     }
-  };
+  }, [localTracks, onTrackOrderChange]);
 
-  // Calculate 85% of screen height
-  const getMaxHeight = () => {
+  // Memoized calculation of 85% of screen height
+  const getMaxHeight = useCallback(() => {
     return Math.floor(window.innerHeight * 0.85);
-  };
+  }, []);
 
   // Double-click to maximize/minimize
-  const handleDoubleClick = () => {
+  const handleDoubleClick = useCallback(() => {
     if (isMaximized) {
       // Minimize to normal height
       setContainerHeight(normalHeight);
@@ -172,10 +172,10 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       setContainerHeight(getMaxHeight());
       setIsMaximized(true);
     }
-  };
+  }, [isMaximized, normalHeight, containerHeight, getMaxHeight]);
 
   // Resize functionality
-  const handleResizeStart = (e) => {
+  const handleResizeStart = useCallback((e) => {
     setIsResizing(true);
     e.preventDefault();
     
@@ -209,23 +209,28 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };
+  }, [containerHeight, getMaxHeight, isMaximized]);
 
-  // Calculate relative popularity quadrants for track labeling
-  const tracksWithPop = localTracks.filter(t => t.popularity !== undefined);
-  const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
-  const qSize = Math.floor(sortedByPop.length / 4);
+  // Memoized calculation of relative popularity quadrants for track labeling
+  const popularityData = useMemo(() => {
+    const tracksWithPop = localTracks.filter(t => t.popularity !== undefined);
+    const sortedByPop = [...tracksWithPop].sort((a, b) => b.popularity - a.popularity);
+    const qSize = Math.floor(sortedByPop.length / 4);
+    
+    return { sortedByPop, qSize };
+  }, [localTracks]);
   
-  const getTrackQuadrant = (track) => {
+  const getTrackQuadrant = useCallback((track) => {
     if (track.popularity === undefined) return null;
+    const { sortedByPop, qSize } = popularityData;
     const index = sortedByPop.findIndex(t => t.id === track.id);
     if (index < qSize) return 'topHits';
     if (index < qSize * 2) return 'popular';
     if (index < qSize * 3) return 'moderate';
     return 'deepCuts';
-  };
+  }, [popularityData]);
 
-  const handleAddUnselectedTracks = (tracksToAdd) => {
+  const handleAddUnselectedTracks = useCallback((tracksToAdd) => {
     const newTracks = [...localTracks, ...tracksToAdd];
     setLocalTracks(newTracks);
     
@@ -233,9 +238,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     if (onTrackOrderChange) {
       onTrackOrderChange(newTracks);
     }
-  };
+  }, [localTracks, onTrackOrderChange]);
 
-  const handleAddSpotifyTracks = (tracksToAdd) => {
+  const handleAddSpotifyTracks = useCallback((tracksToAdd) => {
     const newTracks = [...localTracks, ...tracksToAdd];
     setLocalTracks(newTracks);
     
@@ -243,7 +248,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     if (onTrackOrderChange) {
       onTrackOrderChange(newTracks);
     }
-  };
+  }, [localTracks, onTrackOrderChange]);
 
   return (
     <div style={{ 
@@ -637,6 +642,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       />
     </div>
   );
-};
+});
 
 export default DraggableTrackList;
