@@ -186,10 +186,6 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
             .slider-container {
               width: 100%;
             }
-            .remove-button-cell {
-              justify-self: center;
-              margin-top: 10px;
-            }
           }
         `}
       </style>
@@ -238,13 +234,14 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
             <div key={playlist.id} style={{ 
               background: 'rgba(255, 255, 255, 0.05)', 
               padding: '16px', 
-              borderRadius: '8px' 
+              borderRadius: '8px',
+              position: 'relative'
             }}>
               <div 
                 className="ratio-grid"
                 style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: playlist.coverImage ? 'auto auto 1fr auto' : 'auto 1fr auto',
+                  gridTemplateColumns: playlist.coverImage ? 'auto auto 1fr' : 'auto 1fr',
                   alignItems: 'center', 
                   gap: '16px', 
                   width: '100%' 
@@ -357,32 +354,34 @@ const RatioConfig = ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylist
                     <span style={{ fontSize: '10px', opacity: '0.7' }}>High</span>
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => onPlaylistRemove && onPlaylistRemove(playlist.id)}
-                  style={{
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'background-color 0.2s',
-                    flexShrink: 0
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = '#cc0000'}
-                  onMouseLeave={(e) => e.target.style.background = '#ff4444'}
-                  title={`Remove ${playlist.name}`}
-                >
-                  ×
-                </button>
               </div>
+              <button
+                onClick={() => onPlaylistRemove && onPlaylistRemove(playlist.id)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background-color 0.2s',
+                  zIndex: 10
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#cc0000'}
+                onMouseLeave={(e) => e.target.style.background = '#ff4444'}
+                title={`Remove ${playlist.name}`}
+              >
+                ×
+              </button>
             </div>
           );
         })}
