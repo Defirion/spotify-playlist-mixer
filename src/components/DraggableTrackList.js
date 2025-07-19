@@ -14,6 +14,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
 
+  // Touch drag state for mobile
+  const [touchDragState, setTouchDragState] = useState({
+    isDragging: false,
+    startY: 0,
+    currentY: 0,
+    draggedElement: null,
+    startIndex: null
+  });
+
   // Update local tracks when props change
   React.useEffect(() => {
     setLocalTracks(tracks);
@@ -273,6 +282,105 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
+  // Touch drag handlers for mobile
+  const handleTouchStart = (e, index) => {
+    if (!isMobile) return;
+
+    const touch = e.touches[0];
+    const element = e.currentTarget;
+
+    setTouchDragState({
+      isDragging: false, // Will become true after movement threshold
+      startY: touch.clientY,
+      currentY: touch.clientY,
+      draggedElement: element,
+      startIndex: index
+    });
+
+    // Prevent scrolling while potentially dragging
+    e.preventDefault();
+  };
+
+  const handleTouchMove = (e, index) => {
+    if (!isMobile || !touchDragState.draggedElement) return;
+
+    const touch = e.touches[0];
+    const deltaY = Math.abs(touch.clientY - touchDragState.startY);
+
+    // Start dragging if moved more than 10px
+    if (!touchDragState.isDragging && deltaY > 10) {
+      setDraggedIndex(touchDragState.startIndex);
+      setTouchDragState(prev => ({ ...prev, isDragging: true }));
+    }
+
+    if (touchDragState.isDragging) {
+      // Update current position
+      setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
+
+      // Find the element we're hovering over
+      const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const trackElement = elementFromPoint?.closest('[data-track-index]');
+
+      if (trackElement) {
+        const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
+        if (hoverIndex !== touchDragState.startIndex) {
+          // Calculate drop position
+          const rect = trackElement.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+          const isTopHalf = touch.clientY < midpoint;
+
+          setDropLinePosition({
+            index: isTopHalf ? hoverIndex : hoverIndex + 1,
+            isTopHalf
+          });
+        }
+      }
+
+      // Prevent scrolling during drag
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!isMobile || !touchDragState.draggedElement) return;
+
+    if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
+      // Perform the reorder
+      const newTracks = [...localTracks];
+      const draggedTrack = newTracks[draggedIndex];
+
+      // Remove the dragged track
+      newTracks.splice(draggedIndex, 1);
+
+      // Calculate the correct insertion index
+      let insertIndex = dropLinePosition.index;
+      if (draggedIndex < dropLinePosition.index) {
+        insertIndex = dropLinePosition.index - 1;
+      }
+
+      // Insert at new position
+      newTracks.splice(insertIndex, 0, draggedTrack);
+
+      setLocalTracks(newTracks);
+
+      // Notify parent component of the new order
+      if (onTrackOrderChange) {
+        onTrackOrderChange(newTracks);
+      }
+    }
+
+    // Reset all drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      draggedElement: null,
+      startIndex: null
+    });
+    setDraggedIndex(null);
+    setDropLinePosition(null);
+  };
+
   return (
     <div style={{
       position: 'relative',
@@ -407,7 +515,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             opacity: '0.7',
             lineHeight: '1.3'
           }}>
-            💡 <strong>Drag and drop to reorder</strong> • <strong>Click ✕ to remove tracks</strong> • <strong>Drag bottom edge to resize</strong>
+            💡 <strong>{isMobile ? 'Long press and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong> • <strong>Drag bottom edge to resize</strong>
           </div>
         </div>
 
@@ -458,12 +566,16 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           return (
             <div
               key={`${track.id}-${index}`}
-              draggable
+              draggable={!isMobile}
+              data-track-index={index}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
+              onTouchStart={(e) => handleTouchStart(e, index)}
+              onTouchMove={(e) => handleTouchMove(e, index)}
+              onTouchEnd={handleTouchEnd}
               style={{
                 padding: isMobile ? '6px 12px' : '8px 16px',
                 borderBottom: index < localTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
@@ -471,13 +583,14 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                cursor: 'grab',
-                opacity: isDragging ? 0.5 : 1,
+                cursor: isMobile ? 'default' : 'grab',
+                opacity: isDragging || (isMobile && touchDragState.isDragging && touchDragState.startIndex === index) ? 0.5 : 1,
                 backgroundColor: 'transparent',
                 transition: 'all 0.2s ease',
                 userSelect: 'none',
                 position: 'relative',
-                boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none'
+                boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none',
+                touchAction: isMobile ? 'none' : 'auto' // Prevent scrolling during touch drag
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
@@ -485,7 +598,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                   marginRight: isMobile ? '8px' : '12px',
                   fontSize: isMobile ? '14px' : '16px',
                   opacity: '0.5',
-                  cursor: 'grab'
+                  cursor: isMobile ? 'pointer' : 'grab',
+                  touchAction: 'none' // Prevent default touch behaviors
                 }}>
                   ⋮⋮
                 </div>
