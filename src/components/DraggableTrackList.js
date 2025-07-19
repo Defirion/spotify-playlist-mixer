@@ -256,6 +256,23 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
+  // Helper function to truncate text with ellipsis
+  const truncateText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  };
+
+  // Helper function to get popularity icon
+  const getPopularityIcon = (quadrant) => {
+    switch (quadrant) {
+      case 'topHits': return '🔥';
+      case 'popular': return '⭐';
+      case 'moderate': return '📻';
+      case 'deepCuts': return '💎';
+      default: return '';
+    }
+  };
+
   return (
     <div style={{
       position: 'relative',
@@ -497,16 +514,43 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {index + 1}. {track.name}
+                      {index + 1}. {isMobile ? truncateText(track.name, 25) : track.name}
                     </div>
                     <div style={{
                       fontSize: isMobile ? '11px' : '12px',
                       opacity: '0.7',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
                     }}>
-                      {track.artists?.[0]?.name || 'Unknown Artist'}
+                      <span>{truncateText(track.artists?.[0]?.name || 'Unknown Artist', isMobile ? 15 : 25)}</span>
+                      {isMobile && (
+                        <>
+                          <span>•</span>
+                          <span style={{
+                            color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
+                            fontSize: '10px'
+                          }}>
+                            {track.sourcePlaylist === 'search' ?
+                              '🔍' :
+                              truncateText(sourcePlaylist?.name || 'Unknown', 12)
+                            }
+                          </span>
+                          {quadrant && (
+                            <span style={{ fontSize: '12px' }} title={
+                              quadrant === 'topHits' ? `Top Hits (${track.popularity})` :
+                                quadrant === 'popular' ? `Popular (${track.popularity})` :
+                                  quadrant === 'moderate' ? `Moderate (${track.popularity})` :
+                                    `Deep Cuts (${track.popularity})`
+                            }>
+                              {getPopularityIcon(quadrant)}
+                            </span>
+                          )}
+                        </>
+                      )}
                       {!isMobile && (
                         <>
                           {' • '}
