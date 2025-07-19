@@ -91,13 +91,18 @@ const AddUnselectedModal = ({
   });
 
   const handleTouchStart = (e, track) => {
-    if (!isMobile) return;
+    console.log('[AddUnselectedModal] handleTouchStart called.');
+    if (!isMobile) {
+      console.log('[AddUnselectedModal] Not mobile, returning.');
+      return;
+    }
 
     const touch = e.touches[0];
 
     // Clear any existing timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
+      console.log('[AddUnselectedModal] Cleared existing longPressTimer.');
     }
 
     // Set up long press detection (300ms)
@@ -105,10 +110,11 @@ const AddUnselectedModal = ({
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
+      console.log(`[AddUnselectedModal] Long press timer fired. deltaY: ${deltaY}`);
       
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
-        setTouchDragState(prev => ({ 
-          ...prev, 
+        setTouchDragState(prev => ({
+          ...prev,
           isLongPress: true,
           isDragging: true
         }));
@@ -119,11 +125,14 @@ const AddUnselectedModal = ({
           type: 'modal-track',
           style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
         });
+        console.log('[AddUnselectedModal] startDrag called. globalIsDragging (after call): ', globalIsDragging);
         
         // Provide haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
+      } else {
+        console.log('[AddUnselectedModal] Long press cancelled due to excessive movement.');
       }
     }, 300);
 
@@ -134,6 +143,7 @@ const AddUnselectedModal = ({
       longPressTimer,
       isLongPress: false
     });
+    console.log('[AddUnselectedModal] touchDragState initialized.');
   };
 
   const handleTouchMove = (e, track) => {
@@ -406,7 +416,20 @@ const AddUnselectedModal = ({
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
-                  onTouchMove={isMobile ? (e) => handleTouchMove(e, track) : undefined}
+                  ref={node => {
+                    if (node) {
+                      // Ensure we only add the listener once and remove it on unmount/re-render
+                      // Store the handler on the node itself to easily remove it
+                      if (node.__touchMoveHandler__) {
+                        node.removeEventListener('touchmove', node.__touchMoveHandler__);
+                      }
+                      if (isMobile) {
+                        const handler = (e) => handleTouchMove(e, track);
+                        node.addEventListener('touchmove', handler, { passive: false });
+                        node.__touchMoveHandler__ = handler;
+                      }
+                    }
+                  }}
                   onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}
                   onClick={() => handleTrackSelect(track)}
                   style={{

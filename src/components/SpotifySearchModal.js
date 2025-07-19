@@ -87,13 +87,18 @@ const SpotifySearchModal = ({
   });
 
   const handleTouchStart = (e, track) => {
-    if (!isMobile) return;
+    console.log('[SpotifySearchModal] handleTouchStart called.');
+    if (!isMobile) {
+      console.log('[SpotifySearchModal] Not mobile, returning.');
+      return;
+    }
 
     const touch = e.touches[0];
 
     // Clear any existing timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
+      console.log('[SpotifySearchModal] Cleared existing longPressTimer.');
     }
 
     // Set up long press detection (300ms)
@@ -101,10 +106,11 @@ const SpotifySearchModal = ({
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
+      console.log(`[SpotifySearchModal] Long press timer fired. deltaY: ${deltaY}`);
       
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
-        setTouchDragState(prev => ({ 
-          ...prev, 
+        setTouchDragState(prev => ({
+          ...prev,
           isLongPress: true,
           isDragging: true
         }));
@@ -122,11 +128,14 @@ const SpotifySearchModal = ({
           type: 'search-track',
           style: { background: '#1DB954', border: '#1ed760' }
         });
+        console.log('[SpotifySearchModal] startDrag called. globalIsDragging (after call): ', globalIsDragging);
         
         // Provide haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
+      } else {
+        console.log('[SpotifySearchModal] Long press cancelled due to excessive movement.');
       }
     }, 300);
 
@@ -137,6 +146,7 @@ const SpotifySearchModal = ({
       longPressTimer,
       isLongPress: false
     });
+    console.log('[SpotifySearchModal] touchDragState initialized.');
   };
 
   const handleTouchMove = (e, track) => {
@@ -383,7 +393,20 @@ const SpotifySearchModal = ({
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
-                  onTouchMove={isMobile ? (e) => handleTouchMove(e, track) : undefined}
+                  ref={node => {
+                    if (node) {
+                      // Ensure we only add the listener once and remove it on unmount/re-render
+                      // Store the handler on the node itself to easily remove it
+                      if (node.__touchMoveHandler__) {
+                        node.removeEventListener('touchmove', node.__touchMoveHandler__);
+                      }
+                      if (isMobile) {
+                        const handler = (e) => handleTouchMove(e, track);
+                        node.addEventListener('touchmove', handler, { passive: false });
+                        node.__touchMoveHandler__ = handler;
+                      }
+                    }
+                  }}
                   onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}
                   onClick={() => handleTrackSelect(track)}
                   style={{

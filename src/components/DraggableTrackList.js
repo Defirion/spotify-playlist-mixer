@@ -594,41 +594,80 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
   // Touch handlers for external drags (from modals)
   const handleExternalTouchMove = (e) => {
+    console.log(`[handleExternalTouchMove] isMobile: ${isMobile}, isDragging: ${isDragging}, draggedItem: ${draggedItem ? 'exists' : 'null'}`);
     if (!isMobile || !isDragging || !draggedItem) return;
 
     e.preventDefault(); // Prevent scrolling during external drag
-
     const touch = e.touches[0];
-    
-    // Find the element we're hovering over
-    const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-    const trackElement = elementFromPoint?.closest('[data-track-index]');
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
 
-    if (trackElement) {
+    console.log(`[handleExternalTouchMove] Touch: clientX=${clientX}, clientY=${clientY}`);
+
+    let foundDropTarget = false;
+
+    if (!scrollContainerRef.current) {
+      console.log('[handleExternalTouchMove] scrollContainerRef.current is null.');
+      return;
+    }
+
+    const containerRect = scrollContainerRef.current.getBoundingClientRect();
+    console.log(`[handleExternalTouchMove] Container Rect: top=${containerRect.top}, left=${containerRect.left}, width=${containerRect.width}, height=${containerRect.height}`);
+
+    // Iterate through all track elements to find the hover target
+    const trackElements = scrollContainerRef.current.querySelectorAll('[data-track-index]');
+    console.log(`[handleExternalTouchMove] Found ${trackElements.length} track elements.`);
+
+    for (let i = 0; i < trackElements.length; i++) {
+      const trackElement = trackElements[i];
+      const rect = trackElement.getBoundingClientRect();
       const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
-      if (!isNaN(hoverIndex)) {
-        // Calculate drop position
-        const rect = trackElement.getBoundingClientRect();
+
+      console.log(`[handleExternalTouchMove] Checking track ${hoverIndex}: Rect: top=${rect.top}, left=${rect.left}, width=${rect.width}, height=${rect.height}`);
+
+      if (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      ) {
         const midpoint = rect.top + rect.height / 2;
-        const isTopHalf = touch.clientY < midpoint;
+        const isTopHalf = clientY < midpoint;
 
         setDropLinePosition({
           index: isTopHalf ? hoverIndex : hoverIndex + 1,
           isTopHalf
         });
+        foundDropTarget = true;
+        console.log(`[handleExternalTouchMove] Hovering over track index: ${hoverIndex}, dropLinePosition: ${isTopHalf ? hoverIndex : hoverIndex + 1}`);
+        break; // Found the target, exit loop
       }
-    } else {
-      // Check if we're over the empty space or container
-      const container = elementFromPoint?.closest('[style*="maxHeight"]');
-      if (container) {
-        // Set drop position to end of list
+    }
+
+    // If no specific track element is hovered, check if over the main container
+    if (!foundDropTarget) {
+      if (
+        clientX >= containerRect.left &&
+        clientX <= containerRect.right &&
+        clientY >= containerRect.top &&
+        clientY <= containerRect.bottom
+      ) {
+        // If over the container but not a specific track, set drop position to end of list
         setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+        console.log(`[handleExternalTouchMove] Hovering over container background, dropLinePosition: ${localTracks.length}`);
+      } else {
+        // If not over any valid drop target, clear drop line
+        setDropLinePosition(null);
+        console.log('[handleExternalTouchMove] Not hovering over any valid drop target or container.');
       }
     }
   };
 
   const handleExternalTouchEnd = (e) => {
+    console.log(`[handleExternalTouchEnd] isMobile: ${isMobile}, isDragging: ${isDragging}, draggedItem: ${draggedItem ? 'exists' : 'null'}`);
     if (!isMobile || !isDragging || !draggedItem) return;
+
+    console.log('External Touch End. dropLinePosition:', dropLinePosition);
 
     // Handle the drop if we have a valid drop position
     if (dropLinePosition !== null) {
@@ -658,6 +697,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       if (navigator.vibrate) {
         navigator.vibrate([30, 50, 30]);
       }
+    } else {
+      console.log('No valid drop position on touch end.');
     }
 
     // Reset states
@@ -868,7 +909,19 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
-              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
+              ref={node => {
+                if (node) {
+                  // Ensure we only add the listener once and remove it on unmount/re-render
+                  if (node.__touchMoveHandler__) {
+                    node.removeEventListener('touchmove', node.__touchMoveHandler__);
+                  }
+                  if (isMobile) {
+                    const handler = (e) => handleTouchMove(e, index);
+                    node.addEventListener('touchmove', handler, { passive: false });
+                    node.__touchMoveHandler__ = handler;
+                  }
+                }
+              }}
               onTouchEnd={isMobile ? handleTouchEnd : undefined}
 
               style={{
