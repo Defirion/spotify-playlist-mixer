@@ -14,6 +14,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  
+  // Ref for the scrollable container
+  const scrollContainerRef = React.useRef(null);
 
   // Touch drag state for mobile
   const [touchDragState, setTouchDragState] = useState({
@@ -23,8 +26,25 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     draggedElement: null,
     startIndex: null,
     longPressTimer: null,
-    isLongPress: false
+    isLongPress: false,
+    scrollY: 0 // Store page scroll position when drag starts
   });
+
+  // Cleanup effect to ensure no lingering scroll locks
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount - restore any locked scrolling
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      
+      // Clear any pending timers
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
+    };
+  }, [touchDragState.longPressTimer]);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -316,7 +336,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
 
 
-  // Touch drag handlers for mobile - only on drag handle
+  // Touch drag handlers for mobile - completely prevent scrolling during long press
   const handleTouchStart = (e, index) => {
     if (!isMobile) return;
 
@@ -328,11 +348,36 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // Set up long press detection (200ms - quick response since user touched drag handle)
+    // Set up long press detection (500ms)
     const longPressTimer = setTimeout(() => {
-      setTouchDragState(prev => ({ ...prev, isLongPress: true }));
-      setDraggedIndex(index); // Start drag immediately after long press
-    }, 200);
+      // Check if user hasn't moved much (not scrolling)
+      const currentY = touchDragState.currentY || touch.clientY;
+      const deltaY = Math.abs(currentY - touch.clientY);
+      
+      if (deltaY < 8) { // User hasn't moved much, activate drag mode
+        // Capture current page scroll position
+        const scrollY = window.scrollY;
+        
+        setTouchDragState(prev => ({ 
+          ...prev, 
+          isLongPress: true,
+          isDragging: false, // Don't start dragging yet, wait for movement
+          scrollY: scrollY
+        }));
+        setDraggedIndex(index);
+        
+        // Provide haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+        
+        // Prevent page scrolling while maintaining current position
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+      }
+    }, 500);
 
     setTouchDragState({
       isDragging: false,
@@ -341,50 +386,92 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       draggedElement: element,
       startIndex: index,
       longPressTimer,
-      isLongPress: false
+      isLongPress: false,
+      scrollY: 0 // Initialize to 0, only set when long press actually activates
     });
-
-    // Prevent default to avoid scrolling when touching drag handle
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   const handleTouchMove = (e, index) => {
-    if (!isMobile || !touchDragState.draggedElement) return;
+    if (!isMobile || touchDragState.startIndex === null) return;
 
     const touch = e.touches[0];
     const deltaY = Math.abs(touch.clientY - touchDragState.startY);
+    
+    // Update current position
+    setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
-    // Start dragging if long press completed and moved a bit
-    if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 3) {
-      setTouchDragState(prev => ({ ...prev, isDragging: true }));
+    // If long press hasn't activated yet and user moves too much, cancel it
+    if (!touchDragState.isLongPress && deltaY > 12) {
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+        setTouchDragState(prev => ({ 
+          ...prev, 
+          longPressTimer: null 
+        }));
+      }
+      return; // Allow normal scrolling
+    }
+    
+    // If long press was active but user cancelled by moving too much, cancel drag
+    if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 20) {
+      // Restore page scrolling only if we actually locked it
+      if (touchDragState.scrollY > 0) {
+        const scrollY = touchDragState.scrollY;
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      }
+      
+      // Reset drag state
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        draggedElement: null,
+        startIndex: null,
+        longPressTimer: null,
+        isLongPress: false,
+        scrollY: 0
+      });
+      setDraggedIndex(null);
+      setDropLinePosition(null);
+      return;
     }
 
-    // If dragging, handle drop positioning
-    if (touchDragState.isDragging || (touchDragState.isLongPress && deltaY > 3)) {
-      // Update current position
-      setTouchDragState(prev => ({ ...prev, currentY: touch.clientY, isDragging: true }));
-
-      // Find the element we're hovering over
-      const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-      const trackElement = elementFromPoint?.closest('[data-track-index]');
-
-      if (trackElement) {
-        const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
-        if (hoverIndex !== touchDragState.startIndex && !isNaN(hoverIndex)) {
-          // Calculate drop position
-          const rect = trackElement.getBoundingClientRect();
-          const midpoint = rect.top + rect.height / 2;
-          const isTopHalf = touch.clientY < midpoint;
-
-          setDropLinePosition({
-            index: isTopHalf ? hoverIndex : hoverIndex + 1,
-            isTopHalf
-          });
-        }
+    // If long press is active, handle dragging
+    if (touchDragState.isLongPress) {
+      // Start dragging if moved enough
+      if (!touchDragState.isDragging && deltaY > 3) {
+        setTouchDragState(prev => ({ ...prev, isDragging: true }));
       }
 
-      // Prevent scrolling when dragging
+      // If dragging, handle drop positioning
+      if (touchDragState.isDragging || deltaY > 3) {
+        // Find the element we're hovering over
+        const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        const trackElement = elementFromPoint?.closest('[data-track-index]');
+
+        if (trackElement) {
+          const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
+          if (hoverIndex !== touchDragState.startIndex && !isNaN(hoverIndex)) {
+            // Calculate drop position
+            const rect = trackElement.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            const isTopHalf = touch.clientY < midpoint;
+
+            setDropLinePosition({
+              index: isTopHalf ? hoverIndex : hoverIndex + 1,
+              isTopHalf
+            });
+          }
+        }
+
+        setTouchDragState(prev => ({ ...prev, isDragging: true }));
+      }
+
+      // Always prevent scrolling when long press is active
       e.preventDefault();
       e.stopPropagation();
     }
@@ -398,8 +485,18 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
+    // Restore page scrolling and scroll position only if we actually locked it
+    if (touchDragState.isLongPress || touchDragState.scrollY > 0) {
+      const scrollY = touchDragState.scrollY || 0;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    }
+
+    // If we were dragging, perform the reorder
     if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
-      // Perform the reorder
       const newTracks = [...localTracks];
       const draggedTrack = newTracks[draggedIndex];
 
@@ -421,6 +518,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       if (onTrackOrderChange) {
         onTrackOrderChange(newTracks);
       }
+
+      // Provide completion haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+      }
     }
 
     // Reset all drag state
@@ -431,7 +533,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       draggedElement: null,
       startIndex: null,
       longPressTimer: null,
-      isLongPress: false
+      isLongPress: false,
+      scrollY: 0
     });
     setDraggedIndex(null);
     setDropLinePosition(null);
@@ -443,12 +546,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       marginBottom: '16px'
     }}>
       <div
+        ref={scrollContainerRef}
         style={{
           background: 'var(--hunter-green)',
           borderRadius: '8px',
           border: '1px solid var(--fern-green)',
           height: `${containerHeight}px`,
-          overflowY: 'auto',
+          overflowY: touchDragState.isLongPress ? 'hidden' : 'auto', // Disable scrolling during long press
           borderBottomLeftRadius: isMobile ? '8px' : '0px',
           borderBottomRightRadius: isMobile ? '8px' : '0px'
         }}
@@ -571,7 +675,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             opacity: '0.7',
             lineHeight: '1.3'
           }}>
-            💡 <strong>{isMobile ? 'Long press and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
+            💡 <strong>{isMobile ? 'Long press any track and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
           </div>
         </div>
 
@@ -629,6 +733,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
+              onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
+              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
+              onTouchEnd={isMobile ? handleTouchEnd : undefined}
 
               style={{
                 padding: isMobile ? '6px 12px' : '8px 16px',
@@ -639,12 +746,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                 alignItems: 'center',
                 cursor: isMobile ? 'default' : 'grab',
                 opacity: isDragging || (isMobile && touchDragState.isDragging && touchDragState.startIndex === index) ? 0.5 : 1,
-                backgroundColor: 'transparent',
+                backgroundColor: (isMobile && touchDragState.isLongPress && touchDragState.startIndex === index) ? 'rgba(144, 169, 85, 0.15)' : 'transparent',
                 transition: 'all 0.2s ease',
                 userSelect: 'none',
                 position: 'relative',
                 boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none',
-                touchAction: (isMobile && touchDragState.isDragging) ? 'none' : 'auto' // Only prevent scrolling when actively dragging
+                touchAction: (isMobile && touchDragState.isLongPress) ? 'none' : 'pan-y' // Prevent scrolling when long press is active
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
@@ -652,14 +759,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                   style={{
                     marginRight: isMobile ? '8px' : '12px',
                     fontSize: isMobile ? '14px' : '16px',
-                    opacity: '0.5',
-                    cursor: isMobile ? 'pointer' : 'grab',
-                    touchAction: touchDragState.isDragging ? 'none' : 'auto', // Only prevent touch when dragging
-                    padding: isMobile ? '4px' : '0' // Larger touch target on mobile
+                    opacity: touchDragState.isLongPress && touchDragState.startIndex === index ? '1' : '0.5',
+                    cursor: isMobile ? 'default' : 'grab',
+                    padding: isMobile ? '4px' : '0',
+                    transition: 'all 0.2s ease'
                   }}
-                  onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
-                  onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
-                  onTouchEnd={isMobile ? handleTouchEnd : undefined}
                 >
                   ⋮⋮
                 </div>

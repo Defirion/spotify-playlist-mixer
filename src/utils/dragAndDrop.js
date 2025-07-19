@@ -170,3 +170,48 @@ export const getPopularityStyle = (quadrant, popularity) => {
   
   return styles[quadrant] || { text: '', background: 'transparent', color: 'inherit' };
 };
+
+/**
+ * Provides haptic feedback if available
+ * @param {number|number[]} pattern - Vibration pattern (single number or array)
+ */
+export const provideHapticFeedback = (pattern) => {
+  if (navigator.vibrate) {
+    navigator.vibrate(pattern);
+  }
+};
+
+/**
+ * Mobile touch drag state management utilities
+ */
+export const createInitialTouchState = () => ({
+  isDragging: false,
+  startY: 0,
+  currentY: 0,
+  draggedElement: null,
+  startIndex: null,
+  longPressTimer: null,
+  isLongPress: false
+});
+
+/**
+ * Determines if a touch movement should cancel long press detection
+ * @param {number} startY - Initial touch Y position
+ * @param {number} currentY - Current touch Y position
+ * @param {number} threshold - Movement threshold in pixels
+ * @returns {boolean} - Whether movement exceeds threshold
+ */
+export const shouldCancelLongPress = (startY, currentY, threshold = 15) => {
+  return Math.abs(currentY - startY) > threshold;
+};
+
+/**
+ * Determines if touch movement is sufficient to start dragging
+ * @param {number} startY - Initial touch Y position
+ * @param {number} currentY - Current touch Y position
+ * @param {number} threshold - Movement threshold in pixels
+ * @returns {boolean} - Whether movement exceeds threshold
+ */
+export const shouldStartDragging = (startY, currentY, threshold = 5) => {
+  return Math.abs(currentY - startY) > threshold;
+};
