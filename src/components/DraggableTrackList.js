@@ -20,7 +20,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     startY: 0,
     currentY: 0,
     draggedElement: null,
-    startIndex: null
+    startIndex: null,
+    longPressTimer: null,
+    isLongPress: false
   });
 
   // Update local tracks when props change
@@ -28,15 +30,46 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     setLocalTracks(tracks);
   }, [tracks]);
 
-  // Handle window resize for mobile detection
+  // Handle window resize for mobile detection and optimal height
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
+      const wasMobile = isMobile;
+      const nowMobile = window.innerWidth <= 480;
+      setIsMobile(nowMobile);
+
+      // Auto-adjust height when switching to/from mobile or on mobile resize
+      if (nowMobile) {
+        setContainerHeight(getMobileOptimalHeight());
+      } else if (wasMobile && !nowMobile) {
+        // Switching from mobile to desktop, restore normal height
+        setContainerHeight(400);
+      }
     };
 
     window.addEventListener('resize', handleResize);
+
+    // Set initial optimal height for mobile
+    if (isMobile) {
+      setContainerHeight(getMobileOptimalHeight());
+    }
+
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isMobile]);
+
+  // Handle orientation changes on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleOrientationChange = () => {
+      // Small delay to let the viewport settle after orientation change
+      setTimeout(() => {
+        setContainerHeight(getMobileOptimalHeight());
+      }, 100);
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => window.removeEventListener('orientationchange', handleOrientationChange);
+  }, [isMobile]);
 
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
@@ -180,6 +213,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     return Math.floor(window.innerHeight * 0.85);
   };
 
+  // Calculate optimal height for mobile viewport
+  const getMobileOptimalHeight = () => {
+    // Use most of the viewport height, pushing other content below the fold
+    // Only reserve minimal space for essential UI elements
+    const viewportHeight = window.innerHeight;
+    const reservedSpace = 60; // Minimal space for essential UI only
+    return Math.max(400, viewportHeight - reservedSpace);
+  };
+
   // Double-click to maximize/minimize
   const handleDoubleClick = () => {
     if (isMaximized) {
@@ -282,23 +324,37 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
-  // Touch drag handlers for mobile
+  // Touch drag handlers for mobile - only on drag handle
   const handleTouchStart = (e, index) => {
     if (!isMobile) return;
 
     const touch = e.touches[0];
     const element = e.currentTarget;
 
+    // Clear any existing timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // Set up long press detection (200ms - quick response since user touched drag handle)
+    const longPressTimer = setTimeout(() => {
+      setTouchDragState(prev => ({ ...prev, isLongPress: true }));
+      setDraggedIndex(index); // Start drag immediately after long press
+    }, 200);
+
     setTouchDragState({
-      isDragging: false, // Will become true after movement threshold
+      isDragging: false,
       startY: touch.clientY,
       currentY: touch.clientY,
       draggedElement: element,
-      startIndex: index
+      startIndex: index,
+      longPressTimer,
+      isLongPress: false
     });
 
-    // Prevent scrolling while potentially dragging
+    // Prevent default to avoid scrolling when touching drag handle
     e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleTouchMove = (e, index) => {
@@ -307,15 +363,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const touch = e.touches[0];
     const deltaY = Math.abs(touch.clientY - touchDragState.startY);
 
-    // Start dragging if moved more than 10px
-    if (!touchDragState.isDragging && deltaY > 10) {
-      setDraggedIndex(touchDragState.startIndex);
+    // Start dragging if long press completed and moved a bit
+    if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 3) {
       setTouchDragState(prev => ({ ...prev, isDragging: true }));
     }
 
-    if (touchDragState.isDragging) {
+    // If dragging, handle drop positioning
+    if (touchDragState.isDragging || (touchDragState.isLongPress && deltaY > 3)) {
       // Update current position
-      setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
+      setTouchDragState(prev => ({ ...prev, currentY: touch.clientY, isDragging: true }));
 
       // Find the element we're hovering over
       const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -323,7 +379,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
       if (trackElement) {
         const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
-        if (hoverIndex !== touchDragState.startIndex) {
+        if (hoverIndex !== touchDragState.startIndex && !isNaN(hoverIndex)) {
           // Calculate drop position
           const rect = trackElement.getBoundingClientRect();
           const midpoint = rect.top + rect.height / 2;
@@ -336,13 +392,19 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         }
       }
 
-      // Prevent scrolling during drag
+      // Prevent scrolling when dragging
       e.preventDefault();
+      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
-    if (!isMobile || !touchDragState.draggedElement) return;
+    if (!isMobile) return;
+
+    // Clear long press timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
 
     if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
       // Perform the reorder
@@ -375,7 +437,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       startY: 0,
       currentY: 0,
       draggedElement: null,
-      startIndex: null
+      startIndex: null,
+      longPressTimer: null,
+      isLongPress: false
     });
     setDraggedIndex(null);
     setDropLinePosition(null);
@@ -393,8 +457,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           border: '1px solid var(--fern-green)',
           height: `${containerHeight}px`,
           overflowY: 'auto',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '0px'
+          borderBottomLeftRadius: isMobile ? '8px' : '0px',
+          borderBottomRightRadius: isMobile ? '8px' : '0px'
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -515,7 +579,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             opacity: '0.7',
             lineHeight: '1.3'
           }}>
-            💡 <strong>{isMobile ? 'Long press and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong> • <strong>Drag bottom edge to resize</strong>
+            💡 <strong>{isMobile ? 'Long press and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
           </div>
         </div>
 
@@ -573,9 +637,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              onTouchStart={(e) => handleTouchStart(e, index)}
-              onTouchMove={(e) => handleTouchMove(e, index)}
-              onTouchEnd={handleTouchEnd}
+
               style={{
                 padding: isMobile ? '6px 12px' : '8px 16px',
                 borderBottom: index < localTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
@@ -590,17 +652,23 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                 userSelect: 'none',
                 position: 'relative',
                 boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none',
-                touchAction: isMobile ? 'none' : 'auto' // Prevent scrolling during touch drag
+                touchAction: (isMobile && touchDragState.isDragging) ? 'none' : 'auto' // Only prevent scrolling when actively dragging
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                <div style={{
-                  marginRight: isMobile ? '8px' : '12px',
-                  fontSize: isMobile ? '14px' : '16px',
-                  opacity: '0.5',
-                  cursor: isMobile ? 'pointer' : 'grab',
-                  touchAction: 'none' // Prevent default touch behaviors
-                }}>
+                <div
+                  style={{
+                    marginRight: isMobile ? '8px' : '12px',
+                    fontSize: isMobile ? '14px' : '16px',
+                    opacity: '0.5',
+                    cursor: isMobile ? 'pointer' : 'grab',
+                    touchAction: touchDragState.isDragging ? 'none' : 'auto', // Only prevent touch when dragging
+                    padding: isMobile ? '4px' : '0' // Larger touch target on mobile
+                  }}
+                  onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
+                  onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
+                  onTouchEnd={isMobile ? handleTouchEnd : undefined}
+                >
                   ⋮⋮
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', flex: 1 }}>
@@ -766,47 +834,49 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         })}
       </div>
 
-      {/* Resize handle - outside the scrollable container */}
-      <div
-        onMouseDown={handleResizeStart}
-        onDoubleClick={handleDoubleClick}
-        style={{
-          height: '12px',
-          cursor: 'ns-resize',
-          background: isResizing ? 'rgba(144, 169, 85, 0.3)' :
-            isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)',
-          border: '1px solid var(--fern-green)',
-          borderTop: isResizing ? '2px solid var(--moss-green)' :
-            isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
-          borderBottomLeftRadius: '8px',
-          borderBottomRightRadius: '8px',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-        onMouseEnter={(e) => {
-          if (!isResizing) {
-            e.target.style.background = 'rgba(144, 169, 85, 0.1)';
-            e.target.style.borderTop = '2px solid rgba(144, 169, 85, 0.5)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isResizing) {
-            e.target.style.background = isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)';
-            e.target.style.borderTop = isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)';
-          }
-        }}
-        title={isMaximized ? "Drag to resize • Double-click to minimize" : "Drag to resize • Double-click to maximize"}
-      >
-        <div style={{
-          width: '30px',
-          height: '3px',
-          background: 'rgba(144, 169, 85, 0.6)',
-          borderRadius: '2px',
-          opacity: isResizing ? 1 : 0.7
-        }} />
-      </div>
+      {/* Resize handle - outside the scrollable container - Desktop only */}
+      {!isMobile && (
+        <div
+          onMouseDown={handleResizeStart}
+          onDoubleClick={handleDoubleClick}
+          style={{
+            height: '12px',
+            cursor: 'ns-resize',
+            background: isResizing ? 'rgba(144, 169, 85, 0.3)' :
+              isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)',
+            border: '1px solid var(--fern-green)',
+            borderTop: isResizing ? '2px solid var(--moss-green)' :
+              isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
+            borderBottomLeftRadius: '8px',
+            borderBottomRightRadius: '8px',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onMouseEnter={(e) => {
+            if (!isResizing) {
+              e.target.style.background = 'rgba(144, 169, 85, 0.1)';
+              e.target.style.borderTop = '2px solid rgba(144, 169, 85, 0.5)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isResizing) {
+              e.target.style.background = isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)';
+              e.target.style.borderTop = isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)';
+            }
+          }}
+          title={isMaximized ? "Drag to resize • Double-click to minimize" : "Drag to resize • Double-click to maximize"}
+        >
+          <div style={{
+            width: '30px',
+            height: '3px',
+            background: 'rgba(144, 169, 85, 0.6)',
+            borderRadius: '2px',
+            opacity: isResizing ? 1 : 0.7
+          }} />
+        </div>
+      )}
 
 
 
