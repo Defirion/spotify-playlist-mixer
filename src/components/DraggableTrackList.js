@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 import { getPopularityIcon } from '../utils/dragAndDrop';
+import { useDragContext } from '../contexts/DragContext';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
+  const { externalDragData, isExternalDragActive: contextExternalDragActive, endExternalDrag, cancelExternalDrag } = useDragContext();
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
@@ -30,21 +32,66 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     scrollY: 0 // Store page scroll position when drag starts
   });
 
-  // Cleanup effect to ensure no lingering scroll locks
+  // Centralized scroll lock management - handles all drag operations
   useEffect(() => {
+    const isDragActive = (
+      touchDragState.isLongPress || 
+      draggedIndex !== null || 
+      contextExternalDragActive
+    );
+
+    if (isDragActive) {
+      // Only lock if not already locked
+      if (document.body.style.position !== 'fixed') {
+        const scrollY = window.scrollY;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+        
+        // Store scroll position for restoration
+        document.body.dataset.scrollY = scrollY.toString();
+      }
+    } else {
+      // Only restore if currently locked
+      if (document.body.style.position === 'fixed') {
+        const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        delete document.body.dataset.scrollY;
+        
+        // Restore scroll position after a brief delay to ensure DOM is ready
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+      }
+    }
+
+    // Cleanup function for component unmount
     return () => {
-      // Cleanup on unmount - restore any locked scrolling
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      // Always restore scroll state on unmount
+      if (document.body.style.position === 'fixed') {
+        const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        delete document.body.dataset.scrollY;
+        
+        // Restore scroll position
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+      }
       
       // Clear any pending timers
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
       }
     };
-  }, [touchDragState.longPressTimer]);
+  }, [touchDragState.isLongPress, draggedIndex, contextExternalDragActive, touchDragState.longPressTimer]);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -102,10 +149,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 
-    // Check if it's a modal track being dragged
-    const dragData = e.dataTransfer.types.includes('application/json');
-
-    if (!dragData && (draggedIndex === null || draggedIndex === index)) return;
+    // Check if it's an external drag from context or dataTransfer
+    const isExternalDrag = contextExternalDragActive || e.dataTransfer.types.includes('application/json');
+    
+    // For internal drags, skip if no drag is active or dragging over self
+    if (!isExternalDrag && (draggedIndex === null || draggedIndex === index)) return;
 
     // Calculate if we're in the top or bottom half of the element
     const rect = e.currentTarget.getBoundingClientRect();
@@ -121,7 +169,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
 
     // Don't show drop line if it would be the same position (only for internal drags)
-    if (!dragData && draggedIndex !== null) {
+    if (!isExternalDrag && draggedIndex !== null) {
       if (draggedIndex < insertPosition && insertPosition === draggedIndex + 1) return;
       if (draggedIndex > insertPosition && insertPosition === draggedIndex) return;
     }
@@ -149,29 +197,61 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
 
-    // Check if it's a track from the modal or search results
+    // Handle external drag from context first (most reliable)
+    if (contextExternalDragActive && externalDragData) {
+      const { track, type } = externalDragData;
+      const newTracks = [...localTracks];
+      const insertIndex = dropLinePosition ? dropLinePosition.index : localTracks.length;
+
+      // Insert the track at the specified position
+      newTracks.splice(insertIndex, 0, track);
+
+      setLocalTracks(newTracks);
+
+      // Notify parent component of the new track list
+      if (onTrackOrderChange) {
+        onTrackOrderChange(newTracks);
+      }
+
+      setDropLinePosition(null);
+      endExternalDrag(); // Clear context state
+
+      // Close the appropriate modal after successful drop
+      if (type === 'modal-track') {
+        setShowAddUnselectedModal(false);
+      }
+      if (type === 'search-track') {
+        setShowSpotifySearch(false);
+      }
+
+      return;
+    }
+
+    // Fallback: Check dataTransfer for external drags (backward compatibility)
     try {
       const dragData = e.dataTransfer.getData('application/json');
       if (dragData) {
         const { type, track } = JSON.parse(dragData);
         if (type === 'modal-track' || type === 'search-track') {
-          // Handle drop from modal or search results
           const newTracks = [...localTracks];
           const insertIndex = dropLinePosition ? dropLinePosition.index : localTracks.length;
 
-          // Insert the track at the specified position
           newTracks.splice(insertIndex, 0, track);
-
           setLocalTracks(newTracks);
 
-          // Notify parent component of the new track list
           if (onTrackOrderChange) {
             onTrackOrderChange(newTracks);
           }
 
           setDropLinePosition(null);
 
-          // Track was added from modal
+          // Close the appropriate modal after successful drop
+          if (type === 'modal-track') {
+            setShowAddUnselectedModal(false);
+          }
+          if (type === 'search-track') {
+            setShowSpotifySearch(false);
+          }
 
           return;
         }
@@ -348,21 +428,18 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // Set up long press detection (500ms)
+    // Set up long press detection (300ms)
     const longPressTimer = setTimeout(() => {
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
       
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
-        // Capture current page scroll position
-        const scrollY = window.scrollY;
-        
         setTouchDragState(prev => ({ 
           ...prev, 
           isLongPress: true,
           isDragging: false, // Don't start dragging yet, wait for movement
-          scrollY: scrollY
+          scrollY: 0 // No longer needed - centralized scroll lock handles this
         }));
         setDraggedIndex(index);
         
@@ -370,14 +447,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
-        
-        // Prevent page scrolling while maintaining current position
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.width = '100%';
       }
-    }, 500);
+    }, 300);
 
     setTouchDragState({
       isDragging: false,
@@ -414,17 +485,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     
     // If long press was active but user cancelled by moving too much, cancel drag
     if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 20) {
-      // Restore page scrolling only if we actually locked it
-      if (touchDragState.scrollY > 0) {
-        const scrollY = touchDragState.scrollY;
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        window.scrollTo(0, scrollY);
-      }
-      
-      // Reset drag state
+      // Reset drag state - centralized scroll lock will handle restoration
       setTouchDragState({
         isDragging: false,
         startY: 0,
@@ -485,16 +546,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // Restore page scrolling and scroll position only if we actually locked it
-    if (touchDragState.isLongPress || touchDragState.scrollY > 0) {
-      const scrollY = touchDragState.scrollY || 0;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
-    }
-
     // If we were dragging, perform the reorder
     if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
       const newTracks = [...localTracks];
@@ -540,6 +591,79 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     setDropLinePosition(null);
   };
 
+  // Touch handlers for external drags (from modals)
+  const handleExternalTouchMove = (e) => {
+    if (!isMobile || !contextExternalDragActive || !externalDragData) return;
+
+    e.preventDefault(); // Prevent scrolling during external drag
+
+    const touch = e.touches[0];
+    
+    // Find the element we're hovering over
+    const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+    const trackElement = elementFromPoint?.closest('[data-track-index]');
+
+    if (trackElement) {
+      const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
+      if (!isNaN(hoverIndex)) {
+        // Calculate drop position
+        const rect = trackElement.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        const isTopHalf = touch.clientY < midpoint;
+
+        setDropLinePosition({
+          index: isTopHalf ? hoverIndex : hoverIndex + 1,
+          isTopHalf
+        });
+      }
+    } else {
+      // Check if we're over the empty space or container
+      const container = elementFromPoint?.closest('[style*="maxHeight"]');
+      if (container) {
+        // Set drop position to end of list
+        setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+      }
+    }
+  };
+
+  const handleExternalTouchEnd = (e) => {
+    if (!isMobile || !contextExternalDragActive || !externalDragData) return;
+
+    // Handle the drop if we have a valid drop position
+    if (dropLinePosition !== null) {
+      const { track, type } = externalDragData;
+      const newTracks = [...localTracks];
+      const insertIndex = dropLinePosition.index;
+
+      // Insert the track at the specified position
+      newTracks.splice(insertIndex, 0, track);
+
+      setLocalTracks(newTracks);
+
+      // Notify parent component of the new track list
+      if (onTrackOrderChange) {
+        onTrackOrderChange(newTracks);
+      }
+
+      // Close the appropriate modal after successful drop
+      if (type === 'modal-track') {
+        setShowAddUnselectedModal(false);
+      }
+      if (type === 'search-track') {
+        setShowSpotifySearch(false);
+      }
+
+      // Provide completion haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+      }
+    }
+
+    // Reset states
+    setDropLinePosition(null);
+    endExternalDrag();
+  };
+
   return (
     <div style={{
       position: 'relative',
@@ -552,19 +676,28 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           borderRadius: '8px',
           border: '1px solid var(--fern-green)',
           height: `${containerHeight}px`,
-          overflowY: touchDragState.isLongPress ? 'hidden' : 'auto', // Disable scrolling during long press
+          overflowY: (touchDragState.isLongPress || draggedIndex !== null || contextExternalDragActive) ? 'hidden' : 'auto', // Disable internal scrolling during any drag operation
           borderBottomLeftRadius: isMobile ? '8px' : '0px',
           borderBottomRightRadius: isMobile ? '8px' : '0px'
         }}
+        onTouchMove={isMobile ? handleExternalTouchMove : undefined}
+        onTouchEnd={isMobile ? handleExternalTouchEnd : undefined}
         onDragOver={(e) => {
           e.preventDefault();
-          // If dragging over empty space, set drop position to end
+          
+          // Check if it's an external drag (from context or dataTransfer)
+          const isExternalDrag = contextExternalDragActive || e.dataTransfer.types.includes('application/json');
+          
+          // If dragging over empty space or container, set drop position to end
           if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
-            setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+            // Only show drop line if there's an active drag
+            if (isExternalDrag || draggedIndex !== null) {
+              setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+            }
           }
         }}
         onDrop={(e) => {
-          // Handle drops on empty space
+          // Handle drops on empty space or container
           if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
             handleDrop(e, localTracks.length);
           }
@@ -687,15 +820,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             color: 'var(--mindaro)',
             opacity: '0.6',
             fontSize: '14px',
-            borderStyle: dropLinePosition ? 'dashed' : 'none',
+            borderStyle: (contextExternalDragActive || dropLinePosition) ? 'dashed' : 'none',
             borderWidth: '2px',
             borderColor: 'var(--moss-green)',
             borderRadius: '8px',
             margin: '20px',
-            backgroundColor: dropLinePosition ? 'rgba(144, 169, 85, 0.1)' : 'transparent',
+            backgroundColor: (contextExternalDragActive || dropLinePosition) ? 'rgba(144, 169, 85, 0.1)' : 'transparent',
             transition: 'all 0.2s ease'
           }}>
-            {dropLinePosition ?
+            {(contextExternalDragActive || dropLinePosition) ?
               '🎵 Drop track here to add it to your playlist' :
               'No tracks in preview yet. Generate a preview or drag tracks from the modal.'
             }
@@ -746,7 +879,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                 alignItems: 'center',
                 cursor: isMobile ? 'default' : 'grab',
                 opacity: isDragging || (isMobile && touchDragState.isDragging && touchDragState.startIndex === index) ? 0.5 : 1,
-                backgroundColor: (isMobile && touchDragState.isLongPress && touchDragState.startIndex === index) ? 'rgba(144, 169, 85, 0.15)' : 'transparent',
+                backgroundColor: (isMobile && touchDragState.isLongPress && touchDragState.startIndex === index) ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
                 transition: 'all 0.2s ease',
                 userSelect: 'none',
                 position: 'relative',
@@ -984,10 +1117,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         selectedPlaylists={selectedPlaylists}
         currentTracks={localTracks}
         onAddTracks={handleAddUnselectedTracks}
-        onDragTrack={(track) => {
-          // Optional: Handle when a track starts being dragged from modal
-          console.log('Track being dragged from modal:', track.name);
-        }}
+
       />
 
       {/* Spotify Search Modal */}
@@ -996,10 +1126,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         onClose={() => setShowSpotifySearch(false)}
         accessToken={accessToken}
         onAddTracks={handleAddSpotifyTracks}
-        onDragTrack={(track) => {
-          // Optional: Handle when a track starts being dragged from modal
-          console.log('Track being dragged from Spotify search:', track.name);
-        }}
+
       />
     </div>
   );

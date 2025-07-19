@@ -11,6 +11,7 @@ import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
+import { DragProvider } from './contexts/DragContext';
 
 function MainApp() {
   const [accessToken, setAccessToken] = useState(null);
@@ -178,7 +179,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MainApp />} />
+        <Route path="/" element={<DragProvider><MainApp /></DragProvider>} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
       </Routes>

@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 import { 
   handleModalDragStart, 
-  handleModalDragEnd, 
   handleTrackSelection, 
   handleBackdropClick,
   getTrackQuadrant,
   formatDuration,
   getPopularityStyle
 } from '../utils/dragAndDrop';
+import { useDragContext } from '../contexts/DragContext';
 
 const AddUnselectedModal = ({ 
   isOpen, 
@@ -16,9 +16,9 @@ const AddUnselectedModal = ({
   accessToken, 
   selectedPlaylists, 
   currentTracks, 
-  onAddTracks,
-  onDragTrack
+  onAddTracks
 }) => {
+  const { startExternalDrag } = useDragContext();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
   const [filteredTracks, setFilteredTracks] = useState([]);
@@ -26,6 +26,7 @@ const AddUnselectedModal = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
 
   useEffect(() => {
     // Filter tracks based on search query
@@ -79,14 +80,125 @@ const AddUnselectedModal = ({
       track, 
       'modal-track', 
       setIsDragging, 
-      onDragTrack,
+      startExternalDrag,
       { background: 'var(--moss-green)', border: 'var(--fern-green)' }
     );
   };
 
   const handleDragEnd = () => {
-    handleModalDragEnd(setIsDragging, onClose);
+    setIsDragging(false);
+    // Don't automatically close modal - let the drop handler decide
   };
+
+  // Touch handlers for mobile
+  const [touchDragState, setTouchDragState] = useState({
+    isDragging: false,
+    startY: 0,
+    longPressTimer: null,
+    isLongPress: false
+  });
+
+  const handleTouchStart = (e, track) => {
+    if (!isMobile) return;
+
+    const touch = e.touches[0];
+
+    // Clear any existing timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // Set up long press detection (300ms)
+    const longPressTimer = setTimeout(() => {
+      // Check if user hasn't moved much (not scrolling)
+      const currentY = touchDragState.currentY || touch.clientY;
+      const deltaY = Math.abs(currentY - touch.clientY);
+      
+      if (deltaY < 8) { // User hasn't moved much, activate drag mode
+        setTouchDragState(prev => ({ 
+          ...prev, 
+          isLongPress: true,
+          isDragging: true
+        }));
+        
+        // Start external drag using context
+        startExternalDrag(track, 'modal-track');
+        
+        // Provide haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
+    }, 300);
+
+    setTouchDragState({
+      isDragging: false,
+      startY: touch.clientY,
+      currentY: touch.clientY,
+      longPressTimer,
+      isLongPress: false
+    });
+  };
+
+  const handleTouchMove = (e, track) => {
+    if (!isMobile) return;
+
+    const touch = e.touches[0];
+    const deltaY = Math.abs(touch.clientY - touchDragState.startY);
+    
+    // Update current position
+    setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
+
+    // If long press hasn't activated yet and user moves too much, cancel it
+    if (!touchDragState.isLongPress && deltaY > 12) {
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+        setTouchDragState(prev => ({ 
+          ...prev, 
+          longPressTimer: null 
+        }));
+      }
+      return; // Allow normal scrolling
+    }
+
+    // If long press is active, prevent scrolling
+    if (touchDragState.isLongPress) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchEnd = (e, track) => {
+    if (!isMobile) return;
+
+    // Clear long press timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // If we were in long press mode, end the external drag
+    if (touchDragState.isLongPress) {
+      // The actual drop handling is done in DraggableTrackList
+      // We just need to reset our state here
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false
+      });
+    }
+  };
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch all tracks from playlists (only when playlists change)
   const fetchAllPlaylistTracks = useCallback(async () => {
@@ -166,10 +278,10 @@ const AddUnselectedModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: isDragging ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: 1000,
-          opacity: isDragging ? 0 : 1,
-          pointerEvents: isDragging ? 'none' : 'auto',
+          backgroundColor: (isDragging || touchDragState.isLongPress) ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
+          zIndex: (isDragging || touchDragState.isLongPress) ? -1 : 1000,
+          opacity: 1,
+          pointerEvents: (isDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
         onClick={(e) => handleBackdropClick(e, onClose)}
@@ -191,9 +303,9 @@ const AddUnselectedModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: 1001,
-          opacity: isDragging ? 0 : 1,
-          pointerEvents: isDragging ? 'none' : 'auto',
+          zIndex: (isDragging || touchDragState.isLongPress) ? -1 : 1001,
+          opacity: 1,
+          pointerEvents: (isDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
       >
@@ -295,9 +407,12 @@ const AddUnselectedModal = ({
               return (
                 <div
                   key={track.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, track)}
-                  onDragEnd={handleDragEnd}
+                  draggable={!isMobile}
+                  onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
+                  onDragEnd={!isMobile ? handleDragEnd : undefined}
+                  onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
+                  onTouchMove={isMobile ? (e) => handleTouchMove(e, track) : undefined}
+                  onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}
                   onClick={() => handleTrackSelect(track)}
                   style={{
                     padding: '12px 20px',

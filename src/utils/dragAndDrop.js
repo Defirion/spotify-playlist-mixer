@@ -28,13 +28,18 @@ export const createDragImage = (element, backgroundColor, borderColor) => {
  * @param {Object} track - The track being dragged
  * @param {string} trackType - Type of track ('modal-track' or 'search-track')
  * @param {Function} setIsDragging - Function to set dragging state
- * @param {Function} onDragTrack - Optional callback when drag starts
+ * @param {Function} startExternalDrag - Function from DragContext to start external drag
  * @param {Object} dragImageColors - Colors for the drag image { background, border }
  */
-export const handleModalDragStart = (e, track, trackType, setIsDragging, onDragTrack, dragImageColors) => {
+export const handleModalDragStart = (e, track, trackType, setIsDragging, startExternalDrag, dragImageColors) => {
   setIsDragging(true);
   
   e.dataTransfer.effectAllowed = 'move';
+  
+  // Use DragContext as primary method
+  startExternalDrag(track, trackType);
+  
+  // Keep dataTransfer as fallback for backward compatibility
   e.dataTransfer.setData('application/json', JSON.stringify({
     type: trackType,
     track: track
@@ -55,10 +60,6 @@ export const handleModalDragStart = (e, track, trackType, setIsDragging, onDragT
       document.body.removeChild(dragElement);
     }
   }, 100);
-  
-  if (onDragTrack) {
-    onDragTrack(track);
-  }
 };
 
 /**
@@ -68,7 +69,10 @@ export const handleModalDragStart = (e, track, trackType, setIsDragging, onDragT
  */
 export const handleModalDragEnd = (setIsDragging, onClose) => {
   setIsDragging(false);
-  onClose();
+  // Delay closing the modal to allow drop event to process
+  setTimeout(() => {
+    onClose();
+  }, 100);
 };
 
 /**
