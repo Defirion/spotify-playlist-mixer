@@ -22,58 +22,7 @@ export const createDragImage = (element, backgroundColor, borderColor) => {
   return dragElement;
 };
 
-/**
- * Handles the drag start event for modal tracks
- * @param {Event} e - The drag event
- * @param {Object} track - The track being dragged
- * @param {string} trackType - Type of track ('modal-track' or 'search-track')
- * @param {Function} setIsDragging - Function to set dragging state
- * @param {Function} startExternalDrag - Function from DragContext to start external drag
- * @param {Object} dragImageColors - Colors for the drag image { background, border }
- */
-export const handleModalDragStart = (e, track, trackType, setIsDragging, startExternalDrag, dragImageColors) => {
-  setIsDragging(true);
-  
-  e.dataTransfer.effectAllowed = 'move';
-  
-  // Use DragContext as primary method
-  startExternalDrag(track, trackType);
-  
-  // Keep dataTransfer as fallback for backward compatibility
-  e.dataTransfer.setData('application/json', JSON.stringify({
-    type: trackType,
-    track: track
-  }));
-  
-  // Create a custom drag image
-  const dragElement = createDragImage(
-    e.currentTarget, 
-    dragImageColors.background, 
-    dragImageColors.border
-  );
-  
-  e.dataTransfer.setDragImage(dragElement, 200, 30);
-  
-  // Clean up the drag image after a short delay
-  setTimeout(() => {
-    if (document.body.contains(dragElement)) {
-      document.body.removeChild(dragElement);
-    }
-  }, 100);
-};
 
-/**
- * Handles the drag end event for modal tracks
- * @param {Function} setIsDragging - Function to set dragging state
- * @param {Function} onClose - Function to close the modal
- */
-export const handleModalDragEnd = (setIsDragging, onClose) => {
-  setIsDragging(false);
-  // Delay closing the modal to allow drop event to process
-  setTimeout(() => {
-    onClose();
-  }, 100);
-};
 
 /**
  * Common track selection logic
@@ -91,16 +40,7 @@ export const handleTrackSelection = (track, selectedTracks, setSelectedTracks) =
   setSelectedTracks(newSelected);
 };
 
-/**
- * Common backdrop click handler
- * @param {Event} e - The click event
- * @param {Function} onClose - Function to close the modal
- */
-export const handleBackdropClick = (e, onClose) => {
-  if (e.target === e.currentTarget) {
-    onClose();
-  }
-};
+
 
 /**
  * Common track quadrant calculation based on popularity

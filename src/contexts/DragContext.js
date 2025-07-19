@@ -1,65 +1,35 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const DragContext = createContext();
 
-export const useDragContext = () => {
-  const context = useContext(DragContext);
-  if (!context) {
-    throw new Error('useDragContext must be used within a DragProvider');
-  }
-  return context;
-};
-
 export const DragProvider = ({ children }) => {
-  const [externalDragData, setExternalDragData] = useState(null);
-  const [isExternalDragActive, setIsExternalDragActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [isDropSuccessful, setIsDropSuccessful] = useState(false);
 
-  const startExternalDrag = (track, type) => {
-    setExternalDragData({ track, type });
-    setIsExternalDragActive(true);
+  const startDrag = (item) => {
+    setIsDragging(true);
+    setDraggedItem(item);
+    setIsDropSuccessful(false); // Reset for new drag operation
   };
 
-  const endExternalDrag = (wasSuccessful = false) => {
-    setExternalDragData(null);
-    setIsExternalDragActive(false);
-    return wasSuccessful;
+  const endDrag = () => {
+    setIsDragging(false);
+    setDraggedItem(null);
+    setIsDropSuccessful(true); // Mark as successful drop
   };
 
-  const cancelExternalDrag = () => {
-    setExternalDragData(null);
-    setIsExternalDragActive(false);
-  };
-
-  // Global drag end handler to clean up failed drags
-  useEffect(() => {
-    const handleGlobalDragEnd = (e) => {
-      // Only clean up if we have an active external drag
-      if (isExternalDragActive) {
-        // Small delay to allow drop events to process first
-        setTimeout(() => {
-          // If drag is still active after delay, it means drop failed
-          if (isExternalDragActive) {
-            cancelExternalDrag();
-          }
-        }, 50);
-      }
-    };
-
-    document.addEventListener('dragend', handleGlobalDragEnd);
-    return () => document.removeEventListener('dragend', handleGlobalDragEnd);
-  }, [isExternalDragActive]);
-
-  const value = {
-    externalDragData,
-    isExternalDragActive,
-    startExternalDrag,
-    endExternalDrag,
-    cancelExternalDrag
+  const cancelDrag = () => {
+    setIsDragging(false);
+    setDraggedItem(null);
+    setIsDropSuccessful(false); // Mark as unsuccessful drop
   };
 
   return (
-    <DragContext.Provider value={value}>
+    <DragContext.Provider value={{ isDragging, draggedItem, startDrag, endDrag, cancelDrag, isDropSuccessful }}>
       {children}
     </DragContext.Provider>
   );
 };
+
+export const useDrag = () => useContext(DragContext);

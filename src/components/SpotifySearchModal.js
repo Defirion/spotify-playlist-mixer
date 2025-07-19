@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
-import { 
-  handleModalDragStart, 
-  handleTrackSelection, 
-  handleBackdropClick,
+import {
+  handleTrackSelection,
   getTrackQuadrant,
   formatDuration,
   getPopularityStyle
 } from '../utils/dragAndDrop';
-import { useDragContext } from '../contexts/DragContext';
+import { useDrag } from '../contexts/DragContext';
 
 const SpotifySearchModal = ({ 
   isOpen, 
@@ -16,12 +14,12 @@ const SpotifySearchModal = ({
   accessToken, 
   onAddTracks
 }) => {
-  const { startExternalDrag } = useDragContext();
+  const { isDragging: globalIsDragging, startDrag, endDrag, cancelDrag } = useDrag();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
-  const [isDragging, setIsDragging] = useState(false);
+  
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
 
 
@@ -71,20 +69,14 @@ const SpotifySearchModal = ({
       sourcePlaylistName: 'Spotify Search'
     };
     
-    handleModalDragStart(
-      e, 
-      trackWithSource, 
-      'search-track', 
-      setIsDragging, 
-      startExternalDrag,
-      { background: '#1DB954', border: '#1ed760' }
-    );
+    startDrag({
+      data: trackWithSource,
+      type: 'search-track',
+      style: { background: '#1DB954', border: '#1ed760' }
+    });
   };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    // Don't automatically close modal - let the drop handler decide
-  };
+  
 
   // Touch handlers for mobile
   const [touchDragState, setTouchDragState] = useState({
@@ -125,7 +117,11 @@ const SpotifySearchModal = ({
         };
         
         // Start external drag using context
-        startExternalDrag(trackWithSource, 'search-track');
+        startDrag({
+          data: trackWithSource,
+          type: 'search-track',
+          style: { background: '#1DB954', border: '#1ed760' }
+        });
         
         // Provide haptic feedback
         if (navigator.vibrate) {
@@ -224,13 +220,13 @@ const SpotifySearchModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: (isDragging || touchDragState.isLongPress) ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: (isDragging || touchDragState.isLongPress) ? -1 : 1000,
+          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1000,
           opacity: 1,
-          pointerEvents: (isDragging || touchDragState.isLongPress) ? 'none' : 'auto',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
-        onClick={(e) => handleBackdropClick(e, onClose)}
+        onClick={onClose}
       />
       
       {/* Modal */}
@@ -249,9 +245,9 @@ const SpotifySearchModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (isDragging || touchDragState.isLongPress) ? -1 : 1001,
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
           opacity: 1,
-          pointerEvents: (isDragging || touchDragState.isLongPress) ? 'none' : 'auto',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
       >
@@ -386,7 +382,6 @@ const SpotifySearchModal = ({
                   key={track.id}
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
-                  onDragEnd={!isMobile ? handleDragEnd : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
                   onTouchMove={isMobile ? (e) => handleTouchMove(e, track) : undefined}
                   onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}

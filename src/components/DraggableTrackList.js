@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 import { getPopularityIcon } from '../utils/dragAndDrop';
-import { useDragContext } from '../contexts/DragContext';
+import { useDrag } from '../contexts/DragContext';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
-  const { externalDragData, isExternalDragActive: contextExternalDragActive, endExternalDrag, cancelExternalDrag } = useDragContext();
+  const { draggedItem, isDragging, endDrag, cancelDrag } = useDrag();
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
@@ -35,9 +35,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   // Centralized scroll lock management - handles all drag operations
   useEffect(() => {
     const isDragActive = (
-      touchDragState.isLongPress || 
       draggedIndex !== null || 
-      contextExternalDragActive
+      isDragging
     );
 
     if (isDragActive) {
@@ -91,7 +90,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         clearTimeout(touchDragState.longPressTimer);
       }
     };
-  }, [touchDragState.isLongPress, draggedIndex, contextExternalDragActive, touchDragState.longPressTimer]);
+  }, [draggedIndex, isDragging, touchDragState.longPressTimer]);
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -150,7 +149,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     e.dataTransfer.dropEffect = 'move';
 
     // Check if it's an external drag from context or dataTransfer
-    const isExternalDrag = contextExternalDragActive || e.dataTransfer.types.includes('application/json');
+    // Check if it's an external drag from context or dataTransfer
+    // Check if it's an external drag from context or dataTransfer
+    const isExternalDrag = isDragging || e.dataTransfer.types.includes('application/json');
     
     // For internal drags, skip if no drag is active or dragging over self
     if (!isExternalDrag && (draggedIndex === null || draggedIndex === index)) return;
@@ -198,8 +199,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     e.preventDefault();
 
     // Handle external drag from context first (most reliable)
-    if (contextExternalDragActive && externalDragData) {
-      const { track, type } = externalDragData;
+    if (isDragging && draggedItem) {
+      const { data: track, type } = draggedItem;
       const newTracks = [...localTracks];
       const insertIndex = dropLinePosition ? dropLinePosition.index : localTracks.length;
 
@@ -214,7 +215,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       }
 
       setDropLinePosition(null);
-      endExternalDrag(); // Clear context state
+      endDrag(); // Clear context state
 
       // Close the appropriate modal after successful drop
       if (type === 'modal-track') {
@@ -593,7 +594,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
   // Touch handlers for external drags (from modals)
   const handleExternalTouchMove = (e) => {
-    if (!isMobile || !contextExternalDragActive || !externalDragData) return;
+    if (!isMobile || !isDragging || !draggedItem) return;
 
     e.preventDefault(); // Prevent scrolling during external drag
 
@@ -627,11 +628,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   };
 
   const handleExternalTouchEnd = (e) => {
-    if (!isMobile || !contextExternalDragActive || !externalDragData) return;
+    if (!isMobile || !isDragging || !draggedItem) return;
 
     // Handle the drop if we have a valid drop position
     if (dropLinePosition !== null) {
-      const { track, type } = externalDragData;
+      const { data: track, type } = draggedItem;
       const newTracks = [...localTracks];
       const insertIndex = dropLinePosition.index;
 
@@ -661,7 +662,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
     // Reset states
     setDropLinePosition(null);
-    endExternalDrag();
+    endDrag();
   };
 
   return (
@@ -676,7 +677,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           borderRadius: '8px',
           border: '1px solid var(--fern-green)',
           height: `${containerHeight}px`,
-          overflowY: (touchDragState.isLongPress || draggedIndex !== null || contextExternalDragActive) ? 'hidden' : 'auto', // Disable internal scrolling during any drag operation
+          overflowY: (touchDragState.isLongPress || draggedIndex !== null || isDragging) ? 'hidden' : 'auto', // Disable internal scrolling during any drag operation
           borderBottomLeftRadius: isMobile ? '8px' : '0px',
           borderBottomRightRadius: isMobile ? '8px' : '0px'
         }}
@@ -686,7 +687,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           e.preventDefault();
           
           // Check if it's an external drag (from context or dataTransfer)
-          const isExternalDrag = contextExternalDragActive || e.dataTransfer.types.includes('application/json');
+          const isExternalDrag = isDragging || e.dataTransfer.types.includes('application/json');
           
           // If dragging over empty space or container, set drop position to end
           if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {

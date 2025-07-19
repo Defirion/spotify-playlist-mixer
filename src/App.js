@@ -11,9 +11,10 @@ import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { DragProvider } from './contexts/DragContext';
+import { DragProvider, useDrag } from './contexts/DragContext';
 
 function MainApp() {
+  const { isDragging, isDropSuccessful, cancelDrag } = useDrag();
   const [accessToken, setAccessToken] = useState(null);
   const [selectedPlaylists, setSelectedPlaylists] = useState([]);
   const [ratioConfig, setRatioConfig] = useState({});
@@ -43,6 +44,22 @@ function MainApp() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const handleDragEnd = () => {
+      if (isDragging && !isDropSuccessful) {
+        cancelDrag();
+      }
+    };
+
+    window.addEventListener('dragend', handleDragEnd);
+    window.addEventListener('touchend', handleDragEnd);
+
+    return () => {
+      window.removeEventListener('dragend', handleDragEnd);
+      window.removeEventListener('touchend', handleDragEnd);
+    };
+  }, [isDragging, isDropSuccessful, cancelDrag]);
 
   const handlePlaylistSelection = (playlist) => {
     if (selectedPlaylists.find(p => p.id === playlist.id)) {
