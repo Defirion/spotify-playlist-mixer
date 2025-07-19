@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
+import { getPopularityIcon } from '../utils/dragAndDrop';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -313,16 +314,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     return text.substring(0, maxLength - 3) + '...';
   };
 
-  // Helper function to get popularity icon
-  const getPopularityIcon = (quadrant) => {
-    switch (quadrant) {
-      case 'topHits': return '🔥';
-      case 'popular': return '⭐';
-      case 'moderate': return '📻';
-      case 'deepCuts': return '💎';
-      default: return '';
-    }
-  };
+
 
   // Touch drag handlers for mobile - only on drag handle
   const handleTouchStart = (e, index) => {

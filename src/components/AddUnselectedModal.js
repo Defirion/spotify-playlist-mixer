@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
+import { 
+  handleModalDragStart, 
+  handleModalDragEnd, 
+  handleTrackSelection, 
+  handleBackdropClick,
+  getTrackQuadrant,
+  formatDuration,
+  getPopularityStyle
+} from '../utils/dragAndDrop';
 
 const AddUnselectedModal = ({ 
   isOpen, 
@@ -54,30 +63,8 @@ const AddUnselectedModal = ({
     return allTracks;
   };
 
-  const formatDuration = (ms) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const getTrackQuadrant = (track) => {
-    if (track.popularity === undefined) return null;
-    
-    // Simple quadrant calculation based on popularity score
-    if (track.popularity >= 80) return 'topHits';
-    if (track.popularity >= 60) return 'popular';
-    if (track.popularity >= 40) return 'moderate';
-    return 'deepCuts';
-  };
-
   const handleTrackSelect = (track) => {
-    const newSelected = new Set(selectedTracksToAdd);
-    if (newSelected.has(track.id)) {
-      newSelected.delete(track.id);
-    } else {
-      newSelected.add(track.id);
-    }
-    setSelectedTracksToAdd(newSelected);
+    handleTrackSelection(track, selectedTracksToAdd, setSelectedTracksToAdd);
   };
 
   const handleAddSelected = () => {
@@ -86,50 +73,19 @@ const AddUnselectedModal = ({
     onClose();
   };
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const handleDragStart = (e, track) => {
-    setIsDragging(true);
-    
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'modal-track',
-      track: track
-    }));
-    
-    // Create a custom drag image
-    const dragElement = e.currentTarget.cloneNode(true);
-    dragElement.style.width = '400px';
-    dragElement.style.opacity = '0.8';
-    dragElement.style.transform = 'rotate(2deg)';
-    dragElement.style.backgroundColor = 'var(--moss-green)';
-    dragElement.style.border = '2px solid var(--fern-green)';
-    dragElement.style.borderRadius = '8px';
-    dragElement.style.position = 'absolute';
-    dragElement.style.top = '-1000px';
-    document.body.appendChild(dragElement);
-    
-    e.dataTransfer.setDragImage(dragElement, 200, 30);
-    
-    // Clean up the drag image after a short delay
-    setTimeout(() => {
-      if (document.body.contains(dragElement)) {
-        document.body.removeChild(dragElement);
-      }
-    }, 100);
-    
-    if (onDragTrack) {
-      onDragTrack(track);
-    }
+    handleModalDragStart(
+      e, 
+      track, 
+      'modal-track', 
+      setIsDragging, 
+      onDragTrack,
+      { background: 'var(--moss-green)', border: 'var(--fern-green)' }
+    );
   };
 
   const handleDragEnd = () => {
-    setIsDragging(false);
-    onClose();
+    handleModalDragEnd(setIsDragging, onClose);
   };
 
   // Fetch all tracks from playlists (only when playlists change)
@@ -216,7 +172,7 @@ const AddUnselectedModal = ({
           pointerEvents: isDragging ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
-        onClick={handleBackdropClick}
+        onClick={(e) => handleBackdropClick(e, onClose)}
       />
       
       {/* Modal */}
@@ -432,28 +388,22 @@ const AddUnselectedModal = ({
                       <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
                         {track.sourcePlaylistName}
                       </span>
-                      {track.popularity !== undefined && (
-                        <span style={{ 
-                          marginLeft: '8px', 
-                          fontSize: '10px', 
-                          background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
-                                    quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
-                                    quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
-                                    'rgba(233, 30, 99, 0.2)',
-                          color: quadrant === 'topHits' ? '#FF5722' :
-                               quadrant === 'popular' ? '#FF8F00' :
-                               quadrant === 'moderate' ? '#00BCD4' :
-                               '#E91E63',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontWeight: '500'
-                        }}>
-                          {quadrant === 'topHits' ? `🔥 ${track.popularity}` :
-                           quadrant === 'popular' ? `⭐ ${track.popularity}` :
-                           quadrant === 'moderate' ? `📻 ${track.popularity}` :
-                           `💎 ${track.popularity}`}
-                        </span>
-                      )}
+                      {track.popularity !== undefined && (() => {
+                        const popStyle = getPopularityStyle(quadrant, track.popularity);
+                        return (
+                          <span style={{ 
+                            marginLeft: '8px', 
+                            fontSize: '10px', 
+                            background: popStyle.background,
+                            color: popStyle.color,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: '500'
+                          }}>
+                            {popStyle.text}
+                          </span>
+                        );
+                      })()}
                     </div>
                     {track.album?.name && (
                       <div style={{
