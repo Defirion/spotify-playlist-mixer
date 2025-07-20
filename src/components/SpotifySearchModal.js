@@ -14,7 +14,7 @@ const SpotifySearchModal = ({
   accessToken, 
   onAddTracks
 }) => {
-  const { isDragging: globalIsDragging, startDrag, endDrag, cancelDrag } = useDrag();
+  const { isDragging: globalIsDragging, startDrag } = useDrag();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,11 +69,20 @@ const SpotifySearchModal = ({
       sourcePlaylistName: 'Spotify Search'
     };
     
+    // Context-based drag (primary method)
     startDrag({
       data: trackWithSource,
       type: 'search-track',
       style: { background: '#1DB954', border: '#1ed760' }
     });
+    
+    // DataTransfer fallback for better compatibility
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'search-track',
+        track: trackWithSource
+      }));
+    }
   };
 
   
@@ -83,22 +92,18 @@ const SpotifySearchModal = ({
     isDragging: false,
     startY: 0,
     longPressTimer: null,
-    isLongPress: false
+    isLongPress: false,
+    draggedTrack: null
   });
 
   const handleTouchStart = (e, track) => {
-    console.log('[SpotifySearchModal] handleTouchStart called.');
-    if (!isMobile) {
-      console.log('[SpotifySearchModal] Not mobile, returning.');
-      return;
-    }
+    if (!isMobile) return;
 
     const touch = e.touches[0];
 
     // Clear any existing timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
-      console.log('[SpotifySearchModal] Cleared existing longPressTimer.');
     }
 
     // Set up long press detection (300ms)
@@ -106,15 +111,8 @@ const SpotifySearchModal = ({
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
-      console.log(`[SpotifySearchModal] Long press timer fired. deltaY: ${deltaY}`);
       
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
-        setTouchDragState(prev => ({
-          ...prev,
-          isLongPress: true,
-          isDragging: true
-        }));
-        
         // Prepare track with source info
         const trackWithSource = {
           ...track,
@@ -122,34 +120,45 @@ const SpotifySearchModal = ({
           sourcePlaylistName: 'Spotify Search'
         };
         
+        setTouchDragState(prev => ({
+          ...prev,
+          isLongPress: true,
+          isDragging: true,
+          draggedTrack: trackWithSource
+        }));
+        
         // Start external drag using context
         startDrag({
           data: trackWithSource,
           type: 'search-track',
           style: { background: '#1DB954', border: '#1ed760' }
         });
-        console.log('[SpotifySearchModal] startDrag called. globalIsDragging (after call): ', globalIsDragging);
         
         // Provide haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
-      } else {
-        console.log('[SpotifySearchModal] Long press cancelled due to excessive movement.');
       }
     }, 300);
 
+    // Prepare track with source info for initial state
+    const trackWithSource = {
+      ...track,
+      sourcePlaylist: 'search',
+      sourcePlaylistName: 'Spotify Search'
+    };
+    
     setTouchDragState({
       isDragging: false,
       startY: touch.clientY,
       currentY: touch.clientY,
       longPressTimer,
-      isLongPress: false
+      isLongPress: false,
+      draggedTrack: trackWithSource
     });
-    console.log('[SpotifySearchModal] touchDragState initialized.');
   };
 
-  const handleTouchMove = (e, track) => {
+  const handleTouchMove = (e) => {
     if (!isMobile) return;
 
     const touch = e.touches[0];
@@ -170,33 +179,93 @@ const SpotifySearchModal = ({
       return; // Allow normal scrolling
     }
 
-    // If long press is active, prevent scrolling
+    // If long press is active, prevent scrolling but don't stop propagation
+    // to allow drag context to work properly
     if (touchDragState.isLongPress) {
+      // Check if touch is over the preview panel and simulate the drop position logic
+      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+      
+      if (previewPanel) {
+        // Dispatch a custom event to communicate with the preview panel
+        const dropEvent = new CustomEvent('externalDragOver', {
+          detail: {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'search-track'
+            }
+          }
+        });
+        previewPanel.dispatchEvent(dropEvent);
+      }
+      
       e.preventDefault();
-      e.stopPropagation();
     }
   };
 
-  const handleTouchEnd = (e, track) => {
+  const handleTouchEnd = (e) => {
     if (!isMobile) return;
+
+    console.log('[SpotifySearchModal] handleTouchEnd called, touchDragState.isLongPress:', touchDragState.isLongPress, 'globalIsDragging:', globalIsDragging);
 
     // Clear long press timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // If we were in long press mode, end the external drag
-    if (touchDragState.isLongPress) {
-      // The actual drop handling is done in DraggableTrackList
-      // We just need to reset our state here
+    // If long press was active and drag context is active, check if touch ended over preview panel
+    if (touchDragState.isLongPress && globalIsDragging) {
+      console.log('[SpotifySearchModal] Long press drag active - checking for drop');
+      
+      // Get the touch end coordinates
+      const touch = e?.changedTouches?.[0] || e?.touches?.[0];
+      if (touch) {
+        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+        
+        if (previewPanel) {
+          console.log('[SpotifySearchModal] Touch ended over preview panel - dispatching drop event');
+          
+          // Dispatch a custom drop event to the preview panel
+          const dropEvent = new CustomEvent('externalDrop', {
+            detail: {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              draggedItem: {
+                data: touchDragState.draggedTrack,
+                type: 'search-track'
+              }
+            }
+          });
+          previewPanel.dispatchEvent(dropEvent);
+        } else {
+          console.log('[SpotifySearchModal] Touch ended outside preview panel');
+        }
+      }
+      
+      // Reset local touch state
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
-        isLongPress: false
+        isLongPress: false,
+        draggedTrack: null
       });
+      return;
     }
+
+    // Reset touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
   };
 
   // Handle window resize for mobile detection
@@ -208,6 +277,15 @@ const SpotifySearchModal = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Cleanup touch drag state on unmount
+  useEffect(() => {
+    return () => {
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
+    };
+  }, [touchDragState.longPressTimer]);
 
   // Clear search when modal closes
   useEffect(() => {
@@ -230,9 +308,9 @@ const SpotifySearchModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1000,
-          opacity: 1,
+          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.7)',
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1000,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
           pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
@@ -255,9 +333,8 @@ const SpotifySearchModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
-          opacity: 1,
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 501 : 1001,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.6 : 1,
           transition: 'opacity 0.2s ease'
         }}
       >
@@ -393,31 +470,33 @@ const SpotifySearchModal = ({
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
+                  onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   ref={node => {
-                    if (node) {
-                      // Ensure we only add the listener once and remove it on unmount/re-render
-                      // Store the handler on the node itself to easily remove it
+                    if (node && isMobile) {
+                      // Remove existing listener if any
                       if (node.__touchMoveHandler__) {
                         node.removeEventListener('touchmove', node.__touchMoveHandler__);
                       }
-                      if (isMobile) {
-                        const handler = (e) => handleTouchMove(e, track);
-                        node.addEventListener('touchmove', handler, { passive: false });
-                        node.__touchMoveHandler__ = handler;
-                      }
+                      // Add non-passive touch move listener
+                      const handler = handleTouchMove;
+                      node.addEventListener('touchmove', handler, { passive: false });
+                      node.__touchMoveHandler__ = handler;
                     }
                   }}
-                  onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}
-                  onClick={() => handleTrackSelect(track)}
                   style={{
-                    padding: '12px 20px',
-                    borderBottom: index < searchResults.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'grab',
-                    backgroundColor: isSelected ? 'rgba(29, 185, 84, 0.2)' : 'transparent',
-                    transition: 'background-color 0.2s'
+                    ...{
+                      padding: '12px 20px',
+                      borderBottom: index < searchResults.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'grab',
+                      backgroundColor: isSelected ? 'rgba(29, 185, 84, 0.2)' : 'transparent',
+                      transition: 'background-color 0.2s'
+                    },
+                    // Add touch-action: none for better mobile drag handling
+                    touchAction: isMobile ? 'none' : 'auto'
                   }}
+                  onClick={() => handleTrackSelect(track)}
                   onMouseDown={(e) => {
                     // Change cursor to grabbing when starting to drag
                     e.currentTarget.style.cursor = 'grabbing';

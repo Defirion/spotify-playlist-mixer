@@ -8,23 +8,25 @@ import {
 } from '../utils/dragAndDrop';
 import { useDrag } from '../contexts/DragContext';
 
-const AddUnselectedModal = ({ 
-  isOpen, 
-  onClose, 
-  accessToken, 
-  selectedPlaylists, 
-  currentTracks, 
+const AddUnselectedModal = ({
+  isOpen,
+  onClose,
+  accessToken,
+  selectedPlaylists,
+  currentTracks,
   onAddTracks
 }) => {
-  const { isDragging: globalIsDragging, startDrag, endDrag, cancelDrag } = useDrag();
+  const { isDragging: globalIsDragging, startDrag } = useDrag();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
   const [filteredTracks, setFilteredTracks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
-  
+
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+
+
 
   useEffect(() => {
     // Filter tracks based on search query
@@ -32,7 +34,7 @@ const AddUnselectedModal = ({
       setFilteredTracks(unselectedTracks);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = unselectedTracks.filter(track => 
+      const filtered = unselectedTracks.filter(track =>
         track.name.toLowerCase().includes(query) ||
         track.artists?.[0]?.name.toLowerCase().includes(query) ||
         track.album?.name.toLowerCase().includes(query)
@@ -46,19 +48,19 @@ const AddUnselectedModal = ({
     let allTracks = [];
     let offset = 0;
     const limit = 100;
-    
+
     while (true) {
       const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
       const tracks = response.data.items
         .filter(item => item.track && item.track.id)
         .map(item => item.track);
-      
+
       allTracks = [...allTracks, ...tracks];
-      
+
       if (tracks.length < limit) break;
       offset += limit;
     }
-    
+
     return allTracks;
   };
 
@@ -73,36 +75,45 @@ const AddUnselectedModal = ({
   };
 
   const handleDragStart = (e, track) => {
+    console.log('[AddUnselectedModal] Desktop drag start for track:', track.name);
+
+    // Context-based drag (primary method)
     startDrag({
       data: track,
       type: 'modal-track',
       style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
     });
+
+    // DataTransfer fallback for better compatibility
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'modal-track',
+        track: track
+      }));
+    }
+
+    console.log('[AddUnselectedModal] Desktop drag started - context should be active');
   };
 
-  
+
 
   // Touch handlers for mobile
   const [touchDragState, setTouchDragState] = useState({
     isDragging: false,
     startY: 0,
     longPressTimer: null,
-    isLongPress: false
+    isLongPress: false,
+    draggedTrack: null
   });
 
   const handleTouchStart = (e, track) => {
-    console.log('[AddUnselectedModal] handleTouchStart called.');
-    if (!isMobile) {
-      console.log('[AddUnselectedModal] Not mobile, returning.');
-      return;
-    }
+    if (!isMobile) return;
 
     const touch = e.touches[0];
 
     // Clear any existing timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
-      console.log('[AddUnselectedModal] Cleared existing longPressTimer.');
     }
 
     // Set up long press detection (300ms)
@@ -110,29 +121,28 @@ const AddUnselectedModal = ({
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
-      console.log(`[AddUnselectedModal] Long press timer fired. deltaY: ${deltaY}`);
-      
+
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
         setTouchDragState(prev => ({
           ...prev,
           isLongPress: true,
-          isDragging: true
+          isDragging: true,
+          draggedTrack: track
         }));
-        
+
         // Start external drag using context
+        console.log('[AddUnselectedModal] Mobile drag start for track:', track.name);
         startDrag({
           data: track,
           type: 'modal-track',
           style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
         });
-        console.log('[AddUnselectedModal] startDrag called. globalIsDragging (after call): ', globalIsDragging);
-        
+
+
         // Provide haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
-      } else {
-        console.log('[AddUnselectedModal] Long press cancelled due to excessive movement.');
       }
     }, 300);
 
@@ -141,17 +151,42 @@ const AddUnselectedModal = ({
       startY: touch.clientY,
       currentY: touch.clientY,
       longPressTimer,
-      isLongPress: false
+      isLongPress: false,
+      draggedTrack: track
     });
-    console.log('[AddUnselectedModal] touchDragState initialized.');
   };
 
-  const handleTouchMove = (e, track) => {
+  const handleTouchMove = (e) => {
     if (!isMobile) return;
 
     const touch = e.touches[0];
     const deltaY = Math.abs(touch.clientY - touchDragState.startY);
-    
+
+    if (touchDragState.isLongPress) {
+      console.log('[AddUnselectedModal] Touch move during active drag - coordinates:', touch.clientX, touch.clientY);
+
+      // Check if touch is over the preview panel and simulate the drop position logic
+      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+
+      if (previewPanel) {
+        console.log('[AddUnselectedModal] Touch is over preview panel - should show drop indicators');
+
+        // Dispatch a custom event to communicate with the preview panel
+        const dropEvent = new CustomEvent('externalDragOver', {
+          detail: {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'modal-track'
+            }
+          }
+        });
+        previewPanel.dispatchEvent(dropEvent);
+      }
+    }
+
     // Update current position
     setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
@@ -159,41 +194,82 @@ const AddUnselectedModal = ({
     if (!touchDragState.isLongPress && deltaY > 12) {
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
-        setTouchDragState(prev => ({ 
-          ...prev, 
-          longPressTimer: null 
+        setTouchDragState(prev => ({
+          ...prev,
+          longPressTimer: null
         }));
       }
       return; // Allow normal scrolling
     }
 
-    // If long press is active, prevent scrolling
+    // If long press is active, prevent scrolling but don't stop propagation
+    // to allow drag context to work properly
     if (touchDragState.isLongPress) {
       e.preventDefault();
-      e.stopPropagation();
     }
   };
 
-  const handleTouchEnd = (e, track) => {
+  const handleTouchEnd = (e) => {
     if (!isMobile) return;
+
+    console.log('[AddUnselectedModal] handleTouchEnd called, touchDragState.isLongPress:', touchDragState.isLongPress, 'globalIsDragging:', globalIsDragging);
 
     // Clear long press timer
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // If we were in long press mode, end the external drag
-    if (touchDragState.isLongPress) {
-      // The actual drop handling is done in DraggableTrackList
-      // We just need to reset our state here
+    // If long press was active and drag context is active, check if touch ended over preview panel
+    if (touchDragState.isLongPress && globalIsDragging) {
+      console.log('[AddUnselectedModal] Long press drag active - checking for drop');
+
+      // Get the touch end coordinates
+      const touch = e?.changedTouches?.[0] || e?.touches?.[0];
+      if (touch) {
+        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+
+        if (previewPanel) {
+          console.log('[AddUnselectedModal] Touch ended over preview panel - dispatching drop event');
+
+          // Dispatch a custom drop event to the preview panel
+          const dropEvent = new CustomEvent('externalDrop', {
+            detail: {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              draggedItem: {
+                data: touchDragState.draggedTrack,
+                type: 'modal-track'
+              }
+            }
+          });
+          previewPanel.dispatchEvent(dropEvent);
+        } else {
+          console.log('[AddUnselectedModal] Touch ended outside preview panel');
+        }
+      }
+
+      // Reset local touch state
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
-        isLongPress: false
+        isLongPress: false,
+        draggedTrack: null
       });
+      return;
     }
+
+    // Reset touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
   };
 
   // Handle window resize for mobile detection
@@ -206,14 +282,23 @@ const AddUnselectedModal = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Cleanup touch drag state on unmount
+  useEffect(() => {
+    return () => {
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
+    };
+  }, [touchDragState.longPressTimer]);
+
   // Fetch all tracks from playlists (only when playlists change)
   const fetchAllPlaylistTracks = useCallback(async () => {
     if (selectedPlaylists.length === 0) return;
-    
+
     try {
       setLoading(true);
       const api = getSpotifyApi(accessToken);
-      
+
       // Get all tracks from selected playlists
       const allTracks = [];
       for (const playlist of selectedPlaylists) {
@@ -241,14 +326,14 @@ const AddUnselectedModal = ({
 
     // Get IDs of currently selected tracks
     const currentTrackIds = new Set(currentTracks.map(track => track.id));
-    
+
     // Filter out tracks that are already in the current playlist
     const unselected = allPlaylistTracks.filter(track => !currentTrackIds.has(track.id));
-    
+
     // Remove duplicates (same track from multiple playlists)
     const uniqueUnselected = [];
     const seenTrackIds = new Set();
-    
+
     unselected.forEach(track => {
       if (!seenTrackIds.has(track.id)) {
         seenTrackIds.add(track.id);
@@ -284,17 +369,17 @@ const AddUnselectedModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1000,
-          opacity: 1,
+          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.7)',
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1000,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
           pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         style={{
           position: 'fixed',
           top: '50%',
@@ -309,9 +394,8 @@ const AddUnselectedModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
-          opacity: 1,
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 501 : 1001,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.6 : 1,
           transition: 'opacity 0.2s ease'
         }}
       >
@@ -409,38 +493,41 @@ const AddUnselectedModal = ({
             filteredTracks.map((track, index) => {
               const quadrant = getTrackQuadrant(track);
               const isSelected = selectedTracksToAdd.has(track.id);
-              
+
               return (
                 <div
                   key={track.id}
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
+                  onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   ref={node => {
-                    if (node) {
-                      // Ensure we only add the listener once and remove it on unmount/re-render
-                      // Store the handler on the node itself to easily remove it
+                    if (node && isMobile) {
+                      // Remove existing listener if any
                       if (node.__touchMoveHandler__) {
                         node.removeEventListener('touchmove', node.__touchMoveHandler__);
                       }
-                      if (isMobile) {
-                        const handler = (e) => handleTouchMove(e, track);
-                        node.addEventListener('touchmove', handler, { passive: false });
-                        node.__touchMoveHandler__ = handler;
-                      }
+                      // Add non-passive touch move listener
+                      const handler = handleTouchMove;
+                      node.addEventListener('touchmove', handler, { passive: false });
+                      node.__touchMoveHandler__ = handler;
                     }
                   }}
-                  onTouchEnd={isMobile ? (e) => handleTouchEnd(e, track) : undefined}
-                  onClick={() => handleTrackSelect(track)}
                   style={{
-                    padding: '12px 20px',
-                    borderBottom: index < filteredTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'grab',
-                    backgroundColor: isSelected ? 'rgba(144, 169, 85, 0.2)' : 'transparent',
-                    transition: 'background-color 0.2s'
+                    ...{
+                      padding: '12px 20px',
+                      borderBottom: index < filteredTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'grab',
+                      backgroundColor: isSelected ? 'rgba(144, 169, 85, 0.2)' : 'transparent',
+                      transition: 'background-color 0.2s'
+                    },
+                    // Add touch-action: none for better mobile drag handling
+                    touchAction: isMobile ? 'none' : 'auto'
                   }}
+                  onClick={() => handleTrackSelect(track)}
+
                   onMouseDown={(e) => {
                     // Change cursor to grabbing when starting to drag
                     e.currentTarget.style.cursor = 'grabbing';
@@ -480,7 +567,7 @@ const AddUnselectedModal = ({
 
                   {/* Album Art */}
                   {track.album?.images?.[0]?.url && (
-                    <img 
+                    <img
                       src={track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url}
                       alt={`${track.album.name} album cover`}
                       style={{
@@ -517,16 +604,16 @@ const AddUnselectedModal = ({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {track.artists?.[0]?.name || 'Unknown Artist'} • 
+                      {track.artists?.[0]?.name || 'Unknown Artist'} •
                       <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
                         {track.sourcePlaylistName}
                       </span>
                       {track.popularity !== undefined && (() => {
                         const popStyle = getPopularityStyle(quadrant, track.popularity);
                         return (
-                          <span style={{ 
-                            marginLeft: '8px', 
-                            fontSize: '10px', 
+                          <span style={{
+                            marginLeft: '8px',
+                            fontSize: '10px',
                             background: popStyle.background,
                             color: popStyle.color,
                             padding: '2px 6px',

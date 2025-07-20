@@ -46,18 +46,21 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    const handleDragEnd = () => {
-      if (isDragging && !isDropSuccessful) {
+    const handleDragEnd = (e) => {
+      // Only cancel drag for desktop dragend events, not touch events
+      // Touch events should be handled by the specific components
+      if (e.type === 'dragend' && isDragging && !isDropSuccessful) {
         cancelDrag();
       }
     };
 
     window.addEventListener('dragend', handleDragEnd);
-    window.addEventListener('touchend', handleDragEnd);
+    // Remove touchend listener - let components handle their own touch events
+    // window.addEventListener('touchend', handleDragEnd);
 
     return () => {
       window.removeEventListener('dragend', handleDragEnd);
-      window.removeEventListener('touchend', handleDragEnd);
+      // window.removeEventListener('touchend', handleDragEnd);
     };
   }, [isDragging, isDropSuccessful, cancelDrag]);
 
