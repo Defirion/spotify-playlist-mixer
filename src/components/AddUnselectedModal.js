@@ -20,8 +20,7 @@ const AddUnselectedModal = ({
     isDragging: globalIsDragging, 
     startDrag, 
     cancelDrag,
-    notifyHTML5DragEnd,
-    unifiedCleanup
+    notifyHTML5DragEnd
   } = useDrag();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
