@@ -516,7 +516,9 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                       transition: 'background-color 0.2s'
                     },
                     // Add touch-action: none for better mobile drag handling
-                    touchAction: 'none'
+                    touchAction: 'none',
+                    userSelect: 'none', // Add this
+                    WebkitUserSelect: 'none' // Add this
                   }}
                   onClick={() => handleTrackSelect(track)}
                   onMouseDown={(e) => {

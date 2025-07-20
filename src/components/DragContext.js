@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useRef, useCallback } from 'react';
+import React, { createContext, useState, useContext, useRef, useCallback, useEffect } from 'react';
 
 const DragContext = createContext();
 
@@ -143,6 +143,23 @@ export const DragProvider = ({ children }) => {
       }
     };
   }, []);
+
+  // Add to DragProvider component
+  useEffect(() => {
+    const handleDragClass = () => {
+      if (isDragging) {
+        document.body.classList.add('no-user-select');
+      } else {
+        document.body.classList.remove('no-user-select');
+      }
+    };
+
+    handleDragClass();
+    
+    return () => {
+      document.body.classList.remove('no-user-select');
+    };
+  }, [isDragging]);
 
   const contextValue = {
     isDragging,

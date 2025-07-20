@@ -1121,7 +1121,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           <div style={{
             fontSize: '11px',
             opacity: '0.7',
-            lineHeight: '1.3'
+            lineHeight: '1.3',
+            userSelect: 'none', // Prevent text selection here specifically
+            WebkitUserSelect: 'none' // For Safari
           }}>
             💡 <strong>{isMobile ? 'Long press any track and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
           </div>
