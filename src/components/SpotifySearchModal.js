@@ -14,7 +14,12 @@ const SpotifySearchModal = ({
   accessToken, 
   onAddTracks
 }) => {
-  const { isDragging: globalIsDragging, startDrag } = useDrag();
+  const { 
+    isDragging: globalIsDragging, 
+    startDrag, 
+    cancelDrag,
+    notifyHTML5DragEnd 
+  } = useDrag();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +68,8 @@ const SpotifySearchModal = ({
   };
 
   const handleDragStart = (e, track) => {
+    console.log('[SpotifySearchModal] Desktop drag start for track:', track.name);
+    
     const trackWithSource = {
       ...track,
       sourcePlaylist: 'search',
@@ -74,15 +81,18 @@ const SpotifySearchModal = ({
       data: trackWithSource,
       type: 'search-track',
       style: { background: '#1DB954', border: '#1ed760' }
-    });
+    }, 'html5');
     
     // DataTransfer fallback for better compatibility
     if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('application/json', JSON.stringify({
         type: 'search-track',
         track: trackWithSource
       }));
     }
+    
+    console.log('[SpotifySearchModal] Desktop drag started - context should be active');
   };
 
   
@@ -333,9 +343,10 @@ const SpotifySearchModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
-          transition: 'opacity 0.2s ease'
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
         }}
       >
         {/* Header */}
@@ -469,6 +480,16 @@ const SpotifySearchModal = ({
                   key={track.id}
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
+                  onDragEnd={!isMobile ? (e) => {
+                    console.log('[SpotifySearchModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
+                    notifyHTML5DragEnd();
+                    
+                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
+                    if (e.dataTransfer.dropEffect === 'none') {
+                      console.log('[SpotifySearchModal] Drag was cancelled - cleaning up context');
+                      cancelDrag('html5-cancelled');
+                    }
+                  } : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
                   onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   ref={node => {

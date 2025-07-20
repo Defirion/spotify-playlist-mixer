@@ -16,7 +16,12 @@ const AddUnselectedModal = ({
   currentTracks,
   onAddTracks
 }) => {
-  const { isDragging: globalIsDragging, startDrag } = useDrag();
+  const { 
+    isDragging: globalIsDragging, 
+    startDrag, 
+    cancelDrag,
+    notifyHTML5DragEnd 
+  } = useDrag();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
   const [filteredTracks, setFilteredTracks] = useState([]);
@@ -82,10 +87,11 @@ const AddUnselectedModal = ({
       data: track,
       type: 'modal-track',
       style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
-    });
+    }, 'html5');
 
     // DataTransfer fallback for better compatibility
     if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('application/json', JSON.stringify({
         type: 'modal-track',
         track: track
@@ -136,7 +142,7 @@ const AddUnselectedModal = ({
           data: track,
           type: 'modal-track',
           style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
-        });
+        }, 'touch');
 
 
         // Provide haptic feedback
@@ -401,9 +407,10 @@ const AddUnselectedModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
-          transition: 'opacity 0.2s ease'
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
         }}
       >
         {/* Header */}
@@ -506,6 +513,16 @@ const AddUnselectedModal = ({
                   key={track.id}
                   draggable={!isMobile}
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
+                  onDragEnd={!isMobile ? (e) => {
+                    console.log('[AddUnselectedModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
+                    notifyHTML5DragEnd();
+                    
+                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
+                    if (e.dataTransfer.dropEffect === 'none') {
+                      console.log('[AddUnselectedModal] Drag was cancelled - cleaning up context');
+                      cancelDrag('html5-cancelled');
+                    }
+                  } : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
                   onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   ref={node => {
