@@ -291,6 +291,13 @@ const AddUnselectedModal = ({
     };
   }, [touchDragState.longPressTimer]);
 
+  // Reset selected tracks when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedTracksToAdd(new Set());
+    }
+  }, [isOpen]);
+
   // Fetch all tracks from playlists (only when playlists change)
   const fetchAllPlaylistTracks = useCallback(async () => {
     if (selectedPlaylists.length === 0) return;

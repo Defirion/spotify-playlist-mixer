@@ -905,7 +905,16 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
             <strong>🎵 {localTracks.length} Songs</strong>
             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
               <button
-                onClick={() => setShowAddUnselectedModal(true)}
+                onClick={() => {
+                  // Re-initialize modal even if already open
+                  if (showAddUnselectedModal) {
+                    setShowAddUnselectedModal(false);
+                    // Use setTimeout to ensure state update completes before reopening
+                    setTimeout(() => setShowAddUnselectedModal(true), 0);
+                  } else {
+                    setShowAddUnselectedModal(true);
+                  }
+                }}
                 style={{
                   background: 'var(--moss-green)',
                   color: 'white',
@@ -946,7 +955,16 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               </button>
 
               <button
-                onClick={() => setShowSpotifySearch(true)}
+                onClick={() => {
+                  // Re-initialize modal even if already open
+                  if (showSpotifySearch) {
+                    setShowSpotifySearch(false);
+                    // Use setTimeout to ensure state update completes before reopening
+                    setTimeout(() => setShowSpotifySearch(true), 0);
+                  } else {
+                    setShowSpotifySearch(true);
+                  }
+                }}
                 style={{
                   background: '#1DB954',
                   color: 'white',
