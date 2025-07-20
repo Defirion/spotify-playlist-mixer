@@ -18,7 +18,7 @@ const SpotifySearchModal = ({
     isDragging: globalIsDragging, 
     startDrag, 
     cancelDrag,
-    notifyHTML5DragEnd 
+    notifyHTML5DragEnd
   } = useDrag();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -26,6 +26,39 @@ const SpotifySearchModal = ({
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+
+  // Comprehensive cleanup function for modal drag states
+  const cleanupModalDragState = React.useCallback((reason = 'modal-cleanup') => {
+    console.log(`[SpotifySearchModal] Cleaning up modal drag state: ${reason}`);
+    
+    // Clear any pending timers
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+    
+    // Reset local touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
+    
+    // If there's an active global drag, cancel it
+    if (globalIsDragging) {
+      console.log(`[SpotifySearchModal] Cancelling active global drag: ${reason}`);
+      cancelDrag(reason);
+    }
+  }, [touchDragState.longPressTimer, globalIsDragging, cancelDrag]);
+
+  // Enhanced onClose handler that ensures proper cleanup
+  const handleModalClose = () => {
+    console.log('[SpotifySearchModal] Modal closing - performing cleanup');
+    cleanupModalDragState('modal-close');
+    onClose();
+  };
 
 
 
@@ -70,6 +103,13 @@ const SpotifySearchModal = ({
   const handleDragStart = (e, track) => {
     console.log('[SpotifySearchModal] Desktop drag start for track:', track.name);
     
+    // Set timing guard
+    dragTimingRef.current = {
+      dragStartTime: Date.now(),
+      html5DragActive: true,
+      touchDragActive: false
+    };
+    
     const trackWithSource = {
       ...track,
       sourcePlaylist: 'search',
@@ -106,6 +146,13 @@ const SpotifySearchModal = ({
     draggedTrack: null
   });
 
+  // Timing guard to prevent premature cleanup
+  const dragTimingRef = React.useRef({
+    dragStartTime: null,
+    html5DragActive: false,
+    touchDragActive: false
+  });
+
   const handleTouchStart = (e, track) => {
     if (!isMobile) return;
 
@@ -137,12 +184,19 @@ const SpotifySearchModal = ({
           draggedTrack: trackWithSource
         }));
         
+        // Set timing guard for touch drag
+        dragTimingRef.current = {
+          dragStartTime: Date.now(),
+          html5DragActive: false,
+          touchDragActive: true
+        };
+
         // Start external drag using context
         startDrag({
           data: trackWithSource,
           type: 'search-track',
           style: { background: '#1DB954', border: '#1ed760' }
-        });
+        }, 'touch');
         
         // Provide haptic feedback
         if (navigator.vibrate) {
@@ -228,6 +282,32 @@ const SpotifySearchModal = ({
     // If long press was active and drag context is active, check if touch ended over preview panel
     if (touchDragState.isLongPress && globalIsDragging) {
       console.log('[SpotifySearchModal] Long press drag active - checking for drop');
+
+      // Check timing guard to prevent premature cleanup
+      const timeSinceDragStart = Date.now() - (dragTimingRef.current.dragStartTime || 0);
+      const isValidTouchEnd = dragTimingRef.current.touchDragActive && timeSinceDragStart > 200; // 200ms minimum for touch
+      
+      console.log('[SpotifySearchModal] Touch timing check:', {
+        timeSinceDragStart,
+        isValidTouchEnd,
+        touchDragActive: dragTimingRef.current.touchDragActive
+      });
+
+      // Reset timing guard
+      dragTimingRef.current.touchDragActive = false;
+
+      // Only process drop if this is a valid touch end
+      if (!isValidTouchEnd) {
+        console.log('[SpotifySearchModal] Ignoring premature touch end event');
+        setTouchDragState({
+          isDragging: false,
+          startY: 0,
+          longPressTimer: null,
+          isLongPress: false,
+          draggedTrack: null
+        });
+        return;
+      }
       
       // Get the touch end coordinates
       const touch = e?.changedTouches?.[0] || e?.touches?.[0];
@@ -306,6 +386,26 @@ const SpotifySearchModal = ({
     }
   }, [isOpen]);
 
+  // Comprehensive state reset when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Modal is closing - ensure all drag states are clean
+      console.log('[SpotifySearchModal] Modal closed - resetting all drag states');
+      cleanupModalDragState('modal-closed');
+    } else {
+      // Modal is opening - ensure clean initial state
+      console.log('[SpotifySearchModal] Modal opened - ensuring clean initial state');
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false,
+        draggedTrack: null
+      });
+    }
+  }, [isOpen, globalIsDragging]);
+
   if (!isOpen) return null;
 
   return (
@@ -324,7 +424,7 @@ const SpotifySearchModal = ({
           pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
-        onClick={onClose}
+        onClick={handleModalClose}
       />
       
       {/* Modal */}
@@ -370,7 +470,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleModalClose}
             style={{
               background: 'transparent',
               border: 'none',
@@ -482,12 +582,28 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onDragEnd={!isMobile ? (e) => {
                     console.log('[SpotifySearchModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
+                    
+                    // Check timing guard to prevent premature cleanup
+                    const timeSinceDragStart = Date.now() - (dragTimingRef.current.dragStartTime || 0);
+                    const isValidDragEnd = dragTimingRef.current.html5DragActive && timeSinceDragStart > 100; // 100ms minimum
+                    
+                    console.log('[SpotifySearchModal] Drag timing check:', {
+                      timeSinceDragStart,
+                      isValidDragEnd,
+                      html5DragActive: dragTimingRef.current.html5DragActive
+                    });
+                    
+                    // Reset timing guard
+                    dragTimingRef.current.html5DragActive = false;
+                    
                     notifyHTML5DragEnd();
                     
-                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
-                    if (e.dataTransfer.dropEffect === 'none') {
-                      console.log('[SpotifySearchModal] Drag was cancelled - cleaning up context');
+                    // Only cancel if this is a valid drag end (not immediate) and was actually cancelled
+                    if (isValidDragEnd && e.dataTransfer.dropEffect === 'none') {
+                      console.log('[SpotifySearchModal] Valid drag was cancelled - cleaning up context');
                       cancelDrag('html5-cancelled');
+                    } else if (!isValidDragEnd) {
+                      console.log('[SpotifySearchModal] Ignoring premature drag end event');
                     }
                   } : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
@@ -658,7 +774,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={onClose}
+              onClick={handleModalClose}
               style={{
                 padding: '8px 16px',
                 border: '1px solid var(--fern-green)',

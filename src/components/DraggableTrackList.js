@@ -5,10 +5,10 @@ import { getPopularityIcon } from '../utils/dragAndDrop';
 import { useDrag } from '../contexts/DragContext';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
-  const { 
-    draggedItem, 
-    isDragging, 
-    endDrag, 
+  const {
+    draggedItem,
+    isDragging,
+    endDrag,
     cancelDrag,
     notifyHTML5DragStart,
     notifyHTML5DragEnd,
@@ -99,7 +99,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   useEffect(() => {
     return () => {
       console.log('[DraggableTrackList] Component unmounting - cleaning up');
-      
+
       // Always restore scroll state on unmount
       if (document.body.style.position === 'fixed') {
         const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
@@ -121,7 +121,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
       }
-      
+
       // Unified cleanup on unmount - use ref to avoid dependency issues
       unifiedCleanupRef.current('component-unmount');
     };
@@ -140,7 +140,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const handleExternalDragOver = (e) => {
       const { clientX, clientY } = e.detail;
       console.log('[DraggableTrackList] External drag over event received:', clientX, clientY);
-      
+
       // Find which track element is being hovered over
       const trackElements = container.querySelectorAll('[data-track-index]');
       let foundDropTarget = false;
@@ -188,13 +188,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       const { clientX, clientY, draggedItem } = e.detail;
       console.log('[DraggableTrackList] 🎯 External drop event received!', clientX, clientY);
       console.log('[DraggableTrackList] Current dropLinePosition:', dropLinePosition);
-      
+
       // If no dropLinePosition, calculate it from the drop coordinates
       let finalDropPosition = dropLinePosition;
-      
+
       if (!finalDropPosition) {
         console.log('[DraggableTrackList] No dropLinePosition, calculating from coordinates');
-        
+
         // Find which track element is being hovered over
         const trackElements = container.querySelectorAll('[data-track-index]');
         let foundDropTarget = false;
@@ -237,14 +237,14 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           }
         }
       }
-      
+
       // Process the drop if we have a valid position
       if (finalDropPosition !== null) {
         console.log('[DraggableTrackList] 🎯 PROCESSING DROP from custom event!');
         console.log('[DraggableTrackList] draggedItem:', draggedItem);
         console.log('[DraggableTrackList] finalDropPosition:', finalDropPosition);
         console.log('[DraggableTrackList] localTracks before:', localTracks.length);
-        
+
         const { data: track, type } = draggedItem;
         const newTracks = [...localTracks];
         const insertIndex = finalDropPosition.index;
@@ -340,6 +340,45 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     return () => window.removeEventListener('orientationchange', handleOrientationChange);
   }, [isMobile]);
 
+  // Global touch end listener for mobile drag cancellation (internal drags)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleGlobalTouchEnd = (e) => {
+      // Only handle if we have an active internal touch drag
+      if (touchDragState.isLongPress && touchDragState.isDragging && draggedIndex !== null) {
+        console.log('[DraggableTrackList] Global touch end detected during internal drag');
+
+        // Check if we have a valid drop position
+        if (!dropLinePosition) {
+          console.log('[DraggableTrackList] Global touch end without valid drop position - cancelling drag');
+          cancelDrag('touch-global-no-position');
+
+          // Reset local touch state
+          setTouchDragState({
+            isDragging: false,
+            startY: 0,
+            currentY: 0,
+            draggedElement: null,
+            startIndex: null,
+            longPressTimer: null,
+            isLongPress: false,
+            scrollY: 0
+          });
+          setDraggedIndex(null);
+          setDropLinePosition(null);
+        }
+      }
+    };
+
+    // Add global listener
+    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, [isMobile, touchDragState.isLongPress, touchDragState.isDragging, draggedIndex, dropLinePosition, cancelDrag]);
+
   const handleDragStart = (e, index) => {
     console.log('[DraggableTrackList] HTML5 drag start for index:', index);
     setDraggedIndex(index);
@@ -354,7 +393,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
     // Check if it's an external drag from context or dataTransfer
     const isExternalDrag = isDragging || e.dataTransfer.types.includes('application/json');
-    
+
     if (isExternalDrag && isDragging) {
       console.log('[DraggableTrackList] External drag detected in dragOver, index:', index);
     }
@@ -506,21 +545,21 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
       setDraggedIndex(null);
       setDropLinePosition(null);
-      
+
       console.log('[DraggableTrackList] Internal drop completed successfully');
     }
   };
 
   const handleDragEnd = (e) => {
     console.log('[DraggableTrackList] HTML5 drag end');
-    
+
     // Notify context that HTML5 drag ended
     notifyHTML5DragEnd();
-    
+
     // Reset local HTML5 states
     setDraggedIndex(null);
     setDropLinePosition(null);
-    
+
     // Check if drop was successful by examining the dropEffect
     const wasSuccessful = e?.dataTransfer?.dropEffect !== 'none';
     console.log('[DraggableTrackList] HTML5 drag ended, successful:', wasSuccessful);
@@ -664,7 +703,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
       if (deltaY < 8) { // User hasn't moved much, activate drag mode
         console.log('[DraggableTrackList] Touch long press activated for index:', index);
-        
+
         setTouchDragState(prev => ({
           ...prev,
           isLongPress: true,
@@ -716,11 +755,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     // If long press was active but user cancelled by moving too much, cancel drag
     if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 20) {
       console.log('[DraggableTrackList] Touch drag cancelled by excessive movement');
-      
+
       // Cancel drag through unified system
       cancelDrag('touch-excessive-movement');
       notifyTouchDragEnd();
-      
+
       // Reset local touch state
       setTouchDragState({
         isDragging: false,
@@ -784,6 +823,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
+    let touchDropSuccessful = false;
+
     // If we were dragging, perform the reorder
     if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
       const newTracks = [...localTracks];
@@ -813,7 +854,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         navigator.vibrate([30, 50, 30]);
       }
 
+      touchDropSuccessful = true;
       console.log('[DraggableTrackList] Touch drop completed successfully');
+    } else if (touchDragState.isDragging) {
+      // Was dragging but no valid drop position - cancel the drag
+      console.log('[DraggableTrackList] Touch drag cancelled - no valid drop position');
+      cancelDrag('touch-no-drop-position');
     }
 
     // Notify context system
@@ -839,7 +885,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   // Touch handlers for external drags (from modals)
   const handleExternalTouchMove = (e) => {
     if (!isMobile || !isDragging || !draggedItem) return;
-    
+
     console.log('[DraggableTrackList] 🎯 Touch move detected during external drag!');
 
     e.preventDefault(); // Prevent scrolling during external drag

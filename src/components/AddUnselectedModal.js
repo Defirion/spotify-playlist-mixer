@@ -20,7 +20,8 @@ const AddUnselectedModal = ({
     isDragging: globalIsDragging, 
     startDrag, 
     cancelDrag,
-    notifyHTML5DragEnd 
+    notifyHTML5DragEnd,
+    unifiedCleanup
   } = useDrag();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
@@ -30,6 +31,39 @@ const AddUnselectedModal = ({
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+
+  // Comprehensive cleanup function for modal drag states
+  const cleanupModalDragState = React.useCallback((reason = 'modal-cleanup') => {
+    console.log(`[AddUnselectedModal] Cleaning up modal drag state: ${reason}`);
+    
+    // Clear any pending timers
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+    
+    // Reset local touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
+    
+    // If there's an active global drag, cancel it
+    if (globalIsDragging) {
+      console.log(`[AddUnselectedModal] Cancelling active global drag: ${reason}`);
+      cancelDrag(reason);
+    }
+  }, [touchDragState.longPressTimer, globalIsDragging, cancelDrag]);
+
+  // Enhanced onClose handler that ensures proper cleanup
+  const handleModalClose = () => {
+    console.log('[AddUnselectedModal] Modal closing - performing cleanup');
+    cleanupModalDragState('modal-close');
+    onClose();
+  };
 
 
 
@@ -82,6 +116,13 @@ const AddUnselectedModal = ({
   const handleDragStart = (e, track) => {
     console.log('[AddUnselectedModal] Desktop drag start for track:', track.name);
 
+    // Set timing guard
+    dragTimingRef.current = {
+      dragStartTime: Date.now(),
+      html5DragActive: true,
+      touchDragActive: false
+    };
+
     // Context-based drag (primary method)
     startDrag({
       data: track,
@@ -112,6 +153,13 @@ const AddUnselectedModal = ({
     draggedTrack: null
   });
 
+  // Timing guard to prevent premature cleanup
+  const dragTimingRef = React.useRef({
+    dragStartTime: null,
+    html5DragActive: false,
+    touchDragActive: false
+  });
+
   const handleTouchStart = (e, track) => {
     if (!isMobile) return;
 
@@ -135,6 +183,13 @@ const AddUnselectedModal = ({
           isDragging: true,
           draggedTrack: track
         }));
+
+        // Set timing guard for touch drag
+        dragTimingRef.current = {
+          dragStartTime: Date.now(),
+          html5DragActive: false,
+          touchDragActive: true
+        };
 
         // Start external drag using context
         console.log('[AddUnselectedModal] Mobile drag start for track:', track.name);
@@ -229,6 +284,34 @@ const AddUnselectedModal = ({
     if (touchDragState.isLongPress && globalIsDragging) {
       console.log('[AddUnselectedModal] Long press drag active - checking for drop');
 
+      // Check timing guard to prevent premature cleanup
+      const timeSinceDragStart = Date.now() - (dragTimingRef.current.dragStartTime || 0);
+      const isValidTouchEnd = dragTimingRef.current.touchDragActive && timeSinceDragStart > 200; // 200ms minimum for touch
+      
+      console.log('[AddUnselectedModal] Touch timing check:', {
+        timeSinceDragStart,
+        isValidTouchEnd,
+        touchDragActive: dragTimingRef.current.touchDragActive
+      });
+
+      // Reset timing guard
+      dragTimingRef.current.touchDragActive = false;
+
+      // Only process drop if this is a valid touch end
+      if (!isValidTouchEnd) {
+        console.log('[AddUnselectedModal] Ignoring premature touch end event');
+        setTouchDragState({
+          isDragging: false,
+          startY: 0,
+          longPressTimer: null,
+          isLongPress: false,
+          draggedTrack: null
+        });
+        return;
+      }
+
+      let dropHandled = false;
+
       // Get the touch end coordinates
       const touch = e?.changedTouches?.[0] || e?.touches?.[0];
       if (touch) {
@@ -250,9 +333,16 @@ const AddUnselectedModal = ({
             }
           });
           previewPanel.dispatchEvent(dropEvent);
+          dropHandled = true;
         } else {
-          console.log('[AddUnselectedModal] Touch ended outside preview panel');
+          console.log('[AddUnselectedModal] Touch ended outside preview panel - cancelling drag');
         }
+      }
+
+      // If drop wasn't handled (dropped outside valid area), cancel the drag
+      if (!dropHandled) {
+        console.log('[AddUnselectedModal] Cancelling drag - dropped outside valid area');
+        cancelDrag('touch-outside-drop');
       }
 
       // Reset local touch state
@@ -288,6 +378,48 @@ const AddUnselectedModal = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Global touch end listener for mobile drag cancellation
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleGlobalTouchEnd = (e) => {
+      // Only handle if we have an active drag from this modal
+      if (touchDragState.isLongPress && globalIsDragging) {
+        console.log('[AddUnselectedModal] Global touch end detected during drag');
+        
+        // Check if the touch ended over a valid drop target
+        const touch = e.changedTouches?.[0];
+        if (touch) {
+          const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+          const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+          
+          // If not over preview panel, this is an outside drop - cancel the drag
+          if (!previewPanel) {
+            console.log('[AddUnselectedModal] Global touch end outside valid drop area - cancelling drag');
+            cancelDrag('touch-global-outside');
+            
+            // Reset local touch state
+            setTouchDragState({
+              isDragging: false,
+              startY: 0,
+              currentY: 0,
+              longPressTimer: null,
+              isLongPress: false,
+              draggedTrack: null
+            });
+          }
+        }
+      }
+    };
+
+    // Add global listener with passive: false to ensure we can detect all touch ends
+    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, [isMobile, touchDragState.isLongPress, globalIsDragging, cancelDrag]);
+
   // Cleanup touch drag state on unmount
   useEffect(() => {
     return () => {
@@ -303,6 +435,26 @@ const AddUnselectedModal = ({
       setSelectedTracksToAdd(new Set());
     }
   }, [isOpen]);
+
+  // Comprehensive state reset when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Modal is closing - ensure all drag states are clean
+      console.log('[AddUnselectedModal] Modal closed - resetting all drag states');
+      cleanupModalDragState('modal-closed');
+    } else {
+      // Modal is opening - ensure clean initial state
+      console.log('[AddUnselectedModal] Modal opened - ensuring clean initial state');
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false,
+        draggedTrack: null
+      });
+    }
+  }, [isOpen, globalIsDragging]);
 
   // Fetch all tracks from playlists (only when playlists change)
   const fetchAllPlaylistTracks = useCallback(async () => {
@@ -388,7 +540,7 @@ const AddUnselectedModal = ({
           pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease'
         }}
-        onClick={onClose}
+        onClick={handleModalClose}
       />
 
       {/* Modal */}
@@ -434,7 +586,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleModalClose}
             style={{
               background: 'transparent',
               border: 'none',
@@ -515,12 +667,28 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                   onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
                   onDragEnd={!isMobile ? (e) => {
                     console.log('[AddUnselectedModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
+                    
+                    // Check timing guard to prevent premature cleanup
+                    const timeSinceDragStart = Date.now() - (dragTimingRef.current.dragStartTime || 0);
+                    const isValidDragEnd = dragTimingRef.current.html5DragActive && timeSinceDragStart > 100; // 100ms minimum
+                    
+                    console.log('[AddUnselectedModal] Drag timing check:', {
+                      timeSinceDragStart,
+                      isValidDragEnd,
+                      html5DragActive: dragTimingRef.current.html5DragActive
+                    });
+                    
+                    // Reset timing guard
+                    dragTimingRef.current.html5DragActive = false;
+                    
                     notifyHTML5DragEnd();
                     
-                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
-                    if (e.dataTransfer.dropEffect === 'none') {
-                      console.log('[AddUnselectedModal] Drag was cancelled - cleaning up context');
+                    // Only cancel if this is a valid drag end (not immediate) and was actually cancelled
+                    if (isValidDragEnd && e.dataTransfer.dropEffect === 'none') {
+                      console.log('[AddUnselectedModal] Valid drag was cancelled - cleaning up context');
                       cancelDrag('html5-cancelled');
+                    } else if (!isValidDragEnd) {
+                      console.log('[AddUnselectedModal] Ignoring premature drag end event');
                     }
                   } : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
@@ -692,7 +860,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={onClose}
+              onClick={handleModalClose}
               style={{
                 padding: '8px 16px',
                 border: '1px solid var(--fern-green)',
