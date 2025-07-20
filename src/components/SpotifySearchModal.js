@@ -6,7 +6,7 @@ import {
   formatDuration,
   getPopularityStyle
 } from '../utils/dragAndDrop';
-import { useDrag } from '../contexts/DragContext';
+import { useDrag } from './DragContext';
 
 const SpotifySearchModal = ({ 
   isOpen, 
@@ -36,32 +36,11 @@ const SpotifySearchModal = ({
     draggedTrack: null
   });
 
-  // Comprehensive cleanup function for modal drag states
-  const cleanupModalDragState = React.useCallback((reason = 'modal-cleanup') => {
-    console.log(`[SpotifySearchModal] Cleaning up modal drag state: ${reason}`);
-    
-    // Clear any pending timers
-    if (touchDragState.longPressTimer) {
-      clearTimeout(touchDragState.longPressTimer);
-    }
-    
-    // Reset local touch drag state
-    setTouchDragState({
-      isDragging: false,
-      startY: 0,
-      currentY: 0,
-      longPressTimer: null,
-      isLongPress: false,
-      draggedTrack: null
-    });
-  }, [touchDragState.longPressTimer]); // Remove globalIsDragging and cancelDrag dependencies
-
-  // Enhanced onClose handler that ensures proper cleanup
+  // Enhanced onClose handler
   const handleModalClose = React.useCallback(() => {
-    console.log('[SpotifySearchModal] Modal closing - performing cleanup');
-    cleanupModalDragState('modal-close');
+    console.log('[SpotifySearchModal] Modal closing');
     onClose();
-  }, [cleanupModalDragState, onClose]);
+  }, [onClose]);
 
 
 
@@ -156,16 +135,27 @@ const SpotifySearchModal = ({
 
     // Set up long press detection (250ms)
     const longPressTimer = setTimeout(() => {
-      console.log('[SpotifySearchModal] Long press activated');
-      setTouchDragState(prev => ({ 
-        ...prev, 
-        isLongPress: true,
-        draggedTrack: trackWithSource
-      }));
-      startDrag({ 
-        data: trackWithSource, 
-        type: 'search-track' 
-      }, 'touch');
+      // Check if user hasn't moved much (not scrolling)
+      const currentY = touchDragState.currentY || touch.clientY;
+      const deltaY = Math.abs(currentY - touch.clientY);
+
+      if (deltaY < 12) { // User hasn't moved much, activate drag mode
+        console.log('[SpotifySearchModal] Long press activated for track:', track.name);
+        setTouchDragState(prev => ({
+          ...prev,
+          isLongPress: true,
+          draggedTrack: trackWithSource
+        }));
+        startDrag({
+          data: trackWithSource,
+          type: 'search-track'
+        }, 'touch');
+
+        // Provide haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
     }, 250);
 
     setTouchDragState({
@@ -179,27 +169,50 @@ const SpotifySearchModal = ({
   };
 
   const handleTouchMove = (e) => {
-    if (!isMobile || !touchDragState.isLongPress) return;
-    e.preventDefault(); // Prevent scroll on drag
+    if (!isMobile) return;
 
     const touch = e.touches[0];
-    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-    const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+    const deltaY = Math.abs(touch.clientY - touchDragState.startY);
+    
+    // Update current position
+    setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
-    if (previewPanel) {
-      const dropEvent = new CustomEvent('externalDragOver', {
-        detail: {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          draggedItem: { data: touchDragState.draggedTrack, type: 'search-track' }
-        }
-      });
-      previewPanel.dispatchEvent(dropEvent);
+    // If long press hasn't activated yet and user moves too much, cancel it
+    if (!touchDragState.isLongPress && deltaY > 20) { // Threshold for cancelling long press
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+        setTouchDragState(prev => ({
+          ...prev,
+          longPressTimer: null
+        }));
+      }
+      return; // Allow normal scrolling
+    }
+
+    // If long press is active, handle dragging
+    if (touchDragState.isLongPress) {
+      e.preventDefault(); // Prevent scrolling during drag
+      e.stopPropagation(); // Stop propagation to prevent parent elements from interfering
+
+      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+      
+      if (previewPanel) {
+        const dropEvent = new CustomEvent('externalDragOver', {
+          detail: {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            draggedItem: { data: touchDragState.draggedTrack, type: 'search-track' }
+          }
+        });
+        previewPanel.dispatchEvent(dropEvent);
+      }
     }
   };
 
   const handleTouchEnd = (e) => {
     if (!isMobile) return;
+    e.stopPropagation(); // Add stopPropagation here as well
 
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
@@ -209,7 +222,7 @@ const SpotifySearchModal = ({
       const touch = e.changedTouches[0];
       const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
       const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
-
+      
       if (previewPanel) {
         const dropEvent = new CustomEvent('externalDrop', {
           detail: {
@@ -224,7 +237,15 @@ const SpotifySearchModal = ({
       }
     }
 
-    cleanupModalDragState('touch-end');
+    // Full reset of touch state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
   };
 
   // Handle window resize for mobile detection
@@ -260,7 +281,14 @@ const SpotifySearchModal = ({
     if (!isOpen) {
       // Modal is closing - ensure all drag states are clean
       console.log('[SpotifySearchModal] Modal closed - resetting all drag states');
-      cleanupModalDragState('modal-closed');
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false,
+        draggedTrack: null
+      });
     } else {
       // Modal is opening - ensure clean initial state
       console.log('[SpotifySearchModal] Modal opened - ensuring clean initial state');
@@ -273,7 +301,7 @@ const SpotifySearchModal = ({
         draggedTrack: null
       });
     }
-  }, [isOpen, cleanupModalDragState]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

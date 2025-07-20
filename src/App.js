@@ -11,7 +11,7 @@ import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { DragProvider, useDrag } from './contexts/DragContext';
+import { DragProvider, useDrag } from './components/DragContext';
 
 function MainApp() {
   const { isDragging, isDropSuccessful, cancelDrag } = useDrag();

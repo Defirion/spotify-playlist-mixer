@@ -6,7 +6,7 @@ import {
   formatDuration,
   getPopularityStyle
 } from '../utils/dragAndDrop';
-import { useDrag } from '../contexts/DragContext';
+import { useDrag } from './DragContext';
 
 const AddUnselectedModal = ({
   isOpen,
@@ -41,32 +41,11 @@ const AddUnselectedModal = ({
     draggedTrack: null
   });
 
-  // Comprehensive cleanup function for modal drag states
-  const cleanupModalDragState = React.useCallback((reason = 'modal-cleanup') => {
-    console.log(`[AddUnselectedModal] Cleaning up modal drag state: ${reason}`);
-    
-    // Clear any pending timers
-    if (touchDragState.longPressTimer) {
-      clearTimeout(touchDragState.longPressTimer);
-    }
-    
-    // Reset local touch drag state
-    setTouchDragState({
-      isDragging: false,
-      startY: 0,
-      currentY: 0,
-      longPressTimer: null,
-      isLongPress: false,
-      draggedTrack: null
-    });
-  }, [touchDragState.longPressTimer]); // Remove globalIsDragging and cancelDrag dependencies
-
-  // Enhanced onClose handler that ensures proper cleanup
+  // Enhanced onClose handler
   const handleModalClose = React.useCallback(() => {
-    console.log('[AddUnselectedModal] Modal closing - performing cleanup');
-    cleanupModalDragState('modal-close');
+    console.log('[AddUnselectedModal] Modal closing');
     onClose();
-  }, [cleanupModalDragState, onClose]);
+  }, [onClose]);
 
 
 
@@ -158,16 +137,29 @@ const AddUnselectedModal = ({
 
     // Set up long press detection (250ms)
     const longPressTimer = setTimeout(() => {
-      console.log('[AddUnselectedModal] Long press activated');
-      setTouchDragState(prev => ({ 
-        ...prev, 
-        isLongPress: true,
-        draggedTrack: track
-      }));
-      startDrag({ 
-        data: track, 
-        type: 'modal-track' 
-      }, 'touch');
+      // Check if user hasn't moved much (not scrolling)
+      const currentY = touchDragState.currentY || touch.clientY;
+      const deltaY = Math.abs(currentY - touch.clientY);
+
+      if (deltaY < 12) { // User hasn't moved much, activate drag mode
+        console.log('[AddUnselectedModal] Touch long press activated for track:', track.name);
+
+        setTouchDragState(prev => ({
+          ...prev,
+          isLongPress: true,
+          isDragging: false, // Don't start dragging yet, wait for movement
+          draggedTrack: track
+        }));
+        startDrag({
+          data: track,
+          type: 'modal-track'
+        }, 'touch');
+
+        // Provide haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
     }, 250);
 
     setTouchDragState({
@@ -181,27 +173,50 @@ const AddUnselectedModal = ({
   };
 
   const handleTouchMove = (e) => {
-    if (!isMobile || !touchDragState.isLongPress) return;
-    e.preventDefault(); // Prevent scroll on drag
+    if (!isMobile) return;
 
     const touch = e.touches[0];
-    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-    const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+    const deltaY = Math.abs(touch.clientY - touchDragState.startY);
 
-    if (previewPanel) {
-      const dropEvent = new CustomEvent('externalDragOver', {
-        detail: {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          draggedItem: { data: touchDragState.draggedTrack, type: 'modal-track' }
-        }
-      });
-      previewPanel.dispatchEvent(dropEvent);
+    // Update current position
+    setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
+
+    // If long press hasn't activated yet and user moves too much, cancel it
+    if (!touchDragState.isLongPress && deltaY > 20) { // Threshold for cancelling long press
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+        setTouchDragState(prev => ({
+          ...prev,
+          longPressTimer: null
+        }));
+      }
+      return; // Allow normal scrolling
+    }
+
+    // If long press is active, handle dragging
+    if (touchDragState.isLongPress) {
+      e.preventDefault(); // Prevent scrolling during drag
+      e.stopPropagation(); // Stop propagation to prevent parent elements from interfering
+
+      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
+
+      if (previewPanel) {
+        const dropEvent = new CustomEvent('externalDragOver', {
+          detail: {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            draggedItem: { data: touchDragState.draggedTrack, type: 'modal-track' }
+          }
+        });
+        previewPanel.dispatchEvent(dropEvent);
+      }
     }
   };
 
   const handleTouchEnd = (e) => {
     if (!isMobile) return;
+    e.stopPropagation(); // Add stopPropagation here as well
 
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
@@ -226,7 +241,15 @@ const AddUnselectedModal = ({
       }
     }
 
-    cleanupModalDragState('touch-end');
+    // Full reset of touch state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      longPressTimer: null,
+      isLongPress: false,
+      draggedTrack: null
+    });
   };
 
   // Handle window resize for mobile detection
@@ -302,7 +325,14 @@ const AddUnselectedModal = ({
     if (!isOpen) {
       // Modal is closing - ensure all drag states are clean
       console.log('[AddUnselectedModal] Modal closed - resetting all drag states');
-      cleanupModalDragState('modal-closed');
+      setTouchDragState({
+        isDragging: false,
+        startY: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false,
+        draggedTrack: null
+      });
     } else {
       // Modal is opening - ensure clean initial state
       console.log('[AddUnselectedModal] Modal opened - ensuring clean initial state');
@@ -315,7 +345,7 @@ const AddUnselectedModal = ({
         draggedTrack: null
       });
     }
-  }, [isOpen, cleanupModalDragState]);
+  }, [isOpen]);
 
   // Fetch all tracks from playlists (only when playlists change)
   const fetchAllPlaylistTracks = useCallback(async () => {

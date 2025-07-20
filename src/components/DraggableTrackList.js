@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 import { getPopularityIcon } from '../utils/dragAndDrop';
-import { useDrag } from '../contexts/DragContext';
+import { useDrag } from './DragContext';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
   const {
@@ -125,7 +125,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       // Unified cleanup on unmount - use ref to avoid dependency issues
       unifiedCleanupRef.current('component-unmount');
     };
-  }, []); // Empty dependency array - only runs on actual unmount
+  }, [touchDragState.longPressTimer]); // Empty dependency array - only runs on actual unmount
 
   // Update local tracks when props change
   React.useEffect(() => {
@@ -687,38 +687,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
 
 
-  const handleTouchCancel = (e) => {
-    if (!isMobile) return;
-
-    console.log('[DraggableTrackList] Touch cancel detected - cancelling drag');
-
-    // Clear long press timer
-    if (touchDragState.longPressTimer) {
-      clearTimeout(touchDragState.longPressTimer);
-    }
-
-    // If a drag was in progress, cancel it
-    if (touchDragState.isLongPress) {
-      cancelDrag('touch-cancel-event');
-      notifyTouchDragEnd();
-    }
-
-    // Reset all local touch drag state
-    setTouchDragState({
-      isDragging: false,
-      startY: 0,
-      currentY: 0,
-      draggedElement: null,
-      startIndex: null,
-      longPressTimer: null,
-      isLongPress: false,
-      scrollY: 0
-    });
-    setDraggedIndex(null);
-    setDropLinePosition(null);
-  };
-
-  // Touch drag handlers for mobile - completely prevent scrolling during long press
   const handleTouchStart = (e, index) => {
     if (!isMobile) return;
     e.stopPropagation();
@@ -800,18 +768,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       }
 
       if (isCurrentlyDragging) {
-        const draggedElement = touchDragState.draggedElement;
-        let elementFromPoint;
-
-        // Temporarily hide the dragged element to find what's underneath
-        if (draggedElement) {
-          draggedElement.style.pointerEvents = 'none';
-          elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-          draggedElement.style.pointerEvents = 'auto';
-        } else {
-          elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-        }
-        
+        const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
         const trackElement = elementFromPoint?.closest('[data-track-index]');
         if (trackElement) {
           const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
@@ -838,8 +795,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     if (touchDragState.longPressTimer) {
       clearTimeout(touchDragState.longPressTimer);
     }
-
-    let touchDropSuccessful = false;
 
     // If we were dragging, perform the reorder
     if (touchDragState.isDragging && dropLinePosition && draggedIndex !== null) {
@@ -870,7 +825,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         navigator.vibrate([30, 50, 30]);
       }
 
-      touchDropSuccessful = true;
       console.log('[DraggableTrackList] Touch drop completed successfully');
     } else if (touchDragState.isDragging) {
       // Was dragging but no valid drop position - cancel the drag
@@ -880,6 +834,37 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
     // Notify context system
     if (touchDragState.isLongPress) {
+      notifyTouchDragEnd();
+    }
+
+    // Reset all local touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      draggedElement: null,
+      startIndex: null,
+      longPressTimer: null,
+      isLongPress: false,
+      scrollY: 0
+    });
+    setDraggedIndex(null);
+    setDropLinePosition(null);
+  };
+
+  const handleTouchCancel = (e) => {
+    if (!isMobile) return;
+
+    console.log('[DraggableTrackList] Touch cancel detected - cancelling drag');
+
+    // Clear long press timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // If a drag was in progress, cancel it
+    if (touchDragState.isLongPress) {
+      cancelDrag('touch-cancel-event');
       notifyTouchDragEnd();
     }
 
