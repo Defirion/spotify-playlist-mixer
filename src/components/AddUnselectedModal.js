@@ -408,9 +408,9 @@ const AddUnselectedModal = ({
           flexDirection: 'column',
           overflow: 'hidden',
           zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
-          transition: 'opacity 0.2s ease',
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
+opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
+transition: 'opacity 0.2s ease',
+pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
         }}
       >
         {/* Header */}
