@@ -54,6 +54,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = `-${scrollY}px`;
         document.body.style.width = '100%';
         document.body.style.overflow = 'hidden';
+        document.body.style.backgroundColor = '#1e2a1e'; // Darker green background
       }
     } else {
       // Only restore if currently locked
@@ -65,6 +66,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
+        document.body.style.backgroundColor = ''; // Revert background color
         delete document.body.dataset.scrollY;
 
         // Restore scroll position immediately, then again after animation frame
@@ -84,6 +86,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
+        document.body.style.backgroundColor = ''; // Revert background color on unmount
         delete document.body.dataset.scrollY;
 
         // Restore scroll position

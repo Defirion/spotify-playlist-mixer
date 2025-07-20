@@ -394,8 +394,8 @@ const AddUnselectedModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 501 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.6 : 1,
+          zIndex: (globalIsDragging || touchDragState.isLongPress) ? -1 : 1001,
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
           transition: 'opacity 0.2s ease'
         }}
       >
