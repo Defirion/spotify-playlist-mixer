@@ -346,7 +346,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
     const handleGlobalTouchEnd = (e) => {
       // Only handle if we have an active internal touch drag
-      if (touchDragState.isLongPress && touchDragState.isDragging && draggedIndex !== null) {
+      if (
+        touchDragState.isLongPress && 
+        touchDragState.isDragging && 
+        draggedIndex !== null
+      ) {
         console.log('[DraggableTrackList] Global touch end detected during internal drag');
 
         // Check if we have a valid drop position
@@ -683,9 +687,41 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
 
 
+  const handleTouchCancel = (e) => {
+    if (!isMobile) return;
+
+    console.log('[DraggableTrackList] Touch cancel detected - cancelling drag');
+
+    // Clear long press timer
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // If a drag was in progress, cancel it
+    if (touchDragState.isLongPress) {
+      cancelDrag('touch-cancel-event');
+      notifyTouchDragEnd();
+    }
+
+    // Reset all local touch drag state
+    setTouchDragState({
+      isDragging: false,
+      startY: 0,
+      currentY: 0,
+      draggedElement: null,
+      startIndex: null,
+      longPressTimer: null,
+      isLongPress: false,
+      scrollY: 0
+    });
+    setDraggedIndex(null);
+    setDropLinePosition(null);
+  };
+
   // Touch drag handlers for mobile - completely prevent scrolling during long press
   const handleTouchStart = (e, index) => {
     if (!isMobile) return;
+    e.stopPropagation();
 
     const touch = e.touches[0];
     const element = e.currentTarget;
@@ -695,13 +731,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       clearTimeout(touchDragState.longPressTimer);
     }
 
-    // Set up long press detection (300ms)
+    // Set up long press detection (250ms)
     const longPressTimer = setTimeout(() => {
       // Check if user hasn't moved much (not scrolling)
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
 
-      if (deltaY < 8) { // User hasn't moved much, activate drag mode
+      if (deltaY < 12) { // User hasn't moved much, activate drag mode
         console.log('[DraggableTrackList] Touch long press activated for index:', index);
 
         setTouchDragState(prev => ({
@@ -718,7 +754,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           navigator.vibrate(50);
         }
       }
-    }, 300);
+    }, 250);
 
     setTouchDragState({
       isDragging: false,
@@ -741,7 +777,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
     // If long press hasn't activated yet and user moves too much, cancel it
-    if (!touchDragState.isLongPress && deltaY > 12) {
+    if (!touchDragState.isLongPress && deltaY > 20) {
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
         setTouchDragState(prev => ({
@@ -752,69 +788,49 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       return; // Allow normal scrolling
     }
 
-    // If long press was active but user cancelled by moving too much, cancel drag
-    if (touchDragState.isLongPress && !touchDragState.isDragging && deltaY > 20) {
-      console.log('[DraggableTrackList] Touch drag cancelled by excessive movement');
-
-      // Cancel drag through unified system
-      cancelDrag('touch-excessive-movement');
-      notifyTouchDragEnd();
-
-      // Reset local touch state
-      setTouchDragState({
-        isDragging: false,
-        startY: 0,
-        currentY: 0,
-        draggedElement: null,
-        startIndex: null,
-        longPressTimer: null,
-        isLongPress: false,
-        scrollY: 0
-      });
-      setDraggedIndex(null);
-      setDropLinePosition(null);
-      return;
-    }
-
     // If long press is active, handle dragging
     if (touchDragState.isLongPress) {
-      // Start dragging if moved enough
-      if (!touchDragState.isDragging && deltaY > 3) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      let isCurrentlyDragging = touchDragState.isDragging;
+      if (!isCurrentlyDragging && deltaY > 8) { // Start dragging
+        isCurrentlyDragging = true;
         setTouchDragState(prev => ({ ...prev, isDragging: true }));
       }
 
-      // If dragging, handle drop positioning
-      if (touchDragState.isDragging || deltaY > 3) {
-        // Find the element we're hovering over
-        const elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-        const trackElement = elementFromPoint?.closest('[data-track-index]');
+      if (isCurrentlyDragging) {
+        const draggedElement = touchDragState.draggedElement;
+        let elementFromPoint;
 
+        // Temporarily hide the dragged element to find what's underneath
+        if (draggedElement) {
+          draggedElement.style.pointerEvents = 'none';
+          elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+          draggedElement.style.pointerEvents = 'auto';
+        } else {
+          elementFromPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        }
+        
+        const trackElement = elementFromPoint?.closest('[data-track-index]');
         if (trackElement) {
           const hoverIndex = parseInt(trackElement.getAttribute('data-track-index'));
           if (hoverIndex !== touchDragState.startIndex && !isNaN(hoverIndex)) {
-            // Calculate drop position
             const rect = trackElement.getBoundingClientRect();
             const midpoint = rect.top + rect.height / 2;
             const isTopHalf = touch.clientY < midpoint;
-
-            setDropLinePosition({
-              index: isTopHalf ? hoverIndex : hoverIndex + 1,
-              isTopHalf
-            });
+            setDropLinePosition({ index: isTopHalf ? hoverIndex : hoverIndex + 1, isTopHalf });
           }
+        } else {
+          setDropLinePosition(null);
         }
-
-        setTouchDragState(prev => ({ ...prev, isDragging: true }));
       }
-
-      // Always prevent scrolling when long press is active
-      e.preventDefault();
-      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
     if (!isMobile) return;
+    e.stopPropagation();
 
     console.log('[DraggableTrackList] Touch end - isDragging:', touchDragState.isDragging, 'dropLinePosition:', dropLinePosition);
 
@@ -886,9 +902,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const handleExternalTouchMove = (e) => {
     if (!isMobile || !isDragging || !draggedItem) return;
 
+    e.preventDefault(); // Prevent scrolling during external drag
     console.log('[DraggableTrackList] 🎯 Touch move detected during external drag!');
 
-    e.preventDefault(); // Prevent scrolling during external drag
     const touch = e.touches[0];
     const clientX = touch.clientX;
     const clientY = touch.clientY;
@@ -1181,20 +1197,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
-              ref={node => {
-                if (node) {
-                  // Ensure we only add the listener once and remove it on unmount/re-render
-                  if (node.__touchMoveHandler__) {
-                    node.removeEventListener('touchmove', node.__touchMoveHandler__);
-                  }
-                  if (isMobile) {
-                    const handler = (e) => handleTouchMove(e, index);
-                    node.addEventListener('touchmove', handler, { passive: false });
-                    node.__touchMoveHandler__ = handler;
-                  }
-                }
-              }}
+              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
               onTouchEnd={isMobile ? handleTouchEnd : undefined}
+              onTouchCancel={isMobile ? handleTouchCancel : undefined}
 
               style={{
                 padding: isMobile ? '6px 12px' : '8px 16px',
