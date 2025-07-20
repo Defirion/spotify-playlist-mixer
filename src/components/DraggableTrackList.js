@@ -5,7 +5,7 @@ import { getPopularityIcon } from '../utils/dragAndDrop';
 import { useDrag } from '../contexts/DragContext';
 
 const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, formatDuration, accessToken }) => {
-  const { draggedItem, isDragging, endDrag, cancelDrag } = useDrag();
+  const { draggedItem, isDragging, endDrag } = useDrag();
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
@@ -273,7 +273,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       container.removeEventListener('externalDragOver', handleExternalDragOver);
       container.removeEventListener('externalDrop', handleExternalDrop);
     };
-  }, [localTracks.length]);
+  }, [dropLinePosition, endDrag, localTracks, onTrackOrderChange]);
 
   // Handle window resize for mobile detection and optimal height
   useEffect(() => {
@@ -845,80 +845,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
-  const handleExternalTouchEnd = (e) => {
-    if (!isMobile || !isDragging || !draggedItem) return;
-    
-    console.log('[DraggableTrackList] 🎯 Touch end detected during external drag!');
 
-    // Check if the touch ended within our container bounds
-    const touch = e.changedTouches[0];
-    const containerRect = scrollContainerRef.current?.getBoundingClientRect();
-    
-    if (!containerRect) return;
-    
-    const touchEndedInContainer = (
-      touch.clientX >= containerRect.left &&
-      touch.clientX <= containerRect.right &&
-      touch.clientY >= containerRect.top &&
-      touch.clientY <= containerRect.bottom
-    );
-
-    console.log('External Touch End. touchEndedInContainer:', touchEndedInContainer, 'dropLinePosition:', dropLinePosition);
-
-    // Only handle the drop if touch ended in our container AND we have a valid drop position
-    if (touchEndedInContainer && dropLinePosition !== null) {
-      console.log('[DraggableTrackList] 🎯 PROCESSING DROP!');
-      console.log('[DraggableTrackList] draggedItem:', draggedItem);
-      console.log('[DraggableTrackList] dropLinePosition:', dropLinePosition);
-      console.log('[DraggableTrackList] localTracks before:', localTracks.length);
-      
-      const { data: track, type } = draggedItem;
-      const newTracks = [...localTracks];
-      const insertIndex = dropLinePosition.index;
-
-      console.log('[DraggableTrackList] Inserting track:', track.name, 'at index:', insertIndex);
-
-      // Insert the track at the specified position
-      newTracks.splice(insertIndex, 0, track);
-
-      console.log('[DraggableTrackList] localTracks after:', newTracks.length);
-
-      setLocalTracks(newTracks);
-
-      // Notify parent component of the new track list
-      if (onTrackOrderChange) {
-        console.log('[DraggableTrackList] Calling onTrackOrderChange with', newTracks.length, 'tracks');
-        onTrackOrderChange(newTracks);
-      } else {
-        console.log('[DraggableTrackList] WARNING: onTrackOrderChange is not defined!');
-      }
-
-      // Close the appropriate modal after successful drop
-      if (type === 'modal-track') {
-        console.log('[DraggableTrackList] Closing AddUnselectedModal');
-        setShowAddUnselectedModal(false);
-      }
-      if (type === 'search-track') {
-        console.log('[DraggableTrackList] Closing SpotifySearchModal');
-        setShowSpotifySearch(false);
-      }
-
-      // Provide completion haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([30, 50, 30]);
-      }
-
-      console.log('[DraggableTrackList] 🎯 DROP COMPLETED SUCCESSFULLY!');
-
-      // Reset states and end drag
-      setDropLinePosition(null);
-      endDrag();
-    } else {
-      console.log('Touch ended outside container or no valid drop position - not handling drop');
-      console.log('touchEndedInContainer:', touchEndedInContainer, 'dropLinePosition:', dropLinePosition);
-      // Don't call endDrag() here - let the modal handle the drag end
-    }
-  };
 
   return (
     <div style={{
