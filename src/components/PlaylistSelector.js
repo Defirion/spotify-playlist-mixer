@@ -124,6 +124,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
 
     try {
       setLoading(true); // Set loading true when starting to add a playlist
+      setShowSearchResults(false); // Hide search results immediately when loading starts
       const api = getSpotifyApi(accessToken);
       const response = await api.get(`/playlists/${playlistId}`);
       const playlist = response.data;
