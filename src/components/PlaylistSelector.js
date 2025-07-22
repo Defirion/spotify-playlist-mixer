@@ -3,13 +3,16 @@ import LoadingOverlay from './LoadingOverlay';
 import { getSpotifyApi } from '../utils/spotify';
 
 const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onError }) => {
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [highlightedIndex, setHighlightedIndex] = useState(0); // Start with first item highlighted
   const [playlistInput, setPlaylistInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [inputType, setInputType] = useState('search'); // 'search' or 'url'
+  
+  // Ref for the input to manage focus
+  const inputRef = React.useRef(null);
 
   const extractPlaylistId = (url) => {
     // Handle different Spotify URL formats
@@ -162,6 +165,13 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       setSearchResults([]); // Clear search results after adding
       setShowSearchResults(false);
       
+      // Auto-focus input for immediate next search
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+      
     } catch (err) {
       if (err.response?.status === 404) {
         onError('Playlist not found. Make sure the playlist is public or you have access to it.');
@@ -183,14 +193,16 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setHighlightedIndex((prevIndex) =>
-          Math.min(prevIndex + 1, searchResults.length - 1)
+          prevIndex === -1 ? 0 : Math.min(prevIndex + 1, searchResults.length - 1)
         );
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setHighlightedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+        setHighlightedIndex((prevIndex) => 
+          prevIndex <= 0 ? 0 : prevIndex - 1
+        );
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (highlightedIndex !== -1) {
+        if (highlightedIndex !== -1 && searchResults[highlightedIndex]) {
           handleAddPlaylistByUrl(searchResults[highlightedIndex].id);
         } else {
           handleInputSubmit();
@@ -199,9 +211,16 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
     }
   };
 
-  // Reset highlighted index when search results change or modal closes
+  // Auto-focus input on component mount
   useEffect(() => {
-    setHighlightedIndex(-1);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Reset highlighted index when search results change and always highlight first result
+  useEffect(() => {
+    setHighlightedIndex(searchResults.length > 0 ? 0 : -1);
   }, [searchResults, showSearchResults]);
 
   return (
@@ -231,6 +250,7 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
           <label>Search playlists or paste URL:</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
+              ref={inputRef}
               type="text"
               value={playlistInput}
               onChange={handleInputChange}

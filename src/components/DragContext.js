@@ -43,7 +43,7 @@ export const DragProvider = ({ children }) => {
   }, []);
 
   // Failsafe timer-based cleanup for stuck states
-  const scheduleFailsafeCleanup = useCallback((delay = 5000) => {
+  const scheduleFailsafeCleanup = useCallback((delay = 60000) => { // Increased to 60 seconds
     if (cleanupTimerRef.current) {
       clearTimeout(cleanupTimerRef.current);
     }
@@ -93,8 +93,8 @@ export const DragProvider = ({ children }) => {
       console.log('[DragContext] Delaying cleanup - waiting for HTML5 dragend');
       dragStateRef.current.pendingCleanup = true;
 
-      // Shorter failsafe for coordination
-      scheduleFailsafeCleanup(1000);
+      // Longer failsafe for coordination to allow user time
+      scheduleFailsafeCleanup(30000); // 30 seconds for coordination
     }
   }, [unifiedCleanup, scheduleFailsafeCleanup]);
 
