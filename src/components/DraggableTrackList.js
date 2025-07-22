@@ -47,15 +47,16 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const unifiedCleanupRef = React.useRef(unifiedCleanup);
   unifiedCleanupRef.current = unifiedCleanup;
 
-  // Centralized scroll lock management - handles all drag operations
+  // Centralized scroll lock management - handles internal drag operations only
   useEffect(() => {
-    const isDragActive = (
+    // Only apply scroll lock for internal drags (within the track list)
+    // Don't lock scroll for external drags from modals to allow modal scrolling
+    const isInternalDragActive = (
       draggedIndex !== null ||
-      isDragging ||
       touchDragState.isDragging
     );
 
-    if (isDragActive) {
+    if (isInternalDragActive) {
       // Only lock if not already locked and capture current scroll position
       if (document.body.style.position !== 'fixed') {
         const scrollY = window.scrollY;
@@ -68,8 +69,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = `-${scrollY}px`;
         document.body.style.width = '100%';
         document.body.style.overflow = 'hidden';
-        document.body.style.backgroundColor = '#1e2a1e'; // Darker green background
-        document.body.style.backgroundColor = '#1e2a1e'; // Darker green background
         document.body.style.backgroundColor = '#1e2a1e'; // Darker green background
       }
     } else {
@@ -92,7 +91,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         });
       }
     }
-  }, [draggedIndex, isDragging, touchDragState.isDragging, touchDragState.longPressTimer]);
+  }, [draggedIndex, touchDragState.isDragging, touchDragState.longPressTimer]);
 
   // Separate useEffect for component unmount cleanup
   useEffect(() => {

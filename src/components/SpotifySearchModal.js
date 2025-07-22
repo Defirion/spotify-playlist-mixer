@@ -186,12 +186,15 @@ const SpotifySearchModal = ({
           longPressTimer: null
         }));
       }
-      return; // Allow normal scrolling
+      return; // Allow normal scrolling - don't prevent default
     }
 
     // If long press is active, handle dragging
     if (touchDragState.isLongPress) {
-      e.preventDefault(); // Prevent scrolling during drag
+      // Only prevent default during actual drag operations
+      if (e.cancelable) {
+        e.preventDefault(); // Prevent scrolling during drag
+      }
       e.stopPropagation(); // Stop propagation to prevent parent elements from interfering
 
       const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -493,18 +496,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                   } : undefined}
                   onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
                   onTouchEnd={isMobile ? handleTouchEnd : undefined}
-                  ref={node => {
-                    if (node && isMobile) {
-                      // Remove existing listener if any
-                      if (node.__touchMoveHandler__) {
-                        node.removeEventListener('touchmove', node.__touchMoveHandler__);
-                      }
-                      // Add non-passive touch move listener
-                      const handler = handleTouchMove;
-                      node.addEventListener('touchmove', handler, { passive: false });
-                      node.__touchMoveHandler__ = handler;
-                    }
-                  }}
+                  onTouchMove={isMobile ? handleTouchMove : undefined}
                   style={{
                     ...{
                       padding: '12px 20px',
@@ -515,10 +507,10 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                       backgroundColor: isSelected ? 'rgba(29, 185, 84, 0.2)' : 'transparent',
                       transition: 'background-color 0.2s'
                     },
-                    // Add touch-action: none for better mobile drag handling
-                    touchAction: 'none',
-                    userSelect: 'none', // Add this
-                    WebkitUserSelect: 'none' // Add this
+                    // Only disable touch actions during active drag
+                    touchAction: touchDragState.isLongPress ? 'none' : 'auto',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none'
                   }}
                   onClick={() => handleTrackSelect(track)}
                   onMouseDown={(e) => {
