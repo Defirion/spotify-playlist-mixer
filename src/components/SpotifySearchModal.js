@@ -332,7 +332,7 @@ const SpotifySearchModal = ({
       <div 
         style={{
           position: 'fixed',
-          top: '50%',
+          top: '65%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           backgroundColor: 'var(--hunter-green)',

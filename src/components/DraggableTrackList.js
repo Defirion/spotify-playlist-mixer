@@ -19,13 +19,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [localTracks, setLocalTracks] = useState(tracks);
-  const [containerHeight, setContainerHeight] = useState(400);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-  const [normalHeight, setNormalHeight] = useState(400);
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  
+  // Static container height - 85% of viewport height
+  const containerHeight = Math.floor(window.innerHeight * 0.85);
 
   // Ref for the scrollable container
   const scrollContainerRef = React.useRef(null);
@@ -299,46 +298,17 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     };
   }, [dropLinePosition, endDrag, localTracks, onTrackOrderChange]);
 
-  // Handle window resize for mobile detection and optimal height
+  // Handle window resize for mobile detection
   useEffect(() => {
     const handleResize = () => {
-      const wasMobile = isMobile;
-      const nowMobile = window.innerWidth <= 480;
-      setIsMobile(nowMobile);
-
-      // Auto-adjust height when switching to/from mobile or on mobile resize
-      if (nowMobile) {
-        setContainerHeight(getMobileOptimalHeight());
-      } else if (wasMobile && !nowMobile) {
-        // Switching from mobile to desktop, restore normal height
-        setContainerHeight(400);
-      }
+      setIsMobile(window.innerWidth <= 480);
     };
 
     window.addEventListener('resize', handleResize);
-
-    // Set initial optimal height for mobile
-    if (isMobile) {
-      setContainerHeight(getMobileOptimalHeight());
-    }
-
     return () => window.removeEventListener('resize', handleResize);
-  }, [isMobile]);
+  }, []);
 
-  // Handle orientation changes on mobile
-  useEffect(() => {
-    if (!isMobile) return;
 
-    const handleOrientationChange = () => {
-      // Small delay to let the viewport settle after orientation change
-      setTimeout(() => {
-        setContainerHeight(getMobileOptimalHeight());
-      }, 100);
-    };
-
-    window.addEventListener('orientationchange', handleOrientationChange);
-    return () => window.removeEventListener('orientationchange', handleOrientationChange);
-  }, [isMobile]);
 
   // Global touch end listener for mobile drag cancellation (internal drags)
   useEffect(() => {
@@ -347,8 +317,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const handleGlobalTouchEnd = (e) => {
       // Only handle if we have an active internal touch drag
       if (
-        touchDragState.isLongPress && 
-        touchDragState.isDragging && 
+        touchDragState.isLongPress &&
+        touchDragState.isDragging &&
         draggedIndex !== null
       ) {
         console.log('[DraggableTrackList] Global touch end detected during internal drag');
@@ -580,70 +550,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     }
   };
 
-  // Calculate 85% of screen height
-  const getMaxHeight = () => {
-    return Math.floor(window.innerHeight * 0.85);
-  };
 
-  // Calculate optimal height for mobile viewport
-  const getMobileOptimalHeight = () => {
-    // Use most of the viewport height, pushing other content below the fold
-    // Only reserve minimal space for essential UI elements
-    const viewportHeight = window.innerHeight;
-    const reservedSpace = 60; // Minimal space for essential UI only
-    return Math.max(400, viewportHeight - reservedSpace);
-  };
-
-  // Double-click to maximize/minimize
-  const handleDoubleClick = () => {
-    if (isMaximized) {
-      // Minimize to normal height
-      setContainerHeight(normalHeight);
-      setIsMaximized(false);
-    } else {
-      // Save current height as normal height and maximize
-      setNormalHeight(containerHeight);
-      setContainerHeight(getMaxHeight());
-      setIsMaximized(true);
-    }
-  };
-
-  // Resize functionality
-  const handleResizeStart = (e) => {
-    setIsResizing(true);
-    e.preventDefault();
-
-    const startY = e.clientY;
-    const startHeight = containerHeight;
-    const maxHeight = getMaxHeight();
-
-    const handleMouseMove = (e) => {
-      const deltaY = e.clientY - startY;
-      const newHeight = Math.max(200, Math.min(maxHeight, startHeight + deltaY));
-      setContainerHeight(newHeight);
-
-      // Update maximized state based on height
-      if (newHeight >= maxHeight - 10) {
-        if (!isMaximized) {
-          setNormalHeight(startHeight);
-          setIsMaximized(true);
-        }
-      } else {
-        if (isMaximized) {
-          setIsMaximized(false);
-        }
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
 
   // Calculate relative popularity quadrants for track labeling
   const tracksWithPop = localTracks.filter(t => t.popularity !== undefined);
@@ -958,476 +865,437 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
 
   return (
-    <div style={{
-      position: 'relative',
-      marginBottom: '16px'
-    }}>
-      <div
-        ref={scrollContainerRef}
-        data-preview-panel="true"
-        style={{
-          background: 'var(--hunter-green)',
-          borderRadius: '8px',
-          border: '1px solid var(--fern-green)',
-          height: `${containerHeight}px`,
-          overflowY: (touchDragState.isLongPress || draggedIndex !== null || isDragging) ? 'hidden' : 'auto', // Disable internal scrolling during any drag operation
-          borderBottomLeftRadius: isMobile ? '8px' : '0px',
-          borderBottomRightRadius: isMobile ? '8px' : '0px'
-        }}
-        onTouchMove={isMobile ? handleExternalTouchMove : undefined}
-        onDragOver={(e) => {
-          e.preventDefault();
+    <>
+      <div style={{
+        position: 'relative',
+        marginBottom: '16px'
+      }}>
+        <div
+          ref={scrollContainerRef}
+          data-preview-panel="true"
+          style={{
+            background: 'var(--hunter-green)',
+            borderRadius: '8px',
+            border: '1px solid var(--fern-green)',
+            height: `${containerHeight}px`,
+            overflowY: (touchDragState.isLongPress || draggedIndex !== null || isDragging) ? 'hidden' : 'auto', // Disable internal scrolling during any drag operation
+            borderBottomLeftRadius: '8px',
+            borderBottomRightRadius: '8px'
+          }}
+          onTouchMove={isMobile ? handleExternalTouchMove : undefined}
+          onDragOver={(e) => {
+            e.preventDefault();
 
-          // Check if it's an external drag (from context or dataTransfer)
-          const isExternalDrag = isDragging || e.dataTransfer.types.includes('application/json');
+            // Check if it's an external drag (from context or dataTransfer)
+            const isExternalDrag = isDragging || e.dataTransfer.types.includes('application/json');
 
-          // If dragging over empty space or container, set drop position to end
-          if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
-            // Only show drop line if there's an active drag
-            if (isExternalDrag || draggedIndex !== null) {
-              console.log('[DraggableTrackList] Container dragOver - setting drop position to end');
-              setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+            // If dragging over empty space or container, set drop position to end
+            if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
+              // Only show drop line if there's an active drag
+              if (isExternalDrag || draggedIndex !== null) {
+                console.log('[DraggableTrackList] Container dragOver - setting drop position to end');
+                setDropLinePosition({ index: localTracks.length, isTopHalf: false });
+              }
             }
-          }
-        }}
-        onDrop={(e) => {
-          // Handle drops on empty space or container
-          if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
-            console.log('[DraggableTrackList] Container drop detected');
-            handleDrop(e, localTracks.length);
-          }
-        }}
-      >
-        <div style={{
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--fern-green)',
-          position: 'sticky',
-          top: 0,
-          background: 'var(--hunter-green)',
-          zIndex: 1
-        }}>
+          }}
+          onDrop={(e) => {
+            // Handle drops on empty space or container
+            if (e.target === e.currentTarget || e.target.closest('[style*="sticky"]')) {
+              console.log('[DraggableTrackList] Container drop detected');
+              handleDrop(e, localTracks.length);
+            }
+          }}
+        >
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px'
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--fern-green)',
+            position: 'sticky',
+            top: 0,
+            background: 'var(--hunter-green)',
+            zIndex: 1
           }}>
-            <strong>🎵 {localTracks.length} Songs</strong>
-            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              <button
-                onClick={() => {
-                  // Re-initialize modal even if already open
-                  if (showAddUnselectedModal) {
-                    setShowAddUnselectedModal(false);
-                    // Use setTimeout to ensure state update completes before reopening
-                    setTimeout(() => setShowAddUnselectedModal(true), 0);
-                  } else {
-                    setShowAddUnselectedModal(true);
-                  }
-                }}
-                style={{
-                  background: 'var(--moss-green)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 8px',
-                  fontSize: '11px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'var(--fern-green)';
-                  e.target.style.transform = 'translateY(-1px)';
-                  const iconSpan = e.target.querySelector('span');
-                  if (iconSpan) iconSpan.style.backgroundColor = '#3d5a26';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'var(--moss-green)';
-                  e.target.style.transform = 'translateY(0)';
-                  const iconSpan = e.target.querySelector('span');
-                  if (iconSpan) iconSpan.style.backgroundColor = '#7a9147';
-                }}
-                title="Add songs that weren't selected from your playlists"
-              >
-                <span style={{
-                  backgroundColor: '#7a9147',
-                  borderRadius: '3px',
-                  padding: '2px',
-                  transition: 'background-color 0.2s ease',
-                  fontSize: '10px'
-                }}>➕</span>
-                {!isMobile && <span>Add Unselected</span>}
-              </button>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px'
+            }}>
+              <strong>🎵 {localTracks.length} Songs</strong>
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                <button
+                  onClick={() => {
+                    // Re-initialize modal even if already open
+                    if (showAddUnselectedModal) {
+                      setShowAddUnselectedModal(false);
+                      // Use setTimeout to ensure state update completes before reopening
+                      setTimeout(() => setShowAddUnselectedModal(true), 0);
+                    } else {
+                      setShowAddUnselectedModal(true);
+                    }
+                  }}
+                  style={{
+                    background: 'var(--moss-green)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 8px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'var(--fern-green)';
+                    e.target.style.transform = 'translateY(-1px)';
+                    const iconSpan = e.target.querySelector('span');
+                    if (iconSpan) iconSpan.style.backgroundColor = '#3d5a26';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'var(--moss-green)';
+                    e.target.style.transform = 'translateY(0)';
+                    const iconSpan = e.target.querySelector('span');
+                    if (iconSpan) iconSpan.style.backgroundColor = '#7a9147';
+                  }}
+                  title="Add songs that weren't selected from your playlists"
+                >
+                  <span style={{
+                    backgroundColor: '#7a9147',
+                    borderRadius: '3px',
+                    padding: '2px',
+                    transition: 'background-color 0.2s ease',
+                    fontSize: '10px'
+                  }}>➕</span>
+                  {!isMobile && <span>Add Unselected</span>}
+                </button>
 
-              <button
-                onClick={() => {
-                  // Re-initialize modal even if already open
-                  if (showSpotifySearch) {
-                    setShowSpotifySearch(false);
-                    // Use setTimeout to ensure state update completes before reopening
-                    setTimeout(() => setShowSpotifySearch(true), 0);
-                  } else {
-                    setShowSpotifySearch(true);
-                  }
-                }}
-                style={{
-                  background: '#1DB954',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 8px',
-                  fontSize: '11px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#1ed760';
-                  e.target.style.transform = 'translateY(-1px)';
-                  const iconSpan = e.target.querySelector('span');
-                  if (iconSpan) iconSpan.style.backgroundColor = '#17c653';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = '#1DB954';
-                  e.target.style.transform = 'translateY(0)';
-                  const iconSpan = e.target.querySelector('span');
-                  if (iconSpan) iconSpan.style.backgroundColor = '#189a47';
-                }}
-                title="Search and add songs directly from Spotify"
-              >
-                <span style={{
-                  backgroundColor: '#189a47',
-                  borderRadius: '3px',
-                  padding: '2px',
-                  transition: 'background-color 0.2s ease',
-                  fontSize: '10px'
-                }}>🎵</span>
-                {!isMobile && <span>Add from Spotify</span>}
-              </button>
+                <button
+                  onClick={() => {
+                    // Re-initialize modal even if already open
+                    if (showSpotifySearch) {
+                      setShowSpotifySearch(false);
+                      // Use setTimeout to ensure state update completes before reopening
+                      setTimeout(() => setShowSpotifySearch(true), 0);
+                    } else {
+                      setShowSpotifySearch(true);
+                    }
+                  }}
+                  style={{
+                    background: '#1DB954',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 8px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#1ed760';
+                    e.target.style.transform = 'translateY(-1px)';
+                    const iconSpan = e.target.querySelector('span');
+                    if (iconSpan) iconSpan.style.backgroundColor = '#17c653';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#1DB954';
+                    e.target.style.transform = 'translateY(0)';
+                    const iconSpan = e.target.querySelector('span');
+                    if (iconSpan) iconSpan.style.backgroundColor = '#189a47';
+                  }}
+                  title="Search and add songs directly from Spotify"
+                >
+                  <span style={{
+                    backgroundColor: '#189a47',
+                    borderRadius: '3px',
+                    padding: '2px',
+                    transition: 'background-color 0.2s ease',
+                    fontSize: '10px'
+                  }}>🎵</span>
+                  {!isMobile && <span>Add from Spotify</span>}
+                </button>
 
 
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: '11px',
+              opacity: '0.7',
+              lineHeight: '1.3',
+              userSelect: 'none', // Prevent text selection here specifically
+              WebkitUserSelect: 'none' // For Safari
+            }}>
+              💡 <strong>{isMobile ? 'Long press any track and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
             </div>
           </div>
 
-          <div style={{
-            fontSize: '11px',
-            opacity: '0.7',
-            lineHeight: '1.3',
-            userSelect: 'none', // Prevent text selection here specifically
-            WebkitUserSelect: 'none' // For Safari
-          }}>
-            💡 <strong>{isMobile ? 'Long press any track and drag to reorder' : 'Drag and drop to reorder'}</strong> • <strong>Click ✕ to remove tracks</strong>{!isMobile && ' • '}<strong>{!isMobile && 'Drag bottom edge to resize'}</strong>
-          </div>
-        </div>
+          {/* Empty state drop zone */}
+          {localTracks.length === 0 && (
+            <div style={{
+              padding: '40px 20px',
+              textAlign: 'center',
+              color: 'var(--mindaro)',
+              opacity: '0.6',
+              fontSize: '14px',
+              borderStyle: (isDragging || dropLinePosition) ? 'dashed' : 'none',
+              borderWidth: '2px',
+              borderColor: 'var(--moss-green)',
+              borderRadius: '8px',
+              margin: '20px',
+              backgroundColor: (isDragging || dropLinePosition) ? 'rgba(144, 169, 85, 0.1)' : 'transparent',
+              transition: 'all 0.2s ease'
+            }}>
+              {(isDragging || dropLinePosition) ?
+                '🎵 Drop track here to add it to your playlist' :
+                'No tracks in preview yet. Generate a preview or drag tracks from the modal.'
+              }
+            </div>
+          )}
 
-        {/* Empty state drop zone */}
-        {localTracks.length === 0 && (
-          <div style={{
-            padding: '40px 20px',
-            textAlign: 'center',
-            color: 'var(--mindaro)',
-            opacity: '0.6',
-            fontSize: '14px',
-            borderStyle: (isDragging || dropLinePosition) ? 'dashed' : 'none',
-            borderWidth: '2px',
-            borderColor: 'var(--moss-green)',
-            borderRadius: '8px',
-            margin: '20px',
-            backgroundColor: (isDragging || dropLinePosition) ? 'rgba(144, 169, 85, 0.1)' : 'transparent',
-            transition: 'all 0.2s ease'
-          }}>
-            {(isDragging || dropLinePosition) ?
-              '🎵 Drop track here to add it to your playlist' :
-              'No tracks in preview yet. Generate a preview or drag tracks from the modal.'
-            }
-          </div>
-        )}
+          {/* Drop line at the end when dragging over empty space */}
+          {dropLinePosition && dropLinePosition.index === localTracks.length && localTracks.length > 0 && (
+            <div style={{
+              height: '3px',
+              background: 'var(--moss-green)',
+              borderRadius: '2px',
+              boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
+              animation: 'pulse 1s infinite',
+              margin: '8px 16px',
+              pointerEvents: 'none'
+            }} />
+          )}
 
-        {/* Drop line at the end when dragging over empty space */}
-        {dropLinePosition && dropLinePosition.index === localTracks.length && localTracks.length > 0 && (
-          <div style={{
-            height: '3px',
-            background: 'var(--moss-green)',
-            borderRadius: '2px',
-            boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
-            animation: 'pulse 1s infinite',
-            margin: '8px 16px',
-            pointerEvents: 'none'
-          }} />
-        )}
+          {localTracks.map((track, index) => {
+            const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
+            const quadrant = getTrackQuadrant(track);
+            const isDragging = draggedIndex === index;
 
-        {localTracks.map((track, index) => {
-          const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
-          const quadrant = getTrackQuadrant(track);
-          const isDragging = draggedIndex === index;
+            const showDropLineAbove = dropLinePosition && dropLinePosition.index === index;
+            const showDropLineBelow = dropLinePosition && dropLinePosition.index === index + 1;
 
-          const showDropLineAbove = dropLinePosition && dropLinePosition.index === index;
-          const showDropLineBelow = dropLinePosition && dropLinePosition.index === index + 1;
+            return (
+              <div
+                key={`${track.id}-${index}`}
+                draggable={!isMobile}
+                data-track-index={index}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
+                onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
+                onTouchEnd={isMobile ? handleTouchEnd : undefined}
+                onTouchCancel={isMobile ? handleTouchCancel : undefined}
 
-          return (
-            <div
-              key={`${track.id}-${index}`}
-              draggable={!isMobile}
-              data-track-index={index}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-              onTouchStart={isMobile ? (e) => handleTouchStart(e, index) : undefined}
-              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
-              onTouchEnd={isMobile ? handleTouchEnd : undefined}
-              onTouchCancel={isMobile ? handleTouchCancel : undefined}
-
-              style={{
-                padding: isMobile ? '6px 12px' : '8px 16px',
-                borderBottom: index < localTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
-                borderTop: showDropLineAbove ? '3px solid var(--moss-green)' : 'none',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: isMobile ? 'default' : 'grab',
-                opacity: isDragging || (isMobile && touchDragState.isDragging && touchDragState.startIndex === index) ? 0.5 : 1,
-                backgroundColor: (isMobile && touchDragState.isLongPress && touchDragState.startIndex === index) ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
-                transition: 'all 0.2s ease',
-                userSelect: 'none',
-                position: 'relative',
-                boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none',
-                touchAction: (isMobile && touchDragState.isLongPress) ? 'none' : 'pan-y' // Prevent scrolling when long press is active
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                <div
-                  style={{
-                    marginRight: isMobile ? '8px' : '12px',
-                    fontSize: isMobile ? '14px' : '16px',
-                    opacity: touchDragState.isLongPress && touchDragState.startIndex === index ? '1' : '0.5',
-                    cursor: isMobile ? 'default' : 'grab',
-                    padding: isMobile ? '4px' : '0',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  ⋮⋮
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', flex: 1 }}>
-                  {track.album?.images?.[0]?.url && (
-                    <img
-                      src={track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url}
-                      alt={`${track.album.name} album cover`}
-                      style={{
-                        width: isMobile ? '32px' : '40px',
-                        height: isMobile ? '32px' : '40px',
-                        borderRadius: '4px',
-                        objectFit: 'cover',
-                        flexShrink: 0
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontWeight: '500',
-                      fontSize: isMobile ? '13px' : '14px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {index + 1}. {isMobile ? truncateText(track.name, 25) : track.name}
-                    </div>
-                    <div style={{
-                      fontSize: isMobile ? '11px' : '12px',
-                      opacity: '0.7',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      <span>{truncateText(track.artists?.[0]?.name || 'Unknown Artist', isMobile ? 15 : 25)}</span>
-                      {isMobile && (
-                        <>
-                          <span>•</span>
-                          <span style={{
-                            color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
-                            fontSize: '10px'
-                          }}>
-                            {track.sourcePlaylist === 'search' ?
-                              '🔍' :
-                              truncateText(sourcePlaylist?.name || 'Unknown', 12)
-                            }
-                          </span>
-                          {quadrant && (
-                            <span style={{ fontSize: '12px' }} title={
-                              quadrant === 'topHits' ? `Top Hits (${track.popularity})` :
-                                quadrant === 'popular' ? `Popular (${track.popularity})` :
-                                  quadrant === 'moderate' ? `Moderate (${track.popularity})` :
-                                    `Deep Cuts (${track.popularity})`
-                            }>
-                              {getPopularityIcon(quadrant)}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {!isMobile && (
-                        <>
-                          {' • '}
-                          <span style={{
-                            color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
-                            marginLeft: '4px'
-                          }}>
-                            {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {!isMobile && track.popularity !== undefined && (
+                style={{
+                  padding: isMobile ? '6px 12px' : '8px 16px',
+                  borderBottom: index < localTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                  borderTop: showDropLineAbove ? '3px solid var(--moss-green)' : 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: isMobile ? 'default' : 'grab',
+                  opacity: isDragging || (isMobile && touchDragState.isDragging && touchDragState.startIndex === index) ? 0.5 : 1,
+                  backgroundColor: (isMobile && touchDragState.isLongPress && touchDragState.startIndex === index) ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none',
+                  position: 'relative',
+                  boxShadow: showDropLineAbove ? '0 -2px 8px rgba(144, 169, 85, 0.6)' : 'none',
+                  touchAction: (isMobile && touchDragState.isLongPress) ? 'none' : 'pan-y' // Prevent scrolling when long press is active
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <div
+                    style={{
+                      marginRight: isMobile ? '8px' : '12px',
+                      fontSize: isMobile ? '14px' : '16px',
+                      opacity: touchDragState.isLongPress && touchDragState.startIndex === index ? '1' : '0.5',
+                      cursor: isMobile ? 'default' : 'grab',
+                      padding: isMobile ? '4px' : '0',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    ⋮⋮
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', flex: 1 }}>
+                    {track.album?.images?.[0]?.url && (
+                      <img
+                        src={track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url}
+                        alt={`${track.album.name} album cover`}
+                        style={{
+                          width: isMobile ? '32px' : '40px',
+                          height: isMobile ? '32px' : '40px',
+                          borderRadius: '4px',
+                          objectFit: 'cover',
+                          flexShrink: 0
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontSize: '10px',
-                        marginTop: '2px',
+                        fontWeight: '500',
+                        fontSize: isMobile ? '13px' : '14px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}>
-                        <span style={{
-                          background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
-                            quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
-                              quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
-                                'rgba(233, 30, 99, 0.2)',
-                          color: quadrant === 'topHits' ? '#FF5722' :
-                            quadrant === 'popular' ? '#FF8F00' :
-                              quadrant === 'moderate' ? '#00BCD4' :
-                                '#E91E63',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontWeight: '500'
+                        {index + 1}. {isMobile ? truncateText(track.name, 25) : track.name}
+                      </div>
+                      <div style={{
+                        fontSize: isMobile ? '11px' : '12px',
+                        opacity: '0.7',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <span>{truncateText(track.artists?.[0]?.name || 'Unknown Artist', isMobile ? 15 : 25)}</span>
+                        {isMobile && (
+                          <>
+                            <span>•</span>
+                            <span style={{
+                              color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
+                              fontSize: '10px'
+                            }}>
+                              {track.sourcePlaylist === 'search' ?
+                                '🔍' :
+                                truncateText(sourcePlaylist?.name || 'Unknown', 12)
+                              }
+                            </span>
+                            {quadrant && (
+                              <span style={{ fontSize: '12px' }} title={
+                                quadrant === 'topHits' ? `Top Hits (${track.popularity})` :
+                                  quadrant === 'popular' ? `Popular (${track.popularity})` :
+                                    quadrant === 'moderate' ? `Moderate (${track.popularity})` :
+                                      `Deep Cuts (${track.popularity})`
+                              }>
+                                {getPopularityIcon(quadrant)}
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {!isMobile && (
+                          <>
+                            {' • '}
+                            <span style={{
+                              color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
+                              marginLeft: '4px'
+                            }}>
+                              {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {!isMobile && track.popularity !== undefined && (
+                        <div style={{
+                          fontSize: '10px',
+                          marginTop: '2px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
                         }}>
-                          {quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
-                            quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
-                              quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
-                                `💎 Deep Cuts (${track.popularity})`}
-                        </span>
-                      </div>
-                    )}
-                    {!isMobile && track.album?.name && (
-                      <div style={{ fontSize: '11px', opacity: '0.5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {track.album.name}
-                      </div>
-                    )}
+                          <span style={{
+                            background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
+                              quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
+                                quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
+                                  'rgba(233, 30, 99, 0.2)',
+                            color: quadrant === 'topHits' ? '#FF5722' :
+                              quadrant === 'popular' ? '#FF8F00' :
+                                quadrant === 'moderate' ? '#00BCD4' :
+                                  '#E91E63',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: '500'
+                          }}>
+                            {quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
+                              quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
+                                quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
+                                  `💎 Deep Cuts (${track.popularity})`}
+                          </span>
+                        </div>
+                      )}
+                      {!isMobile && track.album?.name && (
+                        <div style={{ fontSize: '11px', opacity: '0.5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {track.album.name}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ fontSize: '11px', opacity: '0.6' }}>
-                  {formatDuration(track.duration_ms || 0)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ fontSize: '11px', opacity: '0.6' }}>
+                    {formatDuration(track.duration_ms || 0)}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveTrack(index);
+                    }}
+                    style={{
+                      background: '#ff4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = '#cc0000'}
+                    onMouseLeave={(e) => e.target.style.background = '#ff4444'}
+                    title="Remove track from playlist"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveTrack(index);
-                  }}
-                  style={{
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = '#cc0000'}
-                  onMouseLeave={(e) => e.target.style.background = '#ff4444'}
-                  title="Remove track from playlist"
-                >
-                  ×
-                </button>
-              </div>
 
-              {/* Drop line below - positioned absolutely within the track element */}
-              {showDropLineBelow && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-2px',
-                  left: '16px',
-                  right: '16px',
-                  height: '3px',
-                  background: 'var(--moss-green)',
-                  borderRadius: '2px',
-                  boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
-                  animation: 'pulse 1s infinite',
-                  pointerEvents: 'none',
-                  zIndex: 10
-                }} />
-              )}
-            </div>
-          );
-        })}
+                {/* Drop line below - positioned absolutely within the track element */}
+                {showDropLineBelow && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: '16px',
+                    right: '16px',
+                    height: '3px',
+                    background: 'var(--moss-green)',
+                    borderRadius: '2px',
+                    boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
+                    animation: 'pulse 1s infinite',
+                    pointerEvents: 'none',
+                    zIndex: 10
+                  }} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+
+
+
+
       </div>
 
-      {/* Resize handle - outside the scrollable container - Desktop only */}
-      {!isMobile && (
-        <div
-          onMouseDown={handleResizeStart}
-          onDoubleClick={handleDoubleClick}
-          style={{
-            height: '12px',
-            cursor: 'ns-resize',
-            background: isResizing ? 'rgba(144, 169, 85, 0.3)' :
-              isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)',
-            border: '1px solid var(--fern-green)',
-            borderTop: isResizing ? '2px solid var(--moss-green)' :
-              isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)',
-            borderBottomLeftRadius: '8px',
-            borderBottomRightRadius: '8px',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onMouseEnter={(e) => {
-            if (!isResizing) {
-              e.target.style.background = 'rgba(144, 169, 85, 0.1)';
-              e.target.style.borderTop = '2px solid rgba(144, 169, 85, 0.5)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isResizing) {
-              e.target.style.background = isMaximized ? 'rgba(144, 169, 85, 0.2)' : 'var(--hunter-green)';
-              e.target.style.borderTop = isMaximized ? '2px solid var(--moss-green)' : '1px solid var(--fern-green)';
-            }
-          }}
-          title={isMaximized ? "Drag to resize • Double-click to minimize" : "Drag to resize • Double-click to maximize"}
-        >
-          <div style={{
-            width: '30px',
-            height: '3px',
-            background: 'rgba(144, 169, 85, 0.6)',
-            borderRadius: '2px',
-            opacity: isResizing ? 1 : 0.7
-          }} />
-        </div>
-      )}
-
-
-
-      {/* Add Unselected Modal */}
+      {/* Modals rendered outside the relative container for proper centering */}
       <AddUnselectedModal
         isOpen={showAddUnselectedModal}
         onClose={() => setShowAddUnselectedModal(false)}
@@ -1435,18 +1303,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         selectedPlaylists={selectedPlaylists}
         currentTracks={localTracks}
         onAddTracks={handleAddUnselectedTracks}
-
       />
 
-      {/* Spotify Search Modal */}
       <SpotifySearchModal
         isOpen={showSpotifySearch}
         onClose={() => setShowSpotifySearch(false)}
         accessToken={accessToken}
         onAddTracks={handleAddSpotifyTracks}
-
       />
-    </div>
+    </>
   );
 };
 
