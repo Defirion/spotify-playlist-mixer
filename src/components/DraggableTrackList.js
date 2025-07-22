@@ -55,11 +55,8 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const currentScrollSpeed = React.useRef(0);
   
   const startAutoScroll = (direction, targetSpeed) => {
-    console.log('[AutoScroll] startAutoScroll called:', { direction, targetSpeed, isAlreadyScrolling: !!autoScrollRef.current });
-    
     if (autoScrollRef.current) {
       // Update target speed if already scrolling
-      console.log('[AutoScroll] Updating existing scroll speed from', currentScrollSpeed.current, 'to', targetSpeed);
       currentScrollSpeed.current = targetSpeed;
       return;
     }
@@ -74,14 +71,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       const currentScrollTop = container.scrollTop;
       const maxScrollTop = container.scrollHeight - container.clientHeight;
 
-      console.log('[AutoScroll] Scrolling:', {
-        direction,
-        scrollAmount,
-        currentScrollTop,
-        maxScrollTop,
-        willScroll: (direction === 'up' && currentScrollTop > 0) || (direction === 'down' && currentScrollTop < maxScrollTop)
-      });
-
       if (direction === 'up' && currentScrollTop > 0) {
         container.scrollTop = Math.max(0, currentScrollTop - scrollAmount);
       } else if (direction === 'down' && currentScrollTop < maxScrollTop) {
@@ -95,12 +84,10 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       ) {
         autoScrollRef.current = requestAnimationFrame(scroll);
       } else {
-        console.log('[AutoScroll] Reached scroll boundary, stopping');
         stopAutoScroll();
       }
     };
 
-    console.log('[AutoScroll] Starting new scroll animation');
     setIsAutoScrolling(true);
     autoScrollRef.current = requestAnimationFrame(scroll);
   };
@@ -125,18 +112,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       
       // Linear acceleration for out-of-bounds (up to 100px outside)
       const outOfBoundsAcceleration = Math.min(1, outOfBoundsDistance / 100);
-      const speed = baseOutOfBoundsSpeed + (maxOutOfBoundsSpeed - baseOutOfBoundsSpeed) * outOfBoundsAcceleration;
-      
-      console.log('[AutoScroll] OUT OF BOUNDS Speed Calculation:', {
-        distanceFromEdge,
-        outOfBoundsDistance,
-        outOfBoundsAcceleration,
-        baseOutOfBoundsSpeed,
-        maxOutOfBoundsSpeed,
-        finalSpeed: speed
-      });
-      
-      return speed;
+      return baseOutOfBoundsSpeed + (maxOutOfBoundsSpeed - baseOutOfBoundsSpeed) * outOfBoundsAcceleration;
     }
     
     // Normal in-bounds calculation
@@ -154,27 +130,13 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const minSpeed = 2;
     const maxSpeed = 20;
     
-    const speed = minSpeed + (maxSpeed - minSpeed) * accelerationFactor;
-    
-    console.log('[AutoScroll] IN BOUNDS Speed Calculation:', {
-      distanceFromEdge,
-      maxDistance,
-      normalizedDistance,
-      proximity,
-      accelerationFactor,
-      finalSpeed: speed
-    });
-    
-    return speed;
+    return minSpeed + (maxSpeed - minSpeed) * accelerationFactor;
   };
 
   // Check if drag position is near container edges and trigger auto-scroll
   const checkAutoScroll = (clientY) => {
     const container = scrollContainerRef.current;
-    if (!container) {
-      console.log('[AutoScroll] No container ref');
-      return;
-    }
+    if (!container) return;
 
     const containerRect = container.getBoundingClientRect();
     const scrollThreshold = 80; // Threshold for in-bounds scrolling
@@ -182,71 +144,31 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const distanceFromTop = clientY - containerRect.top;
     const distanceFromBottom = containerRect.bottom - clientY;
 
-    // Debug logging
-    console.log('[AutoScroll] Debug Info:', {
-      clientY,
-      containerTop: containerRect.top,
-      containerBottom: containerRect.bottom,
-      distanceFromTop,
-      distanceFromBottom,
-      scrollTop: container.scrollTop,
-      scrollHeight: container.scrollHeight,
-      clientHeight: container.clientHeight,
-      maxScrollTop: container.scrollHeight - container.clientHeight
-    });
-
     // Add a small buffer to make out-of-bounds detection more sensitive
     const outOfBoundsBuffer = 5; // 5px buffer zone
     
     // Check if dragging above container (out of bounds or very close)
     if (clientY < (containerRect.top + outOfBoundsBuffer) && container.scrollTop > 0) {
       const speed = calculateScrollSpeed(distanceFromTop, scrollThreshold, true);
-      console.log('[AutoScroll] OUT OF BOUNDS - Above container:', {
-        clientY,
-        containerTop: containerRect.top,
-        bufferZone: containerRect.top + outOfBoundsBuffer,
-        distanceFromTop,
-        speed,
-        isOutOfBounds: true
-      });
       startAutoScroll('up', speed);
     }
     // Check if dragging below container (out of bounds or very close)
     else if (clientY > (containerRect.bottom - outOfBoundsBuffer) && container.scrollTop < container.scrollHeight - container.clientHeight) {
       const speed = calculateScrollSpeed(distanceFromBottom, scrollThreshold, true);
-      console.log('[AutoScroll] OUT OF BOUNDS - Below container:', {
-        clientY,
-        containerBottom: containerRect.bottom,
-        bufferZone: containerRect.bottom - outOfBoundsBuffer,
-        distanceFromBottom,
-        speed,
-        isOutOfBounds: true
-      });
       startAutoScroll('down', speed);
     }
     // Check if near top edge but still in bounds (outside the out-of-bounds buffer)
     else if (distanceFromTop < scrollThreshold && distanceFromTop >= outOfBoundsBuffer && container.scrollTop > 0) {
       const speed = calculateScrollSpeed(distanceFromTop, scrollThreshold, false);
-      console.log('[AutoScroll] IN BOUNDS - Near top:', {
-        distanceFromTop,
-        speed,
-        isOutOfBounds: false
-      });
       startAutoScroll('up', speed);
     }
     // Check if near bottom edge but still in bounds (outside the out-of-bounds buffer)
     else if (distanceFromBottom < scrollThreshold && distanceFromBottom >= outOfBoundsBuffer && container.scrollTop < container.scrollHeight - container.clientHeight) {
       const speed = calculateScrollSpeed(distanceFromBottom, scrollThreshold, false);
-      console.log('[AutoScroll] IN BOUNDS - Near bottom:', {
-        distanceFromBottom,
-        speed,
-        isOutOfBounds: false
-      });
       startAutoScroll('down', speed);
     }
     // Not in scroll zone, stop auto-scroll
     else {
-      console.log('[AutoScroll] Not in scroll zone - stopping');
       stopAutoScroll();
     }
   };
@@ -273,7 +195,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = `-${scrollY}px`;
         document.body.style.width = '100%';
         document.body.style.overflow = 'hidden';
-        document.body.style.backgroundColor = '#1e2a1e'; // Darker green background
+        document.body.style.setProperty('background', '#132a13', 'important'); // Force darker green background (override gradient)
       }
     } else {
       // Only restore if currently locked
@@ -285,7 +207,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
-        document.body.style.backgroundColor = ''; // Revert background color on unmount
+        document.body.style.removeProperty('background'); // Properly remove background override
         delete document.body.dataset.scrollY;
 
         // Restore scroll position immediately, then again after animation frame
@@ -312,7 +234,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
-        document.body.style.backgroundColor = ''; // Revert background color on unmount
+        document.body.style.removeProperty('background'); // Properly remove background override
         delete document.body.dataset.scrollY;
 
         // Restore scroll position
@@ -517,12 +439,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     const handleGlobalDragOver = (e) => {
       // Only handle if we have an active drag operation
       if (draggedIndex !== null || isDragging) {
-        console.log('[AutoScroll] Global drag over detected:', {
-          clientY: e.clientY,
-          draggedIndex,
-          isDragging,
-          target: e.target.tagName
-        });
         checkAutoScroll(e.clientY);
       }
     };
@@ -532,12 +448,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       if ((touchDragState.isDragging && touchDragState.isLongPress) || isDragging) {
         const touch = e.touches[0];
         if (touch) {
-          console.log('[AutoScroll] Global touch move detected:', {
-            clientY: touch.clientY,
-            touchDragState: touchDragState.isDragging,
-            isDragging,
-            target: e.target.tagName
-          });
           checkAutoScroll(touch.clientY);
         }
       }
@@ -545,12 +455,10 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
     // Add global listeners when any drag is active
     if (draggedIndex !== null || isDragging || (touchDragState.isDragging && touchDragState.isLongPress)) {
-      console.log('[AutoScroll] Adding global drag listeners');
       document.addEventListener('dragover', handleGlobalDragOver, { passive: false });
       document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
       
       return () => {
-        console.log('[AutoScroll] Removing global drag listeners');
         document.removeEventListener('dragover', handleGlobalDragOver);
         document.removeEventListener('touchmove', handleGlobalTouchMove);
       };

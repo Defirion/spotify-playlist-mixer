@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import LoadingOverlay from './LoadingOverlay';
 import { getSpotifyApi } from '../utils/spotify';
 
-const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onError }) => {
+const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, onClearAll, onError }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(0); // Start with first item highlighted
   const [playlistInput, setPlaylistInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -234,15 +234,48 @@ const PlaylistSelector = ({ accessToken, selectedPlaylists, onPlaylistSelect, on
         marginBottom: '16px'
       }}>
         <h2 style={{ margin: 0 }}>Add Playlists to Mix</h2>
-        <div style={{ 
-          fontSize: '14px', 
-          opacity: '0.8',
-          background: 'rgba(79, 119, 45, 0.2)',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          border: '1px solid var(--fern-green)'
-        }}>
-          {selectedPlaylists.length}/10 playlists
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            fontSize: '14px', 
+            opacity: '0.8',
+            background: 'rgba(79, 119, 45, 0.2)',
+            padding: '4px 12px',
+            borderRadius: '12px',
+            border: '1px solid var(--fern-green)'
+          }}>
+            {selectedPlaylists.length}/10 playlists
+          </div>
+          {selectedPlaylists.length > 0 && (
+            <button
+              onClick={onClearAll}
+              style={{
+                background: '#ff4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#cc0000';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ff4444';
+                e.target.style.transform = 'translateY(0)';
+              }}
+              title="Remove all playlists from mix"
+            >
+              <span style={{ fontSize: '10px' }}>🗑️</span>
+              Clear All
+            </button>
+          )}
         </div>
       </div>
       

@@ -80,6 +80,11 @@ function MainApp() {
     }
   };
 
+  const handleClearAllPlaylists = () => {
+    setSelectedPlaylists([]);
+    setRatioConfig({});
+  };
+
   const updateRatioConfig = (playlistId, config) => {
     setRatioConfig({
       ...ratioConfig,
@@ -155,6 +160,7 @@ function MainApp() {
         accessToken={accessToken}
         selectedPlaylists={selectedPlaylists}
         onPlaylistSelect={handlePlaylistSelection}
+        onClearAll={handleClearAllPlaylists}
         onError={setError}
       />
 
