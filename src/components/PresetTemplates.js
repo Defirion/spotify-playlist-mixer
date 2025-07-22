@@ -11,11 +11,11 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             ratios: (playlists) => playlists.map((playlist) => {
                 const name = playlist.name.toLowerCase();
                 if (name.includes('bachata')) {
-                    return { min: 2, max: 2, weight: 10, weightType: 'time' }; // Maximum frequency (10)
+                    return { min: 2, max: 2, weight: 55, weightType: 'time' }; 
                 } else if (name.includes('salsa')) {
-                    return { min: 1, max: 2, weight: 8, weightType: 'time' }; // Very High frequency (8)
+                    return { min: 1, max: 2, weight: 45, weightType: 'time' }; 
                 } else {
-                    return { min: 1, max: 2, weight: 5, weightType: 'time' }; // Medium frequency (5)
+                    return { min: 1, max: 2, weight: 50, weightType: 'time' }; 
                 }
             }),
             settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 300 }
