@@ -53,7 +53,15 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   // Auto-scroll functionality with acceleration
   const currentScrollSpeed = React.useRef(0);
   
-  const startAutoScroll = (direction, targetSpeed) => {
+  const stopAutoScroll = React.useCallback(() => {
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+    currentScrollSpeed.current = 0;
+  }, []);
+
+  const startAutoScroll = React.useCallback((direction, targetSpeed) => {
     if (autoScrollRef.current) {
       // Update target speed if already scrolling
       currentScrollSpeed.current = targetSpeed;
@@ -88,15 +96,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     };
 
     autoScrollRef.current = requestAnimationFrame(scroll);
-  };
-
-  const stopAutoScroll = () => {
-    if (autoScrollRef.current) {
-      cancelAnimationFrame(autoScrollRef.current);
-      autoScrollRef.current = null;
-    }
-    currentScrollSpeed.current = 0;
-  };
+  }, [stopAutoScroll]);
 
   // Calculate scroll speed based on distance from edge with smooth acceleration
   const calculateScrollSpeed = (distanceFromEdge, maxDistance, isOutOfBounds = false) => {
@@ -168,7 +168,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     else {
       stopAutoScroll();
     }
-  }, []);
+  }, [startAutoScroll, stopAutoScroll]);
 
   // Centralized scroll lock management - handles all drag operations
   useEffect(() => {
@@ -249,7 +249,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       // Unified cleanup on unmount - use ref to avoid dependency issues
       unifiedCleanupRef.current('component-unmount');
     };
-  }, [touchDragState.longPressTimer]); // Empty dependency array - only runs on actual unmount
+  }, [touchDragState.longPressTimer, stopAutoScroll]); // Include stopAutoScroll dependency
 
   // Update local tracks when props change
   React.useEffect(() => {
