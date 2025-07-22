@@ -31,7 +31,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
   // Auto-scroll state and refs
   const autoScrollRef = React.useRef(null);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
   // Touch drag state for mobile
   const [touchDragState, setTouchDragState] = useState({
@@ -88,7 +87,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       }
     };
 
-    setIsAutoScrolling(true);
     autoScrollRef.current = requestAnimationFrame(scroll);
   };
 
@@ -98,7 +96,6 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       autoScrollRef.current = null;
     }
     currentScrollSpeed.current = 0;
-    setIsAutoScrolling(false);
   };
 
   // Calculate scroll speed based on distance from edge with smooth acceleration
@@ -134,7 +131,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   };
 
   // Check if drag position is near container edges and trigger auto-scroll
-  const checkAutoScroll = (clientY) => {
+  const checkAutoScroll = React.useCallback((clientY) => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -171,7 +168,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
     else {
       stopAutoScroll();
     }
-  };
+  }, []);
 
   // Centralized scroll lock management - handles all drag operations
   useEffect(() => {
@@ -463,7 +460,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         document.removeEventListener('touchmove', handleGlobalTouchMove);
       };
     }
-  }, [draggedIndex, isDragging, touchDragState.isDragging, touchDragState.isLongPress]);
+  }, [draggedIndex, isDragging, touchDragState.isDragging, touchDragState.isLongPress, checkAutoScroll]);
 
 
 
