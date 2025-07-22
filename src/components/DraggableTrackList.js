@@ -47,16 +47,16 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
   const unifiedCleanupRef = React.useRef(unifiedCleanup);
   unifiedCleanupRef.current = unifiedCleanup;
 
-  // Centralized scroll lock management - handles internal drag operations only
+  // Centralized scroll lock management - handles all drag operations
   useEffect(() => {
-    // Only apply scroll lock for internal drags (within the track list)
-    // Don't lock scroll for external drags from modals to allow modal scrolling
-    const isInternalDragActive = (
+    // Apply scroll lock for both internal drags and external drags from modals
+    const isDragActive = (
       draggedIndex !== null ||
+      isDragging ||
       touchDragState.isDragging
     );
 
-    if (isInternalDragActive) {
+    if (isDragActive) {
       // Only lock if not already locked and capture current scroll position
       if (document.body.style.position !== 'fixed') {
         const scrollY = window.scrollY;
@@ -91,7 +91,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
         });
       }
     }
-  }, [draggedIndex, touchDragState.isDragging, touchDragState.longPressTimer]);
+  }, [draggedIndex, isDragging, touchDragState.isDragging, touchDragState.longPressTimer]);
 
   // Separate useEffect for component unmount cleanup
   useEffect(() => {
@@ -264,14 +264,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
           console.log('[DraggableTrackList] WARNING: onTrackOrderChange is not defined!');
         }
 
-        // Close the appropriate modal after successful drop
+        // Keep both modals open for continued use after successful drop
         if (type === 'modal-track') {
-          console.log('[DraggableTrackList] Closing AddUnselectedModal');
-          setShowAddUnselectedModal(false);
+          console.log('[DraggableTrackList] Keeping AddUnselectedModal open for continued use');
         }
         if (type === 'search-track') {
-          console.log('[DraggableTrackList] Closing SpotifySearchModal');
-          setShowSpotifySearch(false);
+          console.log('[DraggableTrackList] Keeping SpotifySearchModal open for continued use');
         }
 
         // Provide completion haptic feedback
@@ -439,12 +437,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       setDropLinePosition(null);
       endDrag('success'); // Clear context state with success
 
-      // Close the appropriate modal after successful drop
+      // Keep both modals open for continued use after successful drop
       if (type === 'modal-track') {
-        setShowAddUnselectedModal(false);
+        console.log('[DraggableTrackList] Keeping AddUnselectedModal open for continued use');
       }
       if (type === 'search-track') {
-        setShowSpotifySearch(false);
+        console.log('[DraggableTrackList] Keeping SpotifySearchModal open for continued use');
       }
 
       dropProcessed = true;
@@ -469,12 +467,12 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
 
             setDropLinePosition(null);
 
-            // Close the appropriate modal after successful drop
+            // Keep both modals open for continued use after successful drop
             if (type === 'modal-track') {
-              setShowAddUnselectedModal(false);
+              console.log('[DraggableTrackList] Keeping AddUnselectedModal open for continued use');
             }
             if (type === 'search-track') {
-              setShowSpotifySearch(false);
+              console.log('[DraggableTrackList] Keeping SpotifySearchModal open for continued use');
             }
 
             dropProcessed = true;

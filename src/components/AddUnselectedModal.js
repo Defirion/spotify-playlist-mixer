@@ -91,7 +91,9 @@ const AddUnselectedModal = ({
   const handleAddSelected = () => {
     const tracksToAdd = filteredTracks.filter(track => selectedTracksToAdd.has(track.id));
     onAddTracks(tracksToAdd);
-    onClose();
+    
+    // Clear selected tracks but keep modal open for continued browsing
+    setSelectedTracksToAdd(new Set());
   };
 
   const handleDragStart = (e, track) => {
@@ -457,9 +459,9 @@ const AddUnselectedModal = ({
           flexDirection: 'column',
           overflow: 'hidden',
           zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
-opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
-transition: 'opacity 0.2s ease',
-pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
         }}
       >
         {/* Header */}
@@ -773,7 +775,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                 }
               }}
             >
-              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''}
+              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
             </button>
           </div>
         </div>

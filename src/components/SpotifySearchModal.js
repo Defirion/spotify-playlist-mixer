@@ -79,7 +79,9 @@ const SpotifySearchModal = ({
       }));
     
     onAddTracks(tracksToAdd);
-    onClose();
+    
+    // Clear selected tracks but keep modal open for continued searching
+    setSelectedTracksToAdd(new Set());
   };
 
   const handleDragStart = (e, track) => {
@@ -348,9 +350,9 @@ const SpotifySearchModal = ({
           flexDirection: 'column',
           overflow: 'hidden',
           zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
-opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
-transition: 'opacity 0.2s ease',
-pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
+          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
         }}
       >
         {/* Header */}
@@ -694,7 +696,7 @@ pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto
                 }
               }}
             >
-              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''}
+              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
             </button>
           </div>
         </div>
