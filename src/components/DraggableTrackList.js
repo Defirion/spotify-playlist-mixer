@@ -1146,7 +1146,11 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                         fontSize: isMobile ? '13px' : '14px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.3',
+                        maxHeight: isMobile ? '2.6em' : '2.8em'
                       }}>
                         {index + 1}. {isMobile ? truncateText(track.name, 25) : track.name}
                       </div>
@@ -1158,78 +1162,52 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
                         whiteSpace: 'nowrap',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '4px',
+                        marginTop: '2px'
                       }}>
                         <span>{truncateText(track.artists?.[0]?.name || 'Unknown Artist', isMobile ? 15 : 25)}</span>
-                        {isMobile && (
+                        <span>•</span>
+                        <span style={{
+                          color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)'
+                        }}>
+                          {track.sourcePlaylist === 'search' ?
+                            (isMobile ? '🔍' : '🔍 Spotify Search') :
+                            truncateText(sourcePlaylist?.name || 'Unknown', isMobile ? 12 : 20)
+                          }
+                        </span>
+                        {quadrant && (
                           <>
                             <span>•</span>
-                            <span style={{
-                              color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
-                              fontSize: '10px'
-                            }}>
-                              {track.sourcePlaylist === 'search' ?
-                                '🔍' :
-                                truncateText(sourcePlaylist?.name || 'Unknown', 12)
+                            <span style={{ 
+                              fontSize: isMobile ? '10px' : '10px',
+                              background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
+                                quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
+                                  quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
+                                    'rgba(233, 30, 99, 0.2)',
+                              color: quadrant === 'topHits' ? '#FF5722' :
+                                quadrant === 'popular' ? '#FF8F00' :
+                                  quadrant === 'moderate' ? '#00BCD4' :
+                                    '#E91E63',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }} title={
+                              quadrant === 'topHits' ? `Top Hits (${track.popularity})` :
+                                quadrant === 'popular' ? `Popular (${track.popularity})` :
+                                  quadrant === 'moderate' ? `Moderate (${track.popularity})` :
+                                    `Deep Cuts (${track.popularity})`
+                            }>
+                              {isMobile ? 
+                                getPopularityIcon(quadrant) :
+                                (quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
+                                  quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
+                                    quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
+                                      `💎 Deep Cuts (${track.popularity})`)
                               }
-                            </span>
-                            {quadrant && (
-                              <span style={{ fontSize: '12px' }} title={
-                                quadrant === 'topHits' ? `Top Hits (${track.popularity})` :
-                                  quadrant === 'popular' ? `Popular (${track.popularity})` :
-                                    quadrant === 'moderate' ? `Moderate (${track.popularity})` :
-                                      `Deep Cuts (${track.popularity})`
-                              }>
-                                {getPopularityIcon(quadrant)}
-                              </span>
-                            )}
-                          </>
-                        )}
-                        {!isMobile && (
-                          <>
-                            {' • '}
-                            <span style={{
-                              color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
-                              marginLeft: '4px'
-                            }}>
-                              {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
                             </span>
                           </>
                         )}
                       </div>
-                      {!isMobile && track.popularity !== undefined && (
-                        <div style={{
-                          fontSize: '10px',
-                          marginTop: '2px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          <span style={{
-                            background: quadrant === 'topHits' ? 'rgba(255, 87, 34, 0.2)' :
-                              quadrant === 'popular' ? 'rgba(255, 193, 7, 0.2)' :
-                                quadrant === 'moderate' ? 'rgba(0, 188, 212, 0.2)' :
-                                  'rgba(233, 30, 99, 0.2)',
-                            color: quadrant === 'topHits' ? '#FF5722' :
-                              quadrant === 'popular' ? '#FF8F00' :
-                                quadrant === 'moderate' ? '#00BCD4' :
-                                  '#E91E63',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontWeight: '500'
-                          }}>
-                            {quadrant === 'topHits' ? `🔥 Top Hits (${track.popularity})` :
-                              quadrant === 'popular' ? `⭐ Popular (${track.popularity})` :
-                                quadrant === 'moderate' ? `📻 Moderate (${track.popularity})` :
-                                  `💎 Deep Cuts (${track.popularity})`}
-                          </span>
-                        </div>
-                      )}
-                      {!isMobile && track.album?.name && (
-                        <div style={{ fontSize: '11px', opacity: '0.5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {track.album.name}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

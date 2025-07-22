@@ -658,7 +658,11 @@ const AddUnselectedModal = ({
                       color: 'var(--mindaro)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      lineHeight: '1.3',
+                      maxHeight: '2.8em'
                     }}>
                       {track.name}
                     </div>
@@ -668,42 +672,36 @@ const AddUnselectedModal = ({
                       color: 'var(--mindaro)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      marginTop: '2px'
                     }}>
-                      {track.artists?.[0]?.name || 'Unknown Artist'} •
-                      <span style={{ color: 'var(--moss-green)', marginLeft: '4px' }}>
+                      <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+                      <span>•</span>
+                      <span style={{ color: 'var(--moss-green)' }}>
                         {track.sourcePlaylistName}
                       </span>
                       {track.popularity !== undefined && (() => {
                         const popStyle = getPopularityStyle(quadrant, track.popularity);
                         return (
-                          <span style={{
-                            marginLeft: '8px',
-                            fontSize: '10px',
-                            background: popStyle.background,
-                            color: popStyle.color,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontWeight: '500'
-                          }}>
-                            {popStyle.text}
-                          </span>
+                          <>
+                            <span>•</span>
+                            <span style={{
+                              fontSize: '10px',
+                              background: popStyle.background,
+                              color: popStyle.color,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }}>
+                              {popStyle.text}
+                            </span>
+                          </>
                         );
                       })()}
                     </div>
-                    {track.album?.name && (
-                      <div style={{
-                        fontSize: '11px',
-                        opacity: '0.5',
-                        color: 'var(--mindaro)',
-                        marginTop: '2px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {track.album.name}
-                      </div>
-                    )}
                   </div>
 
                   {/* Duration */}
