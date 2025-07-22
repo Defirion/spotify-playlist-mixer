@@ -27,7 +27,8 @@ function MainApp() {
     playlistName: 'My Mixed Playlist',
     shuffleWithinGroups: true,
     popularityStrategy: 'mixed',
-    recencyBoost: true
+    recencyBoost: true,
+    continueWhenPlaylistEmpty: true
   });
 
   useEffect(() => {
@@ -95,7 +96,8 @@ function MainApp() {
       shuffleWithinGroups: settings.shuffleWithinGroups,
       useTimeLimit: settings.useTimeLimit || false,
       targetDuration: settings.targetDuration || prev.targetDuration,
-      playlistName: `${presetName} Mix`
+      playlistName: `${presetName} Mix`,
+      continueWhenPlaylistEmpty: settings.continueWhenPlaylistEmpty !== undefined ? settings.continueWhenPlaylistEmpty : prev.continueWhenPlaylistEmpty
     }));
     setError(null);
   };

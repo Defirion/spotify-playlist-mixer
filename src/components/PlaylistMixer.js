@@ -104,6 +104,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       } else {
         // Generate new mix using the standard algorithm
         mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
+        
+        // Show warning if playlists were exhausted and mixing stopped early
+        if (mixedTracks.stoppedEarly && mixedTracks.exhaustedPlaylists && mixedTracks.exhaustedPlaylists.length > 0) {
+          const exhaustedNames = mixedTracks.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ');
+          console.warn(`⚠️ Mixing stopped early because these playlists ran out of songs: ${exhaustedNames}`);
+        }
       }
       
       if (mixedTracks.length === 0) {
@@ -191,7 +197,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         tracks: previewTracks,
         stats: playlistStats,
         totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0),
-        usedStrategy: localMixOptions.popularityStrategy
+        usedStrategy: localMixOptions.popularityStrategy,
+        exhaustedPlaylists: previewTracks.exhaustedPlaylists || [],
+        stoppedEarly: previewTracks.stoppedEarly || false
       });
       
     } catch (err) {
@@ -556,7 +564,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           border: '1px solid rgba(23, 162, 184, 0.3)',
           borderRadius: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <span style={{ fontSize: '24px' }}>🤔</span>
             <div>
               <h4 style={{ margin: '0 0 8px 0', color: '#17a2b8' }}>
@@ -564,9 +572,45 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               </h4>
               <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
                 With your current ratio settings, we'll run out of songs from <strong>{ratioImbalance.limitingPlaylistName}</strong> after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
-                The rest of your mix will be filled with songs from the other playlists.
+                {localMixOptions.continueWhenPlaylistEmpty 
+                  ? " The mix will continue using songs from the remaining playlists to reach your target length."
+                  : " The mix will stop there, creating a shorter but balanced playlist."
+                }
               </p>
             </div>
+          </div>
+          
+          {/* Mixing Behavior Control */}
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.05)', 
+            padding: '12px', 
+            borderRadius: '8px',
+            marginTop: '12px'
+          }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              gap: '12px', 
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={localMixOptions.continueWhenPlaylistEmpty}
+                onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
+                style={{ transform: 'scale(1.2)', marginTop: '2px' }}
+              />
+              <div>
+                <span style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '4px' }}>
+                  Continue mixing when playlists run out
+                </span>
+                <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
+                  {localMixOptions.continueWhenPlaylistEmpty 
+                    ? "When a playlist runs out, we'll keep adding songs from other playlists until we reach your target. Your mix will be the full length but may have more songs from some playlists."
+                    : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
+                  }
+                </span>
+              </div>
+            </label>
           </div>
         </div>
       )}
@@ -661,7 +705,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           </div>
         )}
       </div>
-      
+
       {/* Action Buttons - Only show when no preview */}
       {!preview && (
         <div style={{ 
@@ -777,6 +821,30 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 preview.usedStrategy === 'front-loaded' ? 'Hits First' :
                 preview.usedStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
             </div>
+
+            {/* Exhausted Playlists Warning */}
+            {preview.exhaustedPlaylists && preview.exhaustedPlaylists.length > 0 && (
+              <div style={{ 
+                marginTop: '12px',
+                padding: '12px',
+                background: preview.stoppedEarly ? 'rgba(255, 193, 7, 0.2)' : 'rgba(23, 162, 184, 0.2)',
+                border: `1px solid ${preview.stoppedEarly ? 'rgba(255, 193, 7, 0.4)' : 'rgba(23, 162, 184, 0.4)'}`,
+                borderRadius: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '16px' }}>{preview.stoppedEarly ? '⚠️' : 'ℹ️'}</span>
+                  <span style={{ fontSize: '13px', fontWeight: '500', color: preview.stoppedEarly ? '#ffc107' : '#17a2b8' }}>
+                    {preview.stoppedEarly ? 'Mixing Stopped Early' : 'Some Playlists Exhausted'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', opacity: '0.9', lineHeight: '1.3' }}>
+                  {preview.stoppedEarly 
+                    ? `Stopped mixing because ${preview.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ')} ran out of songs. Enable "Continue mixing" to use remaining playlists.`
+                    : `Ran out of songs from: ${preview.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ')}. Continued with remaining playlists.`
+                  }
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Track List Preview */}

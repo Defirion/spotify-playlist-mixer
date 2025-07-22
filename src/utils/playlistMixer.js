@@ -198,7 +198,7 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
 };
 
 export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
-  const { totalSongs, targetDuration, useTimeLimit, popularityStrategy, recencyBoost } = options;
+  const { totalSongs, targetDuration, useTimeLimit, popularityStrategy, recencyBoost, continueWhenPlaylistEmpty = true } = options;
 
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
@@ -261,11 +261,13 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   const mixedTracks = [];
   const playlistCounts = {}; // Track songs added from each playlist
   const playlistDurations = {}; // Track total time added from each playlist
+  const playlistExhausted = {}; // Track which playlists have run out of songs
   
   // Initialize tracking for each playlist
   playlistIds.forEach(playlistId => {
     playlistCounts[playlistId] = 0;
     playlistDurations[playlistId] = 0;
+    playlistExhausted[playlistId] = false;
   });
 
   let attempts = 0;
@@ -285,6 +287,9 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     let maxDeficit = -1;
     
     for (const playlistId of playlistIds) {
+      // Skip if playlist is exhausted
+      if (playlistExhausted[playlistId]) continue;
+      
       const config = ratioConfig[playlistId];
       const targetRatio = (config.weight || 1) / totalWeight;
       let currentRatio = 0;
@@ -315,7 +320,20 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       // Calculate how far behind this playlist is from its target ratio
       const deficit = targetRatio - currentRatio;
       
-      if (deficit > maxDeficit && cleanedPlaylistTracks[playlistId].length > 0) {
+      // Check if playlist still has available tracks
+      const availableTracksForPlaylist = getTracksForPosition(popularityPools, playlistId, mixedTracks.length, useTimeLimit ? Math.min(Math.ceil(targetDuration / 3.5), 200) : totalSongs, popularityStrategy);
+      const usedTrackIds = new Set(mixedTracks.map(t => t.id));
+      const hasAvailableTracks = availableTracksForPlaylist.some(track => !usedTrackIds.has(track.id));
+      
+      if (!hasAvailableTracks) {
+        playlistExhausted[playlistId] = true;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🚫 Playlist ${playlistId} is now exhausted`);
+        }
+        continue;
+      }
+      
+      if (deficit > maxDeficit) {
         maxDeficit = deficit;
         bestPlaylistId = playlistId;
       }
@@ -324,8 +342,37 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     return bestPlaylistId;
   };
 
+  // Helper function to check if we should stop due to exhausted playlists
+  const shouldStopDueToExhaustion = () => {
+    const exhaustedPlaylists = Object.keys(playlistExhausted).filter(id => playlistExhausted[id]);
+    const totalPlaylists = playlistIds.length;
+    
+    // If we're not set to continue when playlists are empty, stop when any playlist is exhausted
+    if (!continueWhenPlaylistEmpty && exhaustedPlaylists.length > 0) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🛑 Stopping due to exhausted playlist(s): ${exhaustedPlaylists.join(', ')}`);
+      }
+      return true;
+    }
+    
+    // If all playlists are exhausted, we must stop regardless of setting
+    if (exhaustedPlaylists.length === totalPlaylists) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🛑 All playlists exhausted, stopping`);
+      }
+      return true;
+    }
+    
+    return false;
+  };
+
   while (shouldContinue() && attempts < maxAttempts) {
     attempts++;
+
+    // Check if we should stop due to playlist exhaustion
+    if (shouldStopDueToExhaustion()) {
+      break;
+    }
 
     // Choose playlist based on weight ratios, not simple alternation
     const selectedPlaylistId = getNextPlaylistId();
@@ -447,8 +494,35 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       }
     }
 
+    // Add metadata to trimmed tracks as well
+    const exhaustedPlaylists = Object.keys(playlistExhausted).filter(id => playlistExhausted[id]);
+    trimmedTracks.exhaustedPlaylists = exhaustedPlaylists;
+    trimmedTracks.stoppedEarly = exhaustedPlaylists.length > 0 && !continueWhenPlaylistEmpty;
+    
+    if (process.env.NODE_ENV === 'development' && exhaustedPlaylists.length > 0) {
+      console.log(`🏁 Time-limited mixing completed. Exhausted playlists: ${exhaustedPlaylists.join(', ')}`);
+      if (trimmedTracks.stoppedEarly) {
+        console.log(`⏹️ Stopped early due to playlist exhaustion (continueWhenPlaylistEmpty = false)`);
+      }
+    }
+    
     return trimmedTracks;
   }
 
-  return mixedTracks.slice(0, totalSongs);
+  // Add metadata about exhausted playlists to the result
+  const exhaustedPlaylists = Object.keys(playlistExhausted).filter(id => playlistExhausted[id]);
+  const result = mixedTracks.slice(0, totalSongs);
+  
+  // Add metadata to the result for UI feedback
+  result.exhaustedPlaylists = exhaustedPlaylists;
+  result.stoppedEarly = exhaustedPlaylists.length > 0 && !continueWhenPlaylistEmpty;
+  
+  if (process.env.NODE_ENV === 'development' && exhaustedPlaylists.length > 0) {
+    console.log(`🏁 Mixing completed. Exhausted playlists: ${exhaustedPlaylists.join(', ')}`);
+    if (result.stoppedEarly) {
+      console.log(`⏹️ Stopped early due to playlist exhaustion (continueWhenPlaylistEmpty = false)`);
+    }
+  }
+  
+  return result;
 };
