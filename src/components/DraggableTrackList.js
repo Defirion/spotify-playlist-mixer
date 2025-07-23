@@ -265,6 +265,9 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       const { clientX, clientY } = e.detail;
       console.log('[DraggableTrackList] External drag over event received:', clientX, clientY);
 
+      // Check auto-scroll for external drag events (important for mobile modal drags)
+      checkAutoScroll(clientY);
+
       // Find which track element is being hovered over
       const trackElements = container.querySelectorAll('[data-track-index]');
       let foundDropTarget = false;
