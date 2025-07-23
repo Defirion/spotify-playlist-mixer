@@ -9,7 +9,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     ...mixOptions,
     useAllSongs: mixOptions.useAllSongs !== undefined ? mixOptions.useAllSongs : true
   });
-  
+
   // Debug logging to see what options are being used
   if (process.env.NODE_ENV === 'development') {
     console.log('🔧 Local mix options in PlaylistMixer:', localMixOptions);
@@ -38,7 +38,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
   const handlePreviewOrderChange = (reorderedTracks) => {
     setCustomTrackOrder(reorderedTracks);
-    
+
     // Recalculate stats for the updated track list
     if (preview && reorderedTracks) {
       const updatedStats = {};
@@ -61,14 +61,14 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
         };
       }
-      
+
       const updatedPreview = {
         ...preview,
         tracks: reorderedTracks,
         stats: updatedStats,
         totalDuration: reorderedTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
       };
-      
+
       setPreview(updatedPreview);
     }
   };
@@ -77,16 +77,16 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     try {
       setLoading(true);
       const api = getSpotifyApi(accessToken);
-      
+
       // Validate inputs
       if (!selectedPlaylists || selectedPlaylists.length < 2) {
         throw new Error('Please select at least 2 playlists');
       }
-      
+
       if (!localMixOptions.playlistName.trim()) {
         throw new Error('Please enter a playlist name');
       }
-      
+
       // Fetch all tracks from selected playlists
       const playlistTracks = {};
       for (const playlist of selectedPlaylists) {
@@ -101,13 +101,13 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           playlistTracks[playlist.id] = []; // Continue with empty array
         }
       }
-      
+
       // Check if we have any tracks
       const totalAvailableTracks = Object.values(playlistTracks).reduce((sum, tracks) => sum + tracks.length, 0);
       if (totalAvailableTracks === 0) {
         throw new Error('No tracks found in selected playlists');
       }
-      
+
       // Use custom track order if available, otherwise mix the playlists according to ratios
       let mixedTracks;
       if (customTrackOrder && customTrackOrder.length > 0) {
@@ -116,58 +116,58 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       } else {
         // Generate new mix using the standard algorithm
         mixedTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
-        
+
         // Show warning if playlists were exhausted and mixing stopped early
         if (mixedTracks.stoppedEarly && mixedTracks.exhaustedPlaylists && mixedTracks.exhaustedPlaylists.length > 0) {
           const exhaustedNames = mixedTracks.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ');
           console.warn(`⚠️ Mixing stopped early because these playlists ran out of songs: ${exhaustedNames}`);
         }
       }
-      
+
       if (mixedTracks.length === 0) {
         throw new Error('Failed to mix playlists - no tracks generated');
       }
-      
+
       // Create new playlist
       const userResponse = await api.get('/me');
       const userId = userResponse.data.id;
-      
+
       const playlistResponse = await api.post(`/users/${userId}/playlists`, {
         name: localMixOptions.playlistName.trim(),
         description: `Mixed from: ${selectedPlaylists.map(p => p.name).join(', ')}`,
         public: false
       });
-      
+
       const newPlaylist = playlistResponse.data;
-      
+
       // Add tracks to playlist (Spotify API limit: 100 tracks per request)
       const trackUris = mixedTracks.filter(track => track.uri).map(track => track.uri);
-      
+
       if (trackUris.length === 0) {
         throw new Error('No valid track URIs found');
       }
-      
+
       const chunks = [];
       for (let i = 0; i < trackUris.length; i += 100) {
         chunks.push(trackUris.slice(i, i + 100));
       }
-      
+
       for (const chunk of chunks) {
         await api.post(`/playlists/${newPlaylist.id}/tracks`, {
           uris: chunk
         });
       }
-      
+
       // Calculate total duration for display
       const totalDuration = mixedTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
       const durationMinutes = Math.round(totalDuration / (1000 * 60));
-      
+
       onMixedPlaylist({
         ...newPlaylist,
         tracks: { total: trackUris.length },
         duration: durationMinutes
       });
-      
+
     } catch (err) {
       const errorMessage = err.response?.data?.error?.message || err.message || 'Unknown error occurred';
       onError('Failed to create mixed playlist: ' + errorMessage);
@@ -181,24 +181,24 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     try {
       setPreviewLoading(true);
       setPreview(null);
-      
+
       const api = getSpotifyApi(accessToken);
-      
+
       const playlistTracks = {};
       for (const playlist of selectedPlaylists) {
         const tracks = await fetchAllPlaylistTracks(api, playlist.id);
         playlistTracks[playlist.id] = tracks;
       }
-      
+
       // Generate full sample using actual settings
       const previewTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
-      
+
       // Debug logging for useAllSongs
       if (localMixOptions.useAllSongs && process.env.NODE_ENV === 'development') {
         console.log(`🎵 Preview generated: ${previewTracks.length} tracks for useAllSongs mode`);
         console.log('Local mix options:', localMixOptions);
       }
-      
+
       // Calculate some stats
       const playlistStats = {};
       selectedPlaylists.forEach(playlist => {
@@ -210,7 +210,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
         };
       });
-      
+
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
@@ -219,7 +219,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         exhaustedPlaylists: previewTracks.exhaustedPlaylists || [],
         stoppedEarly: previewTracks.stoppedEarly || false
       });
-      
+
     } catch (err) {
       onError('Failed to generate preview: ' + err.message);
       console.error(err);
@@ -232,19 +232,19 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     let allTracks = [];
     let offset = 0;
     const limit = 100;
-    
+
     while (true) {
       const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
       const tracks = response.data.items
         .filter(item => item.track && item.track.id) // Filter out null tracks
         .map(item => item.track);
-      
+
       allTracks = [...allTracks, ...tracks];
-      
+
       if (tracks.length < limit) break;
       offset += limit;
     }
-    
+
     return allTracks;
   };
 
@@ -264,10 +264,10 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
   // Calculate total available content from selected playlists
   const getTotalAvailableContent = () => {
     const totalSongs = selectedPlaylists.reduce((sum, playlist) => sum + playlist.tracks.total, 0);
-    
+
     // Calculate real total duration using actual average duration data
     let totalDurationMinutes = 0;
-    
+
     for (const playlist of selectedPlaylists) {
       if (playlist.realAverageDurationSeconds) {
         const playlistDurationMinutes = (playlist.tracks.total * playlist.realAverageDurationSeconds) / 60;
@@ -277,7 +277,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         totalDurationMinutes += playlist.tracks.total * 3.5;
       }
     }
-    
+
     return {
       totalSongs,
       totalDurationMinutes: Math.round(totalDurationMinutes)
@@ -287,9 +287,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
   // Check if current settings exceed available content
   const getExceedsLimitWarning = () => {
     if (selectedPlaylists.length === 0) return null;
-    
+
     const available = getTotalAvailableContent();
-    
+
     if (localMixOptions.useTimeLimit) {
       if (available.totalDurationMinutes !== null && localMixOptions.targetDuration > available.totalDurationMinutes) {
         return {
@@ -311,7 +311,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         };
       }
     }
-    
+
     return null;
   };
 
@@ -348,7 +348,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
       const availableCount = playlist.tracks.total;
       const avgSongDurationSeconds = playlist.realAverageDurationSeconds || 210; // 3.5 min default
-      
+
       // Debug logging
       if (process.env.NODE_ENV === 'development') {
         console.log(`🔍 Calculating exhaustion for ${playlist.name}:`);
@@ -357,18 +357,18 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         console.log(`  - Weight type: ${config.weightType}`);
         console.log(`  - Avg song duration: ${avgSongDurationSeconds}s`);
       }
-      
+
       if (availableCount === 0) {
         exhaustionPoint = 0;
       } else {
         const targetRatio = weight / totalWeight;
-        
+
         if (config.weightType === 'time') {
           // Weight represents time proportion
           // When this playlist is exhausted, total mix duration = available duration / target ratio
           const availableDurationSeconds = availableCount * avgSongDurationSeconds;
           const totalMixDurationWhenExhausted = availableDurationSeconds / targetRatio;
-          
+
           if (useTimeLimit || useAllSongs) {
             // Return in milliseconds for time-based calculations
             exhaustionPoint = totalMixDurationWhenExhausted * 1000;
@@ -376,18 +376,18 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             // Convert to song count for song-based calculations
             exhaustionPoint = Math.floor(totalMixDurationWhenExhausted / avgSongDurationSeconds);
           }
-          
+
           if (process.env.NODE_ENV === 'development') {
-            console.log(`  - Available duration: ${Math.round(availableDurationSeconds/60)}m`);
+            console.log(`  - Available duration: ${Math.round(availableDurationSeconds / 60)}m`);
             console.log(`  - Target ratio: ${Math.round(targetRatio * 100)}%`);
-            console.log(`  - Total mix when exhausted: ${Math.round(totalMixDurationWhenExhausted/60)}m`);
-            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint/60000) + 'm' : exhaustionPoint + ' songs'}`);
+            console.log(`  - Total mix when exhausted: ${Math.round(totalMixDurationWhenExhausted / 60)}m`);
+            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint / 60000) + 'm' : exhaustionPoint + ' songs'}`);
           }
         } else {
           // Weight represents frequency proportion
           // When this playlist is exhausted at N songs, total mix = N * (total_weight/weight) songs
           const totalSongsWhenExhausted = availableCount * (totalWeight / weight);
-          
+
           if (useTimeLimit || useAllSongs) {
             // Convert to milliseconds for time-based calculations
             exhaustionPoint = totalSongsWhenExhausted * avgSongDurationSeconds * 1000;
@@ -395,10 +395,10 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             // Keep as song count
             exhaustionPoint = Math.floor(totalSongsWhenExhausted);
           }
-          
+
           if (process.env.NODE_ENV === 'development') {
             console.log(`  - Total songs when exhausted: ${Math.round(totalSongsWhenExhausted)}`);
-            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint/60000) + 'm' : exhaustionPoint + ' songs'}`);
+            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint / 60000) + 'm' : exhaustionPoint + ' songs'}`);
           }
         }
       }
@@ -407,7 +407,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       if (exhaustionPoint > (useTimeLimit || useAllSongs ? 24 * 60 * 60 * 1000 : 10000)) {
         exhaustionPoint = useTimeLimit || useAllSongs ? availableCount * avgSongDurationSeconds * 1000 : availableCount;
       }
-      
+
       if (exhaustionPoint < minExhaustionPoint) {
         minExhaustionPoint = exhaustionPoint;
         limitingPlaylistName = playlist.name;
@@ -417,7 +417,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     // Format the display value based on the mode
     let displayValue = minExhaustionPoint;
     let unit = '';
-    
+
     if (useTimeLimit || useAllSongs) {
       // minExhaustionPoint is in milliseconds
       displayValue = formatTotalDuration(minExhaustionPoint);
@@ -463,38 +463,44 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       <p style={{ marginBottom: '24px', opacity: '0.8' }}>
         Blend your playlists into the perfect mix
       </p>
-      
+
       {/* Playlist Basics */}
-      <div style={{ 
-        background: 'var(--hunter-green)', 
-        padding: '20px', 
-        borderRadius: '12px', 
+      <div style={{
+        background: 'var(--hunter-green)',
+        padding: '20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         border: '1px solid var(--fern-green)'
       }}>
         <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
           📝 Playlist Details
         </h3>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
           <div className="input-group">
             <label style={{ fontWeight: '500' }}>What should we call your mix?</label>
             <input
               type="text"
               value={localMixOptions.playlistName}
-              onChange={(e) => setLocalMixOptions({...localMixOptions, playlistName: e.target.value})}
+              onChange={(e) => setLocalMixOptions({ ...localMixOptions, playlistName: e.target.value })}
               placeholder="My Awesome Mix"
               style={{ fontSize: '16px', padding: '12px' }}
             />
           </div>
-          
+
           <div className="input-group">
             <label style={{ fontWeight: '500' }}>How long should your mix be?</label>
             <div className="toggle-group" style={{ marginBottom: '12px' }}>
               <button
                 type="button"
                 className={`toggle-option ${localMixOptions.useAllSongs ? 'active' : ''}`}
-                onClick={() => setLocalMixOptions({...localMixOptions, useAllSongs: true, useTimeLimit: false})}
+                onClick={() => setLocalMixOptions({
+                  ...localMixOptions,
+                  useAllSongs: true,
+                  useTimeLimit: false,
+                  // When switching to useAllSongs, default to not continuing (maintain ratios)
+                  continueWhenPlaylistEmpty: false
+                })}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 🎵 Mix as long as we have songs
@@ -502,19 +508,24 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               <button
                 type="button"
                 className={`toggle-option ${!localMixOptions.useAllSongs ? 'active' : ''}`}
-                onClick={() => setLocalMixOptions({...localMixOptions, useAllSongs: false})}
+                onClick={() => setLocalMixOptions({
+                  ...localMixOptions,
+                  useAllSongs: false,
+                  // When switching to advanced options, default to continuing (reach target length)
+                  continueWhenPlaylistEmpty: true
+                })}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 ⚙️ Advanced Options
               </button>
             </div>
-          
+
             <div style={{ marginTop: '12px' }}>
               {localMixOptions.useAllSongs ? (
-                <div style={{ 
-                  padding: '16px', 
-                  background: 'rgba(29, 185, 84, 0.1)', 
-                  border: '1px solid rgba(29, 185, 84, 0.3)', 
+                <div style={{
+                  padding: '16px',
+                  background: 'rgba(29, 185, 84, 0.1)',
+                  border: '1px solid rgba(29, 185, 84, 0.3)',
                   borderRadius: '8px',
                   textAlign: 'center'
                 }}>
@@ -523,23 +534,23 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                     Mix as long as we have songs
                   </div>
                   <div style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.4', marginBottom: '16px' }}>
-                    We'll use all available songs from your playlists according to your ratios. 
+                    We'll use all available songs from your playlists according to your ratios.
                     This will likely trigger the Ratio Imbalance Alert below.
                   </div>
-                  
+
                   {/* Checkbox with same layout as Ratio Imbalance Alert */}
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'flex-start', 
-                    gap: '8px', 
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
                     cursor: 'pointer'
                   }}>
                     <input
                       type="checkbox"
                       checked={localMixOptions.continueWhenPlaylistEmpty}
-                      onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
-                      style={{ 
-                        transform: 'scale(1.2)', 
+                      onChange={(e) => setLocalMixOptions({ ...localMixOptions, continueWhenPlaylistEmpty: e.target.checked })}
+                      style={{
+                        transform: 'scale(1.2)',
                         marginTop: '2px',
                         flexShrink: 0,
                         width: 'auto'
@@ -550,7 +561,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                         Continue mixing when playlists run out
                       </span>
                       <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
-                        {localMixOptions.continueWhenPlaylistEmpty 
+                        {localMixOptions.continueWhenPlaylistEmpty
                           ? "When a playlist runs out, we'll keep adding songs from other playlists until all are exhausted. Your mix will use all available content but may have more songs from some playlists."
                           : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
                         }
@@ -564,7 +575,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                     <button
                       type="button"
                       className={`toggle-option ${!localMixOptions.useTimeLimit ? 'active' : ''}`}
-                      onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: false})}
+                      onClick={() => setLocalMixOptions({ ...localMixOptions, useTimeLimit: false })}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       🔢 Number of Songs
@@ -572,13 +583,13 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                     <button
                       type="button"
                       className={`toggle-option ${localMixOptions.useTimeLimit ? 'active' : ''}`}
-                      onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: true})}
+                      onClick={() => setLocalMixOptions({ ...localMixOptions, useTimeLimit: true })}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       ⏱️ Hours & Minutes
                     </button>
                   </div>
-                  
+
                   {localMixOptions.useTimeLimit ? (
                     <>
                       <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
@@ -592,7 +603,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                           max="1200"
                           step="30"
                           value={localMixOptions.targetDuration}
-                          onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
+                          onChange={(e) => setLocalMixOptions({ ...localMixOptions, targetDuration: parseInt(e.target.value) })}
                           style={{ flex: 1 }}
                         />
                         <span style={{ fontSize: '12px', opacity: '0.7' }}>20h</span>
@@ -607,11 +618,11 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                           value={Math.round(localMixOptions.targetDuration)}
                           onChange={(e) => {
                             const value = parseInt(e.target.value) || 60;
-                            setLocalMixOptions({...localMixOptions, targetDuration: Math.max(30, Math.min(2400, value))});
+                            setLocalMixOptions({ ...localMixOptions, targetDuration: Math.max(30, Math.min(2400, value)) });
                           }}
-                          style={{ 
-                            width: '80px', 
-                            padding: '4px 8px', 
+                          style={{
+                            width: '80px',
+                            padding: '4px 8px',
                             fontSize: '12px',
                             background: 'var(--hunter-green)',
                             border: '1px solid var(--fern-green)',
@@ -638,7 +649,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                           max="200"
                           step="10"
                           value={localMixOptions.totalSongs}
-                          onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
+                          onChange={(e) => setLocalMixOptions({ ...localMixOptions, totalSongs: parseInt(e.target.value) })}
                           style={{ flex: 1 }}
                         />
                         <span style={{ fontSize: '12px', opacity: '0.7' }}>200</span>
@@ -653,11 +664,11 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                           value={localMixOptions.totalSongs}
                           onChange={(e) => {
                             const value = parseInt(e.target.value) || 10;
-                            setLocalMixOptions({...localMixOptions, totalSongs: Math.max(5, Math.min(1000, value))});
+                            setLocalMixOptions({ ...localMixOptions, totalSongs: Math.max(5, Math.min(1000, value)) });
                           }}
-                          style={{ 
-                            width: '80px', 
-                            padding: '4px 8px', 
+                          style={{
+                            width: '80px',
+                            padding: '4px 8px',
                             fontSize: '12px',
                             background: 'var(--hunter-green)',
                             border: '1px solid var(--fern-green)',
@@ -681,7 +692,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
       {/* Helpful Tips */}
       {exceedsLimit && (
-        <div style={{ 
+        <div style={{
           marginBottom: '20px',
           padding: '16px',
           background: 'rgba(255, 193, 7, 0.1)',
@@ -695,7 +706,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 Heads up!
               </h4>
               <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
-                You want <strong>{exceedsLimit.requestedFormatted}</strong> but only have <strong>{exceedsLimit.availableFormatted}</strong> available. 
+                You want <strong>{exceedsLimit.requestedFormatted}</strong> but only have <strong>{exceedsLimit.availableFormatted}</strong> available.
                 We'll use everything you've got!
               </p>
             </div>
@@ -739,25 +750,25 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               </p>
             </div>
           </div>
-          
+
           {/* Mixing Behavior Control - only show for non-useAllSongs modes */}
           {!localMixOptions.useAllSongs && (
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.05)', 
-              padding: '12px', 
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '12px',
               borderRadius: '8px',
               marginTop: '12px'
             }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                gap: '12px', 
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
                 cursor: 'pointer'
               }}>
                 <input
                   type="checkbox"
                   checked={localMixOptions.continueWhenPlaylistEmpty}
-                  onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
+                  onChange={(e) => setLocalMixOptions({ ...localMixOptions, continueWhenPlaylistEmpty: e.target.checked })}
                   style={{ transform: 'scale(1.2)', marginTop: '2px' }}
                 />
                 <div>
@@ -765,7 +776,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                     Continue mixing when playlists run out
                   </span>
                   <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
-                    {localMixOptions.continueWhenPlaylistEmpty 
+                    {localMixOptions.continueWhenPlaylistEmpty
                       ? "When a playlist runs out, we'll keep adding songs from other playlists until we reach your target. Your mix will be the full length but may have more songs from some playlists."
                       : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
                     }
@@ -776,12 +787,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           )}
         </div>
       )}
-      
+
       {/* Music Style */}
-      <div style={{ 
-        background: 'var(--hunter-green)', 
-        padding: '20px', 
-        borderRadius: '12px', 
+      <div style={{
+        background: 'var(--hunter-green)',
+        padding: '20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         border: '1px solid var(--fern-green)'
       }}>
@@ -791,12 +802,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         <p style={{ margin: '0 0 16px 0', fontSize: '14px', opacity: '0.8' }}>
           How should we arrange your songs?
         </p>
-        
+
         <div className="toggle-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
           <button
             type="button"
             className={`toggle-option ${localMixOptions.popularityStrategy === 'mixed' ? 'active' : ''}`}
-            onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'mixed'})}
+            onClick={() => setLocalMixOptions({ ...localMixOptions, popularityStrategy: 'mixed' })}
             style={{ padding: '12px 8px', textAlign: 'center' }}
           >
             <div style={{ fontSize: '20px', marginBottom: '4px' }}>🎲</div>
@@ -805,7 +816,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <button
             type="button"
             className={`toggle-option ${localMixOptions.popularityStrategy === 'front-loaded' ? 'active' : ''}`}
-            onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'front-loaded'})}
+            onClick={() => setLocalMixOptions({ ...localMixOptions, popularityStrategy: 'front-loaded' })}
             style={{ padding: '12px 8px', textAlign: 'center' }}
           >
             <div style={{ fontSize: '20px', marginBottom: '4px' }}>🔥</div>
@@ -814,7 +825,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <button
             type="button"
             className={`toggle-option ${localMixOptions.popularityStrategy === 'mid-peak' ? 'active' : ''}`}
-            onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'mid-peak'})}
+            onClick={() => setLocalMixOptions({ ...localMixOptions, popularityStrategy: 'mid-peak' })}
             style={{ padding: '12px 8px', textAlign: 'center' }}
           >
             <div style={{ fontSize: '20px', marginBottom: '4px' }}>🎉</div>
@@ -823,19 +834,19 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <button
             type="button"
             className={`toggle-option ${localMixOptions.popularityStrategy === 'crescendo' ? 'active' : ''}`}
-            onClick={() => setLocalMixOptions({...localMixOptions, popularityStrategy: 'crescendo'})}
+            onClick={() => setLocalMixOptions({ ...localMixOptions, popularityStrategy: 'crescendo' })}
             style={{ padding: '12px 8px', textAlign: 'center' }}
           >
             <div style={{ fontSize: '20px', marginBottom: '4px' }}>📈</div>
             <div style={{ fontSize: '13px', fontWeight: '500' }}>Build Up</div>
           </button>
         </div>
-        
-        <div style={{ 
-          fontSize: '13px', 
-          opacity: '0.7', 
-          padding: '12px', 
-          background: 'rgba(0,0,0,0.2)', 
+
+        <div style={{
+          fontSize: '13px',
+          opacity: '0.7',
+          padding: '12px',
+          background: 'rgba(0,0,0,0.2)',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
@@ -844,20 +855,20 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           {localMixOptions.popularityStrategy === 'mid-peak' && '🎉 Build to the biggest hits in the middle - perfect for parties!'}
           {localMixOptions.popularityStrategy === 'crescendo' && '📈 Start mellow, build to your biggest bangers at the end'}
         </div>
-        
+
         {localMixOptions.popularityStrategy !== 'mixed' && (
           <div style={{ marginTop: '16px' }}>
-            <label style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
               cursor: 'pointer',
               padding: '8px 0'
             }}>
               <input
                 type="checkbox"
                 checked={localMixOptions.recencyBoost}
-                onChange={(e) => setLocalMixOptions({...localMixOptions, recencyBoost: e.target.checked})}
+                onChange={(e) => setLocalMixOptions({ ...localMixOptions, recencyBoost: e.target.checked })}
                 style={{ transform: 'scale(1.2)' }}
               />
               <span style={{ fontSize: '14px' }}>
@@ -870,10 +881,10 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
       {/* Action Buttons - Only show when no preview */}
       {!preview && (
-        <div style={{ 
-          background: 'var(--hunter-green)', 
-          padding: '20px', 
-          borderRadius: '12px', 
+        <div style={{
+          background: 'var(--hunter-green)',
+          padding: '20px',
+          borderRadius: '12px',
           marginBottom: '20px',
           border: '1px solid var(--fern-green)',
           textAlign: 'center'
@@ -881,13 +892,13 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             🚀 Ready to Create?
           </h3>
-          
+
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               onClick={generatePreview}
               disabled={previewLoading || selectedPlaylists.length < 2}
-              style={{ 
+              style={{
                 background: 'var(--moss-green)',
                 border: '2px solid var(--mindaro)',
                 padding: '12px 24px',
@@ -903,12 +914,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 <>👀 Preview First</>
               )}
             </button>
-            
+
             <button
               className="btn"
               onClick={handleMix}
               disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
-              style={{ 
+              style={{
                 background: 'var(--fern-green)',
                 border: '2px solid var(--moss-green)',
                 padding: '12px 24px',
@@ -926,7 +937,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               )}
             </button>
           </div>
-          
+
           <p style={{ margin: '12px 0 0 0', fontSize: '13px', opacity: '0.7' }}>
             Preview lets you see and adjust your mix before creating the final playlist
           </p>
@@ -936,10 +947,10 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       {preview && (
         <div style={{ marginBottom: '20px' }}>
           {/* Preview Header */}
-          <div style={{ 
-            background: 'var(--hunter-green)', 
-            padding: '20px', 
-            borderRadius: '12px 12px 0 0', 
+          <div style={{
+            background: 'var(--hunter-green)',
+            padding: '20px',
+            borderRadius: '12px 12px 0 0',
             border: '1px solid var(--fern-green)',
             borderBottom: 'none'
           }}>
@@ -951,13 +962,13 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 {localMixOptions.useTimeLimit ? `${formatTotalDuration(preview.totalDuration)}` : `${preview.tracks.length} songs`}
               </div>
             </div>
-            
+
             {/* Quick Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               {Object.entries(preview.stats).map(([playlistId, stats]) => (
-                <div key={playlistId} style={{ 
-                  background: 'rgba(0,0,0,0.2)', 
-                  padding: '8px 12px', 
+                <div key={playlistId} style={{
+                  background: 'rgba(0,0,0,0.2)',
+                  padding: '8px 12px',
                   borderRadius: '6px',
                   textAlign: 'center'
                 }}>
@@ -973,23 +984,23 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 </div>
               ))}
             </div>
-            
-            <div style={{ 
-              fontSize: '13px', 
+
+            <div style={{
+              fontSize: '13px',
               opacity: '0.8',
               textAlign: 'center',
               padding: '8px 12px',
               background: 'rgba(29, 185, 84, 0.2)',
               borderRadius: '6px'
             }}>
-              ✨ Using <strong>{preview.usedStrategy === 'mixed' ? 'Random Mix' : 
+              ✨ Using <strong>{preview.usedStrategy === 'mixed' ? 'Random Mix' :
                 preview.usedStrategy === 'front-loaded' ? 'Hits First' :
-                preview.usedStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
+                  preview.usedStrategy === 'mid-peak' ? 'Party Mode' : 'Build Up'}</strong> style
             </div>
 
             {/* Exhausted Playlists Warning */}
             {preview.exhaustedPlaylists && preview.exhaustedPlaylists.length > 0 && (
-              <div style={{ 
+              <div style={{
                 marginTop: '12px',
                 padding: '12px',
                 background: preview.stoppedEarly ? 'rgba(255, 193, 7, 0.2)' : 'rgba(23, 162, 184, 0.2)',
@@ -1003,7 +1014,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   </span>
                 </div>
                 <div style={{ fontSize: '12px', opacity: '0.9', lineHeight: '1.3' }}>
-                  {preview.stoppedEarly 
+                  {preview.stoppedEarly
                     ? `Stopped mixing because ${preview.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ')} ran out of songs. Enable "Continue mixing" to use remaining playlists.`
                     : `Ran out of songs from: ${preview.exhaustedPlaylists.map(id => selectedPlaylists.find(p => p.id === id)?.name || id).join(', ')}. Continued with remaining playlists.`
                   }
@@ -1011,7 +1022,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               </div>
             )}
           </div>
-          
+
           {/* Track List Preview */}
           <DraggableTrackList
             tracks={preview.tracks}
@@ -1022,22 +1033,22 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             maxHeight="400px"
             showPlaylistSource={true}
           />
-          
+
           {/* Preview Action Buttons */}
-          <div style={{ 
-            background: 'var(--hunter-green)', 
-            padding: '20px', 
-            borderRadius: '0 0 12px 12px', 
+          <div style={{
+            background: 'var(--hunter-green)',
+            padding: '20px',
+            borderRadius: '0 0 12px 12px',
             border: '1px solid var(--fern-green)',
             borderTop: 'none',
             textAlign: 'center'
           }}>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 onClick={generatePreview}
                 disabled={previewLoading || selectedPlaylists.length < 2}
-                style={{ 
+                style={{
                   background: 'var(--moss-green)',
                   border: '2px solid var(--mindaro)',
                   padding: '8px 16px',
@@ -1053,12 +1064,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   <>🔄 Regenerate</>
                 )}
               </button>
-              
+
               <button
                 className="btn"
                 onClick={handleMix}
                 disabled={loading || selectedPlaylists.length < 2 || !localMixOptions.playlistName.trim()}
-                style={{ 
+                style={{
                   background: 'var(--fern-green)',
                   border: '2px solid var(--moss-green)',
                   padding: '16px 32px',
@@ -1076,7 +1087,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 )}
               </button>
             </div>
-            
+
             <p style={{ margin: '12px 0 0 0', fontSize: '13px', opacity: '0.7' }}>
               Happy with your mix? Create the playlist or regenerate with your current settings
             </p>

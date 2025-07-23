@@ -292,28 +292,75 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     // Find the limiting playlist (the one that will run out first based on ratios)
     let minPossibleSongs = Infinity;
     
-    playlistIds.forEach(playlistId => {
-      const weight = ratioConfig[playlistId].weight || 1;
-      const targetRatio = weight / totalWeight;
-      const availableCount = cleanedPlaylistTracks[playlistId].length;
+    // Check if any playlist uses time-based weighting
+    const hasTimeBasedWeighting = playlistIds.some(id => ratioConfig[id].weightType === 'time');
+    
+    if (hasTimeBasedWeighting) {
+      // For time-based weighting, calculate based on available duration
+      let minPossibleDuration = Infinity;
       
-      // Calculate how many total songs we could have if this playlist is the limiting factor
-      const maxTotalIfThisLimits = Math.floor(availableCount / targetRatio);
+      playlistIds.forEach(playlistId => {
+        const config = ratioConfig[playlistId];
+        const weight = config.weight || 1;
+        const targetRatio = weight / totalWeight;
+        const availableCount = cleanedPlaylistTracks[playlistId].length;
+        
+        // Calculate average song duration for this playlist from actual tracks
+        const playlistTracks = cleanedPlaylistTracks[playlistId] || [];
+        const totalDuration = playlistTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+        const avgDurationSeconds = playlistTracks.length > 0 ? (totalDuration / playlistTracks.length) / 1000 : 210;
+        const availableDurationSeconds = availableCount * avgDurationSeconds;
+        
+        // Calculate total mix duration if this playlist is the limiting factor
+        const maxTotalDurationIfThisLimits = availableDurationSeconds / targetRatio;
+        
+        if (maxTotalDurationIfThisLimits < minPossibleDuration) {
+          minPossibleDuration = maxTotalDurationIfThisLimits;
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📊 ${playlistId}: ${availableCount} songs (${Math.round(availableDurationSeconds/60)}m), ${Math.round(targetRatio * 100)}% time ratio → max total: ${Math.round(maxTotalDurationIfThisLimits/60)}m`);
+        }
+      });
       
-      if (maxTotalIfThisLimits < minPossibleSongs) {
-        minPossibleSongs = maxTotalIfThisLimits;
-      }
+      // Convert total duration back to estimated song count using overall average
+      const overallAvgDuration = playlistIds.reduce((sum, id) => {
+        const playlistTracks = cleanedPlaylistTracks[id] || [];
+        const totalDuration = playlistTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+        const avgDuration = playlistTracks.length > 0 ? (totalDuration / playlistTracks.length) / 1000 : 210;
+        return sum + avgDuration;
+      }, 0) / playlistIds.length;
+      
+      estimatedTotalSongs = Math.floor((minPossibleDuration / overallAvgDuration) * 1.05);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`📊 ${playlistId}: ${availableCount} songs, ${Math.round(targetRatio * 100)}% ratio → max total: ${maxTotalIfThisLimits}`);
+        console.log(`🎯 useAllSongs (time-based): optimal mix = ${Math.round(minPossibleDuration/60)}m ≈ ${estimatedTotalSongs} songs`);
       }
-    });
-    
-    // Add a small buffer (5%) to account for rounding and song duration variations
-    estimatedTotalSongs = Math.floor(minPossibleSongs * 1.05);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🎯 useAllSongs: optimal mix length = ${estimatedTotalSongs} songs (${minPossibleSongs} + 5% buffer)`);
+    } else {
+      // For frequency-based weighting, calculate based on song counts
+      playlistIds.forEach(playlistId => {
+        const weight = ratioConfig[playlistId].weight || 1;
+        const targetRatio = weight / totalWeight;
+        const availableCount = cleanedPlaylistTracks[playlistId].length;
+        
+        // Calculate how many total songs we could have if this playlist is the limiting factor
+        const maxTotalIfThisLimits = Math.floor(availableCount / targetRatio);
+        
+        if (maxTotalIfThisLimits < minPossibleSongs) {
+          minPossibleSongs = maxTotalIfThisLimits;
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📊 ${playlistId}: ${availableCount} songs, ${Math.round(targetRatio * 100)}% freq ratio → max total: ${maxTotalIfThisLimits}`);
+        }
+      });
+      
+      // Add a small buffer (5%) to account for rounding variations
+      estimatedTotalSongs = Math.floor(minPossibleSongs * 1.05);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🎯 useAllSongs (frequency-based): optimal mix length = ${estimatedTotalSongs} songs (${minPossibleSongs} + 5% buffer)`);
+      }
     }
   } else {
     estimatedTotalSongs = useTimeLimit ? Math.ceil(targetDuration / 3.5) : totalSongs;
