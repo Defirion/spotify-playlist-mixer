@@ -5,14 +5,26 @@ import DraggableTrackList from './DraggableTrackList';
 
 const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions, onMixedPlaylist, onError }) => {
   const [loading, setLoading] = useState(false);
-  const [localMixOptions, setLocalMixOptions] = useState(mixOptions);
+  const [localMixOptions, setLocalMixOptions] = useState({
+    ...mixOptions,
+    useAllSongs: mixOptions.useAllSongs !== undefined ? mixOptions.useAllSongs : true
+  });
+  
+  // Debug logging to see what options are being used
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Local mix options in PlaylistMixer:', localMixOptions);
+  }
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [customTrackOrder, setCustomTrackOrder] = useState(null);
 
   // Sync localMixOptions with mixOptions when it changes (from presets)
   React.useEffect(() => {
-    setLocalMixOptions(mixOptions);
+    setLocalMixOptions(prev => ({
+      ...mixOptions,
+      // Ensure useAllSongs is properly set if not defined
+      useAllSongs: mixOptions.useAllSongs !== undefined ? mixOptions.useAllSongs : prev.useAllSongs
+    }));
     // Clear preview when settings change so user knows to regenerate
     setPreview(null);
     setCustomTrackOrder(null);
@@ -181,6 +193,12 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       // Generate full sample using actual settings
       const previewTracks = mixPlaylists(playlistTracks, ratioConfig, localMixOptions);
       
+      // Debug logging for useAllSongs
+      if (localMixOptions.useAllSongs && process.env.NODE_ENV === 'development') {
+        console.log(`🎵 Preview generated: ${previewTracks.length} tracks for useAllSongs mode`);
+        console.log('Local mix options:', localMixOptions);
+      }
+      
       // Calculate some stats
       const playlistStats = {};
       selectedPlaylists.forEach(playlist => {
@@ -304,7 +322,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       return null;
     }
 
-    const { totalSongs, useTimeLimit, targetDuration, continueWhenPlaylistEmpty } = localMixOptions;
+    const { totalSongs, useTimeLimit, targetDuration, continueWhenPlaylistEmpty, useAllSongs } = localMixOptions;
     const playlistIdsWithWeights = Object.keys(ratioConfig).filter(id => ratioConfig[id] && ratioConfig[id].weight > 0);
 
     if (playlistIdsWithWeights.length < 2) {
@@ -325,66 +343,100 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       if (!playlist) continue;
 
       const config = ratioConfig[playlistId];
-      const weight = config.weight;
+      const weight = config.weight || 1;
       let exhaustionPoint = Infinity;
 
-      if (useTimeLimit) {
-        const availableDurationMs = (playlist.realAverageDurationSeconds * playlist.tracks.total * 1000) || 0;
-        
-        // Debug logging
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`🔍 Warning calc for ${playlist.name}:`);
-          console.log(`  - Tracks: ${playlist.tracks.total}`);
-          console.log(`  - Avg duration: ${playlist.realAverageDurationSeconds}s`);
-          console.log(`  - Total duration: ${Math.round(availableDurationMs / 60000)}m`);
-          console.log(`  - Weight: ${weight}/${totalWeight} (${Math.round(weight/totalWeight*100)}%)`);
-        }
-        
-        if (availableDurationMs === 0) {
-          exhaustionPoint = 0;
-        } else {
-          // For time-based mixing, calculate based on the weightType
-          if (config.weightType === 'time') {
-            // Weight represents time proportion - calculate how much total mix duration can be achieved
-            exhaustionPoint = Math.floor(availableDurationMs * (totalWeight / weight));
-            
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`  - Exhaustion point: ${formatTotalDuration(exhaustionPoint)}`);
-            }
-          } else {
-            // Weight represents frequency proportion - need to convert to time
-            // This playlist should contribute (weight/totalWeight) of the total songs
-            // So total mix duration = availableDurationMs / (weight/totalWeight)
-            const targetSongRatio = weight / totalWeight;
-            const avgSongDuration = playlist.realAverageDurationSeconds * 1000 || 210000; // 3.5 min default
-            const totalSongsWhenExhausted = playlist.tracks.total / targetSongRatio;
-            exhaustionPoint = Math.floor(totalSongsWhenExhausted * avgSongDuration);
-          }
-        }
+      const availableCount = playlist.tracks.total;
+      const avgSongDurationSeconds = playlist.realAverageDurationSeconds || 210; // 3.5 min default
+      
+      // Debug logging
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 Calculating exhaustion for ${playlist.name}:`);
+        console.log(`  - Available tracks: ${availableCount}`);
+        console.log(`  - Weight: ${weight}/${totalWeight}`);
+        console.log(`  - Weight type: ${config.weightType}`);
+        console.log(`  - Avg song duration: ${avgSongDurationSeconds}s`);
+      }
+      
+      if (availableCount === 0) {
+        exhaustionPoint = 0;
       } else {
-        const availableCount = playlist.tracks.total;
-        if (availableCount === 0) {
-          exhaustionPoint = 0;
-        } else {
-          // For song count mixing, calculate based on the weightType
-          if (config.weightType === 'time') {
-            // Weight represents time proportion - need to convert to song count
-            // This playlist should contribute (weight/totalWeight) of the total duration
-            const targetTimeRatio = weight / totalWeight;
-            const avgSongDuration = playlist.realAverageDurationSeconds || 210; // 3.5 min default
-            const totalDurationWhenExhausted = (playlist.tracks.total * avgSongDuration) / targetTimeRatio;
-            exhaustionPoint = Math.floor(totalDurationWhenExhausted / avgSongDuration);
+        const targetRatio = weight / totalWeight;
+        
+        if (config.weightType === 'time') {
+          // Weight represents time proportion
+          // When this playlist is exhausted, total mix duration = available duration / target ratio
+          const availableDurationSeconds = availableCount * avgSongDurationSeconds;
+          const totalMixDurationWhenExhausted = availableDurationSeconds / targetRatio;
+          
+          if (useTimeLimit || useAllSongs) {
+            // Return in milliseconds for time-based calculations
+            exhaustionPoint = totalMixDurationWhenExhausted * 1000;
           } else {
-            // Weight represents frequency proportion - direct calculation
-            exhaustionPoint = Math.floor(availableCount * (totalWeight / weight));
+            // Convert to song count for song-based calculations
+            exhaustionPoint = Math.floor(totalMixDurationWhenExhausted / avgSongDurationSeconds);
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`  - Available duration: ${Math.round(availableDurationSeconds/60)}m`);
+            console.log(`  - Target ratio: ${Math.round(targetRatio * 100)}%`);
+            console.log(`  - Total mix when exhausted: ${Math.round(totalMixDurationWhenExhausted/60)}m`);
+            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint/60000) + 'm' : exhaustionPoint + ' songs'}`);
+          }
+        } else {
+          // Weight represents frequency proportion
+          // When this playlist is exhausted at N songs, total mix = N * (total_weight/weight) songs
+          const totalSongsWhenExhausted = availableCount * (totalWeight / weight);
+          
+          if (useTimeLimit || useAllSongs) {
+            // Convert to milliseconds for time-based calculations
+            exhaustionPoint = totalSongsWhenExhausted * avgSongDurationSeconds * 1000;
+          } else {
+            // Keep as song count
+            exhaustionPoint = Math.floor(totalSongsWhenExhausted);
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`  - Total songs when exhausted: ${Math.round(totalSongsWhenExhausted)}`);
+            console.log(`  - Exhaustion point: ${useTimeLimit || useAllSongs ? Math.round(exhaustionPoint/60000) + 'm' : exhaustionPoint + ' songs'}`);
           }
         }
       }
 
+      // Sanity check to prevent ridiculous numbers
+      if (exhaustionPoint > (useTimeLimit || useAllSongs ? 24 * 60 * 60 * 1000 : 10000)) {
+        exhaustionPoint = useTimeLimit || useAllSongs ? availableCount * avgSongDurationSeconds * 1000 : availableCount;
+      }
+      
       if (exhaustionPoint < minExhaustionPoint) {
         minExhaustionPoint = exhaustionPoint;
         limitingPlaylistName = playlist.name;
       }
+    }
+
+    // Format the display value based on the mode
+    let displayValue = minExhaustionPoint;
+    let unit = '';
+    
+    if (useTimeLimit || useAllSongs) {
+      // minExhaustionPoint is in milliseconds
+      displayValue = formatTotalDuration(minExhaustionPoint);
+      unit = ''; // Unit is already part of the formatted string
+    } else {
+      // minExhaustionPoint is in song count
+      displayValue = Math.round(minExhaustionPoint);
+      unit = 'songs';
+    }
+
+    // For "use all songs" mode, always show the warning since we'll hit imbalance
+    if (useAllSongs) {
+      return {
+        limitingPlaylistName,
+        mixWillBecomeImbalancedAt: minExhaustionPoint === Infinity ? 'never' : displayValue,
+        unit: unit,
+        willStopEarly: !continueWhenPlaylistEmpty,
+        isUseAllSongs: true
+      };
     }
 
     // Determine the target length (songs or duration) for comparison
@@ -392,14 +444,6 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
     // Show warning if the exhaustion point is significantly less than the target length (< 90%)
     if (targetLength > minExhaustionPoint && minExhaustionPoint < targetLength * 0.9) {
-      let displayValue = minExhaustionPoint;
-      let unit = 'songs';
-
-      if (useTimeLimit) {
-        displayValue = formatTotalDuration(minExhaustionPoint); // Convert ms to HHh MMm format
-        unit = ''; // Unit is already part of the formatted string
-      }
-
       return {
         limitingPlaylistName,
         mixWillBecomeImbalancedAt: displayValue,
@@ -449,115 +493,155 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             <div className="toggle-group" style={{ marginBottom: '12px' }}>
               <button
                 type="button"
-                className={`toggle-option ${!localMixOptions.useTimeLimit ? 'active' : ''}`}
-                onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: false})}
+                className={`toggle-option ${localMixOptions.useAllSongs ? 'active' : ''}`}
+                onClick={() => setLocalMixOptions({...localMixOptions, useAllSongs: true, useTimeLimit: false})}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                🔢 Number of Songs
+                🎵 Mix as long as we have songs
               </button>
               <button
                 type="button"
-                className={`toggle-option ${localMixOptions.useTimeLimit ? 'active' : ''}`}
-                onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: true})}
+                className={`toggle-option ${!localMixOptions.useAllSongs ? 'active' : ''}`}
+                onClick={() => setLocalMixOptions({...localMixOptions, useAllSongs: false})}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                ⏱️ Hours & Minutes
+                ⚙️ Advanced Options
               </button>
             </div>
           
             <div style={{ marginTop: '12px' }}>
-              {localMixOptions.useTimeLimit ? (
-                <>
-                  <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                    Duration: {(localMixOptions.targetDuration / 60).toFixed(1)} hours
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>1h</span>
-                    <input
-                      type="range"
-                      min="60"
-                      max="1200"
-                      step="30"
-                      value={localMixOptions.targetDuration}
-                      onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
-                      style={{ flex: 1 }}
-                    />
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>20h</span>
+              {localMixOptions.useAllSongs ? (
+                <div style={{ 
+                  padding: '16px', 
+                  background: 'rgba(29, 185, 84, 0.1)', 
+                  border: '1px solid rgba(29, 185, 84, 0.3)', 
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '16px', marginBottom: '8px' }}>🎵</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px', color: '#1db954' }}>
+                    Mix as long as we have songs
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
-                    <input
-                      type="number"
-                      min="30"
-                      max="2400"
-                      step="30"
-                      value={Math.round(localMixOptions.targetDuration)}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 60;
-                        setLocalMixOptions({...localMixOptions, targetDuration: Math.max(30, Math.min(2400, value))});
-                      }}
-                      style={{ 
-                        width: '80px', 
-                        padding: '4px 8px', 
-                        fontSize: '12px',
-                        background: 'var(--hunter-green)',
-                        border: '1px solid var(--fern-green)',
-                        borderRadius: '4px',
-                        color: 'var(--mindaro)'
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>min</span>
+                  <div style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.4' }}>
+                    We'll use all available songs from your playlists according to your ratios. 
+                    This will likely trigger the Ratio Imbalance Alert below.
                   </div>
-                  <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                    Perfect for parties, workouts, or long events
-                  </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                    Songs: {localMixOptions.totalSongs} tracks
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>10</span>
-                    <input
-                      type="range"
-                      min="10"
-                      max="200"
-                      step="10"
-                      value={localMixOptions.totalSongs}
-                      onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
-                      style={{ flex: 1 }}
-                    />
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>200</span>
+                <div>
+                  <div className="toggle-group" style={{ marginBottom: '16px' }}>
+                    <button
+                      type="button"
+                      className={`toggle-option ${!localMixOptions.useTimeLimit ? 'active' : ''}`}
+                      onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: false})}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      🔢 Number of Songs
+                    </button>
+                    <button
+                      type="button"
+                      className={`toggle-option ${localMixOptions.useTimeLimit ? 'active' : ''}`}
+                      onClick={() => setLocalMixOptions({...localMixOptions, useTimeLimit: true})}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      ⏱️ Hours & Minutes
+                    </button>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
-                    <input
-                      type="number"
-                      min="5"
-                      max="1000"
-                      step="5"
-                      value={localMixOptions.totalSongs}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 10;
-                        setLocalMixOptions({...localMixOptions, totalSongs: Math.max(5, Math.min(1000, value))});
-                      }}
-                      style={{ 
-                        width: '80px', 
-                        padding: '4px 8px', 
-                        fontSize: '12px',
-                        background: 'var(--hunter-green)',
-                        border: '1px solid var(--fern-green)',
-                        borderRadius: '4px',
-                        color: 'var(--mindaro)'
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', opacity: '0.7' }}>songs</span>
-                  </div>
-                  <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
-                    Choose exact number of songs for your playlist
-                  </div>
-                </>
+                  
+                  {localMixOptions.useTimeLimit ? (
+                    <>
+                      <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                        Duration: {(localMixOptions.targetDuration / 60).toFixed(1)} hours
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>1h</span>
+                        <input
+                          type="range"
+                          min="60"
+                          max="1200"
+                          step="30"
+                          value={localMixOptions.targetDuration}
+                          onChange={(e) => setLocalMixOptions({...localMixOptions, targetDuration: parseInt(e.target.value)})}
+                          style={{ flex: 1 }}
+                        />
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>20h</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
+                        <input
+                          type="number"
+                          min="30"
+                          max="2400"
+                          step="30"
+                          value={Math.round(localMixOptions.targetDuration)}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 60;
+                            setLocalMixOptions({...localMixOptions, targetDuration: Math.max(30, Math.min(2400, value))});
+                          }}
+                          style={{ 
+                            width: '80px', 
+                            padding: '4px 8px', 
+                            fontSize: '12px',
+                            background: 'var(--hunter-green)',
+                            border: '1px solid var(--fern-green)',
+                            borderRadius: '4px',
+                            color: 'var(--mindaro)'
+                          }}
+                        />
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>min</span>
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+                        Perfect for parties, workouts, or long events
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                        Songs: {localMixOptions.totalSongs} tracks
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>10</span>
+                        <input
+                          type="range"
+                          min="10"
+                          max="200"
+                          step="10"
+                          value={localMixOptions.totalSongs}
+                          onChange={(e) => setLocalMixOptions({...localMixOptions, totalSongs: parseInt(e.target.value)})}
+                          style={{ flex: 1 }}
+                        />
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>200</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>Custom:</span>
+                        <input
+                          type="number"
+                          min="5"
+                          max="1000"
+                          step="5"
+                          value={localMixOptions.totalSongs}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 10;
+                            setLocalMixOptions({...localMixOptions, totalSongs: Math.max(5, Math.min(1000, value))});
+                          }}
+                          style={{ 
+                            width: '80px', 
+                            padding: '4px 8px', 
+                            fontSize: '12px',
+                            background: 'var(--hunter-green)',
+                            border: '1px solid var(--fern-green)',
+                            borderRadius: '4px',
+                            color: 'var(--mindaro)'
+                          }}
+                        />
+                        <span style={{ fontSize: '12px', opacity: '0.7' }}>songs</span>
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>
+                        Choose exact number of songs for your playlist
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -604,11 +688,23 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                 Ratio Imbalance Alert
               </h4>
               <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
-                With your current ratio settings, we'll run out of songs from <strong>{ratioImbalance.limitingPlaylistName}</strong> after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
-                {ratioImbalance.willStopEarly
-                  ? " The mix will stop there, creating a shorter but balanced playlist."
-                  : " The mix will continue using songs from the remaining playlists to reach your target length."
-                }
+                {ratioImbalance.isUseAllSongs ? (
+                  <>
+                    Since you're mixing as long as you have songs, <strong>{ratioImbalance.limitingPlaylistName}</strong> will run out first after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
+                    {ratioImbalance.willStopEarly
+                      ? " The mix will stop there to maintain balanced ratios."
+                      : " The mix will continue using songs from the remaining playlists until all are exhausted."
+                    }
+                  </>
+                ) : (
+                  <>
+                    With your current ratio settings, we'll run out of songs from <strong>{ratioImbalance.limitingPlaylistName}</strong> after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
+                    {ratioImbalance.willStopEarly
+                      ? " The mix will stop there, creating a shorter but balanced playlist."
+                      : " The mix will continue using songs from the remaining playlists to reach your target length."
+                    }
+                  </>
+                )}
               </p>
             </div>
           </div>

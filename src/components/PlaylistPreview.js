@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 
 const PlaylistPreview = ({
@@ -14,8 +14,6 @@ const PlaylistPreview = ({
   const [loading, setLoading] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [showQuickStart, setShowQuickStart] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const generatePreview = async () => {
     try {
@@ -32,11 +30,16 @@ const PlaylistPreview = ({
         playlistTracks[playlist.id] = tracks;
       }
 
-      // Generate preview with first 20 songs
+      // Generate preview - use actual settings but limit for performance
       const previewOptions = {
         ...mixOptions,
-        totalSongs: mixOptions.useTimeLimit ? Math.min(60, mixOptions.totalSongs || 60) : 20,
-        useTimeLimit: false // Always use song count for preview
+        // For useAllSongs mode, generate the full mix for accurate preview
+        // For other modes, limit preview size for performance
+        totalSongs: mixOptions.useAllSongs ? mixOptions.totalSongs :
+          mixOptions.useTimeLimit ? Math.min(60, mixOptions.totalSongs || 60) :
+            Math.min(50, mixOptions.totalSongs || 50),
+        // Keep original time/song settings for useAllSongs mode
+        useTimeLimit: mixOptions.useAllSongs ? mixOptions.useTimeLimit : false
       };
 
       const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
@@ -436,7 +439,8 @@ const PlaylistPreview = ({
             opacity: '0.7',
             textAlign: 'center'
           }}>
-            Full playlist will have {mixOptions.useTimeLimit ? `${mixOptions.targetDuration} min` : `${mixOptions.totalSongs} songs`}.
+            Full playlist will have {mixOptions.useAllSongs ? 'all available songs' :
+              mixOptions.useTimeLimit ? `${mixOptions.targetDuration} min` : `${mixOptions.totalSongs} songs`}.
           </div>
         </div>
       )}

@@ -225,7 +225,19 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
 };
 
 export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
-  const { totalSongs, targetDuration, useTimeLimit, popularityStrategy, recencyBoost, continueWhenPlaylistEmpty = true } = options;
+  const { totalSongs, targetDuration, useTimeLimit, popularityStrategy, recencyBoost, continueWhenPlaylistEmpty = true, useAllSongs = false } = options;
+  
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎵 Mix Options:', {
+      totalSongs,
+      targetDuration,
+      useTimeLimit,
+      useAllSongs,
+      continueWhenPlaylistEmpty,
+      popularityStrategy
+    });
+  }
 
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
@@ -273,7 +285,39 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   
   // Calculate target counts for each playlist based on weights
   const targetCounts = {};
-  const estimatedTotalSongs = useTimeLimit ? Math.ceil(targetDuration / 3.5) : totalSongs;
+  let estimatedTotalSongs;
+  
+  if (useAllSongs) {
+    // For "use all songs" mode, calculate the optimal mix length based on ratios and available content
+    // Find the limiting playlist (the one that will run out first based on ratios)
+    let minPossibleSongs = Infinity;
+    
+    playlistIds.forEach(playlistId => {
+      const weight = ratioConfig[playlistId].weight || 1;
+      const targetRatio = weight / totalWeight;
+      const availableCount = cleanedPlaylistTracks[playlistId].length;
+      
+      // Calculate how many total songs we could have if this playlist is the limiting factor
+      const maxTotalIfThisLimits = Math.floor(availableCount / targetRatio);
+      
+      if (maxTotalIfThisLimits < minPossibleSongs) {
+        minPossibleSongs = maxTotalIfThisLimits;
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 ${playlistId}: ${availableCount} songs, ${Math.round(targetRatio * 100)}% ratio → max total: ${maxTotalIfThisLimits}`);
+      }
+    });
+    
+    // Add a small buffer (5%) to account for rounding and song duration variations
+    estimatedTotalSongs = Math.floor(minPossibleSongs * 1.05);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🎯 useAllSongs: optimal mix length = ${estimatedTotalSongs} songs (${minPossibleSongs} + 5% buffer)`);
+    }
+  } else {
+    estimatedTotalSongs = useTimeLimit ? Math.ceil(targetDuration / 3.5) : totalSongs;
+  }
   
   playlistIds.forEach(playlistId => {
     const weight = ratioConfig[playlistId].weight || 1;
@@ -298,9 +342,23 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   });
 
   let attempts = 0;
-  const maxAttempts = (totalSongs || 100) * 10;
+  const maxAttempts = useAllSongs ? estimatedTotalSongs * 2 : (totalSongs || 100) * 10;
 
   const shouldContinue = () => {
+    if (useAllSongs) {
+      // Continue until we reach the calculated optimal length or playlists are exhausted
+      const hasAvailableTracks = playlistIds.some(id => !playlistExhausted[id]);
+      const belowTarget = mixedTracks.length < estimatedTotalSongs;
+      
+      if (process.env.NODE_ENV === 'development' && mixedTracks.length % 10 === 0) {
+        console.log(`🔄 useAllSongs check: ${mixedTracks.length}/${estimatedTotalSongs} songs, hasAvailableTracks: ${hasAvailableTracks}`);
+      }
+      
+      // Continue if we haven't reached target AND have available tracks
+      // OR if continueWhenPlaylistEmpty is true and we still have tracks from some playlists
+      return belowTarget && hasAvailableTracks || (continueWhenPlaylistEmpty && hasAvailableTracks);
+    }
+    
     if (useTimeLimit) {
       const currentDuration = calculateTotalDuration(mixedTracks) / (1000 * 60); // minutes
       return currentDuration < targetDuration;
@@ -348,7 +406,15 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       const deficit = targetRatio - currentRatio;
       
       // Check if playlist still has available tracks
-      const availableTracksForPlaylist = getTracksForPosition(popularityPools, playlistId, mixedTracks.length, useTimeLimit ? Math.min(Math.ceil(targetDuration / 3.5), 200) : totalSongs, popularityStrategy);
+      let estimatedLengthForCheck;
+      if (useAllSongs) {
+        estimatedLengthForCheck = estimatedTotalSongs;
+      } else if (useTimeLimit) {
+        estimatedLengthForCheck = Math.min(Math.ceil(targetDuration / 3.5), 200);
+      } else {
+        estimatedLengthForCheck = totalSongs;
+      }
+      const availableTracksForPlaylist = getTracksForPosition(popularityPools, playlistId, mixedTracks.length, estimatedLengthForCheck, popularityStrategy);
       const usedTrackIds = new Set(mixedTracks.map(t => t.id));
       const hasAvailableTracks = availableTracksForPlaylist.some(track => !usedTrackIds.has(track.id));
       
@@ -411,7 +477,10 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     const currentPosition = mixedTracks.length;
     let estimatedTotalLength;
     
-    if (useTimeLimit) {
+    if (useAllSongs) {
+      // For "use all songs" mode, use the total available songs
+      estimatedTotalLength = estimatedTotalSongs;
+    } else if (useTimeLimit) {
       // For time-based playlists, estimate based on average song length (3.5 minutes)
       // But cap it at a reasonable number to avoid the 840 song issue
       const roughEstimate = Math.ceil(targetDuration / 3.5);
@@ -541,7 +610,10 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
   // Add metadata about exhausted playlists to the result
   const exhaustedPlaylists = Object.keys(playlistExhausted).filter(id => playlistExhausted[id]);
-  const result = mixedTracks.slice(0, totalSongs);
+  
+  // For useAllSongs mode, don't truncate - use all generated tracks
+  // For other modes, truncate to the specified limit
+  const result = useAllSongs ? mixedTracks : mixedTracks.slice(0, totalSongs);
   
   // Add metadata to the result for UI feedback
   result.exhaustedPlaylists = exhaustedPlaylists;

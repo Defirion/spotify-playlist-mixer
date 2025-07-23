@@ -24,11 +24,12 @@ function MainApp() {
     totalSongs: 100,
     targetDuration: 240,
     useTimeLimit: false,
+    useAllSongs: true, // New default: mix as long as we have songs
     playlistName: 'My Mixed Playlist',
     shuffleWithinGroups: true,
     popularityStrategy: 'mixed',
     recencyBoost: true,
-    continueWhenPlaylistEmpty: true
+    continueWhenPlaylistEmpty: false // Changed default to false (unchecked)
   });
 
   useEffect(() => {
@@ -100,6 +101,7 @@ function MainApp() {
       recencyBoost: settings.recencyBoost,
       shuffleWithinGroups: settings.shuffleWithinGroups,
       useTimeLimit: settings.useTimeLimit || false,
+      useAllSongs: settings.useAllSongs !== undefined ? settings.useAllSongs : prev.useAllSongs,
       targetDuration: settings.targetDuration || prev.targetDuration,
       playlistName: `${presetName} Mix`,
       continueWhenPlaylistEmpty: settings.continueWhenPlaylistEmpty !== undefined ? settings.continueWhenPlaylistEmpty : prev.continueWhenPlaylistEmpty
