@@ -18,7 +18,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
                     return { min: 1, max: 2, weight: 50, weightType: 'time' };
                 }
             }),
-            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 300 }
+            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 300, useAllSongs: false }
         },
         {
             id: 'workout-mix',
@@ -27,7 +27,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             strategy: 'front-loaded',
             strategyLabel: 'Hits First',
             ratios: (playlists) => playlists.map(() => ({ min: 3, max: 5, weight: 3, weightType: 'frequency' })),
-            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 60 }
+            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 60, useAllSongs: false }
         },
         {
             id: 'road-trip',
@@ -36,7 +36,7 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             strategy: 'crescendo',
             strategyLabel: 'Build Up',
             ratios: (playlists) => playlists.map(() => ({ min: 2, max: 3, weight: 2, weightType: 'frequency' })),
-            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 180 }
+            settings: { recencyBoost: true, shuffleWithinGroups: true, useTimeLimit: true, targetDuration: 180, useAllSongs: false }
         }
     ];
 

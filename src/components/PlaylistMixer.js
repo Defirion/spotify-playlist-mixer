@@ -519,13 +519,44 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   textAlign: 'center'
                 }}>
                   <div style={{ fontSize: '16px', marginBottom: '8px' }}>🎵</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px', color: '#1db954' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#1db954' }}>
                     Mix as long as we have songs
                   </div>
-                  <div style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.4' }}>
+                  <div style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.4', marginBottom: '16px' }}>
                     We'll use all available songs from your playlists according to your ratios. 
                     This will likely trigger the Ratio Imbalance Alert below.
                   </div>
+                  
+                  {/* Checkbox with same layout as Ratio Imbalance Alert */}
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    gap: '8px', 
+                    cursor: 'pointer'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={localMixOptions.continueWhenPlaylistEmpty}
+                      onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
+                      style={{ 
+                        transform: 'scale(1.2)', 
+                        marginTop: '2px',
+                        flexShrink: 0,
+                        width: 'auto'
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '4px' }}>
+                        Continue mixing when playlists run out
+                      </span>
+                      <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
+                        {localMixOptions.continueWhenPlaylistEmpty 
+                          ? "When a playlist runs out, we'll keep adding songs from other playlists until all are exhausted. Your mix will use all available content but may have more songs from some playlists."
+                          : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
+                        }
+                      </span>
+                    </div>
+                  </label>
                 </div>
               ) : (
                 <div>
@@ -682,7 +713,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
           borderRadius: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '24px' }}>🤔</span>
+            <span style={{ fontSize: '24px' }}>⚖️</span>
             <div>
               <h4 style={{ margin: '0 0 8px 0', color: '#17a2b8' }}>
                 Ratio Imbalance Alert
@@ -709,38 +740,40 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
             </div>
           </div>
           
-          {/* Mixing Behavior Control */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.05)', 
-            padding: '12px', 
-            borderRadius: '8px',
-            marginTop: '12px'
-          }}>
-            <label style={{ 
-              display: 'flex', 
-              alignItems: 'flex-start', 
-              gap: '12px', 
-              cursor: 'pointer'
+          {/* Mixing Behavior Control - only show for non-useAllSongs modes */}
+          {!localMixOptions.useAllSongs && (
+            <div style={{ 
+              background: 'rgba(255, 255, 255, 0.05)', 
+              padding: '12px', 
+              borderRadius: '8px',
+              marginTop: '12px'
             }}>
-              <input
-                type="checkbox"
-                checked={localMixOptions.continueWhenPlaylistEmpty}
-                onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
-                style={{ transform: 'scale(1.2)', marginTop: '2px' }}
-              />
-              <div>
-                <span style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '4px' }}>
-                  Continue mixing when playlists run out
-                </span>
-                <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
-                  {localMixOptions.continueWhenPlaylistEmpty 
-                    ? "When a playlist runs out, we'll keep adding songs from other playlists until we reach your target. Your mix will be the full length but may have more songs from some playlists."
-                    : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
-                  }
-                </span>
-              </div>
-            </label>
-          </div>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '12px', 
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={localMixOptions.continueWhenPlaylistEmpty}
+                  onChange={(e) => setLocalMixOptions({...localMixOptions, continueWhenPlaylistEmpty: e.target.checked})}
+                  style={{ transform: 'scale(1.2)', marginTop: '2px' }}
+                />
+                <div>
+                  <span style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '4px' }}>
+                    Continue mixing when playlists run out
+                  </span>
+                  <span style={{ fontSize: '12px', opacity: '0.8', lineHeight: '1.3' }}>
+                    {localMixOptions.continueWhenPlaylistEmpty 
+                      ? "When a playlist runs out, we'll keep adding songs from other playlists until we reach your target. Your mix will be the full length but may have more songs from some playlists."
+                      : "When any playlist runs out, we'll stop mixing right there. Your mix will be shorter but will maintain the ratios you set."
+                    }
+                  </span>
+                </div>
+              </label>
+            </div>
+          )}
         </div>
       )}
       
