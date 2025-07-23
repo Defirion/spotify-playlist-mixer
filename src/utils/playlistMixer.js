@@ -356,7 +356,7 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       
       // Continue if we haven't reached target AND have available tracks
       // OR if continueWhenPlaylistEmpty is true and we still have tracks from some playlists
-      return belowTarget && hasAvailableTracks || (continueWhenPlaylistEmpty && hasAvailableTracks);
+      return (belowTarget && hasAvailableTracks) || (continueWhenPlaylistEmpty && hasAvailableTracks);
     }
     
     if (useTimeLimit) {
