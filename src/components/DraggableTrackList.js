@@ -422,7 +422,7 @@ const DraggableTrackList = ({ tracks, selectedPlaylists, onTrackOrderChange, for
       container.removeEventListener('externalDragOver', handleExternalDragOver);
       container.removeEventListener('externalDrop', handleExternalDrop);
     };
-  }, [dropLinePosition, endDrag, localTracks, onTrackOrderChange]);
+  }, [dropLinePosition, endDrag, localTracks, onTrackOrderChange, checkAutoScroll]);
 
   // Handle window resize for mobile detection
   useEffect(() => {
