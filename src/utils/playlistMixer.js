@@ -194,6 +194,33 @@ const getTracksForPosition = (popularityPools, playlistId, position, totalLength
   if (process.env.NODE_ENV === 'development') {
     console.log(`   Available tracks: ${selectedPools.length}`);
   }
+  
+  // Add fallback mechanism for all strategies (except 'mixed' which already uses all quadrants)
+  // This prevents premature stopping when strategy-specific pools are too restrictive
+  if (strategy !== 'mixed') {
+    // Store the strategy-specific selection
+    const strategyPools = [...selectedPools];
+    
+    // If strategy pools are empty or will likely be exhausted soon, add fallback pools
+    if (selectedPools.length === 0) {
+      selectedPools = [...pools.topHits, ...pools.popular, ...pools.moderate, ...pools.deepCuts];
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`   ⚠️ Fallback: Using all quadrants (strategy pools empty)`);
+      }
+    } else {
+      // Add fallback pools to the end so strategy pools are preferred but fallback is available
+      const allPools = [...pools.topHits, ...pools.popular, ...pools.moderate, ...pools.deepCuts];
+      const fallbackPools = allPools.filter(track => !strategyPools.some(strategyTrack => strategyTrack.id === track.id));
+      
+      if (fallbackPools.length > 0) {
+        selectedPools = [...strategyPools, ...fallbackPools];
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`   📋 Strategy pools: ${strategyPools.length}, Fallback pools: ${fallbackPools.length}`);
+        }
+      }
+    }
+  }
+  
   return selectedPools;
 };
 
@@ -406,15 +433,18 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     
     // Check if we should add more songs to balance time
     if (config.max > config.min) {
-      // Calculate current time balance
+      // Calculate current time balance based on configured weights
       const totalDurationSoFar = Object.values(playlistDurations).reduce((sum, dur) => sum + dur, 0);
       const currentPlaylistShare = playlistDurations[selectedPlaylistId];
-      const expectedShare = totalDurationSoFar / playlistIds.length; // Equal time share
+      
+      // Calculate expected share based on weight ratio
+      const targetRatio = (config.weight || 1) / totalWeight;
+      const expectedShare = totalDurationSoFar * targetRatio;
       
       // If this playlist is significantly behind in time, add more songs
       if (currentPlaylistShare < expectedShare * 0.8) {
         songsToTake = config.max;
-        console.log(`Adding extra songs to ${selectedPlaylistId} for time balance`);
+        console.log(`Adding extra songs to ${selectedPlaylistId} for time balance (${Math.round(currentPlaylistShare/60000)}m vs expected ${Math.round(expectedShare/60000)}m)`);
       }
     }
     

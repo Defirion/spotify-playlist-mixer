@@ -304,7 +304,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
       return null;
     }
 
-    const { totalSongs, useTimeLimit, targetDuration } = localMixOptions;
+    const { totalSongs, useTimeLimit, targetDuration, continueWhenPlaylistEmpty } = localMixOptions;
     const playlistIdsWithWeights = Object.keys(ratioConfig).filter(id => ratioConfig[id] && ratioConfig[id].weight > 0);
 
     if (playlistIdsWithWeights.length < 2) {
@@ -330,21 +330,54 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
 
       if (useTimeLimit) {
         const availableDurationMs = (playlist.realAverageDurationSeconds * playlist.tracks.total * 1000) || 0;
+        
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 Warning calc for ${playlist.name}:`);
+          console.log(`  - Tracks: ${playlist.tracks.total}`);
+          console.log(`  - Avg duration: ${playlist.realAverageDurationSeconds}s`);
+          console.log(`  - Total duration: ${Math.round(availableDurationMs / 60000)}m`);
+          console.log(`  - Weight: ${weight}/${totalWeight} (${Math.round(weight/totalWeight*100)}%)`);
+        }
+        
         if (availableDurationMs === 0) {
           exhaustionPoint = 0;
         } else {
-          // Calculate how much total mix duration can be achieved before this playlist runs out
-          // based on its available duration and its weight in the total mix.
-          exhaustionPoint = Math.floor(availableDurationMs * (totalWeight / weight));
+          // For time-based mixing, calculate based on the weightType
+          if (config.weightType === 'time') {
+            // Weight represents time proportion - calculate how much total mix duration can be achieved
+            exhaustionPoint = Math.floor(availableDurationMs * (totalWeight / weight));
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`  - Exhaustion point: ${formatTotalDuration(exhaustionPoint)}`);
+            }
+          } else {
+            // Weight represents frequency proportion - need to convert to time
+            // This playlist should contribute (weight/totalWeight) of the total songs
+            // So total mix duration = availableDurationMs / (weight/totalWeight)
+            const targetSongRatio = weight / totalWeight;
+            const avgSongDuration = playlist.realAverageDurationSeconds * 1000 || 210000; // 3.5 min default
+            const totalSongsWhenExhausted = playlist.tracks.total / targetSongRatio;
+            exhaustionPoint = Math.floor(totalSongsWhenExhausted * avgSongDuration);
+          }
         }
       } else {
         const availableCount = playlist.tracks.total;
         if (availableCount === 0) {
           exhaustionPoint = 0;
         } else {
-          // Calculate how many total songs can be achieved before this playlist runs out
-          // based on its available songs and its weight in the total mix.
-          exhaustionPoint = Math.floor(availableCount * (totalWeight / weight));
+          // For song count mixing, calculate based on the weightType
+          if (config.weightType === 'time') {
+            // Weight represents time proportion - need to convert to song count
+            // This playlist should contribute (weight/totalWeight) of the total duration
+            const targetTimeRatio = weight / totalWeight;
+            const avgSongDuration = playlist.realAverageDurationSeconds || 210; // 3.5 min default
+            const totalDurationWhenExhausted = (playlist.tracks.total * avgSongDuration) / targetTimeRatio;
+            exhaustionPoint = Math.floor(totalDurationWhenExhausted / avgSongDuration);
+          } else {
+            // Weight represents frequency proportion - direct calculation
+            exhaustionPoint = Math.floor(availableCount * (totalWeight / weight));
+          }
         }
       }
 
@@ -357,8 +390,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
     // Determine the target length (songs or duration) for comparison
     const targetLength = useTimeLimit ? targetDuration * 60 * 1000 : totalSongs;
 
-    // Only show warning if the estimated mix length is greater than the exhaustion point
-    // and the exhaustion point is significantly less than the target length (e.g., < 90%)
+    // Show warning if the exhaustion point is significantly less than the target length (< 90%)
     if (targetLength > minExhaustionPoint && minExhaustionPoint < targetLength * 0.9) {
       let displayValue = minExhaustionPoint;
       let unit = 'songs';
@@ -372,6 +404,7 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
         limitingPlaylistName,
         mixWillBecomeImbalancedAt: displayValue,
         unit: unit,
+        willStopEarly: !continueWhenPlaylistEmpty
       };
     }
 
@@ -572,9 +605,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
               </h4>
               <p style={{ margin: '0', lineHeight: '1.4', fontSize: '14px' }}>
                 With your current ratio settings, we'll run out of songs from <strong>{ratioImbalance.limitingPlaylistName}</strong> after about <strong>{ratioImbalance.mixWillBecomeImbalancedAt} {ratioImbalance.unit}</strong>.
-                {localMixOptions.continueWhenPlaylistEmpty 
-                  ? " The mix will continue using songs from the remaining playlists to reach your target length."
-                  : " The mix will stop there, creating a shorter but balanced playlist."
+                {ratioImbalance.willStopEarly
+                  ? " The mix will stop there, creating a shorter but balanced playlist."
+                  : " The mix will continue using songs from the remaining playlists to reach your target length."
                 }
               </p>
             </div>
@@ -804,6 +837,9 @@ const PlaylistMixer = ({ accessToken, selectedPlaylists, ratioConfig, mixOptions
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: '500' }}>
                     {stats.count} songs
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: '0.6' }}>
+                    {formatTotalDuration(stats.totalDuration)}
                   </div>
                 </div>
               ))}
