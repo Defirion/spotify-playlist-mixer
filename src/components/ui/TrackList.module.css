@@ -1,0 +1,29 @@
+/* Track list container */
+.trackList {
+  position: relative;
+}
+
+.trackList.virtualized {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Empty state */
+.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--mindaro);
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* Non-virtualized list container */
+.listContainer {
+  /* No specific styles needed, inherits from parent */
+}
+
+/* Virtualized spacer */
+.spacer {
+  position: relative;
+}

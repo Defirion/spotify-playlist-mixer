@@ -1,61 +1,25 @@
 import React from 'react';
+import styles from './SuccessToast.module.css';
 
 const SuccessToast = ({ mixedPlaylists, onDismiss }) => {
   if (!mixedPlaylists || mixedPlaylists.length === 0) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        maxWidth: '400px',
-      }}
-    >
+    <div className={styles.toastContainer}>
       {mixedPlaylists.map((playlist, index) => (
         <div
           key={playlist.toastId}
+          className={styles.toast}
           style={{
-            background: 'var(--hunter-green)',
-            border: '2px solid #1DB954',
-            borderRadius: '8px',
-            padding: '16px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             animation: `slideInLeft 0.3s ease-out ${index * 0.1}s both`,
             transform: index > 0 ? 'scale(0.98)' : 'scale(1)',
             opacity: index > 2 ? 0.8 : 1,
-            transition: 'all 0.3s ease',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              gap: '12px',
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <h3
-                style={{
-                  margin: '0 0 8px 0',
-                  color: '#1DB954',
-                  fontSize: '16px',
-                }}
-              >
-                🎉 Mixed Playlist Created!
-              </h3>
-              <p
-                style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '14px',
-                  lineHeight: '1.4',
-                }}
-              >
+          <div className={styles.toastContent}>
+            <div className={styles.toastMain}>
+              <h3 className={styles.toastTitle}>🎉 Mixed Playlist Created!</h3>
+              <p className={styles.toastMessage}>
                 Your new playlist "{playlist.name}" has been created with{' '}
                 {playlist.tracks?.total || playlist.tracks?.length || 0} songs
                 {playlist.duration && (
@@ -67,13 +31,7 @@ const SuccessToast = ({ mixedPlaylists, onDismiss }) => {
                 )}
                 .
               </p>
-              <div
-                style={{
-                  fontSize: '12px',
-                  opacity: '0.7',
-                  marginBottom: '12px',
-                }}
-              >
+              <div className={styles.toastDetails}>
                 Created {formatTimeAgo(playlist.createdAt)}
               </div>
               {playlist.external_urls?.spotify && (
@@ -82,15 +40,7 @@ const SuccessToast = ({ mixedPlaylists, onDismiss }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <button
-                    className="btn"
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: '14px',
-                      background: '#1DB954',
-                      border: '1px solid #1DB954',
-                    }}
-                  >
+                  <button className={styles.toastButton}>
                     Open in Spotify
                   </button>
                 </a>
@@ -98,23 +48,7 @@ const SuccessToast = ({ mixedPlaylists, onDismiss }) => {
             </div>
             <button
               onClick={() => onDismiss(playlist.toastId)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--mindaro)',
-                fontSize: '18px',
-                cursor: 'pointer',
-                padding: '4px',
-                opacity: '0.7',
-                borderRadius: '4px',
-                minWidth: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onMouseEnter={e => (e.target.style.opacity = '1')}
-              onMouseLeave={e => (e.target.style.opacity = '0.7')}
+              className={styles.closeButton}
             >
               ×
             </button>

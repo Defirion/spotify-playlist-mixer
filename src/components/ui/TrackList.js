@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import TrackItem from './TrackItem';
 import useVirtualization from '../../hooks/useVirtualization';
+import styles from './TrackList.module.css';
 
 const TrackList = ({
   tracks = [],
@@ -163,19 +164,22 @@ const TrackList = ({
     );
   };
 
+  // Generate CSS classes
+  const trackListClasses = [
+    styles.trackList,
+    virtualized && styles.virtualized,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   // Empty state
   if (tracks.length === 0) {
     return (
       <div
-        className={`track-list-empty ${className}`}
+        className={`${styles.empty} ${className}`}
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
           height: containerHeight,
-          color: 'var(--mindaro)',
-          opacity: '0.7',
-          textAlign: 'center',
           ...style,
         }}
         {...otherProps}
@@ -187,11 +191,9 @@ const TrackList = ({
 
   return (
     <div
-      className={`track-list ${className}`}
+      className={trackListClasses}
       style={{
         height: virtualized ? containerHeight : 'auto',
-        overflowY: virtualized ? 'auto' : 'visible',
-        position: 'relative',
         ...style,
       }}
       {...(virtualized ? containerProps : {})}
@@ -199,13 +201,15 @@ const TrackList = ({
     >
       {virtualized && (
         // Spacer for virtualization
-        <div {...spacerProps}>
+        <div className={styles.spacer} {...spacerProps}>
           {visibleItems.map((track, index) => renderTrackItem(track, index))}
         </div>
       )}
 
       {!virtualized && (
-        <div>{tracks.map((track, index) => renderTrackItem(track, index))}</div>
+        <div className={styles.listContainer}>
+          {tracks.map((track, index) => renderTrackItem(track, index))}
+        </div>
       )}
     </div>
   );

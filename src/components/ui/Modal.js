@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import styles from './Modal.module.css';
 
 const Modal = ({
   isOpen,
@@ -90,26 +91,10 @@ const Modal = ({
     }
   }, []);
 
-  // Size configurations
-  const sizeStyles = {
-    small: {
-      width: '90%',
-      maxWidth: '400px',
-    },
-    medium: {
-      width: '90%',
-      maxWidth: '600px',
-    },
-    large: {
-      width: '90%',
-      maxWidth: '800px',
-    },
-    fullscreen: {
-      width: '95%',
-      maxWidth: '1200px',
-      maxHeight: '95vh',
-    },
-  };
+  // Generate CSS classes
+  const modalClasses = [styles.modal, styles[size], className]
+    .filter(Boolean)
+    .join(' ');
 
   if (!isOpen) return null;
 
@@ -117,16 +102,7 @@ const Modal = ({
     <>
       {/* Backdrop */}
       <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          zIndex: 1000,
-          transition: 'opacity 0.2s ease',
-        }}
+        className={styles.backdrop}
         onClick={handleBackdropClick}
         aria-hidden="true"
       />
@@ -139,47 +115,13 @@ const Modal = ({
         aria-labelledby={title ? 'modal-title' : undefined}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className={className}
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'var(--hunter-green)',
-          border: '2px solid var(--fern-green)',
-          borderRadius: '12px',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          zIndex: 1001,
-          transition: 'opacity 0.2s ease',
-          outline: 'none',
-          ...sizeStyles[size],
-        }}
+        className={modalClasses}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div
-            style={{
-              padding: '20px',
-              borderBottom: '1px solid var(--fern-green)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexShrink: 0,
-            }}
-          >
+          <div className={styles.header}>
             {title && (
-              <h2
-                id="modal-title"
-                style={{
-                  margin: 0,
-                  color: 'var(--mindaro)',
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                }}
-              >
+              <h2 id="modal-title" className={styles.title}>
                 {title}
               </h2>
             )}
@@ -187,23 +129,7 @@ const Modal = ({
               <button
                 onClick={onClose}
                 aria-label="Close modal"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--mindaro)',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  borderRadius: '4px',
-                  transition: 'background-color 0.2s',
-                  marginLeft: title ? '16px' : '0',
-                }}
-                onMouseEnter={e =>
-                  (e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')
-                }
-                onMouseLeave={e =>
-                  (e.target.style.backgroundColor = 'transparent')
-                }
+                className={`${styles.closeButton} ${title ? styles.withTitle : ''}`}
               >
                 ×
               </button>
@@ -212,16 +138,7 @@ const Modal = ({
         )}
 
         {/* Content */}
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {children}
-        </div>
+        <div className={styles.content}>{children}</div>
       </div>
     </>
   );

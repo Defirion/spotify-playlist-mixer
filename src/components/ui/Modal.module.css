@@ -1,0 +1,97 @@
+/* Modal backdrop */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  transition: opacity 0.2s ease;
+}
+
+/* Modal container */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--hunter-green);
+  border: 2px solid var(--fern-green);
+  border-radius: 12px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1001;
+  transition: opacity 0.2s ease;
+  outline: none;
+}
+
+/* Size variants */
+.modal.small {
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal.medium {
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal.large {
+  width: 90%;
+  max-width: 800px;
+}
+
+.modal.fullscreen {
+  width: 95%;
+  max-width: 1200px;
+  max-height: 95vh;
+}
+
+/* Modal header */
+.header {
+  padding: 20px;
+  border-bottom: 1px solid var(--fern-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Modal title */
+.title {
+  margin: 0;
+  color: var(--mindaro);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Close button */
+.closeButton {
+  background: transparent;
+  border: none;
+  color: var(--mindaro);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton.withTitle {
+  margin-left: 16px;
+}
+
+/* Modal content */
+.content {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
