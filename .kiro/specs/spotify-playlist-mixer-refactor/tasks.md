@@ -74,7 +74,9 @@
   - _Requirements: 3.2, 3.4_
 -
 
-- [ ] 4. Implement unified drag-and-drop system
+- [x] 4. Implement unified drag-and-drop system
+
+
 
 - [x] 4.1 Create useDraggable custom hook
 
@@ -85,7 +87,8 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement useDraggable hook with unified drag-and-drop logic"`
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [-] 4.2 Simplify DragContext
+- [x] 4.2 Simplify DragContext
+
 
   - Refactor DragContext.js to only manage global dragging state (isDragging, draggedItem)
   - Remove complex notification functions and cleanup logic
@@ -93,8 +96,12 @@
   - **Commit changes**: `git add . && git commit -m "refactor: simplify DragContext to work with new useDraggable hook"`
   - _Requirements: 2.1, 2.2_
 
-- [ ] 5. Refactor modal components to use shared UI
-- [ ] 5.1 Refactor AddUnselectedModal
+- [-] 5. Refactor modal components to use shared UI
+
+
+
+- [-] 5.1 Refactor AddUnselectedModal
+
   - Update AddUnselectedModal.js to use new Modal and TrackList components
   - Remove duplicated modal structure and track rendering code
   - Integrate with new useDraggable hook for drag functionality
