@@ -86,6 +86,8 @@ const TrackItem = forwardRef(
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={style}
+        data-testid="track-item"
+        role="listitem"
         {...otherProps}
       >
         {/* Drag Handle */}

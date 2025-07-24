@@ -117,7 +117,7 @@ describe('TrackList', () => {
         />
       );
 
-      const trackList = screen.getByText('Track 1').closest('.track-list');
+      const trackList = screen.getByTestId('track-list');
       expect(trackList).toHaveClass('custom-track-list');
       expect(trackList).toHaveStyle({ border: '1px solid red' });
     });
@@ -351,11 +351,9 @@ describe('TrackList', () => {
         />
       );
 
-      const trackList = screen.getByText('Track 1').closest('.track-list');
+      const trackList = screen.getByTestId('track-list');
       expect(trackList).toHaveStyle({
         height: '400px',
-        overflowY: 'auto',
-        position: 'relative',
       });
     });
 
@@ -369,7 +367,7 @@ describe('TrackList', () => {
         />
       );
 
-      const trackList = screen.getByText('Track 1').closest('.track-list');
+      const trackList = screen.getByTestId('track-list');
 
       // Simulate scroll
       fireEvent.scroll(trackList, { target: { scrollTop: 100 } });

@@ -196,6 +196,7 @@ const TrackList = ({
         height: virtualized ? containerHeight : 'auto',
         ...style,
       }}
+      data-testid="track-list"
       {...(virtualized ? containerProps : {})}
       {...otherProps}
     >

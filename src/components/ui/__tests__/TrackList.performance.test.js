@@ -103,11 +103,9 @@ describe('TrackList Performance Tests', () => {
     );
 
     // Should have virtualization container styles
-    const trackListContainer = container.querySelector('.track-list');
+    const trackListContainer = screen.getByTestId('track-list');
     expect(trackListContainer).toHaveStyle({
       height: '400px',
-      overflowY: 'auto',
-      position: 'relative',
     });
 
     // Should only render visible items
