@@ -1,4 +1,11 @@
-import React, { createContext, useState, useContext, useRef, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 
 const DragContext = createContext();
 
@@ -14,7 +21,7 @@ export const DragProvider = ({ children }) => {
     html5Active: false,
     customActive: false,
     touchActive: false,
-    pendingCleanup: false
+    pendingCleanup: false,
   });
 
   // Unified cleanup function that handles both HTML5 and custom states
@@ -38,70 +45,87 @@ export const DragProvider = ({ children }) => {
       html5Active: false,
       customActive: false,
       touchActive: false,
-      pendingCleanup: false
+      pendingCleanup: false,
     };
   }, []);
 
   // Failsafe timer-based cleanup for stuck states
-  const scheduleFailsafeCleanup = useCallback((delay = 60000) => { // Increased to 60 seconds
-    if (cleanupTimerRef.current) {
-      clearTimeout(cleanupTimerRef.current);
-    }
+  const scheduleFailsafeCleanup = useCallback(
+    (delay = 60000) => {
+      // Increased to 60 seconds
+      if (cleanupTimerRef.current) {
+        clearTimeout(cleanupTimerRef.current);
+      }
 
-    cleanupTimerRef.current = setTimeout(() => {
-      console.log('[DragContext] Failsafe cleanup triggered - drag state was stuck');
-      unifiedCleanup('failsafe-timeout');
-    }, delay);
-  }, [unifiedCleanup]);
+      cleanupTimerRef.current = setTimeout(() => {
+        console.log(
+          '[DragContext] Failsafe cleanup triggered - drag state was stuck'
+        );
+        unifiedCleanup('failsafe-timeout');
+      }, delay);
+    },
+    [unifiedCleanup]
+  );
 
-  const startDrag = useCallback((item, type = 'custom') => {
-    console.log(`[DragContext] Starting drag: type=${type}`);
+  const startDrag = useCallback(
+    (item, type = 'custom') => {
+      console.log(`[DragContext] Starting drag: type=${type}`);
 
-    // Clear any existing cleanup timer
-    if (cleanupTimerRef.current) {
-      clearTimeout(cleanupTimerRef.current);
-      cleanupTimerRef.current = null;
-    }
+      // Clear any existing cleanup timer
+      if (cleanupTimerRef.current) {
+        clearTimeout(cleanupTimerRef.current);
+        cleanupTimerRef.current = null;
+      }
 
-    setIsDragging(true);
-    setDraggedItem(item);
-    setDragType(type);
-    setIsDropSuccessful(false);
+      setIsDragging(true);
+      setDraggedItem(item);
+      setDragType(type);
+      setIsDropSuccessful(false);
 
-    // Update internal tracking
-    dragStateRef.current.customActive = true;
-    if (type === 'html5') dragStateRef.current.html5Active = true;
-    if (type === 'touch') dragStateRef.current.touchActive = true;
+      // Update internal tracking
+      dragStateRef.current.customActive = true;
+      if (type === 'html5') dragStateRef.current.html5Active = true;
+      if (type === 'touch') dragStateRef.current.touchActive = true;
 
-    // Schedule failsafe cleanup
-    scheduleFailsafeCleanup();
-  }, [scheduleFailsafeCleanup]);
+      // Schedule failsafe cleanup
+      scheduleFailsafeCleanup();
+    },
+    [scheduleFailsafeCleanup]
+  );
 
-  const endDrag = useCallback((reason = 'success') => {
-    console.log(`[DragContext] Ending drag: reason=${reason}`);
+  const endDrag = useCallback(
+    (reason = 'success') => {
+      console.log(`[DragContext] Ending drag: reason=${reason}`);
 
-    setIsDropSuccessful(reason === 'success');
+      setIsDropSuccessful(reason === 'success');
 
-    // Mark custom drag as complete
-    dragStateRef.current.customActive = false;
+      // Mark custom drag as complete
+      dragStateRef.current.customActive = false;
 
-    // If no HTML5 drag is active, do immediate cleanup
-    if (!dragStateRef.current.html5Active) {
-      unifiedCleanup(`end-drag-${reason}`);
-    } else {
-      // HTML5 drag still active, delay cleanup to coordinate with dragend
-      console.log('[DragContext] Delaying cleanup - waiting for HTML5 dragend');
-      dragStateRef.current.pendingCleanup = true;
+      // If no HTML5 drag is active, do immediate cleanup
+      if (!dragStateRef.current.html5Active) {
+        unifiedCleanup(`end-drag-${reason}`);
+      } else {
+        // HTML5 drag still active, delay cleanup to coordinate with dragend
+        console.log(
+          '[DragContext] Delaying cleanup - waiting for HTML5 dragend'
+        );
+        dragStateRef.current.pendingCleanup = true;
 
-      // Longer failsafe for coordination to allow user time
-      scheduleFailsafeCleanup(30000); // 30 seconds for coordination
-    }
-  }, [unifiedCleanup, scheduleFailsafeCleanup]);
+        // Longer failsafe for coordination to allow user time
+        scheduleFailsafeCleanup(30000); // 30 seconds for coordination
+      }
+    },
+    [unifiedCleanup, scheduleFailsafeCleanup]
+  );
 
-  const cancelDrag = useCallback((reason = 'cancel') => {
-    console.log(`[DragContext] Canceling drag: reason=${reason}`);
-    unifiedCleanup(`cancel-${reason}`);
-  }, [unifiedCleanup]);
+  const cancelDrag = useCallback(
+    (reason = 'cancel') => {
+      console.log(`[DragContext] Canceling drag: reason=${reason}`);
+      unifiedCleanup(`cancel-${reason}`);
+    },
+    [unifiedCleanup]
+  );
 
   // HTML5 drag coordination methods
   const notifyHTML5DragStart = useCallback(() => {
@@ -114,7 +138,10 @@ export const DragProvider = ({ children }) => {
     dragStateRef.current.html5Active = false;
 
     // If custom drag is complete or there's pending cleanup, do it now
-    if (!dragStateRef.current.customActive || dragStateRef.current.pendingCleanup) {
+    if (
+      !dragStateRef.current.customActive ||
+      dragStateRef.current.pendingCleanup
+    ) {
       unifiedCleanup('html5-dragend');
     }
   }, [unifiedCleanup]);
@@ -130,7 +157,10 @@ export const DragProvider = ({ children }) => {
     dragStateRef.current.touchActive = false;
 
     // If no other drags active, cleanup
-    if (!dragStateRef.current.html5Active && !dragStateRef.current.customActive) {
+    if (
+      !dragStateRef.current.html5Active &&
+      !dragStateRef.current.customActive
+    ) {
       unifiedCleanup('touch-dragend');
     }
   }, [unifiedCleanup]);
@@ -155,7 +185,7 @@ export const DragProvider = ({ children }) => {
     };
 
     handleDragClass();
-    
+
     return () => {
       document.body.classList.remove('no-user-select');
     };
@@ -175,13 +205,11 @@ export const DragProvider = ({ children }) => {
     notifyTouchDragStart,
     notifyTouchDragEnd,
     // Debug info
-    _debugState: dragStateRef.current
+    _debugState: dragStateRef.current,
   };
 
   return (
-    <DragContext.Provider value={contextValue}>
-      {children}
-    </DragContext.Provider>
+    <DragContext.Provider value={contextValue}>{children}</DragContext.Provider>
   );
 };
 

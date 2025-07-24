@@ -18,11 +18,9 @@ export const createDragImage = (element, backgroundColor, borderColor) => {
   dragElement.style.position = 'absolute';
   dragElement.style.top = '-1000px';
   document.body.appendChild(dragElement);
-  
+
   return dragElement;
 };
-
-
 
 /**
  * Common track selection logic
@@ -30,7 +28,11 @@ export const createDragImage = (element, backgroundColor, borderColor) => {
  * @param {Set} selectedTracks - Current set of selected track IDs
  * @param {Function} setSelectedTracks - Function to update selected tracks
  */
-export const handleTrackSelection = (track, selectedTracks, setSelectedTracks) => {
+export const handleTrackSelection = (
+  track,
+  selectedTracks,
+  setSelectedTracks
+) => {
   const newSelected = new Set(selectedTracks);
   if (newSelected.has(track.id)) {
     newSelected.delete(track.id);
@@ -40,16 +42,14 @@ export const handleTrackSelection = (track, selectedTracks, setSelectedTracks) =
   setSelectedTracks(newSelected);
 };
 
-
-
 /**
  * Common track quadrant calculation based on popularity
  * @param {Object} track - The track object
  * @returns {string|null} - The quadrant name or null
  */
-export const getTrackQuadrant = (track) => {
+export const getTrackQuadrant = track => {
   if (track.popularity === undefined) return null;
-  
+
   if (track.popularity >= 80) return 'topHits';
   if (track.popularity >= 60) return 'popular';
   if (track.popularity >= 40) return 'moderate';
@@ -61,7 +61,7 @@ export const getTrackQuadrant = (track) => {
  * @param {number} ms - Duration in milliseconds
  * @returns {string} - Formatted duration string
  */
-export const formatDuration = (ms) => {
+export const formatDuration = ms => {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -72,13 +72,18 @@ export const formatDuration = (ms) => {
  * @param {string} quadrant - The popularity quadrant
  * @returns {string} - The icon emoji
  */
-export const getPopularityIcon = (quadrant) => {
+export const getPopularityIcon = quadrant => {
   switch (quadrant) {
-    case 'topHits': return '🔥';
-    case 'popular': return '⭐';
-    case 'moderate': return '📻';
-    case 'deepCuts': return '💎';
-    default: return '';
+    case 'topHits':
+      return '🔥';
+    case 'popular':
+      return '⭐';
+    case 'moderate':
+      return '📻';
+    case 'deepCuts':
+      return '💎';
+    default:
+      return '';
   }
 };
 
@@ -93,33 +98,39 @@ export const getPopularityStyle = (quadrant, popularity) => {
     topHits: {
       text: `🔥 ${popularity}`,
       background: 'rgba(255, 87, 34, 0.2)',
-      color: '#FF5722'
+      color: '#FF5722',
     },
     popular: {
       text: `⭐ ${popularity}`,
       background: 'rgba(255, 193, 7, 0.2)',
-      color: '#FF8F00'
+      color: '#FF8F00',
     },
     moderate: {
       text: `📻 ${popularity}`,
       background: 'rgba(0, 188, 212, 0.2)',
-      color: '#00BCD4'
+      color: '#00BCD4',
     },
     deepCuts: {
       text: `💎 ${popularity}`,
       background: 'rgba(233, 30, 99, 0.2)',
-      color: '#E91E63'
-    }
+      color: '#E91E63',
+    },
   };
-  
-  return styles[quadrant] || { text: '', background: 'transparent', color: 'inherit' };
+
+  return (
+    styles[quadrant] || {
+      text: '',
+      background: 'transparent',
+      color: 'inherit',
+    }
+  );
 };
 
 /**
  * Provides haptic feedback if available
  * @param {number|number[]} pattern - Vibration pattern (single number or array)
  */
-export const provideHapticFeedback = (pattern) => {
+export const provideHapticFeedback = pattern => {
   if (navigator.vibrate) {
     navigator.vibrate(pattern);
   }
@@ -135,7 +146,7 @@ export const createInitialTouchState = () => ({
   draggedElement: null,
   startIndex: null,
   longPressTimer: null,
-  isLongPress: false
+  isLongPress: false,
 });
 
 /**

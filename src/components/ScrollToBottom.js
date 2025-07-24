@@ -7,8 +7,9 @@ const ScrollToBottom = () => {
     const checkScrollPosition = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
       // Show arrow if there's content below the fold (more than 100px)
       const contentBelowFold = documentHeight - (scrollTop + windowHeight);
       setShowArrow(contentBelowFold > 100);
@@ -16,19 +17,19 @@ const ScrollToBottom = () => {
 
     // Check on mount and when content changes
     checkScrollPosition();
-    
+
     // Check on scroll
     window.addEventListener('scroll', checkScrollPosition);
-    
+
     // Check when window resizes
     window.addEventListener('resize', checkScrollPosition);
-    
+
     // Check when DOM changes (new content added)
     const observer = new MutationObserver(checkScrollPosition);
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true, 
-      attributes: true 
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
     });
 
     return () => {
@@ -41,7 +42,7 @@ const ScrollToBottom = () => {
   const scrollToBottom = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 

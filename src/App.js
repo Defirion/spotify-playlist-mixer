@@ -29,14 +29,17 @@ function MainApp() {
     shuffleWithinGroups: true,
     popularityStrategy: 'mixed',
     recencyBoost: true,
-    continueWhenPlaylistEmpty: false // Changed default to false (unchecked)
+    continueWhenPlaylistEmpty: false, // Changed default to false (unchecked)
   });
 
   useEffect(() => {
     // Check for access token in URL hash (after Spotify redirect)
     const hash = window.location.hash;
     if (hash) {
-      const tokenParam = hash.substring(1).split('&').find(elem => elem.startsWith('access_token'));
+      const tokenParam = hash
+        .substring(1)
+        .split('&')
+        .find(elem => elem.startsWith('access_token'));
       if (tokenParam) {
         const token = tokenParam.split('=')[1];
         if (token) {
@@ -48,7 +51,7 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    const handleDragEnd = (e) => {
+    const handleDragEnd = e => {
       // Only cancel drag for desktop dragend events, not touch events
       // Touch events should be handled by the specific components
       if (e.type === 'dragend' && isDragging && !isDropSuccessful) {
@@ -66,7 +69,7 @@ function MainApp() {
     };
   }, [isDragging, isDropSuccessful, cancelDrag]);
 
-  const handlePlaylistSelection = (playlist) => {
+  const handlePlaylistSelection = playlist => {
     if (selectedPlaylists.find(p => p.id === playlist.id)) {
       setSelectedPlaylists(selectedPlaylists.filter(p => p.id !== playlist.id));
       const newRatioConfig = { ...ratioConfig };
@@ -76,7 +79,7 @@ function MainApp() {
       setSelectedPlaylists([...selectedPlaylists, playlist]);
       setRatioConfig({
         ...ratioConfig,
-        [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' }
+        [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' },
       });
     }
   };
@@ -89,11 +92,16 @@ function MainApp() {
   const updateRatioConfig = (playlistId, config) => {
     setRatioConfig({
       ...ratioConfig,
-      [playlistId]: config
+      [playlistId]: config,
     });
   };
 
-  const handleApplyPreset = ({ ratioConfig: newRatioConfig, strategy, settings, presetName }) => {
+  const handleApplyPreset = ({
+    ratioConfig: newRatioConfig,
+    strategy,
+    settings,
+    presetName,
+  }) => {
     setRatioConfig(newRatioConfig);
     setMixOptions(prev => ({
       ...prev,
@@ -101,30 +109,36 @@ function MainApp() {
       recencyBoost: settings.recencyBoost,
       shuffleWithinGroups: settings.shuffleWithinGroups,
       useTimeLimit: settings.useTimeLimit || false,
-      useAllSongs: settings.useAllSongs !== undefined ? settings.useAllSongs : prev.useAllSongs,
+      useAllSongs:
+        settings.useAllSongs !== undefined
+          ? settings.useAllSongs
+          : prev.useAllSongs,
       targetDuration: settings.targetDuration || prev.targetDuration,
       playlistName: `${presetName} Mix`,
-      continueWhenPlaylistEmpty: settings.continueWhenPlaylistEmpty !== undefined ? settings.continueWhenPlaylistEmpty : prev.continueWhenPlaylistEmpty
+      continueWhenPlaylistEmpty:
+        settings.continueWhenPlaylistEmpty !== undefined
+          ? settings.continueWhenPlaylistEmpty
+          : prev.continueWhenPlaylistEmpty,
     }));
     setError(null);
   };
-
-
 
   const handleDismissError = () => {
     setError(null);
   };
 
-  const handleDismissSuccess = (toastId) => {
-    setMixedPlaylists(prev => prev.filter(playlist => playlist.toastId !== toastId));
+  const handleDismissSuccess = toastId => {
+    setMixedPlaylists(prev =>
+      prev.filter(playlist => playlist.toastId !== toastId)
+    );
   };
 
-  const handleMixedPlaylist = (newPlaylist) => {
+  const handleMixedPlaylist = newPlaylist => {
     // Add unique ID and timestamp for managing multiple toasts
     const playlistWithId = {
       ...newPlaylist,
       toastId: Date.now() + Math.random(),
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     setMixedPlaylists(prev => [playlistWithId, ...prev]);
   };
@@ -134,7 +148,10 @@ function MainApp() {
       <div className="container">
         <div className="header">
           <h1>🎵 Spotify Playlist Mixer</h1>
-          <p>Create custom playlists with perfect ratios from your favorite genres</p>
+          <p>
+            Create custom playlists with perfect ratios from your favorite
+            genres
+          </p>
         </div>
         <SpotifyAuth onAuth={setAccessToken} />
       </div>
@@ -148,12 +165,9 @@ function MainApp() {
         <p>Mix your playlists with custom ratios</p>
       </div>
 
-      <ToastError 
-        error={error} 
-        onDismiss={handleDismissError}
-      />
+      <ToastError error={error} onDismiss={handleDismissError} />
 
-      <SuccessToast 
+      <SuccessToast
         mixedPlaylists={mixedPlaylists}
         onDismiss={handleDismissSuccess}
       />
@@ -176,7 +190,7 @@ function MainApp() {
           selectedPlaylists={selectedPlaylists}
           ratioConfig={ratioConfig}
           onRatioUpdate={updateRatioConfig}
-          onPlaylistRemove={(playlistId) => {
+          onPlaylistRemove={playlistId => {
             const playlist = selectedPlaylists.find(p => p.id === playlistId);
             if (playlist) {
               handlePlaylistSelection(playlist);
@@ -184,8 +198,6 @@ function MainApp() {
           }}
         />
       )}
-
-
 
       {selectedPlaylists.length > 1 && (
         <PlaylistMixer
@@ -198,8 +210,6 @@ function MainApp() {
         />
       )}
 
-
-
       <ScrollToBottom />
     </div>
   );
@@ -209,24 +219,39 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<DragProvider><MainApp /></DragProvider>} />
+        <Route
+          path="/"
+          element={
+            <DragProvider>
+              <MainApp />
+            </DragProvider>
+          }
+        />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
       </Routes>
-      
+
       {/* Footer with links */}
-      <footer style={{ 
-        textAlign: 'center', 
-        padding: '20px', 
-        marginTop: '40px',
-        borderTop: '1px solid var(--fern-green)',
-        opacity: '0.7'
-      }}>
-        <Link to="/privacy" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+      <footer
+        style={{
+          textAlign: 'center',
+          padding: '20px',
+          marginTop: '40px',
+          borderTop: '1px solid var(--fern-green)',
+          opacity: '0.7',
+        }}
+      >
+        <Link
+          to="/privacy"
+          style={{ color: 'var(--moss-green)', margin: '0 10px' }}
+        >
           Privacy Policy
         </Link>
         |
-        <Link to="/terms" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+        <Link
+          to="/terms"
+          style={{ color: 'var(--moss-green)', margin: '0 10px' }}
+        >
           Terms of Service
         </Link>
         |

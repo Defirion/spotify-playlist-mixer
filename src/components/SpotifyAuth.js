@@ -7,11 +7,12 @@ const SpotifyAuth = ({ onAuth }) => {
     'playlist-read-private',
     'playlist-read-collaborative',
     'playlist-modify-public',
-    'playlist-modify-private'
+    'playlist-modify-private',
   ].join(' ');
 
   const handleLogin = () => {
-    const authUrl = `https://accounts.spotify.com/authorize?` +
+    const authUrl =
+      `https://accounts.spotify.com/authorize?` +
       `client_id=${CLIENT_ID}&` +
       `response_type=token&` +
       `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
@@ -30,8 +31,13 @@ const SpotifyAuth = ({ onAuth }) => {
         </button>
       </div>
       <div style={{ marginTop: '20px', fontSize: '14px', opacity: '0.8' }}>
-        <p><strong>Ready to use!</strong></p>
-        <p>Click the button above to connect your Spotify account and start mixing playlists.</p>
+        <p>
+          <strong>Ready to use!</strong>
+        </p>
+        <p>
+          Click the button above to connect your Spotify account and start
+          mixing playlists.
+        </p>
       </div>
     </div>
   );

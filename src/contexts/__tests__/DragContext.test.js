@@ -5,7 +5,7 @@ import { DragProvider, useDrag } from '../DragContext';
 // Test component to interact with the drag context
 const TestComponent = ({ onStateChange }) => {
   const dragContext = useDrag();
-  
+
   React.useEffect(() => {
     if (onStateChange) {
       onStateChange(dragContext);
@@ -16,33 +16,35 @@ const TestComponent = ({ onStateChange }) => {
     <div>
       <div data-testid="is-dragging">{dragContext.isDragging.toString()}</div>
       <div data-testid="drag-type">{dragContext.dragType || 'none'}</div>
-      <div data-testid="dragged-item">{dragContext.draggedItem ? 'item' : 'none'}</div>
-      <button 
-        data-testid="start-drag" 
+      <div data-testid="dragged-item">
+        {dragContext.draggedItem ? 'item' : 'none'}
+      </div>
+      <button
+        data-testid="start-drag"
         onClick={() => dragContext.startDrag({ id: 'test' }, 'custom')}
       >
         Start Drag
       </button>
-      <button 
-        data-testid="end-drag" 
+      <button
+        data-testid="end-drag"
         onClick={() => dragContext.endDrag('success')}
       >
         End Drag
       </button>
-      <button 
-        data-testid="cancel-drag" 
+      <button
+        data-testid="cancel-drag"
         onClick={() => dragContext.cancelDrag('test')}
       >
         Cancel Drag
       </button>
-      <button 
-        data-testid="html5-start" 
+      <button
+        data-testid="html5-start"
         onClick={() => dragContext.notifyHTML5DragStart()}
       >
         HTML5 Start
       </button>
-      <button 
-        data-testid="html5-end" 
+      <button
+        data-testid="html5-end"
         onClick={() => dragContext.notifyHTML5DragEnd()}
       >
         HTML5 End
@@ -59,7 +61,11 @@ describe('DragContext', () => {
     contextState = null;
     const result = render(
       <DragProvider>
-        <TestComponent onStateChange={(state) => { contextState = state; }} />
+        <TestComponent
+          onStateChange={state => {
+            contextState = state;
+          }}
+        />
       </DragProvider>
     );
     getByTestId = result.getByTestId;

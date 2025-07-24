@@ -4,7 +4,7 @@ import {
   handleTrackSelection,
   getTrackQuadrant,
   formatDuration,
-  getPopularityStyle
+  getPopularityStyle,
 } from '../utils/dragAndDrop';
 import { useDrag } from './DragContext';
 
@@ -14,13 +14,13 @@ const AddUnselectedModal = ({
   accessToken,
   selectedPlaylists,
   currentTracks,
-  onAddTracks
+  onAddTracks,
 }) => {
-  const { 
-    isDragging: globalIsDragging, 
-    startDrag, 
+  const {
+    isDragging: globalIsDragging,
+    startDrag,
     cancelDrag,
-    notifyHTML5DragEnd
+    notifyHTML5DragEnd,
   } = useDrag();
   const [allPlaylistTracks, setAllPlaylistTracks] = useState([]);
   const [unselectedTracks, setUnselectedTracks] = useState([]);
@@ -37,7 +37,7 @@ const AddUnselectedModal = ({
     startY: 0,
     longPressTimer: null,
     isLongPress: false,
-    draggedTrack: null
+    draggedTrack: null,
   });
 
   // Enhanced onClose handler
@@ -46,18 +46,17 @@ const AddUnselectedModal = ({
     onClose();
   }, [onClose]);
 
-
-
   useEffect(() => {
     // Filter tracks based on search query
     if (!searchQuery.trim()) {
       setFilteredTracks(unselectedTracks);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = unselectedTracks.filter(track =>
-        track.name.toLowerCase().includes(query) ||
-        track.artists?.[0]?.name.toLowerCase().includes(query) ||
-        track.album?.name.toLowerCase().includes(query)
+      const filtered = unselectedTracks.filter(
+        track =>
+          track.name.toLowerCase().includes(query) ||
+          track.artists?.[0]?.name.toLowerCase().includes(query) ||
+          track.album?.name.toLowerCase().includes(query)
       );
       setFilteredTracks(filtered);
     }
@@ -70,7 +69,9 @@ const AddUnselectedModal = ({
     const limit = 100;
 
     while (true) {
-      const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
+      const response = await api.get(
+        `/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`
+      );
       const tracks = response.data.items
         .filter(item => item.track && item.track.id)
         .map(item => item.track);
@@ -84,43 +85,52 @@ const AddUnselectedModal = ({
     return allTracks;
   };
 
-  const handleTrackSelect = (track) => {
+  const handleTrackSelect = track => {
     handleTrackSelection(track, selectedTracksToAdd, setSelectedTracksToAdd);
   };
 
   const handleAddSelected = () => {
-    const tracksToAdd = filteredTracks.filter(track => selectedTracksToAdd.has(track.id));
+    const tracksToAdd = filteredTracks.filter(track =>
+      selectedTracksToAdd.has(track.id)
+    );
     onAddTracks(tracksToAdd);
-    
+
     // Clear selected tracks but keep modal open for continued browsing
     setSelectedTracksToAdd(new Set());
   };
 
   const handleDragStart = (e, track) => {
-    console.log('[AddUnselectedModal] Desktop drag start for track:', track.name);
+    console.log(
+      '[AddUnselectedModal] Desktop drag start for track:',
+      track.name
+    );
 
     // Context-based drag (primary method)
-    startDrag({
-      data: track,
-      type: 'modal-track',
-      style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
-    }, 'html5');
+    startDrag(
+      {
+        data: track,
+        type: 'modal-track',
+        style: { background: 'var(--moss-green)', border: 'var(--fern-green)' },
+      },
+      'html5'
+    );
 
     // DataTransfer fallback for better compatibility
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/json', JSON.stringify({
-        type: 'modal-track',
-        track: track
-      }));
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({
+          type: 'modal-track',
+          track: track,
+        })
+      );
     }
 
-    console.log('[AddUnselectedModal] Desktop drag started - context should be active');
+    console.log(
+      '[AddUnselectedModal] Desktop drag started - context should be active'
+    );
   };
-
-
-
-  
 
   const handleTouchStart = (e, track) => {
     if (!isMobile) return;
@@ -142,19 +152,26 @@ const AddUnselectedModal = ({
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
 
-      if (deltaY < 12) { // User hasn't moved much, activate drag mode
-        console.log('[AddUnselectedModal] Touch long press activated for track:', track.name);
+      if (deltaY < 12) {
+        // User hasn't moved much, activate drag mode
+        console.log(
+          '[AddUnselectedModal] Touch long press activated for track:',
+          track.name
+        );
 
         setTouchDragState(prev => ({
           ...prev,
           isLongPress: true,
           isDragging: false, // Don't start dragging yet, wait for movement
-          draggedTrack: track
+          draggedTrack: track,
         }));
-        startDrag({
-          data: track,
-          type: 'modal-track'
-        }, 'touch');
+        startDrag(
+          {
+            data: track,
+            type: 'modal-track',
+          },
+          'touch'
+        );
 
         // Provide haptic feedback
         if (navigator.vibrate) {
@@ -169,11 +186,11 @@ const AddUnselectedModal = ({
       currentY: touch.clientY,
       longPressTimer,
       isLongPress: false,
-      draggedTrack: null
+      draggedTrack: null,
     });
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = e => {
     if (!isMobile) return;
 
     const touch = e.touches[0];
@@ -183,12 +200,13 @@ const AddUnselectedModal = ({
     setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
     // If long press hasn't activated yet and user moves too much, cancel it
-    if (!touchDragState.isLongPress && deltaY > 20) { // Threshold for cancelling long press
+    if (!touchDragState.isLongPress && deltaY > 20) {
+      // Threshold for cancelling long press
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
         setTouchDragState(prev => ({
           ...prev,
-          longPressTimer: null
+          longPressTimer: null,
         }));
       }
       return; // Allow normal scrolling - don't prevent default
@@ -202,7 +220,10 @@ const AddUnselectedModal = ({
       }
       e.stopPropagation(); // Stop propagation to prevent parent elements from interfering
 
-      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const elementAtPoint = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
       const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
 
       if (previewPanel) {
@@ -210,15 +231,18 @@ const AddUnselectedModal = ({
           detail: {
             clientX: touch.clientX,
             clientY: touch.clientY,
-            draggedItem: { data: touchDragState.draggedTrack, type: 'modal-track' }
-          }
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'modal-track',
+            },
+          },
         });
         previewPanel.dispatchEvent(dropEvent);
       }
     }
   };
 
-  const handleTouchEnd = (e) => {
+  const handleTouchEnd = e => {
     if (!isMobile) return;
     e.stopPropagation(); // Add stopPropagation here as well
 
@@ -228,7 +252,10 @@ const AddUnselectedModal = ({
 
     if (touchDragState.isLongPress) {
       const touch = e.changedTouches[0];
-      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const elementAtPoint = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
       const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
 
       if (previewPanel) {
@@ -236,8 +263,11 @@ const AddUnselectedModal = ({
           detail: {
             clientX: touch.clientX,
             clientY: touch.clientY,
-            draggedItem: { data: touchDragState.draggedTrack, type: 'modal-track' }
-          }
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'modal-track',
+            },
+          },
         });
         previewPanel.dispatchEvent(dropEvent);
       } else {
@@ -252,7 +282,7 @@ const AddUnselectedModal = ({
       currentY: 0,
       longPressTimer: null,
       isLongPress: false,
-      draggedTrack: null
+      draggedTrack: null,
     });
   };
 
@@ -270,22 +300,29 @@ const AddUnselectedModal = ({
   useEffect(() => {
     if (!isMobile) return;
 
-    const handleGlobalTouchEnd = (e) => {
+    const handleGlobalTouchEnd = e => {
       // Only handle if we have an active drag from this modal
       if (touchDragState.isLongPress && globalIsDragging) {
-        console.log('[AddUnselectedModal] Global touch end detected during drag');
-        
+        console.log(
+          '[AddUnselectedModal] Global touch end detected during drag'
+        );
+
         // Check if the touch ended over a valid drop target
         const touch = e.changedTouches?.[0];
         if (touch) {
-          const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+          const elementAtPoint = document.elementFromPoint(
+            touch.clientX,
+            touch.clientY
+          );
           const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
-          
+
           // If not over preview panel, this is an outside drop - cancel the drag
           if (!previewPanel) {
-            console.log('[AddUnselectedModal] Global touch end outside valid drop area - cancelling drag');
+            console.log(
+              '[AddUnselectedModal] Global touch end outside valid drop area - cancelling drag'
+            );
             cancelDrag('touch-global-outside');
-            
+
             // Reset local touch state
             setTouchDragState({
               isDragging: false,
@@ -293,7 +330,7 @@ const AddUnselectedModal = ({
               currentY: 0,
               longPressTimer: null,
               isLongPress: false,
-              draggedTrack: null
+              draggedTrack: null,
             });
           }
         }
@@ -301,8 +338,10 @@ const AddUnselectedModal = ({
     };
 
     // Add global listener with passive: false to ensure we can detect all touch ends
-    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
-    
+    document.addEventListener('touchend', handleGlobalTouchEnd, {
+      passive: false,
+    });
+
     return () => {
       document.removeEventListener('touchend', handleGlobalTouchEnd);
     };
@@ -328,25 +367,29 @@ const AddUnselectedModal = ({
   useEffect(() => {
     if (!isOpen) {
       // Modal is closing - ensure all drag states are clean
-      console.log('[AddUnselectedModal] Modal closed - resetting all drag states');
+      console.log(
+        '[AddUnselectedModal] Modal closed - resetting all drag states'
+      );
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
         isLongPress: false,
-        draggedTrack: null
+        draggedTrack: null,
       });
     } else {
       // Modal is opening - ensure clean initial state
-      console.log('[AddUnselectedModal] Modal opened - ensuring clean initial state');
+      console.log(
+        '[AddUnselectedModal] Modal opened - ensuring clean initial state'
+      );
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
         isLongPress: false,
-        draggedTrack: null
+        draggedTrack: null,
       });
     }
   }, [isOpen]);
@@ -367,7 +410,7 @@ const AddUnselectedModal = ({
           allTracks.push({
             ...track,
             sourcePlaylist: playlist.id,
-            sourcePlaylistName: playlist.name
+            sourcePlaylistName: playlist.name,
           });
         });
       }
@@ -388,7 +431,9 @@ const AddUnselectedModal = ({
     const currentTrackIds = new Set(currentTracks.map(track => track.id));
 
     // Filter out tracks that are already in the current playlist
-    const unselected = allPlaylistTracks.filter(track => !currentTrackIds.has(track.id));
+    const unselected = allPlaylistTracks.filter(
+      track => !currentTrackIds.has(track.id)
+    );
 
     // Remove duplicates (same track from multiple playlists)
     const uniqueUnselected = [];
@@ -429,11 +474,15 @@ const AddUnselectedModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1000,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
-          transition: 'opacity 0.2s ease'
+          backgroundColor:
+            globalIsDragging || touchDragState.isLongPress
+              ? 'rgba(0, 0, 0, 0.2)'
+              : 'rgba(0, 0, 0, 0.7)',
+          zIndex: globalIsDragging || touchDragState.isLongPress ? 500 : 1000,
+          opacity: globalIsDragging || touchDragState.isLongPress ? 0.3 : 1,
+          pointerEvents:
+            globalIsDragging || touchDragState.isLongPress ? 'none' : 'auto',
+          transition: 'opacity 0.2s ease',
         }}
         onClick={() => {
           if (!globalIsDragging && !touchDragState.isLongPress) {
@@ -458,28 +507,37 @@ const AddUnselectedModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
+          zIndex: globalIsDragging || touchDragState.isLongPress ? 500 : 1001,
+          opacity: globalIsDragging || touchDragState.isLongPress ? 0 : 1,
           transition: 'opacity 0.2s ease',
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
+          pointerEvents:
+            globalIsDragging || touchDragState.isLongPress ? 'none' : 'auto',
         }}
       >
         {/* Header */}
-        <div style={{
-          padding: '20px',
-          borderBottom: '1px solid var(--fern-green)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div
+          style={{
+            padding: '20px',
+            borderBottom: '1px solid var(--fern-green)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
             <h2 style={{ margin: 0, color: 'var(--mindaro)' }}>
               ➕ Add Unselected Tracks
             </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: '0.7' }}>
-              {loading ? 'Loading...' : (
+            <p
+              style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: '0.7' }}
+            >
+              {loading ? (
+                'Loading...'
+              ) : (
                 <>
-                  {filteredTracks.length} tracks available • <strong>Click to select</strong> or <strong>drag to playlist</strong>
+                  {filteredTracks.length} tracks available •{' '}
+                  <strong>Click to select</strong> or{' '}
+                  <strong>drag to playlist</strong>
                 </>
               )}
             </p>
@@ -494,22 +552,29 @@ const AddUnselectedModal = ({
               cursor: 'pointer',
               padding: '4px',
               borderRadius: '4px',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={e =>
+              (e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')
+            }
+            onMouseLeave={e => (e.target.style.backgroundColor = 'transparent')}
           >
             ×
           </button>
         </div>
 
         {/* Search */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--fern-green)' }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid var(--fern-green)',
+          }}
+        >
           <input
             type="text"
             placeholder="Search tracks, artists, or albums..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -518,41 +583,49 @@ const AddUnselectedModal = ({
               borderRadius: '8px',
               backgroundColor: 'var(--dark-green)',
               color: 'var(--mindaro)',
-              outline: 'none'
+              outline: 'none',
             }}
-            onFocus={(e) => e.target.style.borderColor = 'var(--moss-green)'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--fern-green)'}
+            onFocus={e => (e.target.style.borderColor = 'var(--moss-green)')}
+            onBlur={e => (e.target.style.borderColor = 'var(--fern-green)')}
           />
         </div>
 
         {/* Track List */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '0'
-        }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0',
+          }}
+        >
           {loading ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '200px',
-              color: 'var(--mindaro)',
-              opacity: '0.7'
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '200px',
+                color: 'var(--mindaro)',
+                opacity: '0.7',
+              }}
+            >
               Loading unselected tracks...
             </div>
           ) : filteredTracks.length === 0 ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '200px',
-              color: 'var(--mindaro)',
-              opacity: '0.7',
-              textAlign: 'center'
-            }}>
-              {searchQuery ? 'No tracks match your search' : 'All tracks from your playlists are already included'}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '200px',
+                color: 'var(--mindaro)',
+                opacity: '0.7',
+                textAlign: 'center',
+              }}
+            >
+              {searchQuery
+                ? 'No tracks match your search'
+                : 'All tracks from your playlists are already included'}
             </div>
           ) : (
             filteredTracks.map((track, index) => {
@@ -563,78 +636,112 @@ const AddUnselectedModal = ({
                 <div
                   key={track.id}
                   draggable={!isMobile}
-                  onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
-                  onDragEnd={!isMobile ? (e) => {
-                    console.log('[AddUnselectedModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
-                    notifyHTML5DragEnd();
-                    
-                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
-                    if (e.dataTransfer.dropEffect === 'none') {
-                      console.log('[AddUnselectedModal] Drag was cancelled - cleaning up context');
-                      cancelDrag('html5-cancelled');
-                    }
-                  } : undefined}
-                  onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
+                  onDragStart={
+                    !isMobile ? e => handleDragStart(e, track) : undefined
+                  }
+                  onDragEnd={
+                    !isMobile
+                      ? e => {
+                          console.log(
+                            '[AddUnselectedModal] HTML5 drag end, dropEffect:',
+                            e.dataTransfer.dropEffect
+                          );
+                          notifyHTML5DragEnd();
+
+                          // If drag was cancelled (dropEffect is 'none'), cancel the context drag
+                          if (e.dataTransfer.dropEffect === 'none') {
+                            console.log(
+                              '[AddUnselectedModal] Drag was cancelled - cleaning up context'
+                            );
+                            cancelDrag('html5-cancelled');
+                          }
+                        }
+                      : undefined
+                  }
+                  onTouchStart={
+                    isMobile ? e => handleTouchStart(e, track) : undefined
+                  }
                   onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   onTouchMove={isMobile ? handleTouchMove : undefined}
                   style={{
                     ...{
                       padding: '12px 20px',
-                      borderBottom: index < filteredTracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                      borderBottom:
+                        index < filteredTracks.length - 1
+                          ? '1px solid rgba(79, 119, 45, 0.3)'
+                          : 'none',
                       display: 'flex',
                       alignItems: 'center',
                       cursor: 'grab',
-                      backgroundColor: isSelected ? 'rgba(144, 169, 85, 0.2)' : 'transparent',
-                      transition: 'background-color 0.2s'
+                      backgroundColor: isSelected
+                        ? 'rgba(144, 169, 85, 0.2)'
+                        : 'transparent',
+                      transition: 'background-color 0.2s',
                     },
                     // Only disable touch actions during active drag
                     touchAction: touchDragState.isLongPress ? 'none' : 'auto',
                     userSelect: 'none',
-                    WebkitUserSelect: 'none'
+                    WebkitUserSelect: 'none',
                   }}
                   onClick={() => handleTrackSelect(track)}
-
-                  onMouseDown={(e) => {
+                  onMouseDown={e => {
                     // Change cursor to grabbing when starting to drag
                     e.currentTarget.style.cursor = 'grabbing';
                   }}
-                  onMouseUp={(e) => {
+                  onMouseUp={e => {
                     // Reset cursor
                     e.currentTarget.style.cursor = 'grab';
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'rgba(144, 169, 85, 0.1)';
+                      e.currentTarget.style.backgroundColor =
+                        'rgba(144, 169, 85, 0.1)';
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (!isSelected) {
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }
                   }}
                 >
                   {/* Checkbox */}
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    border: '2px solid var(--moss-green)',
-                    borderRadius: '4px',
-                    marginRight: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isSelected ? 'var(--moss-green)' : 'transparent',
-                    transition: 'all 0.2s'
-                  }}>
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid var(--moss-green)',
+                      borderRadius: '4px',
+                      marginRight: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isSelected
+                        ? 'var(--moss-green)'
+                        : 'transparent',
+                      transition: 'all 0.2s',
+                    }}
+                  >
                     {isSelected && (
-                      <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                      <span
+                        style={{
+                          color: 'white',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        ✓
+                      </span>
                     )}
                   </div>
 
                   {/* Album Art */}
                   {track.album?.images?.[0]?.url && (
                     <img
-                      src={track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url}
+                      src={
+                        track.album.images[2]?.url ||
+                        track.album.images[1]?.url ||
+                        track.album.images[0]?.url
+                      }
                       alt={`${track.album.name} album cover`}
                       style={{
                         width: '40px',
@@ -642,9 +749,9 @@ const AddUnselectedModal = ({
                         borderRadius: '4px',
                         objectFit: 'cover',
                         marginRight: '12px',
-                        flexShrink: 0
+                        flexShrink: 0,
                       }}
-                      onError={(e) => {
+                      onError={e => {
                         e.target.style.display = 'none';
                       }}
                     />
@@ -652,65 +759,79 @@ const AddUnselectedModal = ({
 
                   {/* Track Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontWeight: '500',
-                      fontSize: '14px',
-                      color: 'var(--mindaro)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: '1.3',
-                      maxHeight: '2.8em'
-                    }}>
+                    <div
+                      style={{
+                        fontWeight: '500',
+                        fontSize: '14px',
+                        color: 'var(--mindaro)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.3',
+                        maxHeight: '2.8em',
+                      }}
+                    >
                       {track.name}
                     </div>
-                    <div style={{
-                      fontSize: '12px',
-                      opacity: '0.7',
-                      color: 'var(--mindaro)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      marginTop: '2px'
-                    }}>
-                      <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        opacity: '0.7',
+                        color: 'var(--mindaro)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginTop: '2px',
+                      }}
+                    >
+                      <span>
+                        {track.artists?.[0]?.name || 'Unknown Artist'}
+                      </span>
                       <span>•</span>
                       <span style={{ color: 'var(--moss-green)' }}>
                         {track.sourcePlaylistName}
                       </span>
-                      {track.popularity !== undefined && (() => {
-                        const popStyle = getPopularityStyle(quadrant, track.popularity);
-                        return (
-                          <>
-                            <span>•</span>
-                            <span style={{
-                              fontSize: '10px',
-                              background: popStyle.background,
-                              color: popStyle.color,
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              fontWeight: '500'
-                            }}>
-                              {popStyle.text}
-                            </span>
-                          </>
-                        );
-                      })()}
+                      {track.popularity !== undefined &&
+                        (() => {
+                          const popStyle = getPopularityStyle(
+                            quadrant,
+                            track.popularity
+                          );
+                          return (
+                            <>
+                              <span>•</span>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  background: popStyle.background,
+                                  color: popStyle.color,
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {popStyle.text}
+                              </span>
+                            </>
+                          );
+                        })()}
                     </div>
                   </div>
 
                   {/* Duration */}
-                  <div style={{
-                    fontSize: '11px',
-                    opacity: '0.6',
-                    color: 'var(--mindaro)',
-                    marginLeft: '12px'
-                  }}>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      opacity: '0.6',
+                      color: 'var(--mindaro)',
+                      marginLeft: '12px',
+                    }}
+                  >
                     {formatDuration(track.duration_ms || 0)}
                   </div>
                 </div>
@@ -720,15 +841,24 @@ const AddUnselectedModal = ({
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: '16px 20px',
-          borderTop: '1px solid var(--fern-green)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{ fontSize: '14px', opacity: '0.7', color: 'var(--mindaro)' }}>
-            {selectedTracksToAdd.size} track{selectedTracksToAdd.size !== 1 ? 's' : ''} selected
+        <div
+          style={{
+            padding: '16px 20px',
+            borderTop: '1px solid var(--fern-green)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '14px',
+              opacity: '0.7',
+              color: 'var(--mindaro)',
+            }}
+          >
+            {selectedTracksToAdd.size} track
+            {selectedTracksToAdd.size !== 1 ? 's' : ''} selected
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
@@ -741,10 +871,14 @@ const AddUnselectedModal = ({
                 color: 'var(--mindaro)',
                 cursor: 'pointer',
                 fontSize: '14px',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onMouseEnter={e =>
+                (e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')
+              }
+              onMouseLeave={e =>
+                (e.target.style.backgroundColor = 'transparent')
+              }
             >
               Cancel
             </button>
@@ -755,25 +889,30 @@ const AddUnselectedModal = ({
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '6px',
-                backgroundColor: selectedTracksToAdd.size > 0 ? 'var(--moss-green)' : 'rgba(144, 169, 85, 0.3)',
+                backgroundColor:
+                  selectedTracksToAdd.size > 0
+                    ? 'var(--moss-green)'
+                    : 'rgba(144, 169, 85, 0.3)',
                 color: 'white',
-                cursor: selectedTracksToAdd.size > 0 ? 'pointer' : 'not-allowed',
+                cursor:
+                  selectedTracksToAdd.size > 0 ? 'pointer' : 'not-allowed',
                 fontSize: '14px',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (selectedTracksToAdd.size > 0) {
                   e.target.style.backgroundColor = 'var(--fern-green)';
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 if (selectedTracksToAdd.size > 0) {
                   e.target.style.backgroundColor = 'var(--moss-green)';
                 }
               }}
             >
-              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
+              Add {selectedTracksToAdd.size} Track
+              {selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
             </button>
           </div>
         </div>

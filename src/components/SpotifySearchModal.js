@@ -4,27 +4,22 @@ import {
   handleTrackSelection,
   getTrackQuadrant,
   formatDuration,
-  getPopularityStyle
+  getPopularityStyle,
 } from '../utils/dragAndDrop';
 import { useDrag } from './DragContext';
 
-const SpotifySearchModal = ({ 
-  isOpen, 
-  onClose, 
-  accessToken, 
-  onAddTracks
-}) => {
-  const { 
-    isDragging: globalIsDragging, 
-    startDrag, 
+const SpotifySearchModal = ({ isOpen, onClose, accessToken, onAddTracks }) => {
+  const {
+    isDragging: globalIsDragging,
+    startDrag,
     cancelDrag,
-    notifyHTML5DragEnd
+    notifyHTML5DragEnd,
   } = useDrag();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
-  
+
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
 
   // Touch handlers for mobile
@@ -33,7 +28,7 @@ const SpotifySearchModal = ({
     startY: 0,
     longPressTimer: null,
     isLongPress: false,
-    draggedTrack: null
+    draggedTrack: null,
   });
 
   // Enhanced onClose handler
@@ -41,8 +36,6 @@ const SpotifySearchModal = ({
     console.log('[SpotifySearchModal] Modal closing');
     onClose();
   }, [onClose]);
-
-
 
   const handleSpotifySearch = async () => {
     if (!searchQuery.trim()) {
@@ -53,10 +46,11 @@ const SpotifySearchModal = ({
     try {
       setLoading(true);
       const api = getSpotifyApi(accessToken);
-      
-      const response = await api.get(`/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=20`);
+
+      const response = await api.get(
+        `/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=20`
+      );
       setSearchResults(response.data.tracks.items || []);
-      
     } catch (err) {
       console.error('Failed to search for songs:', err);
       setSearchResults([]);
@@ -65,7 +59,7 @@ const SpotifySearchModal = ({
     }
   };
 
-  const handleTrackSelect = (track) => {
+  const handleTrackSelect = track => {
     handleTrackSelection(track, selectedTracksToAdd, setSelectedTracksToAdd);
   };
 
@@ -75,46 +69,53 @@ const SpotifySearchModal = ({
       .map(track => ({
         ...track,
         sourcePlaylist: 'search',
-        sourcePlaylistName: 'Spotify Search'
+        sourcePlaylistName: 'Spotify Search',
       }));
-    
+
     onAddTracks(tracksToAdd);
-    
+
     // Clear selected tracks but keep modal open for continued searching
     setSelectedTracksToAdd(new Set());
   };
 
   const handleDragStart = (e, track) => {
-    console.log('[SpotifySearchModal] Desktop drag start for track:', track.name);
-    
+    console.log(
+      '[SpotifySearchModal] Desktop drag start for track:',
+      track.name
+    );
+
     const trackWithSource = {
       ...track,
       sourcePlaylist: 'search',
-      sourcePlaylistName: 'Spotify Search'
+      sourcePlaylistName: 'Spotify Search',
     };
-    
+
     // Context-based drag (primary method)
-    startDrag({
-      data: trackWithSource,
-      type: 'search-track',
-      style: { background: '#1DB954', border: '#1ed760' }
-    }, 'html5');
-    
+    startDrag(
+      {
+        data: trackWithSource,
+        type: 'search-track',
+        style: { background: '#1DB954', border: '#1ed760' },
+      },
+      'html5'
+    );
+
     // DataTransfer fallback for better compatibility
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/json', JSON.stringify({
-        type: 'search-track',
-        track: trackWithSource
-      }));
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({
+          type: 'search-track',
+          track: trackWithSource,
+        })
+      );
     }
-    
-    console.log('[SpotifySearchModal] Desktop drag started - context should be active');
+
+    console.log(
+      '[SpotifySearchModal] Desktop drag started - context should be active'
+    );
   };
-
-  
-
-  
 
   const handleTouchStart = (e, track) => {
     if (!isMobile) return;
@@ -127,7 +128,7 @@ const SpotifySearchModal = ({
     const trackWithSource = {
       ...track,
       sourcePlaylist: 'search',
-      sourcePlaylistName: 'Spotify Search'
+      sourcePlaylistName: 'Spotify Search',
     };
 
     // Clear any existing timer
@@ -141,17 +142,24 @@ const SpotifySearchModal = ({
       const currentY = touchDragState.currentY || touch.clientY;
       const deltaY = Math.abs(currentY - touch.clientY);
 
-      if (deltaY < 12) { // User hasn't moved much, activate drag mode
-        console.log('[SpotifySearchModal] Long press activated for track:', track.name);
+      if (deltaY < 12) {
+        // User hasn't moved much, activate drag mode
+        console.log(
+          '[SpotifySearchModal] Long press activated for track:',
+          track.name
+        );
         setTouchDragState(prev => ({
           ...prev,
           isLongPress: true,
-          draggedTrack: trackWithSource
+          draggedTrack: trackWithSource,
         }));
-        startDrag({
-          data: trackWithSource,
-          type: 'search-track'
-        }, 'touch');
+        startDrag(
+          {
+            data: trackWithSource,
+            type: 'search-track',
+          },
+          'touch'
+        );
 
         // Provide haptic feedback
         if (navigator.vibrate) {
@@ -166,26 +174,27 @@ const SpotifySearchModal = ({
       currentY: touch.clientY,
       longPressTimer,
       isLongPress: false,
-      draggedTrack: null
+      draggedTrack: null,
     });
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = e => {
     if (!isMobile) return;
 
     const touch = e.touches[0];
     const deltaY = Math.abs(touch.clientY - touchDragState.startY);
-    
+
     // Update current position
     setTouchDragState(prev => ({ ...prev, currentY: touch.clientY }));
 
     // If long press hasn't activated yet and user moves too much, cancel it
-    if (!touchDragState.isLongPress && deltaY > 20) { // Threshold for cancelling long press
+    if (!touchDragState.isLongPress && deltaY > 20) {
+      // Threshold for cancelling long press
       if (touchDragState.longPressTimer) {
         clearTimeout(touchDragState.longPressTimer);
         setTouchDragState(prev => ({
           ...prev,
-          longPressTimer: null
+          longPressTimer: null,
         }));
       }
       return; // Allow normal scrolling - don't prevent default
@@ -199,23 +208,29 @@ const SpotifySearchModal = ({
       }
       e.stopPropagation(); // Stop propagation to prevent parent elements from interfering
 
-      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const elementAtPoint = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
       const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
-      
+
       if (previewPanel) {
         const dropEvent = new CustomEvent('externalDragOver', {
           detail: {
             clientX: touch.clientX,
             clientY: touch.clientY,
-            draggedItem: { data: touchDragState.draggedTrack, type: 'search-track' }
-          }
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'search-track',
+            },
+          },
         });
         previewPanel.dispatchEvent(dropEvent);
       }
     }
   };
 
-  const handleTouchEnd = (e) => {
+  const handleTouchEnd = e => {
     if (!isMobile) return;
     e.stopPropagation(); // Add stopPropagation here as well
 
@@ -225,16 +240,22 @@ const SpotifySearchModal = ({
 
     if (touchDragState.isLongPress) {
       const touch = e.changedTouches[0];
-      const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+      const elementAtPoint = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
       const previewPanel = elementAtPoint?.closest('[data-preview-panel]');
-      
+
       if (previewPanel) {
         const dropEvent = new CustomEvent('externalDrop', {
           detail: {
             clientX: touch.clientX,
             clientY: touch.clientY,
-            draggedItem: { data: touchDragState.draggedTrack, type: 'search-track' }
-          }
+            draggedItem: {
+              data: touchDragState.draggedTrack,
+              type: 'search-track',
+            },
+          },
         });
         previewPanel.dispatchEvent(dropEvent);
       } else {
@@ -249,7 +270,7 @@ const SpotifySearchModal = ({
       currentY: 0,
       longPressTimer: null,
       isLongPress: false,
-      draggedTrack: null
+      draggedTrack: null,
     });
   };
 
@@ -285,25 +306,29 @@ const SpotifySearchModal = ({
   useEffect(() => {
     if (!isOpen) {
       // Modal is closing - ensure all drag states are clean
-      console.log('[SpotifySearchModal] Modal closed - resetting all drag states');
+      console.log(
+        '[SpotifySearchModal] Modal closed - resetting all drag states'
+      );
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
         isLongPress: false,
-        draggedTrack: null
+        draggedTrack: null,
       });
     } else {
       // Modal is opening - ensure clean initial state
-      console.log('[SpotifySearchModal] Modal opened - ensuring clean initial state');
+      console.log(
+        '[SpotifySearchModal] Modal opened - ensuring clean initial state'
+      );
       setTouchDragState({
         isDragging: false,
         startY: 0,
         currentY: 0,
         longPressTimer: null,
         isLongPress: false,
-        draggedTrack: null
+        draggedTrack: null,
       });
     }
   }, [isOpen]);
@@ -320,11 +345,15 @@ const SpotifySearchModal = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: (globalIsDragging || touchDragState.isLongPress) ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.7)',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1000,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0.3 : 1,
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto',
-          transition: 'opacity 0.2s ease'
+          backgroundColor:
+            globalIsDragging || touchDragState.isLongPress
+              ? 'rgba(0, 0, 0, 0.2)'
+              : 'rgba(0, 0, 0, 0.7)',
+          zIndex: globalIsDragging || touchDragState.isLongPress ? 500 : 1000,
+          opacity: globalIsDragging || touchDragState.isLongPress ? 0.3 : 1,
+          pointerEvents:
+            globalIsDragging || touchDragState.isLongPress ? 'none' : 'auto',
+          transition: 'opacity 0.2s ease',
         }}
         onClick={() => {
           if (!globalIsDragging && !touchDragState.isLongPress) {
@@ -332,9 +361,9 @@ const SpotifySearchModal = ({
           }
         }}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         style={{
           position: 'fixed',
           top: '65%',
@@ -349,28 +378,37 @@ const SpotifySearchModal = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          zIndex: (globalIsDragging || touchDragState.isLongPress) ? 500 : 1001,
-          opacity: (globalIsDragging || touchDragState.isLongPress) ? 0 : 1,
+          zIndex: globalIsDragging || touchDragState.isLongPress ? 500 : 1001,
+          opacity: globalIsDragging || touchDragState.isLongPress ? 0 : 1,
           transition: 'opacity 0.2s ease',
-          pointerEvents: (globalIsDragging || touchDragState.isLongPress) ? 'none' : 'auto'
+          pointerEvents:
+            globalIsDragging || touchDragState.isLongPress ? 'none' : 'auto',
         }}
       >
         {/* Header */}
-        <div style={{
-          padding: '20px',
-          borderBottom: '1px solid var(--fern-green)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div
+          style={{
+            padding: '20px',
+            borderBottom: '1px solid var(--fern-green)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
             <h2 style={{ margin: 0, color: 'var(--mindaro)' }}>
               🎵 Search Spotify
             </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: '0.7' }}>
-              {loading ? 'Searching...' : (
+            <p
+              style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: '0.7' }}
+            >
+              {loading ? (
+                'Searching...'
+              ) : (
                 <>
-                  {searchResults.length} tracks found • <strong>Click to select</strong> or <strong>drag to playlist</strong>
+                  {searchResults.length} tracks found •{' '}
+                  <strong>Click to select</strong> or{' '}
+                  <strong>drag to playlist</strong>
                 </>
               )}
             </p>
@@ -385,23 +423,30 @@ const SpotifySearchModal = ({
               cursor: 'pointer',
               padding: '4px',
               borderRadius: '4px',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={e =>
+              (e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')
+            }
+            onMouseLeave={e => (e.target.style.backgroundColor = 'transparent')}
           >
             ×
           </button>
         </div>
 
         {/* Search */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--fern-green)' }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid var(--fern-green)',
+          }}
+        >
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
               type="text"
               placeholder="Search for songs, artists, or albums..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -410,11 +455,11 @@ const SpotifySearchModal = ({
                 borderRadius: '8px',
                 backgroundColor: 'var(--dark-green)',
                 color: 'var(--mindaro)',
-                outline: 'none'
+                outline: 'none',
               }}
-              onKeyPress={(e) => e.key === 'Enter' && handleSpotifySearch()}
-              onFocus={(e) => e.target.style.borderColor = 'var(--moss-green)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--fern-green)'}
+              onKeyPress={e => e.key === 'Enter' && handleSpotifySearch()}
+              onFocus={e => (e.target.style.borderColor = 'var(--moss-green)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--fern-green)')}
               autoFocus
             />
             <button
@@ -424,19 +469,23 @@ const SpotifySearchModal = ({
                 padding: '12px 20px',
                 border: 'none',
                 borderRadius: '8px',
-                backgroundColor: loading || !searchQuery.trim() ? 'rgba(29, 185, 84, 0.3)' : '#1DB954',
+                backgroundColor:
+                  loading || !searchQuery.trim()
+                    ? 'rgba(29, 185, 84, 0.3)'
+                    : '#1DB954',
                 color: 'white',
-                cursor: loading || !searchQuery.trim() ? 'not-allowed' : 'pointer',
+                cursor:
+                  loading || !searchQuery.trim() ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (!loading && searchQuery.trim()) {
                   e.target.style.backgroundColor = '#1ed760';
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 if (!loading && searchQuery.trim()) {
                   e.target.style.backgroundColor = '#1DB954';
                 }
@@ -448,114 +497,155 @@ const SpotifySearchModal = ({
         </div>
 
         {/* Track List */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '0'
-        }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0',
+          }}
+        >
           {loading ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '200px',
-              color: 'var(--mindaro)',
-              opacity: '0.7'
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '200px',
+                color: 'var(--mindaro)',
+                opacity: '0.7',
+              }}
+            >
               Searching Spotify...
             </div>
           ) : searchResults.length === 0 ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '200px',
-              color: 'var(--mindaro)',
-              opacity: '0.7',
-              textAlign: 'center'
-            }}>
-              {searchQuery ? 'No tracks found. Try a different search term.' : 'Enter a search term to find songs on Spotify'}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '200px',
+                color: 'var(--mindaro)',
+                opacity: '0.7',
+                textAlign: 'center',
+              }}
+            >
+              {searchQuery
+                ? 'No tracks found. Try a different search term.'
+                : 'Enter a search term to find songs on Spotify'}
             </div>
           ) : (
             searchResults.map((track, index) => {
               const quadrant = getTrackQuadrant(track);
               const isSelected = selectedTracksToAdd.has(track.id);
-              
+
               return (
                 <div
                   key={track.id}
                   draggable={!isMobile}
-                  onDragStart={!isMobile ? (e) => handleDragStart(e, track) : undefined}
-                  onDragEnd={!isMobile ? (e) => {
-                    console.log('[SpotifySearchModal] HTML5 drag end, dropEffect:', e.dataTransfer.dropEffect);
-                    notifyHTML5DragEnd();
-                    
-                    // If drag was cancelled (dropEffect is 'none'), cancel the context drag
-                    if (e.dataTransfer.dropEffect === 'none') {
-                      console.log('[SpotifySearchModal] Drag was cancelled - cleaning up context');
-                      cancelDrag('html5-cancelled');
-                    }
-                  } : undefined}
-                  onTouchStart={isMobile ? (e) => handleTouchStart(e, track) : undefined}
+                  onDragStart={
+                    !isMobile ? e => handleDragStart(e, track) : undefined
+                  }
+                  onDragEnd={
+                    !isMobile
+                      ? e => {
+                          console.log(
+                            '[SpotifySearchModal] HTML5 drag end, dropEffect:',
+                            e.dataTransfer.dropEffect
+                          );
+                          notifyHTML5DragEnd();
+
+                          // If drag was cancelled (dropEffect is 'none'), cancel the context drag
+                          if (e.dataTransfer.dropEffect === 'none') {
+                            console.log(
+                              '[SpotifySearchModal] Drag was cancelled - cleaning up context'
+                            );
+                            cancelDrag('html5-cancelled');
+                          }
+                        }
+                      : undefined
+                  }
+                  onTouchStart={
+                    isMobile ? e => handleTouchStart(e, track) : undefined
+                  }
                   onTouchEnd={isMobile ? handleTouchEnd : undefined}
                   onTouchMove={isMobile ? handleTouchMove : undefined}
                   style={{
                     ...{
                       padding: '12px 20px',
-                      borderBottom: index < searchResults.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                      borderBottom:
+                        index < searchResults.length - 1
+                          ? '1px solid rgba(79, 119, 45, 0.3)'
+                          : 'none',
                       display: 'flex',
                       alignItems: 'center',
                       cursor: 'grab',
-                      backgroundColor: isSelected ? 'rgba(29, 185, 84, 0.2)' : 'transparent',
-                      transition: 'background-color 0.2s'
+                      backgroundColor: isSelected
+                        ? 'rgba(29, 185, 84, 0.2)'
+                        : 'transparent',
+                      transition: 'background-color 0.2s',
                     },
                     // Only disable touch actions during active drag
                     touchAction: touchDragState.isLongPress ? 'none' : 'auto',
                     userSelect: 'none',
-                    WebkitUserSelect: 'none'
+                    WebkitUserSelect: 'none',
                   }}
                   onClick={() => handleTrackSelect(track)}
-                  onMouseDown={(e) => {
+                  onMouseDown={e => {
                     // Change cursor to grabbing when starting to drag
                     e.currentTarget.style.cursor = 'grabbing';
                   }}
-                  onMouseUp={(e) => {
+                  onMouseUp={e => {
                     // Reset cursor
                     e.currentTarget.style.cursor = 'grab';
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'rgba(29, 185, 84, 0.1)';
+                      e.currentTarget.style.backgroundColor =
+                        'rgba(29, 185, 84, 0.1)';
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (!isSelected) {
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }
                   }}
                 >
                   {/* Checkbox */}
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    border: '2px solid #1DB954',
-                    borderRadius: '4px',
-                    marginRight: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isSelected ? '#1DB954' : 'transparent',
-                    transition: 'all 0.2s'
-                  }}>
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #1DB954',
+                      borderRadius: '4px',
+                      marginRight: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isSelected ? '#1DB954' : 'transparent',
+                      transition: 'all 0.2s',
+                    }}
+                  >
                     {isSelected && (
-                      <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                      <span
+                        style={{
+                          color: 'white',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        ✓
+                      </span>
                     )}
                   </div>
 
                   {/* Album Art */}
                   {track.album?.images?.[0]?.url && (
-                    <img 
-                      src={track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url}
+                    <img
+                      src={
+                        track.album.images[2]?.url ||
+                        track.album.images[1]?.url ||
+                        track.album.images[0]?.url
+                      }
                       alt={`${track.album.name} album cover`}
                       style={{
                         width: '40px',
@@ -563,9 +653,9 @@ const SpotifySearchModal = ({
                         borderRadius: '4px',
                         objectFit: 'cover',
                         marginRight: '12px',
-                        flexShrink: 0
+                        flexShrink: 0,
                       }}
-                      onError={(e) => {
+                      onError={e => {
                         e.target.style.display = 'none';
                       }}
                     />
@@ -573,65 +663,79 @@ const SpotifySearchModal = ({
 
                   {/* Track Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontWeight: '500',
-                      fontSize: '14px',
-                      color: 'var(--mindaro)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: '1.3',
-                      maxHeight: '2.8em'
-                    }}>
+                    <div
+                      style={{
+                        fontWeight: '500',
+                        fontSize: '14px',
+                        color: 'var(--mindaro)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.3',
+                        maxHeight: '2.8em',
+                      }}
+                    >
                       {track.name}
                     </div>
-                    <div style={{
-                      fontSize: '12px',
-                      opacity: '0.7',
-                      color: 'var(--mindaro)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      marginTop: '2px'
-                    }}>
-                      <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        opacity: '0.7',
+                        color: 'var(--mindaro)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginTop: '2px',
+                      }}
+                    >
+                      <span>
+                        {track.artists?.[0]?.name || 'Unknown Artist'}
+                      </span>
                       <span>•</span>
                       <span style={{ color: '#1DB954' }}>
                         🔍 Spotify Search
                       </span>
-                      {track.popularity !== undefined && (() => {
-                        const popStyle = getPopularityStyle(quadrant, track.popularity);
-                        return (
-                          <>
-                            <span>•</span>
-                            <span style={{ 
-                              fontSize: '10px', 
-                              background: popStyle.background,
-                              color: popStyle.color,
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              fontWeight: '500'
-                            }}>
-                              {popStyle.text}
-                            </span>
-                          </>
-                        );
-                      })()}
+                      {track.popularity !== undefined &&
+                        (() => {
+                          const popStyle = getPopularityStyle(
+                            quadrant,
+                            track.popularity
+                          );
+                          return (
+                            <>
+                              <span>•</span>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  background: popStyle.background,
+                                  color: popStyle.color,
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {popStyle.text}
+                              </span>
+                            </>
+                          );
+                        })()}
                     </div>
                   </div>
 
                   {/* Duration */}
-                  <div style={{
-                    fontSize: '11px',
-                    opacity: '0.6',
-                    color: 'var(--mindaro)',
-                    marginLeft: '12px'
-                  }}>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      opacity: '0.6',
+                      color: 'var(--mindaro)',
+                      marginLeft: '12px',
+                    }}
+                  >
                     {formatDuration(track.duration_ms || 0)}
                   </div>
                 </div>
@@ -641,15 +745,24 @@ const SpotifySearchModal = ({
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: '16px 20px',
-          borderTop: '1px solid var(--fern-green)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{ fontSize: '14px', opacity: '0.7', color: 'var(--mindaro)' }}>
-            {selectedTracksToAdd.size} track{selectedTracksToAdd.size !== 1 ? 's' : ''} selected
+        <div
+          style={{
+            padding: '16px 20px',
+            borderTop: '1px solid var(--fern-green)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '14px',
+              opacity: '0.7',
+              color: 'var(--mindaro)',
+            }}
+          >
+            {selectedTracksToAdd.size} track
+            {selectedTracksToAdd.size !== 1 ? 's' : ''} selected
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
@@ -662,10 +775,14 @@ const SpotifySearchModal = ({
                 color: 'var(--mindaro)',
                 cursor: 'pointer',
                 fontSize: '14px',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onMouseEnter={e =>
+                (e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')
+              }
+              onMouseLeave={e =>
+                (e.target.style.backgroundColor = 'transparent')
+              }
             >
               Cancel
             </button>
@@ -676,25 +793,30 @@ const SpotifySearchModal = ({
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '6px',
-                backgroundColor: selectedTracksToAdd.size > 0 ? '#1DB954' : 'rgba(29, 185, 84, 0.3)',
+                backgroundColor:
+                  selectedTracksToAdd.size > 0
+                    ? '#1DB954'
+                    : 'rgba(29, 185, 84, 0.3)',
                 color: 'white',
-                cursor: selectedTracksToAdd.size > 0 ? 'pointer' : 'not-allowed',
+                cursor:
+                  selectedTracksToAdd.size > 0 ? 'pointer' : 'not-allowed',
                 fontSize: '14px',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (selectedTracksToAdd.size > 0) {
                   e.target.style.backgroundColor = '#1ed760';
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 if (selectedTracksToAdd.size > 0) {
                   e.target.style.backgroundColor = '#1DB954';
                 }
               }}
             >
-              Add {selectedTracksToAdd.size} Track{selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
+              Add {selectedTracksToAdd.size} Track
+              {selectedTracksToAdd.size !== 1 ? 's' : ''} & Continue
             </button>
           </div>
         </div>

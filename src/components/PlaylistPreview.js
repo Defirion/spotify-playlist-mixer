@@ -8,7 +8,7 @@ const PlaylistPreview = ({
   mixOptions,
   onCreatePlaylist,
   onError,
-  onPreviewOrderChange
+  onPreviewOrderChange,
 }) => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,43 +35,58 @@ const PlaylistPreview = ({
         ...mixOptions,
         // For useAllSongs mode, generate the full mix for accurate preview
         // For other modes, limit preview size for performance
-        totalSongs: mixOptions.useAllSongs ? mixOptions.totalSongs :
-          mixOptions.useTimeLimit ? Math.min(60, mixOptions.totalSongs || 60) :
-            Math.min(50, mixOptions.totalSongs || 50),
+        totalSongs: mixOptions.useAllSongs
+          ? mixOptions.totalSongs
+          : mixOptions.useTimeLimit
+            ? Math.min(60, mixOptions.totalSongs || 60)
+            : Math.min(50, mixOptions.totalSongs || 50),
         // Keep original time/song settings for useAllSongs mode
-        useTimeLimit: mixOptions.useAllSongs ? mixOptions.useTimeLimit : false
+        useTimeLimit: mixOptions.useAllSongs ? mixOptions.useTimeLimit : false,
       };
 
-      const previewTracks = mixPlaylists(playlistTracks, ratioConfig, previewOptions);
+      const previewTracks = mixPlaylists(
+        playlistTracks,
+        ratioConfig,
+        previewOptions
+      );
 
       // Calculate some stats
       const playlistStats = {};
       selectedPlaylists.forEach(playlist => {
         playlistStats[playlist.id] = {
           name: playlist.name,
-          count: previewTracks.filter(track => track.sourcePlaylist === playlist.id).length,
+          count: previewTracks.filter(
+            track => track.sourcePlaylist === playlist.id
+          ).length,
           totalDuration: previewTracks
             .filter(track => track.sourcePlaylist === playlist.id)
-            .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+            .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
         };
       });
 
       // Add Spotify Search stats if there are any search tracks
-      const searchTracks = previewTracks.filter(track => track.sourcePlaylist === 'search');
+      const searchTracks = previewTracks.filter(
+        track => track.sourcePlaylist === 'search'
+      );
       if (searchTracks.length > 0) {
         playlistStats['search'] = {
           name: '🔍 Spotify Search',
           count: searchTracks.length,
-          totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+          totalDuration: searchTracks.reduce(
+            (sum, track) => sum + (track.duration_ms || 0),
+            0
+          ),
         };
       }
 
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
-        totalDuration: previewTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        totalDuration: previewTracks.reduce(
+          (sum, track) => sum + (track.duration_ms || 0),
+          0
+        ),
       });
-
     } catch (err) {
       onError('Failed to generate preview: ' + err.message);
       console.error(err);
@@ -86,7 +101,9 @@ const PlaylistPreview = ({
     const limit = 100;
 
     while (true) {
-      const response = await api.get(`/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`);
+      const response = await api.get(
+        `/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`
+      );
       const tracks = response.data.items
         .filter(item => item.track && item.track.id)
         .map(item => item.track);
@@ -100,13 +117,13 @@ const PlaylistPreview = ({
     return allTracks;
   };
 
-  const formatDuration = (ms) => {
+  const formatDuration = ms => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatTotalDuration = (ms) => {
+  const formatTotalDuration = ms => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
@@ -151,7 +168,7 @@ const PlaylistPreview = ({
     // Update preview with new order
     const updatedPreview = {
       ...preview,
-      tracks: newTracks
+      tracks: newTracks,
     };
 
     setPreview(updatedPreview);
@@ -170,7 +187,7 @@ const PlaylistPreview = ({
     setDragOverIndex(null);
   };
 
-  const handleRemoveTrack = (index) => {
+  const handleRemoveTrack = index => {
     const newTracks = [...preview.tracks];
     newTracks.splice(index, 1);
 
@@ -179,20 +196,26 @@ const PlaylistPreview = ({
     selectedPlaylists.forEach(playlist => {
       updatedStats[playlist.id] = {
         name: playlist.name,
-        count: newTracks.filter(track => track.sourcePlaylist === playlist.id).length,
+        count: newTracks.filter(track => track.sourcePlaylist === playlist.id)
+          .length,
         totalDuration: newTracks
           .filter(track => track.sourcePlaylist === playlist.id)
-          .reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+          .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
       };
     });
 
     // Add Spotify Search stats if there are any search tracks
-    const searchTracks = newTracks.filter(track => track.sourcePlaylist === 'search');
+    const searchTracks = newTracks.filter(
+      track => track.sourcePlaylist === 'search'
+    );
     if (searchTracks.length > 0) {
       updatedStats['search'] = {
         name: '🔍 Spotify Search',
         count: searchTracks.length,
-        totalDuration: searchTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+        totalDuration: searchTracks.reduce(
+          (sum, track) => sum + (track.duration_ms || 0),
+          0
+        ),
       };
     }
 
@@ -200,7 +223,10 @@ const PlaylistPreview = ({
       ...preview,
       tracks: newTracks,
       stats: updatedStats,
-      totalDuration: newTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0)
+      totalDuration: newTracks.reduce(
+        (sum, track) => sum + (track.duration_ms || 0),
+        0
+      ),
     };
 
     setPreview(updatedPreview);
@@ -210,8 +236,6 @@ const PlaylistPreview = ({
       onPreviewOrderChange(newTracks);
     }
   };
-
-
 
   if (selectedPlaylists.length < 2) {
     return null;
@@ -224,13 +248,15 @@ const PlaylistPreview = ({
         Review and adjust your mix preview.
       </p>
 
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '20px',
-        justifyContent: 'center',
-        flexWrap: 'wrap'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '20px',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
         <button
           className="btn"
           onClick={generatePreview}
@@ -242,14 +268,10 @@ const PlaylistPreview = ({
             fontSize: '16px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
           }}
         >
-          {loading ? (
-            <>⏳ Generating Preview...</>
-          ) : (
-            <>🎵 Generate Preview</>
-          )}
+          {loading ? <>⏳ Generating Preview...</> : <>🎵 Generate Preview</>}
         </button>
 
         {preview && (
@@ -264,7 +286,7 @@ const PlaylistPreview = ({
               fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
             }}
           >
             ✨ Create Full Playlist
@@ -272,39 +294,83 @@ const PlaylistPreview = ({
         )}
       </div>
 
-
-
       {preview && (
         <div>
           {/* Quick Stats */}
-          <div style={{
-            background: 'var(--hunter-green)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '20px',
-            border: '1px solid var(--fern-green)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            style={{
+              background: 'var(--hunter-green)',
+              padding: '20px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              border: '1px solid var(--fern-green)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px',
+              }}
+            >
+              <h3
+                style={{
+                  margin: '0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
                 📊 Your Preview
               </h3>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--moss-green)' }}>
-                {preview.tracks.length} songs • {formatTotalDuration(preview.totalDuration)}
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  color: 'var(--moss-green)',
+                }}
+              >
+                {preview.tracks.length} songs •{' '}
+                {formatTotalDuration(preview.totalDuration)}
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '12px',
+              }}
+            >
               {Object.entries(preview.stats).map(([playlistId, stats]) => (
-                <div key={playlistId} style={{
-                  background: 'rgba(0,0,0,0.2)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '13px', opacity: '0.7', marginBottom: '4px' }}>
-                    {stats.name.length > 18 ? stats.name.substring(0, 18) + '...' : stats.name}
+                <div
+                  key={playlistId}
+                  style={{
+                    background: 'rgba(0,0,0,0.2)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      opacity: '0.7',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    {stats.name.length > 18
+                      ? stats.name.substring(0, 18) + '...'
+                      : stats.name}
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--mindaro)' }}>
+                  <div
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      color: 'var(--mindaro)',
+                    }}
+                  >
                     {stats.count} songs
                   </div>
                   <div style={{ fontSize: '12px', opacity: '0.6' }}>
@@ -316,33 +382,60 @@ const PlaylistPreview = ({
           </div>
 
           {/* Track List */}
-          <div style={{
-            background: 'var(--hunter-green)',
-            borderRadius: '12px',
-            border: '1px solid var(--fern-green)',
-            maxHeight: '500px',
-            overflowY: 'auto'
-          }}>
-            <div style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid var(--fern-green)',
-              position: 'sticky',
-              top: 0,
+          <div
+            style={{
               background: 'var(--hunter-green)',
-              zIndex: 1
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h4 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              borderRadius: '12px',
+              border: '1px solid var(--fern-green)',
+              maxHeight: '500px',
+              overflowY: 'auto',
+            }}
+          >
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--fern-green)',
+                position: 'sticky',
+                top: 0,
+                background: 'var(--hunter-green)',
+                zIndex: 1,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <h4
+                  style={{
+                    margin: '0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   🎵 Your Songs ({preview.tracks.length})
                 </h4>
-                <div style={{ fontSize: '12px', opacity: '0.7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    opacity: '0.7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
                   ⋮⋮ Reorder
                 </div>
               </div>
             </div>
 
             {preview.tracks.map((track, index) => {
-              const sourcePlaylist = selectedPlaylists.find(p => p.id === track.sourcePlaylist);
+              const sourcePlaylist = selectedPlaylists.find(
+                p => p.id === track.sourcePlaylist
+              );
               const isDragging = draggedIndex === index;
               const isDragOver = dragOverIndex === index;
 
@@ -350,55 +443,100 @@ const PlaylistPreview = ({
                 <div
                   key={`${track.id}-${index}`}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragStart={e => handleDragStart(e, index)}
+                  onDragOver={e => handleDragOver(e, index)}
                   onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
+                  onDrop={e => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                   style={{
                     padding: '8px 8px',
-                    borderBottom: index < preview.tracks.length - 1 ? '1px solid rgba(79, 119, 45, 0.3)' : 'none',
+                    borderBottom:
+                      index < preview.tracks.length - 1
+                        ? '1px solid rgba(79, 119, 45, 0.3)'
+                        : 'none',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     cursor: 'grab',
                     opacity: isDragging ? 0.5 : 1,
-                    backgroundColor: isDragOver ? 'rgba(79, 119, 45, 0.2)' : 'transparent',
-                    borderLeft: isDragOver ? '3px solid var(--moss-green)' : '3px solid transparent',
+                    backgroundColor: isDragOver
+                      ? 'rgba(79, 119, 45, 0.2)'
+                      : 'transparent',
+                    borderLeft: isDragOver
+                      ? '3px solid var(--moss-green)'
+                      : '3px solid transparent',
                     transition: 'all 0.2s ease',
-                    userSelect: 'none'
+                    userSelect: 'none',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0 }}>
-                    <div style={{
-                      marginRight: '8px',
-                      fontSize: '16px',
-                      opacity: '0.5',
-                      cursor: 'grab'
-                    }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      flex: '1 1 auto',
+                      minWidth: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        marginRight: '8px',
+                        fontSize: '16px',
+                        opacity: '0.5',
+                        cursor: 'grab',
+                      }}
+                    >
                       ⋮⋮
                     </div>
                     <div style={{ flex: 1, marginRight: '8px' }}>
-                      <div style={{ fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div
+                        style={{
+                          fontWeight: '500',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
                         {index + 1}. {track.name}
                       </div>
-                      <div style={{ fontSize: '14px', opacity: '0.7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          opacity: '0.7',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
                         {track.artists?.[0]?.name || 'Unknown Artist'} •
-                        <span style={{
-                          color: track.sourcePlaylist === 'search' ? 'var(--mindaro)' : 'var(--moss-green)',
-                          marginLeft: '4px'
-                        }}>
-                          {track.sourcePlaylist === 'search' ? '🔍 Spotify Search' : (sourcePlaylist?.name || 'Unknown Playlist')}
+                        <span
+                          style={{
+                            color:
+                              track.sourcePlaylist === 'search'
+                                ? 'var(--mindaro)'
+                                : 'var(--moss-green)',
+                            marginLeft: '4px',
+                          }}
+                        >
+                          {track.sourcePlaylist === 'search'
+                            ? '🔍 Spotify Search'
+                            : sourcePlaylist?.name || 'Unknown Playlist'}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                      flexShrink: 0,
+                    }}
+                  >
                     <div style={{ fontSize: '12px', opacity: '0.6' }}>
                       {formatDuration(track.duration_ms || 0)}
                     </div>
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleRemoveTrack(index);
                       }}
@@ -411,14 +549,14 @@ const PlaylistPreview = ({
                         padding: '1px 2px',
                         borderRadius: '3px',
                         opacity: '0.5',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
                       }}
-                      onMouseEnter={(e) => {
+                      onMouseEnter={e => {
                         e.target.style.opacity = '1';
                         e.target.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
                         e.target.style.color = '#ff6b6b';
                       }}
-                      onMouseLeave={(e) => {
+                      onMouseLeave={e => {
                         e.target.style.opacity = '0.5';
                         e.target.style.backgroundColor = 'transparent';
                         e.target.style.color = 'var(--mindaro)';
@@ -433,14 +571,21 @@ const PlaylistPreview = ({
             })}
           </div>
 
-          <div style={{
-            marginTop: '12px',
-            fontSize: '12px',
-            opacity: '0.7',
-            textAlign: 'center'
-          }}>
-            Full playlist will have {mixOptions.useAllSongs ? 'all available songs' :
-              mixOptions.useTimeLimit ? `${mixOptions.targetDuration} min` : `${mixOptions.totalSongs} songs`}.
+          <div
+            style={{
+              marginTop: '12px',
+              fontSize: '12px',
+              opacity: '0.7',
+              textAlign: 'center',
+            }}
+          >
+            Full playlist will have{' '}
+            {mixOptions.useAllSongs
+              ? 'all available songs'
+              : mixOptions.useTimeLimit
+                ? `${mixOptions.targetDuration} min`
+                : `${mixOptions.totalSongs} songs`}
+            .
           </div>
         </div>
       )}
