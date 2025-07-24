@@ -13,7 +13,7 @@
   - **Commit changes**: `git add . && git commit -m "feat: set up project foundation with directory structure, TypeScript, ESLint, and pre-commit hooks"`
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 10.1, 10.2_
 
-- [ ] 2. Create core UI components
+- [x] 2. Create core UI components
 
 
 
@@ -96,7 +96,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: simplify DragContext to work with new useDraggable hook"`
   - _Requirements: 2.1, 2.2_
 
-- [-] 5. Refactor modal components to use shared UI
+- [x] 5. Refactor modal components to use shared UI
+
+
 
 
 
@@ -109,7 +111,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: update AddUnselectedModal to use shared UI components"`
   - _Requirements: 1.2, 2.1, 2.4_
 
-- [-] 5.2 Refactor SpotifySearchModal
+- [x] 5.2 Refactor SpotifySearchModal
+
+
+
 
   - Update SpotifySearchModal.js to use new Modal and TrackList components
   - Remove duplicated modal structure and track rendering code
@@ -117,8 +122,12 @@
   - **Commit changes**: `git add . && git commit -m "refactor: update SpotifySearchModal to use shared UI components and API hooks"`
   - _Requirements: 1.2, 2.1, 3.2_
 
-- [ ] 6. Implement performance optimizations
-- [ ] 6.1 Add virtualization to track lists
+- [-] 6. Implement performance optimizations
+
+
+
+- [-] 6.1 Add virtualization to track lists
+
   - Create useVirtualization hook for handling large lists efficiently
   - Integrate virtualization into TrackList component for lists with 100+ items
   - Test performance with playlists containing 1000+ tracks

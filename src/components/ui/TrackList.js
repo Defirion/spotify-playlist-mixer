@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import TrackItem from './TrackItem';
+import useVirtualization from '../../hooks/useVirtualization';
 
 const TrackList = ({
   tracks = [],
@@ -35,49 +36,36 @@ const TrackList = ({
   onTrackTouchEnd,
   ...otherProps
 }) => {
-  const containerRef = useRef(null);
-  const [scrollTop, setScrollTop] = useState(0);
+  // Use virtualization hook when enabled
+  const virtualizationData = useVirtualization({
+    items: tracks,
+    itemHeight,
+    containerHeight,
+    overscan,
+  });
 
-  // Virtualization calculations
-  const { visibleItems, totalHeight, startIndex, endIndex } = useMemo(() => {
-    if (!virtualized || tracks.length === 0) {
-      return {
+  // Determine which data to use based on virtualization setting
+  const {
+    visibleItems,
+    totalHeight,
+    startIndex,
+    endIndex,
+    containerProps,
+    spacerProps,
+    getItemProps,
+    scrollToItem,
+  } = virtualized
+    ? virtualizationData
+    : {
         visibleItems: tracks,
         totalHeight: tracks.length * itemHeight,
         startIndex: 0,
         endIndex: tracks.length - 1,
+        containerProps: {},
+        spacerProps: {},
+        getItemProps: () => ({}),
+        scrollToItem: () => {},
       };
-    }
-
-    const visibleCount = Math.ceil(containerHeight / itemHeight);
-    const startIdx = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-    const endIdx = Math.min(
-      tracks.length - 1,
-      startIdx + visibleCount + overscan * 2
-    );
-
-    return {
-      visibleItems: tracks.slice(startIdx, endIdx + 1),
-      totalHeight: tracks.length * itemHeight,
-      startIndex: startIdx,
-      endIndex: endIdx,
-    };
-  }, [tracks, virtualized, itemHeight, containerHeight, scrollTop, overscan]);
-
-  // Handle scroll for virtualization
-  const handleScroll = e => {
-    if (virtualized) {
-      setScrollTop(e.target.scrollTop);
-    }
-  };
-
-  // Reset scroll position when tracks change
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0;
-      setScrollTop(0);
-    }
-  }, [tracks]);
 
   // Handle track selection
   const handleTrackSelect = track => {
@@ -103,21 +91,11 @@ const TrackList = ({
       ? renderTrackActions(track, actualIndex)
       : null;
 
+    // Get item positioning props for virtualization
+    const itemProps = virtualized ? getItemProps(index) : {};
+
     return (
-      <div
-        key={track.id}
-        style={
-          virtualized
-            ? {
-                position: 'absolute',
-                top: (startIndex + index) * itemHeight,
-                left: 0,
-                right: 0,
-                height: itemHeight,
-              }
-            : undefined
-        }
-      >
+      <div key={track.id} {...itemProps}>
         <TrackItem
           track={track}
           onSelect={selectable ? handleTrackSelect : undefined}
@@ -209,20 +187,19 @@ const TrackList = ({
 
   return (
     <div
-      ref={containerRef}
       className={`track-list ${className}`}
-      onScroll={handleScroll}
       style={{
         height: virtualized ? containerHeight : 'auto',
         overflowY: virtualized ? 'auto' : 'visible',
         position: 'relative',
         ...style,
       }}
+      {...(virtualized ? containerProps : {})}
       {...otherProps}
     >
       {virtualized && (
         // Spacer for virtualization
-        <div style={{ height: totalHeight, position: 'relative' }}>
+        <div {...spacerProps}>
           {visibleItems.map((track, index) => renderTrackItem(track, index))}
         </div>
       )}
