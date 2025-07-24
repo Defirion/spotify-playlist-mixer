@@ -47,7 +47,9 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement TrackList component with virtualization and flexible interaction modes"`
   - _Requirements: 1.2, 4.1, 4.3_
 
-- [-] 3. Implement centralized API service layer
+- [ ] 3. Implement centralized API service layer
+
+
 
 
 
@@ -60,7 +62,8 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement centralized SpotifyService with pagination and error handling"`
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [-] 3.2 Create custom API hooks
+- [x] 3.2 Create custom API hooks
+
 
   - Write useSpotifySearch hook for search functionality with loading and error states
   - Write usePlaylistTracks hook for fetching playlist tracks with pagination
@@ -68,9 +71,12 @@
   - Create unit tests for all custom API hooks
   - **Commit changes**: `git add . && git commit -m "feat: implement custom API hooks for Spotify data fetching with tests"`
   - _Requirements: 3.2, 3.4_
+-
 
 - [ ] 4. Implement unified drag-and-drop system
-- [ ] 4.1 Create useDraggable custom hook
+
+- [-] 4.1 Create useDraggable custom hook
+
   - Write useDraggable.js hook to encapsulate all drag-and-drop logic (mouse, touch, keyboard)
   - Implement auto-scroll functionality for drag operations
   - Add long-press detection for mobile touch interactions
