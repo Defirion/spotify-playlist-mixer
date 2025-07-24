@@ -76,7 +76,8 @@
 
 - [ ] 4. Implement unified drag-and-drop system
 
-- [-] 4.1 Create useDraggable custom hook
+- [x] 4.1 Create useDraggable custom hook
+
 
   - Write useDraggable.js hook to encapsulate all drag-and-drop logic (mouse, touch, keyboard)
   - Implement auto-scroll functionality for drag operations
@@ -84,7 +85,8 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement useDraggable hook with unified drag-and-drop logic"`
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 4.2 Simplify DragContext
+- [-] 4.2 Simplify DragContext
+
   - Refactor DragContext.js to only manage global dragging state (isDragging, draggedItem)
   - Remove complex notification functions and cleanup logic
   - Update context to work with new useDraggable hook

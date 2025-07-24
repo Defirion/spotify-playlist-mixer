@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, act, waitFor } from '@testing-library/react';
-import { DragProvider, useDrag } from '../DragContext';
+import { DragProvider, useDrag } from '../../components/DragContext';
 
 // Test component to interact with the drag context
 const TestComponent = ({ onStateChange }) => {
@@ -80,7 +80,6 @@ describe('DragContext', () => {
     expect(getByTestId('is-dragging').textContent).toBe('false');
     expect(getByTestId('drag-type').textContent).toBe('none');
     expect(getByTestId('dragged-item').textContent).toBe('none');
-    expect(contextState.isDropSuccessful).toBe(false);
   });
 
   test('startDrag sets correct state', () => {
@@ -91,10 +90,9 @@ describe('DragContext', () => {
     expect(getByTestId('is-dragging').textContent).toBe('true');
     expect(getByTestId('drag-type').textContent).toBe('custom');
     expect(getByTestId('dragged-item').textContent).toBe('item');
-    expect(contextState.isDropSuccessful).toBe(false);
   });
 
-  test('endDrag with success clears state immediately when no HTML5 drag active', () => {
+  test('endDrag clears state immediately', () => {
     // Start drag
     act(() => {
       getByTestId('start-drag').click();
@@ -128,58 +126,21 @@ describe('DragContext', () => {
     expect(getByTestId('is-dragging').textContent).toBe('false');
     expect(getByTestId('drag-type').textContent).toBe('none');
     expect(getByTestId('dragged-item').textContent).toBe('none');
-    expect(contextState.isDropSuccessful).toBe(false);
   });
 
-  test('coordinates HTML5 and custom drag states', async () => {
-    // Start custom drag
-    act(() => {
-      getByTestId('start-drag').click();
-    });
-
-    // Start HTML5 drag
+  test('notification methods work without errors', () => {
+    // These methods are now simple logging functions for coordination
     act(() => {
       getByTestId('html5-start').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-
-    // End custom drag - should not clear state yet because HTML5 is active
-    act(() => {
-      getByTestId('end-drag').click();
-    });
-
-    // State should still be active because HTML5 drag is ongoing
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-
-    // End HTML5 drag - now state should clear
     act(() => {
       getByTestId('html5-end').click();
     });
 
+    // Should not affect state since they're just notification methods
     expect(getByTestId('is-dragging').textContent).toBe('false');
     expect(getByTestId('drag-type').textContent).toBe('none');
-  });
-
-  test('failsafe cleanup triggers after timeout', async () => {
-    jest.useFakeTimers();
-
-    // Start drag
-    act(() => {
-      getByTestId('start-drag').click();
-    });
-
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-
-    // Fast-forward time to trigger failsafe
-    act(() => {
-      jest.advanceTimersByTime(5000);
-    });
-
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-
-    jest.useRealTimers();
   });
 
   test('multiple rapid drag operations are handled correctly', () => {
@@ -204,38 +165,5 @@ describe('DragContext', () => {
     });
 
     expect(getByTestId('is-dragging').textContent).toBe('false');
-  });
-
-  test('HTML5 drag coordination without custom drag', () => {
-    // Start HTML5 drag only
-    act(() => {
-      getByTestId('html5-start').click();
-    });
-
-    // End HTML5 drag - should not affect context state since no custom drag was active
-    act(() => {
-      getByTestId('html5-end').click();
-    });
-
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-  });
-
-  test('unifiedCleanup can be called directly', () => {
-    // Start drag
-    act(() => {
-      getByTestId('start-drag').click();
-    });
-
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-
-    // Call unified cleanup directly
-    act(() => {
-      contextState.unifiedCleanup('direct-call');
-    });
-
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-    expect(getByTestId('dragged-item').textContent).toBe('none');
   });
 });
