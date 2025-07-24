@@ -100,7 +100,8 @@
 
 
 
-- [-] 5.1 Refactor AddUnselectedModal
+- [x] 5.1 Refactor AddUnselectedModal
+
 
   - Update AddUnselectedModal.js to use new Modal and TrackList components
   - Remove duplicated modal structure and track rendering code
@@ -108,7 +109,8 @@
   - **Commit changes**: `git add . && git commit -m "refactor: update AddUnselectedModal to use shared UI components"`
   - _Requirements: 1.2, 2.1, 2.4_
 
-- [ ] 5.2 Refactor SpotifySearchModal
+- [-] 5.2 Refactor SpotifySearchModal
+
   - Update SpotifySearchModal.js to use new Modal and TrackList components
   - Remove duplicated modal structure and track rendering code
   - Integrate with new useDraggable hook and useSpotifySearch hook
