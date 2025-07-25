@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
@@ -13,24 +13,39 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import { DragProvider, useDrag } from './components/DragContext';
 
+// Custom hooks for state management
+import { useAppState } from './hooks/useAppState';
+import { useMixOptions } from './hooks/useMixOptions';
+import { usePlaylistSelection } from './hooks/usePlaylistSelection';
+import { useRatioConfig } from './hooks/useRatioConfig';
+
 function MainApp() {
   const { isDragging, isDropSuccessful, cancelDrag } = useDrag();
-  const [accessToken, setAccessToken] = useState(null);
-  const [selectedPlaylists, setSelectedPlaylists] = useState([]);
-  const [ratioConfig, setRatioConfig] = useState({});
-  const [mixedPlaylists, setMixedPlaylists] = useState([]);
-  const [error, setError] = useState(null);
-  const [mixOptions, setMixOptions] = useState({
-    totalSongs: 100,
-    targetDuration: 240,
-    useTimeLimit: false,
-    useAllSongs: true, // New default: mix as long as we have songs
-    playlistName: 'My Mixed Playlist',
-    shuffleWithinGroups: true,
-    popularityStrategy: 'mixed',
-    recencyBoost: true,
-    continueWhenPlaylistEmpty: false, // Changed default to false (unchecked)
-  });
+
+  // Use custom hooks for state management
+  const {
+    accessToken,
+    error,
+    mixedPlaylists,
+    setAccessToken,
+    setError,
+    dismissError,
+    addMixedPlaylist,
+    dismissSuccessToast,
+  } = useAppState();
+
+  const { mixOptions, updateMixOptions, applyPresetOptions } = useMixOptions();
+
+  const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
+    usePlaylistSelection();
+
+  const {
+    ratioConfig,
+    updateRatioConfig,
+    addPlaylistToRatioConfig,
+    removeRatioConfig,
+    setRatioConfigBulk,
+  } = useRatioConfig();
 
   useEffect(() => {
     // Check for access token in URL hash (after Spotify redirect)
@@ -48,7 +63,7 @@ function MainApp() {
         }
       }
     }
-  }, []);
+  }, [setAccessToken]);
 
   useEffect(() => {
     const handleDragEnd = e => {
@@ -71,80 +86,39 @@ function MainApp() {
 
   const handlePlaylistSelection = useCallback(
     playlist => {
-      if (selectedPlaylists.find(p => p.id === playlist.id)) {
-        setSelectedPlaylists(
-          selectedPlaylists.filter(p => p.id !== playlist.id)
-        );
-        const newRatioConfig = { ...ratioConfig };
-        delete newRatioConfig[playlist.id];
-        setRatioConfig(newRatioConfig);
+      const isSelected = selectedPlaylists.find(p => p.id === playlist.id);
+
+      if (isSelected) {
+        // Remove playlist and its ratio config
+        togglePlaylistSelection(playlist);
+        removeRatioConfig(playlist.id);
       } else {
-        setSelectedPlaylists([...selectedPlaylists, playlist]);
-        setRatioConfig({
-          ...ratioConfig,
-          [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' },
-        });
+        // Add playlist and initialize ratio config
+        togglePlaylistSelection(playlist);
+        addPlaylistToRatioConfig(playlist.id);
       }
     },
-    [selectedPlaylists, ratioConfig]
+    [
+      selectedPlaylists,
+      togglePlaylistSelection,
+      removeRatioConfig,
+      addPlaylistToRatioConfig,
+    ]
   );
 
   const handleClearAllPlaylists = useCallback(() => {
-    setSelectedPlaylists([]);
-    setRatioConfig({});
-  }, []);
-
-  const updateRatioConfig = useCallback((playlistId, config) => {
-    setRatioConfig(prevConfig => ({
-      ...prevConfig,
-      [playlistId]: config,
-    }));
-  }, []);
+    clearAllPlaylists();
+    setRatioConfigBulk({});
+  }, [clearAllPlaylists, setRatioConfigBulk]);
 
   const handleApplyPreset = useCallback(
     ({ ratioConfig: newRatioConfig, strategy, settings, presetName }) => {
-      setRatioConfig(newRatioConfig);
-      setMixOptions(prev => ({
-        ...prev,
-        popularityStrategy: strategy,
-        recencyBoost: settings.recencyBoost,
-        shuffleWithinGroups: settings.shuffleWithinGroups,
-        useTimeLimit: settings.useTimeLimit || false,
-        useAllSongs:
-          settings.useAllSongs !== undefined
-            ? settings.useAllSongs
-            : prev.useAllSongs,
-        targetDuration: settings.targetDuration || prev.targetDuration,
-        playlistName: `${presetName} Mix`,
-        continueWhenPlaylistEmpty:
-          settings.continueWhenPlaylistEmpty !== undefined
-            ? settings.continueWhenPlaylistEmpty
-            : prev.continueWhenPlaylistEmpty,
-      }));
+      setRatioConfigBulk(newRatioConfig);
+      applyPresetOptions({ strategy, settings, presetName });
       setError(null);
     },
-    []
+    [setRatioConfigBulk, applyPresetOptions, setError]
   );
-
-  const handleDismissError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  const handleDismissSuccess = useCallback(toastId => {
-    setMixedPlaylists(prev =>
-      prev.filter(playlist => playlist.toastId !== toastId)
-    );
-  }, []);
-
-  const handleMixedPlaylist = useCallback(newPlaylist => {
-    // Add unique ID and timestamp for managing multiple toasts
-    const playlistWithId = {
-      ...newPlaylist,
-      toastId: Date.now() + Math.random(),
-      createdAt: new Date(),
-    };
-    setMixedPlaylists(prev => [playlistWithId, ...prev]);
-  }, []);
 
   if (!accessToken) {
     return (
@@ -168,11 +142,11 @@ function MainApp() {
         <p>Mix your playlists with custom ratios</p>
       </div>
 
-      <ToastError error={error} onDismiss={handleDismissError} />
+      <ToastError error={error} onDismiss={dismissError} />
 
       <SuccessToast
         mixedPlaylists={mixedPlaylists}
-        onDismiss={handleDismissSuccess}
+        onDismiss={dismissSuccessToast}
       />
 
       <PlaylistSelector
@@ -208,7 +182,7 @@ function MainApp() {
           selectedPlaylists={selectedPlaylists}
           ratioConfig={ratioConfig}
           mixOptions={mixOptions}
-          onMixedPlaylist={handleMixedPlaylist}
+          onMixedPlaylist={addMixedPlaylist}
           onError={setError}
         />
       )}
