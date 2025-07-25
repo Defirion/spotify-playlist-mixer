@@ -187,8 +187,12 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement custom state management hooks for better organization"`
   - _Requirements: 6.2, 6.3_
 
-- [ ] 8. Refactor main components to use new architecture
+- [-] 8. Refactor main components to use new architecture
+
+
 - [ ] 8.1 Refactor PlaylistMixer component
+
+
   - Update PlaylistMixer.js to use new API hooks and remove direct API calls
   - Integrate with new useDraggable hook and simplified drag context
   - Remove redundant preview functionality (consolidate with DraggableTrackList)

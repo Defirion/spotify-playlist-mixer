@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { getSpotifyApi } from '../utils/spotify';
+import React, { useState, useCallback } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 import DraggableTrackList from './DraggableTrackList';
+import SpotifyService from '../services/spotify';
+import usePlaylistTracks from '../hooks/usePlaylistTracks';
+import useDraggable from '../hooks/useDraggable';
 
 const PlaylistMixer = ({
   accessToken,
@@ -26,6 +28,11 @@ const PlaylistMixer = ({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [customTrackOrder, setCustomTrackOrder] = useState(null);
 
+  // Initialize Spotify service
+  const spotifyService = React.useMemo(() => {
+    return accessToken ? new SpotifyService(accessToken) : null;
+  }, [accessToken]);
+
   // Sync localMixOptions with mixOptions when it changes (from presets)
   React.useEffect(() => {
     setLocalMixOptions(prev => ({
@@ -47,57 +54,59 @@ const PlaylistMixer = ({
     setCustomTrackOrder(null);
   }, [ratioConfig]);
 
-  const handlePreviewOrderChange = reorderedTracks => {
-    setCustomTrackOrder(reorderedTracks);
+  const handlePreviewOrderChange = useCallback(
+    reorderedTracks => {
+      setCustomTrackOrder(reorderedTracks);
 
-    // Recalculate stats for the updated track list
-    if (preview && reorderedTracks) {
-      const updatedStats = {};
-      selectedPlaylists.forEach(playlist => {
-        updatedStats[playlist.id] = {
-          name: playlist.name,
-          count: reorderedTracks.filter(
-            track => track.sourcePlaylist === playlist.id
-          ).length,
-          totalDuration: reorderedTracks
-            .filter(track => track.sourcePlaylist === playlist.id)
-            .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
-        };
-      });
+      // Recalculate stats for the updated track list
+      if (preview && reorderedTracks) {
+        const updatedStats = {};
+        selectedPlaylists.forEach(playlist => {
+          updatedStats[playlist.id] = {
+            name: playlist.name,
+            count: reorderedTracks.filter(
+              track => track.sourcePlaylist === playlist.id
+            ).length,
+            totalDuration: reorderedTracks
+              .filter(track => track.sourcePlaylist === playlist.id)
+              .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
+          };
+        });
 
-      // Add Spotify Search stats if there are any search tracks
-      const searchTracks = reorderedTracks.filter(
-        track => track.sourcePlaylist === 'search'
-      );
-      if (searchTracks.length > 0) {
-        updatedStats['search'] = {
-          name: '🔍 Spotify Search',
-          count: searchTracks.length,
-          totalDuration: searchTracks.reduce(
+        // Add Spotify Search stats if there are any search tracks
+        const searchTracks = reorderedTracks.filter(
+          track => track.sourcePlaylist === 'search'
+        );
+        if (searchTracks.length > 0) {
+          updatedStats['search'] = {
+            name: '🔍 Spotify Search',
+            count: searchTracks.length,
+            totalDuration: searchTracks.reduce(
+              (sum, track) => sum + (track.duration_ms || 0),
+              0
+            ),
+          };
+        }
+
+        const updatedPreview = {
+          ...preview,
+          tracks: reorderedTracks,
+          stats: updatedStats,
+          totalDuration: reorderedTracks.reduce(
             (sum, track) => sum + (track.duration_ms || 0),
             0
           ),
         };
+
+        setPreview(updatedPreview);
       }
-
-      const updatedPreview = {
-        ...preview,
-        tracks: reorderedTracks,
-        stats: updatedStats,
-        totalDuration: reorderedTracks.reduce(
-          (sum, track) => sum + (track.duration_ms || 0),
-          0
-        ),
-      };
-
-      setPreview(updatedPreview);
-    }
-  };
+    },
+    [preview, selectedPlaylists]
+  );
 
   const handleMix = async () => {
     try {
       setLoading(true);
-      const api = getSpotifyApi(accessToken);
 
       // Validate inputs
       if (!selectedPlaylists || selectedPlaylists.length < 2) {
@@ -108,11 +117,15 @@ const PlaylistMixer = ({
         throw new Error('Please enter a playlist name');
       }
 
-      // Fetch all tracks from selected playlists
+      if (!spotifyService) {
+        throw new Error('Spotify service not available');
+      }
+
+      // Fetch all tracks from selected playlists using SpotifyService
       const playlistTracks = {};
       for (const playlist of selectedPlaylists) {
         try {
-          const tracks = await fetchAllPlaylistTracks(api, playlist.id);
+          const tracks = await spotifyService.getPlaylistTracks(playlist.id);
           if (tracks.length === 0) {
             console.warn(`Playlist ${playlist.name} has no tracks`);
           }
@@ -164,19 +177,17 @@ const PlaylistMixer = ({
         throw new Error('Failed to mix playlists - no tracks generated');
       }
 
-      // Create new playlist
-      const userResponse = await api.get('/me');
-      const userId = userResponse.data.id;
+      // Create new playlist using SpotifyService
+      const userProfile = await spotifyService.getUserProfile();
+      const userId = userProfile.id;
 
-      const playlistResponse = await api.post(`/users/${userId}/playlists`, {
+      const newPlaylist = await spotifyService.createPlaylist(userId, {
         name: localMixOptions.playlistName.trim(),
         description: `Mixed from: ${selectedPlaylists.map(p => p.name).join(', ')}`,
         public: false,
       });
 
-      const newPlaylist = playlistResponse.data;
-
-      // Add tracks to playlist (Spotify API limit: 100 tracks per request)
+      // Add tracks to playlist using SpotifyService
       const trackUris = mixedTracks
         .filter(track => track.uri)
         .map(track => track.uri);
@@ -185,16 +196,7 @@ const PlaylistMixer = ({
         throw new Error('No valid track URIs found');
       }
 
-      const chunks = [];
-      for (let i = 0; i < trackUris.length; i += 100) {
-        chunks.push(trackUris.slice(i, i + 100));
-      }
-
-      for (const chunk of chunks) {
-        await api.post(`/playlists/${newPlaylist.id}/tracks`, {
-          uris: chunk,
-        });
-      }
+      await spotifyService.addTracksToPlaylist(newPlaylist.id, trackUris);
 
       // Calculate total duration for display
       const totalDuration = mixedTracks.reduce(
@@ -209,10 +211,7 @@ const PlaylistMixer = ({
         duration: durationMinutes,
       });
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.error?.message ||
-        err.message ||
-        'Unknown error occurred';
+      const errorMessage = err.message || 'Unknown error occurred';
       onError('Failed to create mixed playlist: ' + errorMessage);
       console.error('Playlist mixing error:', err);
     } finally {
@@ -225,11 +224,13 @@ const PlaylistMixer = ({
       setPreviewLoading(true);
       setPreview(null);
 
-      const api = getSpotifyApi(accessToken);
+      if (!spotifyService) {
+        throw new Error('Spotify service not available');
+      }
 
       const playlistTracks = {};
       for (const playlist of selectedPlaylists) {
-        const tracks = await fetchAllPlaylistTracks(api, playlist.id);
+        const tracks = await spotifyService.getPlaylistTracks(playlist.id);
         playlistTracks[playlist.id] = tracks;
       }
 
@@ -282,28 +283,6 @@ const PlaylistMixer = ({
     } finally {
       setPreviewLoading(false);
     }
-  };
-
-  const fetchAllPlaylistTracks = async (api, playlistId) => {
-    let allTracks = [];
-    let offset = 0;
-    const limit = 100;
-
-    while (true) {
-      const response = await api.get(
-        `/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`
-      );
-      const tracks = response.data.items
-        .filter(item => item.track && item.track.id) // Filter out null tracks
-        .map(item => item.track);
-
-      allTracks = [...allTracks, ...tracks];
-
-      if (tracks.length < limit) break;
-      offset += limit;
-    }
-
-    return allTracks;
   };
 
   const formatDuration = ms => {
