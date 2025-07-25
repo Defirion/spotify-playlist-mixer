@@ -3,7 +3,6 @@ import { getSpotifyApi } from '../utils/spotify';
 import { handleTrackSelection } from '../utils/dragAndDrop';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
-import useDraggable from '../hooks/useDraggable';
 import { useDrag } from './DragContext';
 
 const AddUnselectedModal = memo(
@@ -22,21 +21,7 @@ const AddUnselectedModal = memo(
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
 
-    const { startDrag, endDrag } = useDrag();
-
-    // Drag and drop functionality using the new useDraggable hook
-    const { isDragging, touchState } = useDraggable({
-      type: 'modal-track',
-      onDragStart: (item, dragType) => {
-        console.log('[AddUnselectedModal] Drag start for track:', item?.name);
-        startDrag({ data: item, type: 'modal-track' }, dragType);
-      },
-      onDragEnd: reason => {
-        console.log('[AddUnselectedModal] Drag end:', reason);
-        endDrag(reason);
-      },
-      scrollContainer: document.querySelector('[data-preview-panel="true"]'),
-    });
+    const { startDrag, endDrag, isDragging } = useDrag();
 
     // Enhanced onClose handler
     const handleModalClose = useCallback(() => {
@@ -209,8 +194,8 @@ const AddUnselectedModal = memo(
         title="➕ Add Unselected Tracks"
         size="large"
         style={{
-          opacity: isDragging || touchState.isLongPress ? 0.3 : 1,
-          pointerEvents: isDragging || touchState.isLongPress ? 'none' : 'auto',
+          opacity: isDragging ? 0.3 : 1,
+          pointerEvents: isDragging ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
         }}
       >

@@ -3,7 +3,6 @@ import { handleTrackSelection } from '../utils/dragAndDrop';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
 import useSpotifySearch from '../hooks/useSpotifySearch';
-import useDraggable from '../hooks/useDraggable';
 import { useDrag } from './DragContext';
 
 const SpotifySearchModal = memo(
@@ -24,21 +23,7 @@ const SpotifySearchModal = memo(
       limit: 20,
     });
 
-    const { startDrag, endDrag } = useDrag();
-
-    // Drag and drop functionality using the new useDraggable hook
-    const { isDragging, touchState } = useDraggable({
-      type: 'search-track',
-      onDragStart: (item, dragType) => {
-        console.log('[SpotifySearchModal] Drag start for track:', item?.name);
-        startDrag({ data: item, type: 'search-track' }, dragType);
-      },
-      onDragEnd: reason => {
-        console.log('[SpotifySearchModal] Drag end:', reason);
-        endDrag(reason);
-      },
-      scrollContainer: document.querySelector('[data-preview-panel="true"]'),
-    });
+    const { startDrag, endDrag, isDragging } = useDrag();
 
     // Enhanced onClose handler
     const handleModalClose = useCallback(() => {
@@ -123,8 +108,8 @@ const SpotifySearchModal = memo(
         title="🎵 Search Spotify"
         size="large"
         style={{
-          opacity: isDragging || touchState.isLongPress ? 0.3 : 1,
-          pointerEvents: isDragging || touchState.isLongPress ? 'none' : 'auto',
+          opacity: isDragging ? 0.3 : 1,
+          pointerEvents: isDragging ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
         }}
       >
