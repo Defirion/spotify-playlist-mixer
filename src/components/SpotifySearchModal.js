@@ -4,6 +4,7 @@ import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
 import useSpotifySearch from '../hooks/useSpotifySearch';
 import useDraggable from '../hooks/useDraggable';
+import { useDrag } from './DragContext';
 
 const SpotifySearchModal = memo(
   ({ isOpen, onClose, accessToken, onAddTracks }) => {
@@ -23,15 +24,20 @@ const SpotifySearchModal = memo(
       limit: 20,
     });
 
+    const { startDrag, endDrag } = useDrag();
+
     // Drag and drop functionality using the new useDraggable hook
     const { isDragging, touchState } = useDraggable({
       type: 'search-track',
       onDragStart: (item, dragType) => {
         console.log('[SpotifySearchModal] Drag start for track:', item?.name);
+        startDrag({ data: item, type: 'search-track' }, dragType);
       },
       onDragEnd: reason => {
         console.log('[SpotifySearchModal] Drag end:', reason);
+        endDrag(reason);
       },
+      scrollContainer: document.querySelector('[data-preview-panel="true"]'),
     });
 
     // Enhanced onClose handler
@@ -74,27 +80,33 @@ const SpotifySearchModal = memo(
     }, [searchResults, selectedTracksToAdd, onAddTracks]);
 
     // Drag event handlers for TrackList
-    const handleTrackDragStart = useCallback((e, track) => {
-      console.log('[SpotifySearchModal] Track drag start:', track.name);
+    const handleTrackDragStart = useCallback(
+      (e, track) => {
+        console.log('[SpotifySearchModal] Track drag start:', track.name);
 
-      const trackWithSource = {
-        ...track,
-        sourcePlaylist: 'search',
-        sourcePlaylistName: 'Spotify Search',
-      };
+        const trackWithSource = {
+          ...track,
+          sourcePlaylist: 'search',
+          sourcePlaylistName: 'Spotify Search',
+        };
 
-      // Set data for the drag operation
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData(
-          'application/json',
-          JSON.stringify({
-            type: 'search-track',
-            track: trackWithSource,
-          })
-        );
-      }
-    }, []);
+        // Start drag in context
+        startDrag({ data: trackWithSource, type: 'search-track' }, 'html5');
+
+        // Set data for the drag operation (for backward compatibility)
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData(
+            'application/json',
+            JSON.stringify({
+              type: 'search-track',
+              track: trackWithSource,
+            })
+          );
+        }
+      },
+      [startDrag]
+    );
 
     // Clear search when modal closes
     useEffect(() => {
@@ -257,6 +269,7 @@ const SpotifySearchModal = memo(
                   : 'Enter a search term to find songs on Spotify'
               }
               onTrackDragStart={handleTrackDragStart}
+              onTrackDragEnd={() => endDrag('html5-end')}
               style={{
                 height: '400px',
                 overflowY: 'auto',

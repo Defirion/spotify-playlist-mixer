@@ -4,6 +4,7 @@ import { handleTrackSelection } from '../utils/dragAndDrop';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
 import useDraggable from '../hooks/useDraggable';
+import { useDrag } from './DragContext';
 
 const AddUnselectedModal = memo(
   ({
@@ -21,15 +22,20 @@ const AddUnselectedModal = memo(
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTracksToAdd, setSelectedTracksToAdd] = useState(new Set());
 
+    const { startDrag, endDrag } = useDrag();
+
     // Drag and drop functionality using the new useDraggable hook
     const { isDragging, touchState } = useDraggable({
       type: 'modal-track',
       onDragStart: (item, dragType) => {
         console.log('[AddUnselectedModal] Drag start for track:', item?.name);
+        startDrag({ data: item, type: 'modal-track' }, dragType);
       },
       onDragEnd: reason => {
         console.log('[AddUnselectedModal] Drag end:', reason);
+        endDrag(reason);
       },
+      scrollContainer: document.querySelector('[data-preview-panel="true"]'),
     });
 
     // Enhanced onClose handler
@@ -99,21 +105,27 @@ const AddUnselectedModal = memo(
     }, [filteredTracks, selectedTracksToAdd, onAddTracks]);
 
     // Drag event handlers for TrackList
-    const handleTrackDragStart = useCallback((e, track) => {
-      console.log('[AddUnselectedModal] Track drag start:', track.name);
+    const handleTrackDragStart = useCallback(
+      (e, track) => {
+        console.log('[AddUnselectedModal] Track drag start:', track.name);
 
-      // Set data for the drag operation
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData(
-          'application/json',
-          JSON.stringify({
-            type: 'modal-track',
-            track: track,
-          })
-        );
-      }
-    }, []);
+        // Start drag in context
+        startDrag({ data: track, type: 'modal-track' }, 'html5');
+
+        // Set data for the drag operation (for backward compatibility)
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData(
+            'application/json',
+            JSON.stringify({
+              type: 'modal-track',
+              track: track,
+            })
+          );
+        }
+      },
+      [startDrag]
+    );
 
     // Reset selected tracks when modal opens/closes
     useEffect(() => {
@@ -291,6 +303,7 @@ const AddUnselectedModal = memo(
                   : 'All tracks from your playlists are already included'
               }
               onTrackDragStart={handleTrackDragStart}
+              onTrackDragEnd={() => endDrag('html5-end')}
               style={{
                 height: '400px',
                 overflowY: 'auto',

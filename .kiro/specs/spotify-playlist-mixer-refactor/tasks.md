@@ -195,7 +195,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: update PlaylistMixer to use new architecture and API hooks"`
   - _Requirements: 1.1, 3.1, 3.2, 2.1_
 
-- [-] 8.2 Refactor DraggableTrackList component
+- [x] 8.2 Refactor DraggableTrackList component
+
+
 
 
 
