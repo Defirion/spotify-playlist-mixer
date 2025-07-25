@@ -105,30 +105,6 @@ const PlaylistSelector = memo(
       }
     }, []);
 
-    const handleInputSubmit = useCallback(async () => {
-      if (!playlistInput.trim()) {
-        onError('Please enter a playlist URL or search term');
-        return;
-      }
-
-      const input = playlistInput.trim();
-
-      // If it's a valid Spotify URL/ID, add it directly
-      if (isValidPlaylistUrl(input)) {
-        await handleAddPlaylistByUrl(input);
-      } else {
-        // If it's not a URL, and not handled by continuous search, initiate a search
-        // This case might be less frequent with continuous search, but good as a fallback
-        await searchPlaylists(input);
-      }
-    }, [
-      playlistInput,
-      onError,
-      isValidPlaylistUrl,
-      handleAddPlaylistByUrl,
-      searchPlaylists,
-    ]);
-
     const handleAddPlaylistByUrl = useCallback(
       async input => {
         const playlistId = extractPlaylistId(input);
@@ -229,6 +205,30 @@ const PlaylistSelector = memo(
         onPlaylistSelect,
       ]
     );
+
+    const handleInputSubmit = useCallback(async () => {
+      if (!playlistInput.trim()) {
+        onError('Please enter a playlist URL or search term');
+        return;
+      }
+
+      const input = playlistInput.trim();
+
+      // If it's a valid Spotify URL/ID, add it directly
+      if (isValidPlaylistUrl(input)) {
+        await handleAddPlaylistByUrl(input);
+      } else {
+        // If it's not a URL, and not handled by continuous search, initiate a search
+        // This case might be less frequent with continuous search, but good as a fallback
+        await searchPlaylists(input);
+      }
+    }, [
+      playlistInput,
+      onError,
+      isValidPlaylistUrl,
+      handleAddPlaylistByUrl,
+      searchPlaylists,
+    ]);
 
     const handleKeyDown = useCallback(
       e => {

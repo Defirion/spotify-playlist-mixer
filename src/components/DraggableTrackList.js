@@ -20,7 +20,6 @@ const DraggableTrackList = ({
     notifyHTML5DragEnd,
     notifyTouchDragStart,
     notifyTouchDragEnd,
-    unifiedCleanup,
   } = useDrag();
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropLinePosition, setDropLinePosition] = useState(null);
@@ -50,10 +49,6 @@ const DraggableTrackList = ({
     scrollY: 0, // Store page scroll position when drag starts
   });
 
-  // Store unifiedCleanup in a ref to avoid useEffect re-runs
-  const unifiedCleanupRef = React.useRef(unifiedCleanup);
-  unifiedCleanupRef.current = unifiedCleanup;
-
   // Auto-scroll functionality with acceleration
   const currentScrollSpeed = React.useRef(0);
 
@@ -64,6 +59,24 @@ const DraggableTrackList = ({
     }
     currentScrollSpeed.current = 0;
   }, []);
+
+  // Cleanup function for component unmount
+  const cleanup = React.useCallback(() => {
+    console.log('[DraggableTrackList] Performing cleanup');
+
+    // Stop auto-scrolling
+    stopAutoScroll();
+
+    // Clear any pending timers
+    if (touchDragState.longPressTimer) {
+      clearTimeout(touchDragState.longPressTimer);
+    }
+
+    // Cancel any active drag operations
+    if (isDragging) {
+      cancelDrag('component-cleanup');
+    }
+  }, [stopAutoScroll, touchDragState.longPressTimer, isDragging, cancelDrag]);
 
   const startAutoScroll = React.useCallback(
     (direction, targetSpeed) => {
@@ -301,10 +314,10 @@ const DraggableTrackList = ({
         clearTimeout(touchDragState.longPressTimer);
       }
 
-      // Unified cleanup on unmount - use ref to avoid dependency issues
-      unifiedCleanupRef.current('component-unmount');
+      // Perform cleanup on unmount
+      cleanup();
     };
-  }, [touchDragState.longPressTimer, stopAutoScroll]); // Include stopAutoScroll dependency
+  }, [cleanup]); // Use cleanup function
 
   // Update local tracks when props change
   React.useEffect(() => {
