@@ -12,6 +12,8 @@ const Modal = memo(
     showCloseButton = true,
     closeOnBackdropClick = true,
     closeOnEscape = true,
+    style = {},
+    backdropStyle = {},
   }) => {
     const modalRef = useRef(null);
     const previousActiveElement = useRef(null);
@@ -106,6 +108,7 @@ const Modal = memo(
           className={styles.backdrop}
           onClick={handleBackdropClick}
           aria-hidden="true"
+          style={backdropStyle}
         />
 
         {/* Modal Container */}
@@ -117,6 +120,7 @@ const Modal = memo(
           tabIndex={-1}
           onKeyDown={handleKeyDown}
           className={modalClasses}
+          style={style}
         >
           {/* Header */}
           {(title || showCloseButton) && (

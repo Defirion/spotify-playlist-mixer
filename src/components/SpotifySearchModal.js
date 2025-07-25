@@ -112,6 +112,11 @@ const SpotifySearchModal = memo(
           pointerEvents: isDragging ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
         }}
+        backdropStyle={{
+          pointerEvents: isDragging ? 'none' : 'auto',
+          opacity: isDragging ? 0 : 1,
+          transition: 'opacity 0.2s ease',
+        }}
       >
         {/* Header Info */}
         <div
