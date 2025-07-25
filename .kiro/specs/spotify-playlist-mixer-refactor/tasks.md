@@ -187,7 +187,9 @@
   - **Commit changes**: `git add . && git commit -m "feat: implement custom state management hooks for better organization"`
   - _Requirements: 6.2, 6.3_
 
-- [-] 8. Refactor main components to use new architecture
+- [x] 8. Refactor main components to use new architecture
+
+
 
 
 - [x] 8.1 Refactor PlaylistMixer component
@@ -212,7 +214,8 @@
   - **Commit changes**: `git add . && git commit -m "refactor: simplify DraggableTrackList with new useDraggable hook and virtualization"`
   - _Requirements: 2.1, 2.3, 4.1_
 
-- [-] 8.3 Remove PlaylistPreview component
+- [x] 8.3 Remove PlaylistPreview component
+
 
   - Delete PlaylistPreview.js component entirely
   - Integrate preview functionality into PlaylistMixer.js as a state
@@ -220,8 +223,13 @@
   - **Commit changes**: `git add . && git commit -m "refactor: remove redundant PlaylistPreview component and consolidate logic"`
   - _Requirements: 1.1_
 
-- [ ] 9. Implement accessibility features
+- [-] 9. Implement accessibility features
+
+
+
 - [ ] 9.1 Add keyboard navigation for drag-and-drop
+
+
   - Create useKeyboardNavigation hook for arrow key navigation
   - Implement spacebar selection and arrow key movement for track reordering
   - Add proper ARIA labels and announcements for screen readers

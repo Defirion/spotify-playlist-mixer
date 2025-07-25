@@ -117,6 +117,14 @@ const PresetTemplates = ({ selectedPlaylists, onApplyPreset }) => {
             key={preset.id}
             className="preset-card"
             onClick={() => handleApplyPreset(preset)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleApplyPreset(preset);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             <h3
               style={{

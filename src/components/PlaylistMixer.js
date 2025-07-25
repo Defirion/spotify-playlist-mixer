@@ -2,8 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 import DraggableTrackList from './DraggableTrackList';
 import SpotifyService from '../services/spotify';
-import usePlaylistTracks from '../hooks/usePlaylistTracks';
-import useDraggable from '../hooks/useDraggable';
 
 const PlaylistMixer = ({
   accessToken,

@@ -143,9 +143,12 @@ class SpotifyService {
     let totalTracks = null;
 
     while (true) {
-      const tracks = await this.withRetry(async () => {
+      const currentOffset = offset;
+      const currentTotalTracks = totalTracks;
+
+      const result = await this.withRetry(async () => {
         const params = new URLSearchParams({
-          offset: offset.toString(),
+          offset: currentOffset.toString(),
           limit: limit.toString(),
         });
 
@@ -158,18 +161,28 @@ class SpotifyService {
         );
 
         // Set total on first request
-        if (totalTracks === null) {
-          totalTracks = response.data.total;
+        if (currentTotalTracks === null) {
+          return {
+            ...response.data,
+            totalTracks: response.data.total,
+          };
         }
 
-        return response.data.items
-          .filter(item => item.track && item.track.id) // Filter out null/invalid tracks
-          .map(item => ({
-            ...item.track,
-            added_at: item.added_at,
-            added_by: item.added_by,
-          }));
+        return response.data;
       });
+
+      // Set total on first request
+      if (totalTracks === null && result.totalTracks) {
+        totalTracks = result.totalTracks;
+      }
+
+      const tracks = result.items
+        .filter(item => item.track && item.track.id) // Filter out null/invalid tracks
+        .map(item => ({
+          ...item.track,
+          added_at: item.added_at,
+          added_by: item.added_by,
+        }));
 
       allTracks = [...allTracks, ...tracks];
 
@@ -218,9 +231,11 @@ class SpotifyService {
       const pageLimit = 50;
 
       while (true) {
+        const currentOffsetValue = currentOffset;
+
         const result = await this.withRetry(async () => {
           const response = await this.api.get(
-            `/me/playlists?limit=${pageLimit}&offset=${currentOffset}`
+            `/me/playlists?limit=${pageLimit}&offset=${currentOffsetValue}`
           );
           return response.data;
         });

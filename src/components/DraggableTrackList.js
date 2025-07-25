@@ -206,7 +206,7 @@ const DraggableTrackList = ({
           '[DraggableTrackList] Processing external drag drop:',
           draggedItem
         );
-        const { data: track, type } = draggedItem;
+        const { data: track } = draggedItem;
         const newTracks = [...localTracks];
         const insertIndex = dropLinePosition
           ? dropLinePosition.index
@@ -614,6 +614,18 @@ const DraggableTrackList = ({
                     transition: 'all 0.2s ease',
                     whiteSpace: 'nowrap',
                   }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (showAddUnselectedModal) {
+                        setShowAddUnselectedModal(false);
+                        setTimeout(() => setShowAddUnselectedModal(true), 0);
+                      } else {
+                        setShowAddUnselectedModal(true);
+                      }
+                    }
+                  }}
+                  tabIndex={0}
                   title="Add songs that weren't selected from your playlists"
                 >
                   <span
@@ -653,6 +665,18 @@ const DraggableTrackList = ({
                     transition: 'all 0.2s ease',
                     whiteSpace: 'nowrap',
                   }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (showSpotifySearch) {
+                        setShowSpotifySearch(false);
+                        setTimeout(() => setShowSpotifySearch(true), 0);
+                      } else {
+                        setShowSpotifySearch(true);
+                      }
+                    }
+                  }}
+                  tabIndex={0}
                   title="Search and add songs directly from Spotify"
                 >
                   <span

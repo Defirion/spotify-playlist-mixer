@@ -34,7 +34,7 @@ function MainApp() {
     dismissSuccessToast,
   } = useAppState();
 
-  const { mixOptions, updateMixOptions, applyPresetOptions } = useMixOptions();
+  const { mixOptions, applyPresetOptions } = useMixOptions();
 
   const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
     usePlaylistSelection();

@@ -78,7 +78,7 @@ const PlaylistSelector = memo(
           setSearching(false);
         }
       },
-      [accessToken, onError]
+      [accessToken, onError, isValidSpotifyLink]
     );
 
     // Debounce search query
@@ -92,18 +92,21 @@ const PlaylistSelector = memo(
       };
     }, [playlistInput, accessToken, searchPlaylists]);
 
-    const handleInputChange = useCallback(e => {
-      const value = e.target.value;
-      setPlaylistInput(value);
+    const handleInputChange = useCallback(
+      e => {
+        const value = e.target.value;
+        setPlaylistInput(value);
 
-      if (isValidSpotifyLink(value.trim())) {
-        setInputType('url');
-        setShowSearchResults(false); // Hide search results if it's a URL
-      } else {
-        setInputType('search');
-        // Search will be triggered by the useEffect debounce
-      }
-    }, []);
+        if (isValidSpotifyLink(value.trim())) {
+          setInputType('url');
+          setShowSearchResults(false); // Hide search results if it's a URL
+        } else {
+          setInputType('search');
+          // Search will be triggered by the useEffect debounce
+        }
+      },
+      [isValidSpotifyLink]
+    );
 
     const handleAddPlaylistByUrl = useCallback(
       async input => {

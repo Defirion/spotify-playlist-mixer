@@ -499,7 +499,20 @@ const useDraggable = ({
         }
       }
     },
-    [disabled, touchState, checkAutoScroll, scrollContainer, data, type]
+    [
+      disabled,
+      touchState.isActive,
+      touchState.startY,
+      touchState.startX,
+      touchState.isLongPress,
+      touchState.longPressTimer,
+      touchState.currentY,
+      touchState.currentX,
+      checkAutoScroll,
+      scrollContainer,
+      data,
+      type,
+    ]
   );
 
   const handleTouchEnd = useCallback(
