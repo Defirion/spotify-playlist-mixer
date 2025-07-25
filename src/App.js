@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
@@ -69,71 +69,74 @@ function MainApp() {
     };
   }, [isDragging, isDropSuccessful, cancelDrag]);
 
-  const handlePlaylistSelection = playlist => {
-    if (selectedPlaylists.find(p => p.id === playlist.id)) {
-      setSelectedPlaylists(selectedPlaylists.filter(p => p.id !== playlist.id));
-      const newRatioConfig = { ...ratioConfig };
-      delete newRatioConfig[playlist.id];
-      setRatioConfig(newRatioConfig);
-    } else {
-      setSelectedPlaylists([...selectedPlaylists, playlist]);
-      setRatioConfig({
-        ...ratioConfig,
-        [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' },
-      });
-    }
-  };
+  const handlePlaylistSelection = useCallback(
+    playlist => {
+      if (selectedPlaylists.find(p => p.id === playlist.id)) {
+        setSelectedPlaylists(
+          selectedPlaylists.filter(p => p.id !== playlist.id)
+        );
+        const newRatioConfig = { ...ratioConfig };
+        delete newRatioConfig[playlist.id];
+        setRatioConfig(newRatioConfig);
+      } else {
+        setSelectedPlaylists([...selectedPlaylists, playlist]);
+        setRatioConfig({
+          ...ratioConfig,
+          [playlist.id]: { min: 1, max: 2, weight: 2, weightType: 'frequency' },
+        });
+      }
+    },
+    [selectedPlaylists, ratioConfig]
+  );
 
-  const handleClearAllPlaylists = () => {
+  const handleClearAllPlaylists = useCallback(() => {
     setSelectedPlaylists([]);
     setRatioConfig({});
-  };
+  }, []);
 
-  const updateRatioConfig = (playlistId, config) => {
-    setRatioConfig({
-      ...ratioConfig,
+  const updateRatioConfig = useCallback((playlistId, config) => {
+    setRatioConfig(prevConfig => ({
+      ...prevConfig,
       [playlistId]: config,
-    });
-  };
-
-  const handleApplyPreset = ({
-    ratioConfig: newRatioConfig,
-    strategy,
-    settings,
-    presetName,
-  }) => {
-    setRatioConfig(newRatioConfig);
-    setMixOptions(prev => ({
-      ...prev,
-      popularityStrategy: strategy,
-      recencyBoost: settings.recencyBoost,
-      shuffleWithinGroups: settings.shuffleWithinGroups,
-      useTimeLimit: settings.useTimeLimit || false,
-      useAllSongs:
-        settings.useAllSongs !== undefined
-          ? settings.useAllSongs
-          : prev.useAllSongs,
-      targetDuration: settings.targetDuration || prev.targetDuration,
-      playlistName: `${presetName} Mix`,
-      continueWhenPlaylistEmpty:
-        settings.continueWhenPlaylistEmpty !== undefined
-          ? settings.continueWhenPlaylistEmpty
-          : prev.continueWhenPlaylistEmpty,
     }));
-    setError(null);
-  };
+  }, []);
 
-  const handleDismissError = () => {
-    setError(null);
-  };
+  const handleApplyPreset = useCallback(
+    ({ ratioConfig: newRatioConfig, strategy, settings, presetName }) => {
+      setRatioConfig(newRatioConfig);
+      setMixOptions(prev => ({
+        ...prev,
+        popularityStrategy: strategy,
+        recencyBoost: settings.recencyBoost,
+        shuffleWithinGroups: settings.shuffleWithinGroups,
+        useTimeLimit: settings.useTimeLimit || false,
+        useAllSongs:
+          settings.useAllSongs !== undefined
+            ? settings.useAllSongs
+            : prev.useAllSongs,
+        targetDuration: settings.targetDuration || prev.targetDuration,
+        playlistName: `${presetName} Mix`,
+        continueWhenPlaylistEmpty:
+          settings.continueWhenPlaylistEmpty !== undefined
+            ? settings.continueWhenPlaylistEmpty
+            : prev.continueWhenPlaylistEmpty,
+      }));
+      setError(null);
+    },
+    []
+  );
 
-  const handleDismissSuccess = toastId => {
+  const handleDismissError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const handleDismissSuccess = useCallback(toastId => {
     setMixedPlaylists(prev =>
       prev.filter(playlist => playlist.toastId !== toastId)
     );
-  };
+  }, []);
 
-  const handleMixedPlaylist = newPlaylist => {
+  const handleMixedPlaylist = useCallback(newPlaylist => {
     // Add unique ID and timestamp for managing multiple toasts
     const playlistWithId = {
       ...newPlaylist,
@@ -141,7 +144,7 @@ function MainApp() {
       createdAt: new Date(),
     };
     setMixedPlaylists(prev => [playlistWithId, ...prev]);
-  };
+  }, []);
 
   if (!accessToken) {
     return (

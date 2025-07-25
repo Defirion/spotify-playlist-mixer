@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, memo, useMemo, useCallback } from 'react';
 import {
   formatDuration,
   getTrackQuadrant,
@@ -6,182 +6,207 @@ import {
 } from '../../utils/dragAndDrop';
 import styles from './TrackItem.module.css';
 
-const TrackItem = forwardRef(
-  (
-    {
-      track,
-      onSelect,
-      onRemove,
-      draggable = false,
-      selected = false,
-      actions,
-      className = '',
-      showCheckbox = false,
-      showDragHandle = false,
-      showPopularity = true,
-      showDuration = true,
-      showAlbumArt = true,
-      showSourcePlaylist = false,
-      style = {},
-      onClick,
-      onMouseEnter,
-      onMouseLeave,
-      onMouseDown,
-      onMouseUp,
-      // Drag event handlers
-      onDragStart,
-      onDragEnd,
-      // Touch event handlers
-      onTouchStart,
-      onTouchMove,
-      onTouchEnd,
-      ...otherProps
-    },
-    ref
-  ) => {
-    const quadrant = getTrackQuadrant(track);
-    const popularityStyle =
-      showPopularity && track.popularity !== undefined
-        ? getPopularityStyle(quadrant, track.popularity)
-        : null;
+const TrackItem = memo(
+  forwardRef(
+    (
+      {
+        track,
+        onSelect,
+        onRemove,
+        draggable = false,
+        selected = false,
+        actions,
+        className = '',
+        showCheckbox = false,
+        showDragHandle = false,
+        showPopularity = true,
+        showDuration = true,
+        showAlbumArt = true,
+        showSourcePlaylist = false,
+        style = {},
+        onClick,
+        onMouseEnter,
+        onMouseLeave,
+        onMouseDown,
+        onMouseUp,
+        // Drag event handlers
+        onDragStart,
+        onDragEnd,
+        // Touch event handlers
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd,
+        ...otherProps
+      },
+      ref
+    ) => {
+      // Memoize expensive calculations
+      const quadrant = useMemo(() => getTrackQuadrant(track), [track]);
 
-    // Generate CSS classes
-    const trackItemClasses = [
-      styles.trackItem,
-      selected && styles.selected,
-      draggable && styles.draggable,
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ');
+      const popularityStyle = useMemo(
+        () =>
+          showPopularity && track.popularity !== undefined
+            ? getPopularityStyle(quadrant, track.popularity)
+            : null,
+        [showPopularity, track.popularity, quadrant]
+      );
 
-    const handleClick = e => {
-      if (onClick) {
-        onClick(e, track);
-      } else if (onSelect) {
-        onSelect(track);
-      }
-    };
+      // Memoize CSS classes generation
+      const trackItemClasses = useMemo(
+        () =>
+          [
+            styles.trackItem,
+            selected && styles.selected,
+            draggable && styles.draggable,
+            className,
+          ]
+            .filter(Boolean)
+            .join(' '),
+        [selected, draggable, className]
+      );
 
-    const handleRemoveClick = e => {
-      e.stopPropagation();
-      if (onRemove) {
-        onRemove(track);
-      }
-    };
+      // Stabilize event handlers with useCallback
+      const handleClick = useCallback(
+        e => {
+          if (onClick) {
+            onClick(e, track);
+          } else if (onSelect) {
+            onSelect(track);
+          }
+        },
+        [onClick, onSelect, track]
+      );
 
-    return (
-      <div
-        ref={ref}
-        className={trackItemClasses}
-        draggable={draggable}
-        onClick={handleClick}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={style}
-        data-testid="track-item"
-        role="listitem"
-        {...otherProps}
-      >
-        {/* Drag Handle */}
-        {showDragHandle && (
-          <div className={styles.dragHandle} aria-label="Drag handle">
-            ⋮⋮
-          </div>
-        )}
+      const handleRemoveClick = useCallback(
+        e => {
+          e.stopPropagation();
+          if (onRemove) {
+            onRemove(track);
+          }
+        },
+        [onRemove, track]
+      );
 
-        {/* Checkbox */}
-        {showCheckbox && (
-          <div
-            className={`${styles.checkbox} ${selected ? styles.selected : ''}`}
-          >
-            {selected && <span className={styles.checkmark}>✓</span>}
-          </div>
-        )}
-
-        {/* Album Art */}
-        {showAlbumArt && track.album?.images?.[0]?.url && (
-          <img
-            src={
-              track.album.images[2]?.url ||
-              track.album.images[1]?.url ||
-              track.album.images[0]?.url
+      return (
+        <div
+          ref={ref}
+          className={trackItemClasses}
+          draggable={draggable}
+          onClick={handleClick}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          onMouseDown={onMouseDown}
+          onMouseUp={onMouseUp}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleClick(e);
             }
-            alt={`${track.album.name} album cover`}
-            className={styles.albumArt}
-            onError={e => {
-              e.target.style.display = 'none';
-            }}
-          />
-        )}
+          }}
+          style={style}
+          data-testid="track-item"
+          role="listitem"
+          tabIndex={0}
+          {...otherProps}
+        >
+          {/* Drag Handle */}
+          {showDragHandle && (
+            <div className={styles.dragHandle} aria-label="Drag handle">
+              ⋮⋮
+            </div>
+          )}
 
-        {/* Track Info */}
-        <div className={styles.trackInfo}>
-          {/* Track Name */}
-          <div className={styles.trackName}>{track.name}</div>
+          {/* Checkbox */}
+          {showCheckbox && (
+            <div
+              className={`${styles.checkbox} ${selected ? styles.selected : ''}`}
+            >
+              {selected && <span className={styles.checkmark}>✓</span>}
+            </div>
+          )}
 
-          {/* Artist and Additional Info */}
-          <div className={styles.artistInfo}>
-            <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+          {/* Album Art */}
+          {showAlbumArt && track.album?.images?.[0]?.url && (
+            <img
+              src={
+                track.album.images[2]?.url ||
+                track.album.images[1]?.url ||
+                track.album.images[0]?.url
+              }
+              alt={`${track.album.name} album cover`}
+              className={styles.albumArt}
+              onError={e => {
+                e.target.style.display = 'none';
+              }}
+            />
+          )}
 
-            {/* Source Playlist */}
-            {showSourcePlaylist && track.sourcePlaylistName && (
-              <>
-                <span>•</span>
-                <span className={styles.sourcePlaylist}>
-                  {track.sourcePlaylistName}
-                </span>
-              </>
-            )}
+          {/* Track Info */}
+          <div className={styles.trackInfo}>
+            {/* Track Name */}
+            <div className={styles.trackName}>{track.name}</div>
 
-            {/* Popularity Indicator */}
-            {popularityStyle && (
-              <>
-                <span>•</span>
-                <span
-                  className={styles.popularityBadge}
-                  style={{
-                    background: popularityStyle.background,
-                    color: popularityStyle.color,
-                  }}
-                >
-                  {popularityStyle.text}
-                </span>
-              </>
-            )}
+            {/* Artist and Additional Info */}
+            <div className={styles.artistInfo}>
+              <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+
+              {/* Source Playlist */}
+              {showSourcePlaylist && track.sourcePlaylistName && (
+                <>
+                  <span>•</span>
+                  <span className={styles.sourcePlaylist}>
+                    {track.sourcePlaylistName}
+                  </span>
+                </>
+              )}
+
+              {/* Popularity Indicator */}
+              {popularityStyle && (
+                <>
+                  <span>•</span>
+                  <span
+                    className={styles.popularityBadge}
+                    style={{
+                      background: popularityStyle.background,
+                      color: popularityStyle.color,
+                    }}
+                  >
+                    {popularityStyle.text}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Duration */}
+          {showDuration && track.duration_ms && (
+            <div className={styles.duration}>
+              {formatDuration(track.duration_ms)}
+            </div>
+          )}
+
+          {/* Custom Actions */}
+          {actions && <div className={styles.actions}>{actions}</div>}
+
+          {/* Remove Button */}
+          {onRemove && (
+            <button
+              onClick={handleRemoveClick}
+              aria-label={`Remove ${track.name}`}
+              className={styles.removeButton}
+            >
+              ×
+            </button>
+          )}
         </div>
-
-        {/* Duration */}
-        {showDuration && track.duration_ms && (
-          <div className={styles.duration}>
-            {formatDuration(track.duration_ms)}
-          </div>
-        )}
-
-        {/* Custom Actions */}
-        {actions && <div className={styles.actions}>{actions}</div>}
-
-        {/* Remove Button */}
-        {onRemove && (
-          <button
-            onClick={handleRemoveClick}
-            aria-label={`Remove ${track.name}`}
-            className={styles.removeButton}
-          >
-            ×
-          </button>
-        )}
-      </div>
-    );
-  }
+      );
+    }
+  )
 );
 
 TrackItem.displayName = 'TrackItem';
