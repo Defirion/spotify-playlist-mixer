@@ -190,7 +190,8 @@
 - [-] 8. Refactor main components to use new architecture
 
 
-- [ ] 8.1 Refactor PlaylistMixer component
+- [x] 8.1 Refactor PlaylistMixer component
+
 
 
   - Update PlaylistMixer.js to use new API hooks and remove direct API calls
@@ -211,7 +212,8 @@
   - **Commit changes**: `git add . && git commit -m "refactor: simplify DraggableTrackList with new useDraggable hook and virtualization"`
   - _Requirements: 2.1, 2.3, 4.1_
 
-- [ ] 8.3 Remove PlaylistPreview component
+- [-] 8.3 Remove PlaylistPreview component
+
   - Delete PlaylistPreview.js component entirely
   - Integrate preview functionality into PlaylistMixer.js as a state
   - Update parent components to use consolidated mixing logic
