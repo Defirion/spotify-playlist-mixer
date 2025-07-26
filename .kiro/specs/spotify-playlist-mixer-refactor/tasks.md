@@ -26,7 +26,7 @@
   - Add keyboard navigation (ESC key) and focus management
   - Create unit tests for Modal component functionality
   - **Commit changes**: `git add . && git commit -m "feat: implement reusable Modal component with keyboard navigation and tests"`
-  - _Requirements: 1.2, 7.2, 7.3_
+  - _Requirements: 1.2_
 
 - [x] 2.2 Implement TrackItem component
 
@@ -223,113 +223,95 @@
   - **Commit changes**: `git add . && git commit -m "refactor: remove redundant PlaylistPreview component and consolidate logic"`
   - _Requirements: 1.1_
 
-- [-] 9. Implement accessibility features
+
+- [-] 9. Remove JavaScript-based responsiveness
 
 
+- [-] 9.1 Replace JavaScript media queries with CSS
 
-- [ ] 9.1 Add keyboard navigation for drag-and-drop
-
-
-  - Create useKeyboardNavigation hook for arrow key navigation
-  - Implement spacebar selection and arrow key movement for track reordering
-  - Add proper ARIA labels and announcements for screen readers
-  - **Commit changes**: `git add . && git commit -m "feat: implement keyboard navigation and accessibility for drag-and-drop"`
-  - _Requirements: 7.1, 7.2, 7.3_
-
-- [ ] 9.2 Enhance accessibility across components
-  - Add proper ARIA labels to all interactive elements
-  - Implement focus management for modals and dynamic content
-  - Add live regions for announcing dynamic content changes
-  - Test with screen readers and keyboard-only navigation
-  - **Commit changes**: `git add . && git commit -m "feat: enhance accessibility with ARIA labels and focus management"`
-  - _Requirements: 7.1, 7.2, 7.3_
-
-- [ ] 10. Remove JavaScript-based responsiveness
-- [ ] 10.1 Replace JavaScript media queries with CSS
   - Remove all JavaScript-based device detection (isMobile state)
   - Implement responsive design using only CSS media queries
   - Update components to rely on CSS for responsive behavior
   - **Commit changes**: `git add . && git commit -m "refactor: replace JavaScript media queries with CSS-only responsive design"`
   - _Requirements: 5.3_
 
-- [ ] 11. Add comprehensive error handling
-- [ ] 11.1 Implement error boundaries
+- [ ] 10. Add comprehensive error handling
+- [ ] 10.1 Implement error boundaries
   - Create ErrorBoundary component to catch JavaScript errors
   - Add fallback UI for error states
   - Implement error recovery mechanisms
   - **Commit changes**: `git add . && git commit -m "feat: implement error boundaries with fallback UI and recovery"`
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 11.2 Enhance API error handling
+- [ ] 10.2 Enhance API error handling
   - Create centralized error handling service for API calls
   - Implement user-friendly error messages for different error types
   - Add retry logic for transient failures (network issues, rate limits)
   - **Commit changes**: `git add . && git commit -m "feat: enhance API error handling with centralized service and retry logic"`
   - _Requirements: 3.4, 9.1, 9.2_
 
-- [ ] 12. Continuous testing
-- [ ] 12.1 Write unit tests for core components
+- [ ] 11. Continuous testing
+- [ ] 11.1 Write unit tests for core components
   - Create unit tests for Modal, TrackList, TrackItem components
   - Test component rendering, props handling, and user interactions
   - Achieve >80% test coverage for UI components
   - **Commit changes**: `git add . && git commit -m "test: add comprehensive unit tests for core UI components"`
   - _Requirements: 9.1, 9.2_
 
-- [ ] 12.2 Write tests for custom hooks
+- [ ] 11.2 Write tests for custom hooks
   - Create unit tests for useDraggable, useSpotifyApi, useVirtualization hooks
   - Test hook state management, side effects, and cleanup
   - Mock external dependencies and API calls
   - **Commit changes**: `git add . && git commit -m "test: add unit tests for custom hooks with mocked dependencies"`
   - _Requirements: 9.1, 9.2_
 
-- [ ] 12.3 Write integration tests
+- [ ] 11.3 Write integration tests
   - Create integration tests for component interactions and data flow
   - Test complete user workflows (playlist selection, mixing, drag-and-drop)
   - Use React Testing Library and Mock Service Worker for realistic testing
   - **Commit changes**: `git add . && git commit -m "test: add integration tests for user workflows and component interactions"`
   - _Requirements: 9.3_
 
-- [ ] 12.4 Set up Mock Service Worker (MSW) for API mocking
+- [ ] 11.4 Set up Mock Service Worker (MSW) for API mocking
   - Configure MSW for mocking Spotify API responses in tests
   - Create mock data fixtures for tracks, playlists, and user data
   - Set up MSW handlers for all API endpoints used in the application
   - **Commit changes**: `git add . && git commit -m "test: set up Mock Service Worker with API mocking and fixtures"`
   - _Requirements: 9.1, 9.2_
 
-- [ ] 13. Gradual TypeScript migration
-- [ ] 13.1 Create core type definitions
+- [ ] 12. Gradual TypeScript migration
+- [ ] 12.1 Create core type definitions
   - Write TypeScript interfaces for Track, Playlist, MixOptions, RatioConfig
   - Create type definitions for API responses and service methods
   - Add proper typing for component props and hook return values
   - **Commit changes**: `git add . && git commit -m "feat: add comprehensive TypeScript type definitions"`
   - _Requirements: 8.1, 8.2, 8.3_
 
-- [ ] 13.2 Migrate components to TypeScript
+- [ ] 12.2 Migrate components to TypeScript
   - Convert core components (Modal, TrackList, TrackItem) to TypeScript
   - Convert custom hooks to TypeScript with proper type annotations
   - Convert API service layer to TypeScript
   - **Commit changes**: `git add . && git commit -m "refactor: migrate core components and hooks to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 14. Final integration and cleanup
-- [ ] 14.1 Update main App component
+- [ ] 13. Final integration and cleanup
+- [ ] 13.1 Update main App component
   - Integrate all refactored components into main App.js
   - Remove unused imports and dead code
   - Test complete application functionality
   - **Commit changes**: `git add . && git commit -m "refactor: integrate all refactored components into main App and cleanup"`
   - _Requirements: 1.1, 6.1, 6.4_
 
-- [ ] 14.2 Performance testing and optimization
+- [ ] 13.2 Performance testing and optimization
   - Test application performance with large playlists (1000+ tracks)
   - Optimize bundle size and loading times
   - Add performance monitoring and metrics
   - **Commit changes**: `git add . && git commit -m "perf: optimize performance and add monitoring for large playlists"`
   - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 14.3 Final testing and validation
+- [ ] 13.3 Final testing and validation
   - Run complete test suite and ensure all tests pass
   - Perform manual testing of all user workflows
-  - Validate accessibility compliance with WCAG 2.1 AA standards
   - Test cross-browser compatibility and mobile responsiveness
   - **Commit changes**: `git add . && git commit -m "test: complete final testing and validation for production readiness"`
-  - _Requirements: 7.1, 7.2, 7.3, 9.4_
+  - _Requirements: 5.3_

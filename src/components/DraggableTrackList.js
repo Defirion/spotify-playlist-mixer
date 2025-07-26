@@ -9,6 +9,7 @@ import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 import { getPopularityIcon } from '../utils/dragAndDrop';
 import { useDrag } from './DragContext';
+import styles from './DraggableTrackList.module.css';
 
 const DraggableTrackList = ({
   tracks,
@@ -21,7 +22,6 @@ const DraggableTrackList = ({
   const [localTracks, setLocalTracks] = useState(tracks);
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
@@ -405,16 +405,6 @@ const DraggableTrackList = ({
     checkAutoScroll,
   ]);
 
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -484,16 +474,10 @@ const DraggableTrackList = ({
     [localTracks, onTrackOrderChange]
   );
 
-  // Helper function to truncate text with ellipsis
-  const truncateText = useCallback((text, maxLength) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + '...';
-  }, []);
-
   // Simplified external touch handler for modal drags
   const handleExternalTouchMove = useCallback(
     e => {
-      if (!isMobile || !isDragging || !draggedItem) return;
+      if (!isDragging || !draggedItem) return;
 
       e.preventDefault();
       const touch = e.touches[0];
@@ -511,30 +495,20 @@ const DraggableTrackList = ({
         scrollContainerRef.current.dispatchEvent(customEvent);
       }
     },
-    [isMobile, isDragging, draggedItem, checkAutoScroll]
+    [isDragging, draggedItem, checkAutoScroll]
   );
 
   return (
     <>
-      <div
-        style={{
-          position: 'relative',
-          marginBottom: '16px',
-        }}
-      >
+      <div className={styles.container}>
         <div
           ref={scrollContainerRef}
           data-preview-panel="true"
+          className={`${styles.scrollContainer} ${isDragging || draggedIndex !== null ? styles.dragging : ''}`}
           style={{
-            background: 'var(--hunter-green)',
-            borderRadius: '8px',
-            border: '1px solid var(--fern-green)',
             height: `${containerHeight}px`,
-            overflowY: isDragging || draggedIndex !== null ? 'hidden' : 'auto',
-            borderBottomLeftRadius: '8px',
-            borderBottomRightRadius: '8px',
           }}
-          onTouchMove={isMobile ? handleExternalTouchMove : undefined}
+          onTouchMove={handleExternalTouchMove}
           onDragOver={e => {
             e.preventDefault();
             checkAutoScroll(e.clientY);
@@ -570,26 +544,10 @@ const DraggableTrackList = ({
           }}
         >
           {/* Header */}
-          <div
-            style={{
-              padding: '12px 16px',
-              borderBottom: '1px solid var(--fern-green)',
-              position: 'sticky',
-              top: 0,
-              background: 'var(--hunter-green)',
-              zIndex: 1,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '8px',
-              }}
-            >
+          <div className={styles.header}>
+            <div className={styles.headerTop}>
               <strong>🎵 {localTracks.length} Songs</strong>
-              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <div className={styles.buttonGroup}>
                 <button
                   onClick={() => {
                     if (showAddUnselectedModal) {
@@ -599,21 +557,7 @@ const DraggableTrackList = ({
                       setShowAddUnselectedModal(true);
                     }
                   }}
-                  style={{
-                    background: 'var(--moss-green)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 8px',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '3px',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap',
-                  }}
+                  className={styles.addButton}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -629,16 +573,11 @@ const DraggableTrackList = ({
                   title="Add songs that weren't selected from your playlists"
                 >
                   <span
-                    style={{
-                      backgroundColor: '#7a9147',
-                      borderRadius: '3px',
-                      padding: '2px',
-                      fontSize: '10px',
-                    }}
+                    className={`${styles.buttonIcon} ${styles.addButtonIcon}`}
                   >
                     ➕
                   </span>
-                  {!isMobile && <span>Add Unselected</span>}
+                  <span className={styles.buttonText}>Add Unselected</span>
                 </button>
 
                 <button
@@ -650,21 +589,7 @@ const DraggableTrackList = ({
                       setShowSpotifySearch(true);
                     }
                   }}
-                  style={{
-                    background: '#1DB954',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 8px',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '3px',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap',
-                  }}
+                  className={styles.spotifyButton}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -680,34 +605,24 @@ const DraggableTrackList = ({
                   title="Search and add songs directly from Spotify"
                 >
                   <span
-                    style={{
-                      backgroundColor: '#189a47',
-                      borderRadius: '3px',
-                      padding: '2px',
-                      fontSize: '10px',
-                    }}
+                    className={`${styles.buttonIcon} ${styles.spotifyButtonIcon}`}
                   >
                     🎵
                   </span>
-                  {!isMobile && <span>Add from Spotify</span>}
+                  <span className={styles.buttonText}>Add from Spotify</span>
                 </button>
               </div>
             </div>
 
-            <div
-              style={{
-                fontSize: '11px',
-                opacity: '0.7',
-                lineHeight: '1.3',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-              }}
-            >
+            <div className={styles.helpText}>
               💡{' '}
               <strong>
-                {isMobile
-                  ? 'Long press any track and drag to reorder'
-                  : 'Drag and drop to reorder'}
+                <span className={styles.buttonText}>
+                  Drag and drop to reorder
+                </span>
+                <span className={styles.mobileText}>
+                  Long press any track and drag to reorder
+                </span>
               </strong>{' '}
               • <strong>Click ✕ to remove tracks</strong>
             </div>
@@ -716,40 +631,14 @@ const DraggableTrackList = ({
           {/* Drop line at the end when dragging over empty space */}
           {dropLinePosition &&
             dropLinePosition.index === localTracks.length &&
-            localTracks.length > 0 && (
-              <div
-                style={{
-                  height: '3px',
-                  background: 'var(--moss-green)',
-                  borderRadius: '2px',
-                  boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
-                  animation: 'pulse 1s infinite',
-                  margin: '8px 16px',
-                  pointerEvents: 'none',
-                }}
-              />
-            )}
+            localTracks.length > 0 && <div className={styles.dropLine} />}
 
           {/* Empty state drop zone */}
           {localTracks.length === 0 && (
             <div
-              style={{
-                padding: '40px 20px',
-                textAlign: 'center',
-                color: 'var(--mindaro)',
-                opacity: '0.6',
-                fontSize: '14px',
-                borderStyle: isDragging || dropLinePosition ? 'dashed' : 'none',
-                borderWidth: '2px',
-                borderColor: 'var(--moss-green)',
-                borderRadius: '8px',
-                margin: '20px',
-                backgroundColor:
-                  isDragging || dropLinePosition
-                    ? 'rgba(144, 169, 85, 0.1)'
-                    : 'transparent',
-                transition: 'all 0.2s ease',
-              }}
+              className={`${styles.emptyState} ${
+                isDragging || dropLinePosition ? styles.dragging : styles.normal
+              }`}
             >
               {isDragging || dropLinePosition
                 ? '🎵 Drop track here to add it to your playlist'
@@ -772,55 +661,26 @@ const DraggableTrackList = ({
             return (
               <div
                 key={`${track.id}-${index}`}
-                draggable={!isMobile}
+                draggable={true}
                 data-track-index={index}
                 onDragStart={e => handleDragStart(e, index)}
                 onDragOver={e => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
                 onDrop={e => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
+                className={styles.trackItem}
                 style={{
-                  padding: isMobile ? '6px 12px' : '8px 16px',
-                  borderBottom:
-                    index < localTracks.length - 1
-                      ? '1px solid rgba(79, 119, 45, 0.3)'
-                      : 'none',
                   borderTop: showDropLineAbove
                     ? '3px solid var(--moss-green)'
                     : 'none',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  cursor: isMobile ? 'default' : 'grab',
-                  transition: 'all 0.2s ease',
-                  userSelect: 'none',
-                  position: 'relative',
                   boxShadow: showDropLineAbove
                     ? '0 -2px 8px rgba(144, 169, 85, 0.6)'
                     : 'none',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                  <div
-                    style={{
-                      marginRight: isMobile ? '8px' : '12px',
-                      fontSize: isMobile ? '14px' : '16px',
-                      opacity: '0.5',
-                      cursor: isMobile ? 'default' : 'grab',
-                      padding: isMobile ? '4px' : '0',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    ⋮⋮
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: isMobile ? '8px' : '12px',
-                      flex: 1,
-                    }}
-                  >
+                <div className={styles.trackContent}>
+                  <div className={styles.dragHandle}>⋮⋮</div>
+                  <div className={styles.trackInfo}>
                     {track.album?.images?.[0]?.url && (
                       <img
                         src={
@@ -829,53 +689,19 @@ const DraggableTrackList = ({
                           track.album.images[0]?.url
                         }
                         alt={`${track.album.name} album cover`}
-                        style={{
-                          width: isMobile ? '32px' : '40px',
-                          height: isMobile ? '32px' : '40px',
-                          borderRadius: '4px',
-                          objectFit: 'cover',
-                          flexShrink: 0,
-                        }}
+                        className={styles.albumCover}
                         onError={e => {
                           e.target.style.display = 'none';
                         }}
                       />
                     )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontWeight: '500',
-                          fontSize: isMobile ? '13px' : '14px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          lineHeight: '1.3',
-                          maxHeight: isMobile ? '2.6em' : '2.8em',
-                        }}
-                      >
-                        {index + 1}.{' '}
-                        {isMobile ? truncateText(track.name, 25) : track.name}
+                    <div className={styles.trackDetails}>
+                      <div className={styles.trackName}>
+                        {index + 1}. {track.name}
                       </div>
-                      <div
-                        style={{
-                          fontSize: isMobile ? '11px' : '12px',
-                          opacity: '0.7',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          marginTop: '2px',
-                        }}
-                      >
+                      <div className={styles.trackMeta}>
                         <span>
-                          {truncateText(
-                            track.artists?.[0]?.name || 'Unknown Artist',
-                            isMobile ? 15 : 25
-                          )}
+                          {track.artists?.[0]?.name || 'Unknown Artist'}
                         </span>
                         <span>•</span>
                         <span
@@ -886,21 +712,23 @@ const DraggableTrackList = ({
                                 : 'var(--moss-green)',
                           }}
                         >
-                          {track.sourcePlaylist === 'search'
-                            ? isMobile
-                              ? '🔍'
-                              : '🔍 Spotify Search'
-                            : truncateText(
-                                sourcePlaylist?.name || 'Unknown',
-                                isMobile ? 12 : 20
-                              )}
+                          {track.sourcePlaylist === 'search' ? (
+                            <>
+                              <span className={styles.buttonText}>
+                                🔍 Spotify Search
+                              </span>
+                              <span className={styles.mobileText}>🔍</span>
+                            </>
+                          ) : (
+                            sourcePlaylist?.name || 'Unknown'
+                          )}
                         </span>
                         {quadrant && (
                           <>
                             <span>•</span>
                             <span
+                              className={styles.popularityBadge}
                               style={{
-                                fontSize: isMobile ? '10px' : '10px',
                                 background:
                                   quadrant === 'topHits'
                                     ? 'rgba(255, 87, 34, 0.2)'
@@ -917,9 +745,6 @@ const DraggableTrackList = ({
                                       : quadrant === 'moderate'
                                         ? '#00BCD4'
                                         : '#E91E63',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500',
                               }}
                               title={
                                 quadrant === 'topHits'
@@ -931,15 +756,18 @@ const DraggableTrackList = ({
                                       : `Deep Cuts (${track.popularity})`
                               }
                             >
-                              {isMobile
-                                ? getPopularityIcon(quadrant)
-                                : quadrant === 'topHits'
+                              <span className={styles.buttonText}>
+                                {quadrant === 'topHits'
                                   ? `🔥 Top Hits (${track.popularity})`
                                   : quadrant === 'popular'
                                     ? `⭐ Popular (${track.popularity})`
                                     : quadrant === 'moderate'
                                       ? `📻 Moderate (${track.popularity})`
                                       : `💎 Deep Cuts (${track.popularity})`}
+                              </span>
+                              <span className={styles.mobileText}>
+                                {getPopularityIcon(quadrant)}
+                              </span>
                             </span>
                           </>
                         )}
@@ -947,10 +775,8 @@ const DraggableTrackList = ({
                     </div>
                   </div>
                 </div>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <div style={{ fontSize: '11px', opacity: '0.6' }}>
+                <div className={styles.trackActions}>
+                  <div className={styles.duration}>
                     {formatDuration(track.duration_ms || 0)}
                   </div>
                   <button
@@ -958,23 +784,7 @@ const DraggableTrackList = ({
                       e.stopPropagation();
                       handleRemoveTrack(index);
                     }}
-                    style={{
-                      background: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '24px',
-                      height: '24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'background-color 0.2s',
-                    }}
-                    onMouseEnter={e => (e.target.style.background = '#cc0000')}
-                    onMouseLeave={e => (e.target.style.background = '#ff4444')}
+                    className={styles.removeButton}
                     title="Remove track from playlist"
                   >
                     ×
@@ -982,23 +792,7 @@ const DraggableTrackList = ({
                 </div>
 
                 {/* Drop line below */}
-                {showDropLineBelow && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-2px',
-                      left: '16px',
-                      right: '16px',
-                      height: '3px',
-                      background: 'var(--moss-green)',
-                      borderRadius: '2px',
-                      boxShadow: '0 0 8px rgba(144, 169, 85, 0.6)',
-                      animation: 'pulse 1s infinite',
-                      pointerEvents: 'none',
-                      zIndex: 10,
-                    }}
-                  />
-                )}
+                {showDropLineBelow && <div className={styles.dropLineBelow} />}
               </div>
             );
           })}

@@ -1,0 +1,380 @@
+/* DraggableTrackList responsive styles */
+
+.container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.scrollContainer {
+  background: var(--hunter-green);
+  border-radius: 8px;
+  border: 1px solid var(--fern-green);
+  overflow-y: auto;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.scrollContainer.dragging {
+  overflow-y: hidden;
+}
+
+.header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--fern-green);
+  position: sticky;
+  top: 0;
+  background: var(--hunter-green);
+  z-index: 1;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.addButton {
+  background: var(--moss-green);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.addButton:focus {
+  outline: 2px solid var(--mindaro);
+  outline-offset: 2px;
+}
+
+.spotifyButton {
+  background: #1db954;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.spotifyButton:focus {
+  outline: 2px solid var(--mindaro);
+  outline-offset: 2px;
+}
+
+.buttonIcon {
+  border-radius: 3px;
+  padding: 2px;
+  font-size: 10px;
+}
+
+.addButtonIcon {
+  background-color: #7a9147;
+}
+
+.spotifyButtonIcon {
+  background-color: #189a47;
+}
+
+.buttonText {
+  display: inline;
+}
+
+.helpText {
+  font-size: 11px;
+  opacity: 0.7;
+  line-height: 1.3;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.trackItem {
+  border-bottom: 1px solid rgba(79, 119, 45, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  position: relative;
+  padding: 8px 16px;
+}
+
+.trackItem:last-child {
+  border-bottom: none;
+}
+
+.trackItem.mobile {
+  padding: 6px 12px;
+  cursor: default;
+}
+
+.trackContent {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.dragHandle {
+  margin-right: 12px;
+  font-size: 16px;
+  opacity: 0.5;
+  cursor: grab;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.dragHandle.mobile {
+  margin-right: 8px;
+  font-size: 14px;
+  cursor: default;
+  padding: 4px;
+}
+
+.trackInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.trackInfo.mobile {
+  gap: 8px;
+}
+
+.albumCover {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.albumCover.mobile {
+  width: 32px;
+  height: 32px;
+}
+
+.trackDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.trackName {
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  max-height: 2.8em;
+}
+
+.trackName.mobile {
+  font-size: 13px;
+  max-height: 2.6em;
+}
+
+.trackMeta {
+  font-size: 12px;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.trackMeta.mobile {
+  font-size: 11px;
+}
+
+.trackMeta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+/* Mobile text truncation */
+@media (max-width: 480px) {
+  .trackMeta span {
+    max-width: 80px;
+  }
+
+  .trackName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+}
+
+.popularityBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.trackActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duration {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.removeButton {
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.removeButton:hover {
+  background: #cc0000;
+}
+
+.removeButton:focus {
+  outline: 2px solid var(--mindaro);
+  outline-offset: 2px;
+}
+
+.dropLine {
+  height: 3px;
+  background: var(--moss-green);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(144, 169, 85, 0.6);
+  animation: pulse 1s infinite;
+  margin: 8px 16px;
+  pointer-events: none;
+}
+
+.dropLineBelow {
+  position: absolute;
+  bottom: -2px;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  background: var(--moss-green);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(144, 169, 85, 0.6);
+  animation: pulse 1s infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--mindaro);
+  opacity: 0.6;
+  font-size: 14px;
+  border-radius: 8px;
+  margin: 20px;
+  transition: all 0.2s ease;
+}
+
+.emptyState.dragging {
+  border: 2px dashed var(--moss-green);
+  background-color: rgba(144, 169, 85, 0.1);
+}
+
+.emptyState.normal {
+  border: none;
+  background-color: transparent;
+}
+
+/* Mobile-specific responsive styles */
+@media (max-width: 480px) {
+  .buttonText {
+    display: none;
+  }
+
+  .mobileText {
+    display: inline;
+  }
+
+  .trackItem {
+    padding: 6px 12px;
+    cursor: default;
+  }
+
+  .dragHandle {
+    margin-right: 8px;
+    font-size: 14px;
+    cursor: default;
+    padding: 4px;
+  }
+
+  .trackInfo {
+    gap: 8px;
+  }
+
+  .albumCover {
+    width: 32px;
+    height: 32px;
+  }
+
+  .trackName {
+    font-size: 13px;
+    max-height: 2.6em;
+  }
+
+  .trackMeta {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 481px) {
+  .mobileText {
+    display: none;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
