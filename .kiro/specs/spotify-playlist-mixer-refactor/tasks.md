@@ -224,10 +224,14 @@
   - _Requirements: 1.1_
 
 
-- [-] 9. Remove JavaScript-based responsiveness
+- [x] 9. Remove JavaScript-based responsiveness
 
 
-- [-] 9.1 Replace JavaScript media queries with CSS
+
+
+- [x] 9.1 Replace JavaScript media queries with CSS
+
+
 
   - Remove all JavaScript-based device detection (isMobile state)
   - Implement responsive design using only CSS media queries

@@ -409,8 +409,13 @@ const DraggableTrackList = ({
   useEffect(() => {
     return () => {
       stopAutoScroll();
+
+      // Clean up touch drag timer
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
     };
-  }, [stopAutoScroll]);
+  }, [stopAutoScroll, touchDragState.longPressTimer]);
 
   const handleRemoveTrack = useCallback(
     index => {
@@ -472,6 +477,191 @@ const DraggableTrackList = ({
       }
     },
     [localTracks, onTrackOrderChange]
+  );
+
+  // Touch drag state for track items
+  const [touchDragState, setTouchDragState] = useState({
+    isActive: false,
+    startY: 0,
+    startX: 0,
+    longPressTimer: null,
+    draggedTrackIndex: null,
+  });
+
+  // Touch handlers for track items
+  const handleTrackTouchStart = useCallback(
+    (e, index) => {
+      const touch = e.touches[0];
+
+      // Clear any existing timer
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
+
+      // Set up long press detection
+      const longPressTimer = setTimeout(() => {
+        console.log(
+          '[DraggableTrackList] Touch long press detected for index:',
+          index
+        );
+        setTouchDragState(prev => ({
+          ...prev,
+          draggedTrackIndex: index,
+        }));
+        setDraggedIndex(index);
+
+        // Provide haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+      }, 250); // 250ms long press delay
+
+      setTouchDragState({
+        isActive: true,
+        startY: touch.clientY,
+        startX: touch.clientX,
+        longPressTimer,
+        draggedTrackIndex: null,
+      });
+    },
+    [touchDragState.longPressTimer]
+  );
+
+  const handleTrackTouchMove = useCallback(
+    (e, index) => {
+      if (!touchDragState.isActive) return;
+
+      const touch = e.touches[0];
+      const deltaY = Math.abs(touch.clientY - touchDragState.startY);
+      const deltaX = Math.abs(touch.clientX - touchDragState.startX);
+
+      // Cancel long press if user moves too much before long press activates
+      if (
+        touchDragState.draggedTrackIndex === null &&
+        (deltaY > 15 || deltaX > 15)
+      ) {
+        if (touchDragState.longPressTimer) {
+          clearTimeout(touchDragState.longPressTimer);
+          setTouchDragState(prev => ({
+            ...prev,
+            longPressTimer: null,
+          }));
+        }
+        return;
+      }
+
+      // Handle dragging if long press is active
+      if (touchDragState.draggedTrackIndex !== null) {
+        e.preventDefault();
+        checkAutoScroll(touch.clientY);
+
+        // Find which track element is being hovered over
+        const trackElements =
+          scrollContainerRef.current?.querySelectorAll('[data-track-index]');
+        let foundDropTarget = false;
+
+        if (trackElements) {
+          for (let i = 0; i < trackElements.length; i++) {
+            const trackElement = trackElements[i];
+            const rect = trackElement.getBoundingClientRect();
+            const hoverIndex = parseInt(
+              trackElement.getAttribute('data-track-index')
+            );
+
+            if (
+              touch.clientX >= rect.left &&
+              touch.clientX <= rect.right &&
+              touch.clientY >= rect.top &&
+              touch.clientY <= rect.bottom
+            ) {
+              const midpoint = rect.top + rect.height / 2;
+              const isTopHalf = touch.clientY < midpoint;
+
+              setDropLinePosition({
+                index: isTopHalf ? hoverIndex : hoverIndex + 1,
+                isTopHalf,
+              });
+              foundDropTarget = true;
+              break;
+            }
+          }
+        }
+
+        if (!foundDropTarget) {
+          const containerRect =
+            scrollContainerRef.current?.getBoundingClientRect();
+          if (
+            containerRect &&
+            touch.clientX >= containerRect.left &&
+            touch.clientX <= containerRect.right &&
+            touch.clientY >= containerRect.top &&
+            touch.clientY <= containerRect.bottom
+          ) {
+            setDropLinePosition({
+              index: localTracks.length,
+              isTopHalf: false,
+            });
+          }
+        }
+      }
+    },
+    [touchDragState, checkAutoScroll, localTracks.length]
+  );
+
+  const handleTrackTouchEnd = useCallback(
+    (e, index) => {
+      // Clear long press timer
+      if (touchDragState.longPressTimer) {
+        clearTimeout(touchDragState.longPressTimer);
+      }
+
+      // Handle drop if long press was active
+      if (touchDragState.draggedTrackIndex !== null && dropLinePosition) {
+        console.log('[DraggableTrackList] Touch drop detected');
+
+        const draggedTrackIndex = touchDragState.draggedTrackIndex;
+        const newTracks = [...localTracks];
+        const draggedTrack = newTracks[draggedTrackIndex];
+
+        newTracks.splice(draggedTrackIndex, 1);
+
+        let insertIndex = dropLinePosition.index;
+        if (draggedTrackIndex < dropLinePosition.index) {
+          insertIndex = dropLinePosition.index - 1;
+        }
+
+        newTracks.splice(insertIndex, 0, draggedTrack);
+        setLocalTracks(newTracks);
+
+        if (onTrackOrderChange) {
+          onTrackOrderChange(newTracks);
+        }
+
+        // Provide success haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate([30, 50, 30]);
+        }
+      }
+
+      // Reset states
+      setTouchDragState({
+        isActive: false,
+        startY: 0,
+        startX: 0,
+        longPressTimer: null,
+        draggedTrackIndex: null,
+      });
+      setDraggedIndex(null);
+      setDropLinePosition(null);
+      stopAutoScroll();
+    },
+    [
+      touchDragState,
+      dropLinePosition,
+      localTracks,
+      onTrackOrderChange,
+      stopAutoScroll,
+    ]
   );
 
   // Simplified external touch handler for modal drags
@@ -661,13 +851,16 @@ const DraggableTrackList = ({
             return (
               <div
                 key={`${track.id}-${index}`}
-                draggable={true}
+                draggable={!('ontouchstart' in window)}
                 data-track-index={index}
                 onDragStart={e => handleDragStart(e, index)}
                 onDragOver={e => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
                 onDrop={e => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
+                onTouchStart={e => handleTrackTouchStart(e, index)}
+                onTouchMove={e => handleTrackTouchMove(e, index)}
+                onTouchEnd={e => handleTrackTouchEnd(e, index)}
                 className={styles.trackItem}
                 style={{
                   borderTop: showDropLineAbove
