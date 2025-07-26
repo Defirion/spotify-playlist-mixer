@@ -25,6 +25,15 @@ const DraggableTrackList = ({
   const [dropLinePosition, setDropLinePosition] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
+  // Touch drag state for track items
+  const [touchDragState, setTouchDragState] = useState({
+    isActive: false,
+    startY: 0,
+    startX: 0,
+    longPressTimer: null,
+    draggedTrackIndex: null,
+  });
+
   // Static container height - 85% of viewport height
   const containerHeight = Math.floor(window.innerHeight * 0.85);
   const scrollContainerRef = useRef(null);
@@ -479,15 +488,6 @@ const DraggableTrackList = ({
     [localTracks, onTrackOrderChange]
   );
 
-  // Touch drag state for track items
-  const [touchDragState, setTouchDragState] = useState({
-    isActive: false,
-    startY: 0,
-    startX: 0,
-    longPressTimer: null,
-    draggedTrackIndex: null,
-  });
-
   // Touch handlers for track items
   const handleTrackTouchStart = useCallback(
     (e, index) => {
@@ -547,12 +547,24 @@ const DraggableTrackList = ({
             longPressTimer: null,
           }));
         }
+
+        // Restore page scrolling if it was locked
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+
         return;
       }
 
       // Handle dragging if long press is active
       if (touchDragState.draggedTrackIndex !== null) {
         e.preventDefault();
+
+        // Prevent page scrolling during drag
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+
         checkAutoScroll(touch.clientY);
 
         // Find which track element is being hovered over
@@ -642,6 +654,11 @@ const DraggableTrackList = ({
           navigator.vibrate([30, 50, 30]);
         }
       }
+
+      // Restore page scrolling
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
 
       // Reset states
       setTouchDragState({

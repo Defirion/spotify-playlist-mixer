@@ -75,10 +75,13 @@ const SpotifySearchModal = memo(
           sourcePlaylistName: 'Spotify Search',
         };
 
-        // Start drag in context
-        startDrag({ data: trackWithSource, type: 'search-track' }, 'html5');
+        // Determine drag type based on device capabilities
+        const dragType = 'ontouchstart' in window ? 'touch' : 'html5';
 
-        // Set data for the drag operation (for backward compatibility)
+        // Start drag in context
+        startDrag({ data: trackWithSource, type: 'search-track' }, dragType);
+
+        // Set data for the drag operation (for backward compatibility with HTML5)
         if (e.dataTransfer) {
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData(
@@ -92,6 +95,38 @@ const SpotifySearchModal = memo(
       },
       [startDrag]
     );
+
+    // Touch event handlers for mobile drag support
+    const handleTrackTouchStart = useCallback(
+      (e, track) => {
+        console.log('[SpotifySearchModal] Track touch start:', track.name);
+
+        const trackWithSource = {
+          ...track,
+          sourcePlaylist: 'search',
+          sourcePlaylistName: 'Spotify Search',
+        };
+
+        // Start drag in context for touch devices
+        startDrag({ data: trackWithSource, type: 'search-track' }, 'touch');
+      },
+      [startDrag]
+    );
+
+    const handleTrackTouchMove = useCallback(
+      (e, track) => {
+        // Touch move is handled by the drag context
+        if (isDragging) {
+          e.preventDefault();
+        }
+      },
+      [isDragging]
+    );
+
+    const handleTrackTouchEnd = useCallback((e, track) => {
+      console.log('[SpotifySearchModal] Track touch end:', track.name);
+      // Touch end is handled by the drag context
+    }, []);
 
     // Clear search when modal closes
     useEffect(() => {
@@ -242,6 +277,10 @@ const SpotifySearchModal = memo(
                 sourcePlaylist: 'search',
                 sourcePlaylistName: '🔍 Spotify Search',
               }))}
+              onTrackDragStart={handleTrackDragStart}
+              onTrackTouchStart={handleTrackTouchStart}
+              onTrackTouchMove={handleTrackTouchMove}
+              onTrackTouchEnd={handleTrackTouchEnd}
               onTrackSelect={handleTrackSelect}
               selectedTracks={selectedTracksToAdd}
               draggable={true}
@@ -258,7 +297,6 @@ const SpotifySearchModal = memo(
                   ? 'No tracks found. Try a different search term.'
                   : 'Enter a search term to find songs on Spotify'
               }
-              onTrackDragStart={handleTrackDragStart}
               onTrackDragEnd={() => endDrag('html5-end')}
               style={{
                 height: '400px',

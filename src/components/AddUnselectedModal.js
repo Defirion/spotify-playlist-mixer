@@ -94,10 +94,13 @@ const AddUnselectedModal = memo(
       (e, track) => {
         console.log('[AddUnselectedModal] Track drag start:', track.name);
 
-        // Start drag in context
-        startDrag({ data: track, type: 'modal-track' }, 'html5');
+        // Determine drag type based on device capabilities
+        const dragType = 'ontouchstart' in window ? 'touch' : 'html5';
 
-        // Set data for the drag operation (for backward compatibility)
+        // Start drag in context
+        startDrag({ data: track, type: 'modal-track' }, dragType);
+
+        // Set data for the drag operation (for backward compatibility with HTML5)
         if (e.dataTransfer) {
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData(
@@ -111,6 +114,32 @@ const AddUnselectedModal = memo(
       },
       [startDrag]
     );
+
+    // Touch event handlers for mobile drag support
+    const handleTrackTouchStart = useCallback(
+      (e, track) => {
+        console.log('[AddUnselectedModal] Track touch start:', track.name);
+
+        // Start drag in context for touch devices
+        startDrag({ data: track, type: 'modal-track' }, 'touch');
+      },
+      [startDrag]
+    );
+
+    const handleTrackTouchMove = useCallback(
+      (e, track) => {
+        // Touch move is handled by the drag context
+        if (isDragging) {
+          e.preventDefault();
+        }
+      },
+      [isDragging]
+    );
+
+    const handleTrackTouchEnd = useCallback((e, track) => {
+      console.log('[AddUnselectedModal] Track touch end:', track.name);
+      // Touch end is handled by the drag context
+    }, []);
 
     // Reset selected tracks when modal opens/closes
     useEffect(() => {
@@ -276,6 +305,10 @@ const AddUnselectedModal = memo(
           ) : (
             <TrackList
               tracks={filteredTracks}
+              onTrackDragStart={handleTrackDragStart}
+              onTrackTouchStart={handleTrackTouchStart}
+              onTrackTouchMove={handleTrackTouchMove}
+              onTrackTouchEnd={handleTrackTouchEnd}
               onTrackSelect={handleTrackSelect}
               selectedTracks={selectedTracksToAdd}
               draggable={true}
@@ -292,7 +325,6 @@ const AddUnselectedModal = memo(
                   ? 'No tracks match your search'
                   : 'All tracks from your playlists are already included'
               }
-              onTrackDragStart={handleTrackDragStart}
               onTrackDragEnd={() => endDrag('html5-end')}
               style={{
                 height: '400px',
