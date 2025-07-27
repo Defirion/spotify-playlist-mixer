@@ -1,80 +1,36 @@
 import { getSpotifyApi } from '../utils/spotify';
+import { ApiErrorHandler } from './apiErrorHandler';
 
 /**
  * Centralized Spotify API service class
  * Handles all Spotify API interactions with automatic pagination, error handling, and retry logic
  */
 class SpotifyService {
-  constructor(accessToken) {
+  constructor(accessToken, errorHandler = null) {
     if (!accessToken) {
       throw new Error('Access token is required for SpotifyService');
     }
     this.api = getSpotifyApi(accessToken);
     this.accessToken = accessToken;
+    this.errorHandler =
+      errorHandler ||
+      new ApiErrorHandler({
+        enableLogging: process.env.NODE_ENV === 'development',
+      });
   }
 
   /**
-   * Generic retry wrapper for API calls
+   * Generic retry wrapper for API calls using the centralized error handler
    * @param {Function} apiCall - The API call function to retry
-   * @param {number} maxRetries - Maximum number of retry attempts
-   * @param {number} baseDelay - Base delay in milliseconds
+   * @param {Object} context - Additional context for error handling
    * @returns {Promise} - The API response
    */
-  async withRetry(apiCall, maxRetries = 3, baseDelay = 1000) {
-    let lastError;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await apiCall();
-      } catch (error) {
-        lastError = error;
-
-        // Don't retry on certain error types
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          throw this.createSpotifyError(error, 'Authentication failed');
-        }
-
-        if (error.response?.status === 400) {
-          throw this.createSpotifyError(error, 'Bad request');
-        }
-
-        // If this is the last attempt, throw the error
-        if (attempt === maxRetries) {
-          break;
-        }
-
-        // Calculate delay with exponential backoff
-        const delay = baseDelay * Math.pow(2, attempt);
-
-        // Add jitter to prevent thundering herd
-        const jitter = Math.random() * 0.1 * delay;
-        const totalDelay = delay + jitter;
-
-        console.warn(
-          `API call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(totalDelay)}ms...`,
-          error.message
-        );
-
-        await new Promise(resolve => setTimeout(resolve, totalDelay));
-      }
-    }
-
-    throw this.createSpotifyError(lastError, 'API call failed after retries');
-  }
-
-  /**
-   * Create a standardized error object
-   * @param {Error} originalError - The original error
-   * @param {string} message - Custom error message
-   * @returns {Error} - Standardized error object
-   */
-  createSpotifyError(originalError, message) {
-    const error = new Error(message);
-    error.originalError = originalError;
-    error.status = originalError.response?.status;
-    error.statusText = originalError.response?.statusText;
-    error.data = originalError.response?.data;
-    return error;
+  async withRetry(apiCall, context = {}) {
+    return this.errorHandler.withRetry(apiCall, {
+      service: 'SpotifyService',
+      accessToken: this.accessToken ? 'present' : 'missing',
+      ...context,
+    });
   }
 
   /**
@@ -97,30 +53,38 @@ class SpotifyService {
       throw new Error('Limit cannot exceed 50 for search requests');
     }
 
-    return this.withRetry(async () => {
-      const params = new URLSearchParams({
-        q: query.trim(),
-        type: 'track',
-        limit: limit.toString(),
-        offset: offset.toString(),
-      });
+    return this.withRetry(
+      async () => {
+        const params = new URLSearchParams({
+          q: query.trim(),
+          type: 'track',
+          limit: limit.toString(),
+          offset: offset.toString(),
+        });
 
-      if (market) {
-        params.append('market', market);
+        if (market) {
+          params.append('market', market);
+        }
+
+        const response = await this.api.get(`/search?${params.toString()}`);
+
+        return {
+          tracks: response.data.tracks.items.filter(track => track && track.id),
+          total: response.data.tracks.total,
+          limit: response.data.tracks.limit,
+          offset: response.data.tracks.offset,
+          hasMore:
+            response.data.tracks.offset + response.data.tracks.limit <
+            response.data.tracks.total,
+        };
+      },
+      {
+        operation: 'searchTracks',
+        query: query.substring(0, 50), // Truncate for logging
+        limit,
+        offset,
       }
-
-      const response = await this.api.get(`/search?${params.toString()}`);
-
-      return {
-        tracks: response.data.tracks.items.filter(track => track && track.id),
-        total: response.data.tracks.total,
-        limit: response.data.tracks.limit,
-        offset: response.data.tracks.offset,
-        hasMore:
-          response.data.tracks.offset + response.data.tracks.limit <
-          response.data.tracks.total,
-      };
-    });
+    );
   }
 
   /**
@@ -146,30 +110,38 @@ class SpotifyService {
       const currentOffset = offset;
       const currentTotalTracks = totalTracks;
 
-      const result = await this.withRetry(async () => {
-        const params = new URLSearchParams({
-          offset: currentOffset.toString(),
-          limit: limit.toString(),
-        });
+      const result = await this.withRetry(
+        async () => {
+          const params = new URLSearchParams({
+            offset: currentOffset.toString(),
+            limit: limit.toString(),
+          });
 
-        if (market) {
-          params.append('market', market);
+          if (market) {
+            params.append('market', market);
+          }
+
+          const response = await this.api.get(
+            `/playlists/${playlistId}/tracks?${params.toString()}`
+          );
+
+          // Set total on first request
+          if (currentTotalTracks === null) {
+            return {
+              ...response.data,
+              totalTracks: response.data.total,
+            };
+          }
+
+          return response.data;
+        },
+        {
+          operation: 'getPlaylistTracks',
+          playlistId,
+          offset: currentOffset,
+          limit,
         }
-
-        const response = await this.api.get(
-          `/playlists/${playlistId}/tracks?${params.toString()}`
-        );
-
-        // Set total on first request
-        if (currentTotalTracks === null) {
-          return {
-            ...response.data,
-            totalTracks: response.data.total,
-          };
-        }
-
-        return response.data;
-      });
+      );
 
       // Set total on first request
       if (totalTracks === null && result.totalTracks) {

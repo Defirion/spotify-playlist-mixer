@@ -1,7 +1,23 @@
 import React from 'react';
+import ApiErrorDisplay from './ui/ApiErrorDisplay';
+import { ApiError } from '../services/apiErrorHandler';
 
 const ErrorHandler = ({ error, onDismiss, onRetry }) => {
   if (!error) return null;
+
+  // If it's an ApiError, use the enhanced display component
+  if (error instanceof ApiError) {
+    return (
+      <ApiErrorDisplay
+        error={error}
+        onRetry={onRetry}
+        onDismiss={onDismiss}
+        showDetails={process.env.NODE_ENV === 'development'}
+      />
+    );
+  }
+
+  // Fall back to legacy error handling for non-API errors
 
   const getErrorDetails = error => {
     // Parse different types of errors and provide helpful messages
