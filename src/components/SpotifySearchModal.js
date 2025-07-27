@@ -96,10 +96,23 @@ const SpotifySearchModal = memo(
       [startDrag]
     );
 
-    // Touch event handlers for mobile drag support
+    // Touch event handlers for mobile drag support with long press
+    const [touchState, setTouchState] = useState({
+      isActive: false,
+      startY: 0,
+      startX: 0,
+      longPressTimer: null,
+      isDragging: false,
+    });
+
     const handleTrackTouchStart = useCallback(
       (e, track) => {
-        console.log('[SpotifySearchModal] Track touch start:', track.name);
+        const touch = e.touches[0];
+
+        // Clear any existing timer
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer);
+        }
 
         const trackWithSource = {
           ...track,
@@ -107,26 +120,207 @@ const SpotifySearchModal = memo(
           sourcePlaylistName: 'Spotify Search',
         };
 
-        // Start drag in context for touch devices
-        startDrag({ data: trackWithSource, type: 'search-track' }, 'touch');
+        // Set up long press detection (don't start drag immediately)
+        const longPressTimer = setTimeout(() => {
+          const currentY = touchState.currentY || touch.clientY;
+          const currentX = touchState.currentX || touch.clientX;
+          const deltaY = Math.abs(currentY - touch.clientY);
+          const deltaX = Math.abs(currentX - touch.clientX);
+
+          // Only start drag if user hasn't moved much
+          if (deltaY < 15 && deltaX < 15) {
+            console.log(
+              '[SpotifySearchModal] Long press detected, starting drag:',
+              track.name
+            );
+            setTouchState(prev => ({ ...prev, isDragging: true }));
+            startDrag({ data: trackWithSource, type: 'search-track' }, 'touch');
+
+            // Provide haptic feedback
+            if (navigator.vibrate) {
+              navigator.vibrate(100);
+            }
+          }
+        }, 250); // 250ms long press delay
+
+        setTouchState({
+          isActive: true,
+          startY: touch.clientY,
+          currentY: touch.clientY,
+          startX: touch.clientX,
+          currentX: touch.clientX,
+          longPressTimer,
+          isDragging: false,
+        });
       },
-      [startDrag]
+      [startDrag, touchState.longPressTimer]
     );
 
     const handleTrackTouchMove = useCallback(
       (e, track) => {
-        // Touch move is handled by the drag context
-        if (isDragging) {
+        if (!touchState.isActive) return;
+
+        const touch = e.touches[0];
+        const deltaY = Math.abs(touch.clientY - touchState.startY);
+        const deltaX = Math.abs(touch.clientX - touchState.startX);
+
+        // Update current position
+        setTouchState(prev => ({
+          ...prev,
+          currentY: touch.clientY,
+          currentX: touch.clientX,
+        }));
+
+        // Cancel long press if user moves too much before drag starts
+        if (!touchState.isDragging && (deltaY > 15 || deltaX > 15)) {
+          if (touchState.longPressTimer) {
+            clearTimeout(touchState.longPressTimer);
+            setTouchState(prev => ({
+              ...prev,
+              longPressTimer: null,
+            }));
+          }
+
+          // Restore page scrolling if it was locked
+          if (document.body.hasAttribute('data-scroll-locked')) {
+            const scrollY = parseInt(
+              document.body.getAttribute('data-scroll-locked'),
+              10
+            );
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.body.removeAttribute('data-scroll-locked');
+            window.scrollTo(0, scrollY);
+          }
+          return;
+        }
+
+        // Handle dragging if long press is active
+        if (touchState.isDragging) {
           e.preventDefault();
+
+          // Prevent page scrolling during drag without jumping to top
+          if (!document.body.hasAttribute('data-scroll-locked')) {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            document.body.setAttribute(
+              'data-scroll-locked',
+              scrollY.toString()
+            );
+          }
+
+          // Find the DraggableTrackList container and dispatch external drag events
+          const trackListContainer = document.querySelector(
+            '[data-preview-panel="true"]'
+          );
+          if (trackListContainer) {
+            const trackWithSource = {
+              ...track,
+              sourcePlaylist: 'search',
+              sourcePlaylistName: 'Spotify Search',
+            };
+
+            const customEvent = new CustomEvent('externalDragOver', {
+              detail: {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                draggedItem: { data: trackWithSource, type: 'search-track' },
+              },
+            });
+            trackListContainer.dispatchEvent(customEvent);
+          }
         }
       },
-      [isDragging]
+      [touchState]
     );
 
-    const handleTrackTouchEnd = useCallback((e, track) => {
-      console.log('[SpotifySearchModal] Track touch end:', track.name);
-      // Touch end is handled by the drag context
-    }, []);
+    const handleTrackTouchEnd = useCallback(
+      (e, track) => {
+        // Clear long press timer
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer);
+        }
+
+        // Handle drop if long press was active
+        if (touchState.isDragging) {
+          const touch = e.changedTouches[0];
+
+          // Find the DraggableTrackList container and dispatch external drop event
+          const trackListContainer = document.querySelector(
+            '[data-preview-panel="true"]'
+          );
+          if (trackListContainer) {
+            const trackWithSource = {
+              ...track,
+              sourcePlaylist: 'search',
+              sourcePlaylistName: 'Spotify Search',
+            };
+
+            const customEvent = new CustomEvent('externalDrop', {
+              detail: {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                draggedItem: { data: trackWithSource, type: 'search-track' },
+              },
+            });
+            trackListContainer.dispatchEvent(customEvent);
+          }
+        } else if (touchState.isActive) {
+          // If it was just a tap (no drag), handle track selection
+          const deltaY = Math.abs(
+            e.changedTouches[0].clientY - touchState.startY
+          );
+          const deltaX = Math.abs(
+            e.changedTouches[0].clientX - touchState.startX
+          );
+
+          // Only treat as tap if minimal movement
+          if (deltaY < 10 && deltaX < 10) {
+            handleTrackSelect(track);
+          }
+        }
+
+        // Restore page scrolling
+        if (document.body.hasAttribute('data-scroll-locked')) {
+          const scrollY = parseInt(
+            document.body.getAttribute('data-scroll-locked'),
+            10
+          );
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.width = '';
+          document.body.style.overflow = '';
+          document.body.removeAttribute('data-scroll-locked');
+          window.scrollTo(0, scrollY);
+        }
+
+        // Reset touch state
+        setTouchState({
+          isActive: false,
+          startY: 0,
+          currentY: 0,
+          startX: 0,
+          currentX: 0,
+          longPressTimer: null,
+          isDragging: false,
+        });
+      },
+      [touchState, handleTrackSelect]
+    );
+
+    // Cleanup touch timer on unmount
+    useEffect(() => {
+      return () => {
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer);
+        }
+      };
+    }, [touchState.longPressTimer]);
 
     // Clear search when modal closes
     useEffect(() => {
@@ -143,7 +337,7 @@ const SpotifySearchModal = memo(
         title="🎵 Search Spotify"
         size="large"
         style={{
-          opacity: isDragging ? 0.3 : 1,
+          opacity: isDragging ? 0 : 1,
           pointerEvents: isDragging ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
         }}

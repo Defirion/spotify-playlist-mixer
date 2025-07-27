@@ -16,6 +16,7 @@
 
 .scrollContainer.dragging {
   overflow-y: hidden;
+  background: var(--hunter-green) !important;
 }
 
 .header {

@@ -229,7 +229,10 @@
 
 
 
-- [x] 9.1 Replace JavaScript media queries with CSS
+- [ ] 9.1 Replace JavaScript media queries with CSS
+
+
+
 
 
 

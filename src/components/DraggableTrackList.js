@@ -549,9 +549,18 @@ const DraggableTrackList = ({
         }
 
         // Restore page scrolling if it was locked
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
+        if (document.body.hasAttribute('data-scroll-locked')) {
+          const scrollY = parseInt(
+            document.body.getAttribute('data-scroll-locked'),
+            10
+          );
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.width = '';
+          document.body.style.overflow = '';
+          document.body.removeAttribute('data-scroll-locked');
+          window.scrollTo(0, scrollY);
+        }
 
         return;
       }
@@ -560,10 +569,15 @@ const DraggableTrackList = ({
       if (touchDragState.draggedTrackIndex !== null) {
         e.preventDefault();
 
-        // Prevent page scrolling during drag
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
+        // Prevent page scrolling during drag without jumping to top
+        if (!document.body.hasAttribute('data-scroll-locked')) {
+          const scrollY = window.scrollY;
+          document.body.style.position = 'fixed';
+          document.body.style.top = `-${scrollY}px`;
+          document.body.style.width = '100%';
+          document.body.style.overflow = 'hidden';
+          document.body.setAttribute('data-scroll-locked', scrollY.toString());
+        }
 
         checkAutoScroll(touch.clientY);
 
@@ -656,9 +670,18 @@ const DraggableTrackList = ({
       }
 
       // Restore page scrolling
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      if (document.body.hasAttribute('data-scroll-locked')) {
+        const scrollY = parseInt(
+          document.body.getAttribute('data-scroll-locked'),
+          10
+        );
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        document.body.removeAttribute('data-scroll-locked');
+        window.scrollTo(0, scrollY);
+      }
 
       // Reset states
       setTouchDragState({
