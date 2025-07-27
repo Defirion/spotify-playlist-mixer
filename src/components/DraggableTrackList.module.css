@@ -12,6 +12,7 @@
   overflow-y: auto;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
+  height: 85vh; /* Use CSS viewport height instead of JavaScript calculation */
 }
 
 .scrollContainer.dragging {
@@ -325,6 +326,10 @@
 
 /* Mobile-specific responsive styles */
 @media (max-width: 480px) {
+  .scrollContainer {
+    height: 75vh; /* Smaller height on mobile for better UX */
+  }
+
   .buttonText {
     display: none;
   }

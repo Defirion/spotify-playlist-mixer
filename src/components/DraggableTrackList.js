@@ -34,8 +34,6 @@ const DraggableTrackList = ({
     draggedTrackIndex: null,
   });
 
-  // Static container height - 85% of viewport height
-  const containerHeight = Math.floor(window.innerHeight * 0.85);
   const scrollContainerRef = useRef(null);
 
   // Scroll position preservation for drag operations
@@ -762,9 +760,6 @@ const DraggableTrackList = ({
           ref={scrollContainerRef}
           data-preview-panel="true"
           className={`${styles.scrollContainer} ${isDragging || draggedIndex !== null ? styles.dragging : ''}`}
-          style={{
-            height: `${containerHeight}px`,
-          }}
           onTouchMove={handleExternalTouchMove}
           onDragOver={e => {
             e.preventDefault();
