@@ -49,16 +49,47 @@ export const DragProvider = ({ children }) => {
     console.log('[DragContext] Touch drag ended');
   };
 
-  // Handle body class for drag state
+  // Handle body class for drag state and scroll position preservation
   useEffect(() => {
     if (isDragging) {
+      // Store current scroll position before applying fixed positioning
+      const scrollY = window.scrollY;
+      document.body.setAttribute('data-scroll-locked', scrollY.toString());
+      document.body.style.top = `-${scrollY}px`;
+
+      // Apply drag classes
       document.body.classList.add('no-user-select');
+      document.body.classList.add('drag-active');
     } else {
+      // Restore scroll position
+      if (document.body.hasAttribute('data-scroll-locked')) {
+        const scrollY = parseInt(
+          document.body.getAttribute('data-scroll-locked'),
+          10
+        );
+        document.body.style.top = '';
+        document.body.removeAttribute('data-scroll-locked');
+        window.scrollTo(0, scrollY);
+      }
+
+      // Remove drag classes
       document.body.classList.remove('no-user-select');
+      document.body.classList.remove('drag-active');
     }
 
     return () => {
+      // Cleanup on unmount
+      if (document.body.hasAttribute('data-scroll-locked')) {
+        const scrollY = parseInt(
+          document.body.getAttribute('data-scroll-locked'),
+          10
+        );
+        document.body.style.top = '';
+        document.body.removeAttribute('data-scroll-locked');
+        window.scrollTo(0, scrollY);
+      }
       document.body.classList.remove('no-user-select');
+      document.body.classList.remove('drag-active');
     };
   }, [isDragging]);
 

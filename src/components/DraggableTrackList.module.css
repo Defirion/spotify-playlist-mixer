@@ -314,7 +314,7 @@
 }
 
 .emptyState.dragging {
-  border: 2px dashed var(--moss-green);
+  border: 2px dashed var(--drag-green);
   background-color: rgba(144, 169, 85, 0.1);
 }
 
@@ -370,11 +370,28 @@
   }
 }
 
+/* Global drag state styles - changes page background and prevents scrolling during drag */
+:global(body.drag-active) {
+  background: linear-gradient(
+    135deg,
+    var(--dark-green) 0%,
+    #0f1f0f 100%
+  ) !important;
+  /* Ensure background is preserved even with position: fixed */
+  background-attachment: fixed !important;
+  /* Prevent page scrolling during drag */
+  position: fixed !important;
+  /* top is set dynamically by JavaScript to preserve scroll position */
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
 @keyframes pulse {
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }

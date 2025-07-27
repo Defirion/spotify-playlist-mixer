@@ -201,18 +201,7 @@ const SpotifySearchModal = memo(
         if (touchState.isDragging) {
           e.preventDefault();
 
-          // Prevent page scrolling during drag without jumping to top
-          if (!document.body.hasAttribute('data-scroll-locked')) {
-            const scrollY = window.scrollY;
-            document.body.style.position = 'fixed';
-            document.body.style.top = `-${scrollY}px`;
-            document.body.style.width = '100%';
-            document.body.style.overflow = 'hidden';
-            document.body.setAttribute(
-              'data-scroll-locked',
-              scrollY.toString()
-            );
-          }
+          // Scroll locking is now handled by the drag-active CSS class in DragContext
 
           // Find the DraggableTrackList container and dispatch external drag events
           const trackListContainer = document.querySelector(
@@ -285,19 +274,7 @@ const SpotifySearchModal = memo(
           }
         }
 
-        // Restore page scrolling
-        if (document.body.hasAttribute('data-scroll-locked')) {
-          const scrollY = parseInt(
-            document.body.getAttribute('data-scroll-locked'),
-            10
-          );
-          document.body.style.position = '';
-          document.body.style.top = '';
-          document.body.style.width = '';
-          document.body.style.overflow = '';
-          document.body.removeAttribute('data-scroll-locked');
-          window.scrollTo(0, scrollY);
-        }
+        // Scroll restoration is now handled by the DragContext
 
         // Reset touch state
         setTouchState({
