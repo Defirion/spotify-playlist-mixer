@@ -18,7 +18,7 @@ const DraggableTrackList = ({
   formatDuration,
   accessToken,
 }) => {
-  const { isDragging, draggedItem, endDrag } = useDrag();
+  const { isDragging, draggedItem, endDrag, startDrag } = useDrag();
   const [localTracks, setLocalTracks] = useState(tracks);
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
@@ -37,6 +37,9 @@ const DraggableTrackList = ({
   // Static container height - 85% of viewport height
   const containerHeight = Math.floor(window.innerHeight * 0.85);
   const scrollContainerRef = useRef(null);
+
+  // Scroll position preservation for drag operations
+  const savedScrollPosition = useRef(null);
 
   // Auto-scroll functionality
   const autoScrollRef = useRef(null);
@@ -121,13 +124,54 @@ const DraggableTrackList = ({
     [startAutoScroll, stopAutoScroll]
   );
 
-  // Drag and drop handlers
-  const handleDragStart = useCallback((e, index) => {
-    console.log('[DraggableTrackList] HTML5 drag start for index:', index);
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.outerHTML);
+  // Scroll position preservation helpers
+  const captureScrollPosition = useCallback(() => {
+    if (scrollContainerRef.current) {
+      savedScrollPosition.current = scrollContainerRef.current.scrollTop;
+      console.log(
+        '[DraggableTrackList] Captured scroll position:',
+        savedScrollPosition.current
+      );
+    }
   }, []);
+
+  const restoreScrollPosition = useCallback(() => {
+    if (scrollContainerRef.current && savedScrollPosition.current !== null) {
+      console.log(
+        '[DraggableTrackList] Restoring scroll position:',
+        savedScrollPosition.current
+      );
+      scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+      savedScrollPosition.current = null; // Clear after use
+    }
+  }, []);
+
+  // Restore scroll position after localTracks updates (post-render)
+  useEffect(() => {
+    if (savedScrollPosition.current !== null) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        restoreScrollPosition();
+      });
+    }
+  }, [localTracks, restoreScrollPosition]);
+
+  // Drag and drop handlers
+  const handleDragStart = useCallback(
+    (e, index) => {
+      console.log('[DraggableTrackList] HTML5 drag start for index:', index);
+      setDraggedIndex(index);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', e.target.outerHTML);
+
+      // Notify drag context for consistent background styling
+      const track = localTracks[index];
+      if (track) {
+        startDrag({ data: track, type: 'internal-track' }, 'html5');
+      }
+    },
+    [localTracks, startDrag]
+  );
 
   const handleDragOver = useCallback(
     (e, index) => {
@@ -222,9 +266,9 @@ const DraggableTrackList = ({
           : localTracks.length;
 
         newTracks.splice(insertIndex, 0, track);
-        setLocalTracks(newTracks);
 
         if (onTrackOrderChange) {
+          captureScrollPosition();
           onTrackOrderChange(newTracks);
         }
 
@@ -247,9 +291,9 @@ const DraggableTrackList = ({
                 : localTracks.length;
 
               newTracks.splice(insertIndex, 0, track);
-              setLocalTracks(newTracks);
 
               if (onTrackOrderChange) {
+                captureScrollPosition();
                 onTrackOrderChange(newTracks);
               }
 
@@ -284,9 +328,9 @@ const DraggableTrackList = ({
         }
 
         newTracks.splice(insertIndex, 0, draggedTrack);
-        setLocalTracks(newTracks);
 
         if (onTrackOrderChange) {
+          captureScrollPosition();
           onTrackOrderChange(newTracks);
         }
 
@@ -307,6 +351,7 @@ const DraggableTrackList = ({
       onTrackOrderChange,
       endDrag,
       draggedIndex,
+      captureScrollPosition,
     ]
   );
 
@@ -316,8 +361,11 @@ const DraggableTrackList = ({
       stopAutoScroll();
       setDraggedIndex(null);
       setDropLinePosition(null);
+
+      // End drag in context for consistent background styling
+      endDrag('success');
     },
-    [stopAutoScroll]
+    [stopAutoScroll, endDrag]
   );
 
   // Update local tracks when props change
@@ -384,9 +432,9 @@ const DraggableTrackList = ({
         const insertIndex = dropLinePosition.index;
 
         newTracks.splice(insertIndex, 0, track);
-        setLocalTracks(newTracks);
 
         if (onTrackOrderChange) {
+          captureScrollPosition();
           onTrackOrderChange(newTracks);
         }
 
@@ -430,13 +478,13 @@ const DraggableTrackList = ({
     index => {
       const newTracks = [...localTracks];
       newTracks.splice(index, 1);
-      setLocalTracks(newTracks);
 
       if (onTrackOrderChange) {
+        captureScrollPosition();
         onTrackOrderChange(newTracks);
       }
     },
-    [localTracks, onTrackOrderChange]
+    [localTracks, onTrackOrderChange, captureScrollPosition]
   );
 
   // Calculate relative popularity quadrants for track labeling
@@ -467,25 +515,25 @@ const DraggableTrackList = ({
   const handleAddUnselectedTracks = useCallback(
     tracksToAdd => {
       const newTracks = [...localTracks, ...tracksToAdd];
-      setLocalTracks(newTracks);
 
       if (onTrackOrderChange) {
+        captureScrollPosition();
         onTrackOrderChange(newTracks);
       }
     },
-    [localTracks, onTrackOrderChange]
+    [localTracks, onTrackOrderChange, captureScrollPosition]
   );
 
   const handleAddSpotifyTracks = useCallback(
     tracksToAdd => {
       const newTracks = [...localTracks, ...tracksToAdd];
-      setLocalTracks(newTracks);
 
       if (onTrackOrderChange) {
+        captureScrollPosition();
         onTrackOrderChange(newTracks);
       }
     },
-    [localTracks, onTrackOrderChange]
+    [localTracks, onTrackOrderChange, captureScrollPosition]
   );
 
   // Touch handlers for track items
@@ -510,6 +558,12 @@ const DraggableTrackList = ({
         }));
         setDraggedIndex(index);
 
+        // Notify drag context for consistent background styling
+        const track = localTracks[index];
+        if (track) {
+          startDrag({ data: track, type: 'internal-track' }, 'touch');
+        }
+
         // Provide haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(100);
@@ -524,7 +578,7 @@ const DraggableTrackList = ({
         draggedTrackIndex: null,
       });
     },
-    [touchDragState.longPressTimer]
+    [touchDragState.longPressTimer, localTracks, startDrag]
   );
 
   const handleTrackTouchMove = useCallback(
@@ -548,19 +602,7 @@ const DraggableTrackList = ({
           }));
         }
 
-        // Restore page scrolling if it was locked
-        if (document.body.hasAttribute('data-scroll-locked')) {
-          const scrollY = parseInt(
-            document.body.getAttribute('data-scroll-locked'),
-            10
-          );
-          document.body.style.position = '';
-          document.body.style.top = '';
-          document.body.style.width = '';
-          document.body.style.overflow = '';
-          document.body.removeAttribute('data-scroll-locked');
-          window.scrollTo(0, scrollY);
-        }
+        // Scroll restoration is now handled centrally by DragContext
 
         return;
       }
@@ -569,15 +611,7 @@ const DraggableTrackList = ({
       if (touchDragState.draggedTrackIndex !== null) {
         e.preventDefault();
 
-        // Prevent page scrolling during drag without jumping to top
-        if (!document.body.hasAttribute('data-scroll-locked')) {
-          const scrollY = window.scrollY;
-          document.body.style.position = 'fixed';
-          document.body.style.top = `-${scrollY}px`;
-          document.body.style.width = '100%';
-          document.body.style.overflow = 'hidden';
-          document.body.setAttribute('data-scroll-locked', scrollY.toString());
-        }
+        // Scroll locking is now handled centrally by DragContext
 
         checkAutoScroll(touch.clientY);
 
@@ -657,9 +691,9 @@ const DraggableTrackList = ({
         }
 
         newTracks.splice(insertIndex, 0, draggedTrack);
-        setLocalTracks(newTracks);
 
         if (onTrackOrderChange) {
+          captureScrollPosition();
           onTrackOrderChange(newTracks);
         }
 
@@ -669,18 +703,9 @@ const DraggableTrackList = ({
         }
       }
 
-      // Restore page scrolling
-      if (document.body.hasAttribute('data-scroll-locked')) {
-        const scrollY = parseInt(
-          document.body.getAttribute('data-scroll-locked'),
-          10
-        );
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        document.body.removeAttribute('data-scroll-locked');
-        window.scrollTo(0, scrollY);
+      // End drag in context for consistent background styling
+      if (touchDragState.draggedTrackIndex !== null) {
+        endDrag('success');
       }
 
       // Reset states
@@ -701,6 +726,8 @@ const DraggableTrackList = ({
       localTracks,
       onTrackOrderChange,
       stopAutoScroll,
+      endDrag,
+      captureScrollPosition,
     ]
   );
 
@@ -890,7 +917,7 @@ const DraggableTrackList = ({
 
             return (
               <div
-                key={`${track.id}-${index}`}
+                key={track.id}
                 draggable={!('ontouchstart' in window)}
                 data-track-index={index}
                 onDragStart={e => handleDragStart(e, index)}

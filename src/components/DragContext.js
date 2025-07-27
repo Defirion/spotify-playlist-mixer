@@ -55,7 +55,10 @@ export const DragProvider = ({ children }) => {
       // Store current scroll position before applying fixed positioning
       const scrollY = window.scrollY;
       document.body.setAttribute('data-scroll-locked', scrollY.toString());
+      document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
 
       // Apply drag classes
       document.body.classList.add('no-user-select');
@@ -67,9 +70,17 @@ export const DragProvider = ({ children }) => {
           document.body.getAttribute('data-scroll-locked'),
           10
         );
+        // Reset all positioning styles immediately
+        document.body.style.position = '';
         document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
         document.body.removeAttribute('data-scroll-locked');
-        window.scrollTo(0, scrollY);
+
+        // Defer scroll restoration to allow DOM to settle and local scroll restoration to complete
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
       }
 
       // Remove drag classes
@@ -84,9 +95,17 @@ export const DragProvider = ({ children }) => {
           document.body.getAttribute('data-scroll-locked'),
           10
         );
+        // Reset all positioning styles immediately
+        document.body.style.position = '';
         document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
         document.body.removeAttribute('data-scroll-locked');
-        window.scrollTo(0, scrollY);
+
+        // Defer scroll restoration to allow DOM to settle
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
       }
       document.body.classList.remove('no-user-select');
       document.body.classList.remove('drag-active');
