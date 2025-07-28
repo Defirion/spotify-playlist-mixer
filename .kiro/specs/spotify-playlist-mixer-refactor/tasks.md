@@ -279,6 +279,8 @@
 
 
 - [ ] 11.1 Write unit tests for core components
+
+
   - Create unit tests for Modal, TrackList, TrackItem components
   - Test component rendering, props handling, and user interactions
   - Achieve >80% test coverage for UI components
@@ -299,7 +301,8 @@
   - **Commit changes**: `git add . && git commit -m "test: add integration tests for user workflows and component interactions"`
   - _Requirements: 9.3_
 
-- [ ] 11.4 Set up Mock Service Worker (MSW) for API mocking
+- [x] 11.4 Set up Mock Service Worker (MSW) for API mocking
+
 
 
 

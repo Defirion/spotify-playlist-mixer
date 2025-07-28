@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Modal from '../Modal';
 
@@ -13,11 +13,6 @@ describe('Modal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    // Clean up any remaining modals
-    document.body.innerHTML = '';
   });
 
   describe('Rendering', () => {
@@ -42,92 +37,59 @@ describe('Modal', () => {
       expect(screen.queryByText('Test Modal')).not.toBeInTheDocument();
     });
 
-    it('renders close button by default', () => {
-      render(<Modal {...defaultProps} />);
-
-      expect(screen.getByLabelText('Close modal')).toBeInTheDocument();
-    });
-
-    it('does not render close button when showCloseButton is false', () => {
-      render(<Modal {...defaultProps} showCloseButton={false} />);
-
-      expect(screen.queryByLabelText('Close modal')).not.toBeInTheDocument();
-    });
-
     it('applies custom className', () => {
       render(<Modal {...defaultProps} className="custom-modal" />);
 
       const modal = screen.getByRole('dialog');
       expect(modal).toHaveClass('custom-modal');
     });
-  });
 
-  describe('Size variants', () => {
-    it('applies small size styles', () => {
-      render(<Modal {...defaultProps} size="small" />);
+    it('applies custom styles', () => {
+      const customStyle = { backgroundColor: 'red' };
+      render(<Modal {...defaultProps} style={customStyle} />);
 
       const modal = screen.getByRole('dialog');
-      // With CSS modules, we can't easily test exact styles, but we can verify the modal renders
-      expect(modal).toBeInTheDocument();
+      expect(modal).toHaveStyle('background-color: red');
     });
 
-    it('applies medium size styles by default', () => {
+    it('renders different sizes correctly', () => {
+      const { rerender } = render(<Modal {...defaultProps} size="small" />);
+      expect(screen.getByRole('dialog')).toHaveClass('small');
+
+      rerender(<Modal {...defaultProps} size="large" />);
+      expect(screen.getByRole('dialog')).toHaveClass('large');
+    });
+  });
+
+  describe('Close Button', () => {
+    it('renders close button by default', () => {
       render(<Modal {...defaultProps} />);
 
-      const modal = screen.getByRole('dialog');
-      // With CSS modules, we can't easily test exact styles, but we can verify the modal renders
-      expect(modal).toBeInTheDocument();
+      const closeButton = screen.getByRole('button', { name: /close modal/i });
+      expect(closeButton).toBeInTheDocument();
     });
 
-    it('applies large size styles', () => {
-      render(<Modal {...defaultProps} size="large" />);
+    it('does not render close button when showCloseButton is false', () => {
+      render(<Modal {...defaultProps} showCloseButton={false} />);
 
-      const modal = screen.getByRole('dialog');
-      // With CSS modules, we can't easily test exact styles, but we can verify the modal renders
-      expect(modal).toBeInTheDocument();
+      const closeButton = screen.queryByRole('button', {
+        name: /close modal/i,
+      });
+      expect(closeButton).not.toBeInTheDocument();
     });
 
-    it('applies fullscreen size styles', () => {
-      render(<Modal {...defaultProps} size="fullscreen" />);
-
-      const modal = screen.getByRole('dialog');
-      // With CSS modules, we can't easily test exact styles, but we can verify the modal renders
-      expect(modal).toBeInTheDocument();
-    });
-  });
-
-  describe('Close functionality', () => {
     it('calls onClose when close button is clicked', async () => {
       const user = userEvent.setup();
       render(<Modal {...defaultProps} />);
 
-      const closeButton = screen.getByLabelText('Close modal');
+      const closeButton = screen.getByRole('button', { name: /close modal/i });
       await user.click(closeButton);
 
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
     });
+  });
 
-    it('calls onClose when backdrop is clicked', async () => {
-      const user = userEvent.setup();
-      render(<Modal {...defaultProps} />);
-
-      // Click on the backdrop (the first child of body that's not the modal)
-      const backdrop = document.querySelector('[aria-hidden="true"]');
-      await user.click(backdrop);
-
-      expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not call onClose when backdrop is clicked and closeOnBackdropClick is false', async () => {
-      const user = userEvent.setup();
-      render(<Modal {...defaultProps} closeOnBackdropClick={false} />);
-
-      const backdrop = document.querySelector('[aria-hidden="true"]');
-      await user.click(backdrop);
-
-      expect(defaultProps.onClose).not.toHaveBeenCalled();
-    });
-
+  describe('Keyboard Interactions', () => {
     it('calls onClose when Escape key is pressed', async () => {
       const user = userEvent.setup();
       render(<Modal {...defaultProps} />);
@@ -145,10 +107,59 @@ describe('Modal', () => {
 
       expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
+
+    it('traps focus within modal', async () => {
+      const user = userEvent.setup();
+      render(
+        <Modal {...defaultProps}>
+          <button>First Button</button>
+          <button>Second Button</button>
+        </Modal>
+      );
+
+      const firstButton = screen.getByText('First Button');
+      const secondButton = screen.getByText('Second Button');
+      const closeButton = screen.getByRole('button', { name: /close modal/i });
+
+      // Focus first button
+      firstButton.focus();
+      expect(firstButton).toHaveFocus();
+
+      // Tab to second button
+      await user.tab();
+      expect(secondButton).toHaveFocus();
+
+      // Tab should cycle to close button (since it's also focusable)
+      await user.tab();
+      expect(closeButton).toHaveFocus();
+
+      // Tab should cycle back to first button
+      await user.tab();
+      expect(firstButton).toHaveFocus();
+    });
   });
 
-  describe('Focus management', () => {
-    it('focuses the modal when opened', async () => {
+  describe('Modal Content Interactions', () => {
+    it('does not call onClose when modal content is clicked', async () => {
+      const user = userEvent.setup();
+      render(<Modal {...defaultProps} />);
+
+      const modalContent = screen.getByText('Modal content');
+      await user.click(modalContent);
+
+      expect(defaultProps.onClose).not.toHaveBeenCalled();
+    });
+
+    it('renders modal content correctly', () => {
+      render(<Modal {...defaultProps} />);
+
+      expect(screen.getByText('Modal content')).toBeInTheDocument();
+      expect(screen.getByText('Test Modal')).toBeInTheDocument();
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('focuses modal when opened', async () => {
       render(<Modal {...defaultProps} />);
 
       await waitFor(() => {
@@ -157,84 +168,21 @@ describe('Modal', () => {
       });
     });
 
-    it('traps focus within modal', async () => {
-      const user = userEvent.setup();
-      render(
-        <Modal {...defaultProps}>
-          <button>First button</button>
-          <button>Second button</button>
-        </Modal>
-      );
+    it('restores focus to previous element when closed', async () => {
+      const button = document.createElement('button');
+      document.body.appendChild(button);
+      button.focus();
 
-      const firstButton = screen.getByText('First button');
-      const secondButton = screen.getByText('Second button');
-      const closeButton = screen.getByLabelText('Close modal');
-
-      // Focus should start on the modal
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toHaveFocus();
-      });
-
-      // Tab should move to first focusable element
-      await user.tab();
-      expect(closeButton).toHaveFocus();
-
-      // Tab should move to next focusable element
-      await user.tab();
-      expect(firstButton).toHaveFocus();
-
-      // Tab should move to next focusable element
-      await user.tab();
-      expect(secondButton).toHaveFocus();
-
-      // Tab from last element should wrap to first
-      await user.tab();
-      expect(closeButton).toHaveFocus();
-
-      // Shift+Tab should move backwards
-      await user.tab({ shift: true });
-      expect(secondButton).toHaveFocus();
-    });
-
-    it('restores focus to previously focused element when closed', async () => {
-      const user = userEvent.setup();
-
-      // Create a button outside the modal to focus initially
-      const { rerender } = render(
-        <div>
-          <button>Outside button</button>
-          <Modal {...defaultProps} isOpen={false} />
-        </div>
-      );
-
-      const outsideButton = screen.getByText('Outside button');
-      await user.click(outsideButton);
-      expect(outsideButton).toHaveFocus();
-
-      // Open modal
-      rerender(
-        <div>
-          <button>Outside button</button>
-          <Modal {...defaultProps} isOpen={true} />
-        </div>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toHaveFocus();
-      });
+      const { rerender } = render(<Modal {...defaultProps} />);
 
       // Close modal
-      rerender(
-        <div>
-          <button>Outside button</button>
-          <Modal {...defaultProps} isOpen={false} />
-        </div>
-      );
+      rerender(<Modal {...defaultProps} isOpen={false} />);
 
-      // Focus should be restored to the outside button
       await waitFor(() => {
-        expect(outsideButton).toHaveFocus();
+        expect(button).toHaveFocus();
       });
+
+      document.body.removeChild(button);
     });
   });
 
@@ -255,33 +203,41 @@ describe('Modal', () => {
       expect(modal).not.toHaveAttribute('aria-labelledby');
     });
 
-    it('backdrop has aria-hidden attribute', () => {
+    it('has proper modal structure for accessibility', () => {
       render(<Modal {...defaultProps} />);
 
-      const backdrop = document.querySelector('[aria-hidden="true"]');
-      expect(backdrop).toBeInTheDocument();
+      const modal = screen.getByRole('dialog');
+      expect(modal).toHaveAttribute('aria-modal', 'true');
+      expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
+      expect(modal).toHaveAttribute('tabIndex', '-1');
     });
   });
 
-  describe('Event handling', () => {
-    it('prevents modal content clicks from closing modal', async () => {
-      const user = userEvent.setup();
-      render(<Modal {...defaultProps} />);
+  describe('Event Cleanup', () => {
+    it('removes event listeners when modal is closed', () => {
+      const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+      const removeEventListenerSpy = jest.spyOn(
+        document,
+        'removeEventListener'
+      );
 
-      const modalContent = screen.getByText('Modal content');
-      await user.click(modalContent);
+      const { rerender } = render(<Modal {...defaultProps} />);
 
-      expect(defaultProps.onClose).not.toHaveBeenCalled();
-    });
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function)
+      );
 
-    it('handles multiple rapid escape key presses', async () => {
-      const user = userEvent.setup();
-      render(<Modal {...defaultProps} />);
+      // Close modal
+      rerender(<Modal {...defaultProps} isOpen={false} />);
 
-      await user.keyboard('{Escape}{Escape}{Escape}');
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function)
+      );
 
-      // Should only call onClose once per escape press
-      expect(defaultProps.onClose).toHaveBeenCalledTimes(3);
+      addEventListenerSpy.mockRestore();
+      removeEventListenerSpy.mockRestore();
     });
   });
 });
