@@ -71,7 +71,7 @@ describe('useSpotifySearch', () => {
 
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
 
-      act(() => {
+      await act(async () => {
         result.current.setQuery('test query');
       });
 
@@ -79,7 +79,7 @@ describe('useSpotifySearch', () => {
       expect(mockSpotifyService.searchTracks).not.toHaveBeenCalled();
 
       // Fast-forward past debounce delay
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
       });
 
@@ -94,9 +94,11 @@ describe('useSpotifySearch', () => {
         );
       });
 
-      expect(result.current.results).toEqual(mockSearchResults.tracks);
-      expect(result.current.total).toBe(100);
-      expect(result.current.hasMore).toBe(true);
+      await waitFor(() => {
+        expect(result.current.results).toEqual(mockSearchResults.tracks);
+        expect(result.current.total).toBe(100);
+        expect(result.current.hasMore).toBe(true);
+      });
     });
 
     it('cancels previous search when new query is set', async () => {
@@ -213,14 +215,20 @@ describe('useSpotifySearch', () => {
 
       await act(async () => {
         result.current.search('manual query');
+        jest.runAllTimers();
       });
 
-      expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
-        'manual query',
-        expect.any(Object)
-      );
-      expect(result.current.query).toBe('manual query');
-      expect(result.current.results).toEqual(mockSearchResults.tracks);
+      await waitFor(() => {
+        expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
+          'manual query',
+          expect.any(Object)
+        );
+      });
+
+      await waitFor(() => {
+        expect(result.current.query).toBe('manual query');
+        expect(result.current.results).toEqual(mockSearchResults.tracks);
+      });
     });
 
     it('resets pagination for new manual search', async () => {
@@ -229,22 +237,25 @@ describe('useSpotifySearch', () => {
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
 
       // Set some offset first
-      act(() => {
+      await act(async () => {
         result.current.setQuery('test');
+        jest.advanceTimersByTime(300);
       });
 
       await act(async () => {
         result.current.search('new query');
       });
 
-      expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
-        'new query',
-        {
-          limit: 20,
-          offset: 0,
-          market: undefined,
-        }
-      );
+      await waitFor(() => {
+        expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
+          'new query',
+          {
+            limit: 20,
+            offset: 0,
+            market: undefined,
+          }
+        );
+      });
     });
   });
 

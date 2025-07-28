@@ -112,10 +112,18 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
 
   // Auto-fetch effect
   useEffect(() => {
+    if (!playlistId) {
+      // Clear tracks when playlistId is null
+      setTracks([]);
+      setError(null);
+      setProgress({ loaded: 0, total: 0, percentage: 0 });
+      return;
+    }
+
     if (autoFetch) {
       fetchTracks();
     }
-  }, [autoFetch, fetchTracks]);
+  }, [playlistId, autoFetch, fetchTracks]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -203,9 +211,9 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
     getTracksWithProperty,
 
     // Computed values
-    isEmpty: tracks.length === 0 && !loading,
-    hasData: tracks.length > 0,
-    totalTracks: tracks.length,
+    isEmpty: (tracks?.length || 0) === 0 && !loading,
+    hasData: (tracks?.length || 0) > 0,
+    totalTracks: tracks?.length || 0,
     isComplete: progress.percentage === 100 && !loading,
   };
 };

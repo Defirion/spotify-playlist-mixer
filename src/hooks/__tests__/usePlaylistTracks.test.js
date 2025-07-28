@@ -26,7 +26,7 @@ describe('usePlaylistTracks', () => {
   describe('Initialization', () => {
     it('initializes with default state', () => {
       const { result } = renderHook(() =>
-        usePlaylistTracks(mockAccessToken, mockPlaylistId)
+        usePlaylistTracks(mockAccessToken, null, { autoFetch: false })
       );
 
       expect(result.current.tracks).toEqual([]);
@@ -50,7 +50,7 @@ describe('usePlaylistTracks', () => {
 
     it('handles missing access token gracefully', () => {
       const { result } = renderHook(() =>
-        usePlaylistTracks(null, mockPlaylistId)
+        usePlaylistTracks(null, mockPlaylistId, { autoFetch: false })
       );
 
       expect(SpotifyService).not.toHaveBeenCalled();
@@ -96,12 +96,16 @@ describe('usePlaylistTracks', () => {
     });
 
     it('clears tracks when playlistId is null', async () => {
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+
       const { result, rerender } = renderHook(
         ({ playlistId }) => usePlaylistTracks(mockAccessToken, playlistId),
         { initialProps: { playlistId: mockPlaylistId } }
       );
 
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      await waitFor(() => {
+        expect(mockSpotifyService.getPlaylistTracks).toHaveBeenCalled();
+      });
 
       await waitFor(() => {
         expect(result.current.tracks).toEqual(mockTracks);

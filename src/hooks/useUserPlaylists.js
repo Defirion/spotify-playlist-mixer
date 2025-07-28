@@ -26,13 +26,16 @@ const useUserPlaylists = (accessToken, options = {}) => {
   // Refs
   const spotifyServiceRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const hasAutoFetchedRef = useRef(false);
 
   // Initialize Spotify service when access token changes
   useEffect(() => {
     if (accessToken) {
       spotifyServiceRef.current = new SpotifyService(accessToken);
+      hasAutoFetchedRef.current = false; // Reset auto-fetch flag when token changes
     } else {
       spotifyServiceRef.current = null;
+      hasAutoFetchedRef.current = false;
     }
   }, [accessToken]);
 
@@ -113,8 +116,9 @@ const useUserPlaylists = (accessToken, options = {}) => {
 
   // Auto-fetch effect
   useEffect(() => {
-    if (autoFetch) {
-      fetchPlaylists();
+    if (autoFetch && !hasAutoFetchedRef.current && spotifyServiceRef.current) {
+      hasAutoFetchedRef.current = true;
+      fetchPlaylists({ append: false });
     }
   }, [autoFetch, fetchPlaylists]);
 

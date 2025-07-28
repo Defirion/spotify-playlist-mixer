@@ -161,16 +161,68 @@ const useSpotifySearch = (accessToken, options = {}) => {
    * Manually trigger a search (useful when autoSearch is false)
    */
   const search = useCallback(
-    searchQuery => {
+    async searchQuery => {
+      const queryToSearch = searchQuery !== undefined ? searchQuery : query;
+
       if (searchQuery !== undefined) {
         setQuery(searchQuery);
       }
 
+      if (!queryToSearch || !queryToSearch.trim()) {
+        setResults([]);
+        setTotal(0);
+        setHasMore(false);
+        return;
+      }
+
       // Reset pagination for new search
       setOffset(0);
-      performSearch({ append: false });
+
+      // Cancel previous request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new abort controller
+      abortControllerRef.current = new AbortController();
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!spotifyServiceRef.current) {
+          throw new Error('Spotify service not initialized');
+        }
+
+        const searchResults = await spotifyServiceRef.current.searchTracks(
+          queryToSearch,
+          {
+            limit,
+            offset: 0,
+            market,
+          }
+        );
+
+        // Check if request was aborted
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        setResults(searchResults.tracks);
+        setOffset(searchResults.tracks.length);
+        setHasMore(searchResults.hasMore);
+        setTotal(searchResults.total);
+      } catch (err) {
+        // Don't set error if request was aborted
+        if (!abortControllerRef.current?.signal.aborted) {
+          setError(err);
+          console.error('Search error:', err);
+        }
+      } finally {
+        setLoading(false);
+      }
     },
-    [performSearch]
+    [query, limit, market]
   );
 
   /**

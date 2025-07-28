@@ -278,7 +278,8 @@
 
 
 
-- [ ] 11.1 Write unit tests for core components
+- [x] 11.1 Write unit tests for core components
+
 
 
   - Create unit tests for Modal, TrackList, TrackItem components
@@ -287,7 +288,21 @@
   - **Commit changes**: `git add . && git commit -m "test: add comprehensive unit tests for core UI components"`
   - _Requirements: 9.1, 9.2_
 
-- [ ] 11.2 Write tests for custom hooks
+- [x] 11.2 Write tests for custom hooks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   - Create unit tests for useDraggable, useSpotifyApi, useVirtualization hooks
   - Test hook state management, side effects, and cleanup
   - Mock external dependencies and API calls
@@ -295,6 +310,15 @@
   - _Requirements: 9.1, 9.2_
 
 - [ ] 11.3 Write integration tests
+
+
+
+
+
+
+
+
+
   - Create integration tests for component interactions and data flow
   - Test complete user workflows (playlist selection, mixing, drag-and-drop)
   - Use React Testing Library and Mock Service Worker for realistic testing

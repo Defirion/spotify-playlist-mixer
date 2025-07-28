@@ -20,6 +20,11 @@
     "format:check": "prettier --check src/**/*.{js,jsx,ts,tsx,css,md}",
     "prepare": "husky install"
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@bundled-es-modules|msw|@mswjs)/)"
+    ]
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

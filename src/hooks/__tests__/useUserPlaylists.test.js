@@ -24,7 +24,9 @@ describe('useUserPlaylists', () => {
 
   describe('Initialization', () => {
     it('initializes with default state', () => {
-      const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
+      const { result } = renderHook(() =>
+        useUserPlaylists(mockAccessToken, { autoFetch: false })
+      );
 
       expect(result.current.playlists).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -43,7 +45,9 @@ describe('useUserPlaylists', () => {
     });
 
     it('handles missing access token gracefully', () => {
-      const { result } = renderHook(() => useUserPlaylists(null));
+      const { result } = renderHook(() =>
+        useUserPlaylists(null, { autoFetch: false })
+      );
 
       expect(SpotifyService).not.toHaveBeenCalled();
       expect(result.current.error).toBe(null);
@@ -108,6 +112,7 @@ describe('useUserPlaylists', () => {
         hasMore: false,
       };
 
+      // Set up the mock before rendering the hook
       mockSpotifyService.getUserPlaylists.mockResolvedValue(
         allPlaylistsResponse
       );
@@ -122,7 +127,10 @@ describe('useUserPlaylists', () => {
         });
       });
 
-      expect(result.current.playlists).toEqual(mockPlaylists);
+      await waitFor(() => {
+        expect(result.current.playlists).toEqual(mockPlaylists);
+      });
+
       expect(result.current.hasMore).toBe(false);
     });
   });
@@ -196,29 +204,43 @@ describe('useUserPlaylists', () => {
     };
 
     it('loads more playlists', async () => {
+      // Set up the mock to return the first page, then the second page
       mockSpotifyService.getUserPlaylists
         .mockResolvedValueOnce(mockFirstPage)
         .mockResolvedValueOnce(mockSecondPage);
 
-      const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
+      const { result } = renderHook(() =>
+        useUserPlaylists(mockAccessToken, { limit: 50 })
+      );
 
+      // Wait for the first page to load
       await waitFor(() => {
         expect(result.current.playlists).toHaveLength(1);
         expect(result.current.hasMore).toBe(true);
+        expect(result.current.loading).toBe(false);
       });
 
+      // Load more playlists
       await act(async () => {
         result.current.loadMore();
       });
 
+      // Wait for the second page to load
+      await waitFor(() => {
+        expect(result.current.playlists).toHaveLength(2);
+        expect(result.current.hasMore).toBe(false);
+        expect(result.current.loading).toBe(false);
+      });
+
       expect(mockSpotifyService.getUserPlaylists).toHaveBeenCalledTimes(2);
-      expect(mockSpotifyService.getUserPlaylists).toHaveBeenLastCalledWith({
+      expect(mockSpotifyService.getUserPlaylists).toHaveBeenNthCalledWith(1, {
+        limit: 50,
+        offset: 0,
+      });
+      expect(mockSpotifyService.getUserPlaylists).toHaveBeenNthCalledWith(2, {
         limit: 50,
         offset: 1,
       });
-
-      expect(result.current.playlists).toHaveLength(2);
-      expect(result.current.hasMore).toBe(false);
     });
 
     it('does not load more when already loading', async () => {
