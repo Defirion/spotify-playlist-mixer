@@ -1,99 +1,57 @@
-// Core type definitions for the Spotify Playlist Mixer
+// Main types export file
 
-export interface Track {
-  id: string;
-  name: string;
-  artists: Artist[];
-  album: Album;
-  duration_ms: number;
-  popularity?: number;
-  uri: string;
-  preview_url?: string;
-  external_urls: {
-    spotify: string;
-  };
-  sourcePlaylist?: string; // For mixed tracks
-}
+// Spotify API types
+export * from './spotify';
 
-export interface Artist {
-  id: string;
-  name: string;
-  uri: string;
-}
+// Mixer and application types
+export * from './mixer';
 
-export interface Album {
-  id: string;
-  name: string;
-  images: Image[];
-  release_date: string;
-}
+// API service types
+export * from './api';
 
-export interface Image {
-  url: string;
-  height: number | null;
-  width: number | null;
-}
+// Component types
+export * from './components';
 
-export interface Playlist {
-  id: string;
-  name: string;
-  description?: string;
-  images: Image[];
-  tracks: {
-    total: number;
-  };
-  owner: {
-    id: string;
-    display_name: string;
-  };
-  public: boolean;
-  uri: string;
-  realAverageDurationSeconds?: number;
-}
+// Hook types
+export * from './hooks';
 
-export interface MixOptions {
-  totalSongs: number;
-  targetDuration: number;
-  useTimeLimit: boolean;
-  useAllSongs: boolean;
-  playlistName: string;
-  shuffleWithinGroups: boolean;
-  popularityStrategy: 'mixed' | 'popular' | 'balanced';
-  recencyBoost: boolean;
-  continueWhenPlaylistEmpty: boolean;
-}
+// Utility types
+export * from './utils';
 
-export interface RatioConfig {
-  [playlistId: string]: {
-    min: number;
-    max: number;
-    weight: number;
-    weightType: 'frequency' | 'time';
-  };
-}
+// Re-export commonly used types for convenience
+export type {
+  SpotifyTrack,
+  SpotifyPlaylist,
+  SpotifyUserProfile,
+  SpotifyImage,
+  SpotifyArtist,
+  SpotifyAlbum,
+} from './spotify';
 
-export interface SpotifyUser {
-  id: string;
-  display_name: string;
-  email?: string;
-  images: Image[];
-  country?: string;
-  followers: {
-    total: number;
-  };
-}
+export type {
+  MixOptions,
+  RatioConfig,
+  PlaylistMixResult,
+  DragItem,
+  DropResult,
+  TrackSelectHandler,
+  TrackRemoveHandler,
+  PlaylistSelectHandler,
+} from './mixer';
 
-export interface APIResponse<T> {
-  data: T;
-  loading: boolean;
-  error: string | null;
-}
+export type {
+  TrackItemProps,
+  TrackListProps,
+  ModalProps,
+  ButtonProps,
+} from './components';
 
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  limit: number;
-  offset: number;
-  next: string | null;
-  previous: string | null;
-}
+export type {
+  UseSpotifySearchReturn,
+  UsePlaylistTracksReturn,
+  UseUserPlaylistsReturn,
+  UseDraggableReturn,
+  UseVirtualizationReturn,
+} from './hooks';
+
+export type { ISpotifyService, ApiError, ApiErrorType } from './api';
