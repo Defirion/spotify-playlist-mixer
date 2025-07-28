@@ -309,7 +309,8 @@
   - **Commit changes**: `git add . && git commit -m "test: add unit tests for custom hooks with mocked dependencies"`
   - _Requirements: 9.1, 9.2_
 
-- [ ] 11.3 Write integration tests
+- [x] 11.3 Write integration tests
+
 
 
 
@@ -326,6 +327,8 @@
   - _Requirements: 9.3_
 
 - [x] 11.4 Set up Mock Service Worker (MSW) for API mocking
+
+
 
 
 

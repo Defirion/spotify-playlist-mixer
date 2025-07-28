@@ -1,11 +1,26 @@
+// MSW test setup utility
+// Import this in tests that need API mocking
+
+// Import Jest polyfills first (required for MSW)
+import '../jest.polyfills.js';
 import { server } from '../mocks/server';
 
-// Establish API mocking before all tests.
-beforeAll(() => server.listen());
+// Setup function for tests that need MSW
+export const setupMSW = () => {
+  beforeAll(() => {
+    server.listen({
+      onUnhandledRequest: 'warn',
+    });
+  });
 
-// Reset any request handlers that we may add during the tests,
-// so they don't affect other tests.
-afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+  });
 
-// Clean up after the tests are finished.
-afterAll(() => server.close());
+  afterAll(() => {
+    server.close();
+  });
+};
+
+// Export server for custom handler setup in tests
+export { server };
