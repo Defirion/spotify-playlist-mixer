@@ -21,6 +21,11 @@ const DraggableTrackList = ({
   const { isDragging, draggedItem, endDrag, startDrag } = useDrag();
   const [localTracks, setLocalTracks] = useState(tracks || []);
 
+  const draggedItemRef = useRef(draggedItem);
+  useEffect(() => {
+    draggedItemRef.current = draggedItem;
+  }, [draggedItem]);
+
   // Sync localTracks with tracks prop
   useEffect(() => {
     setLocalTracks(tracks || []);
@@ -439,9 +444,9 @@ const DraggableTrackList = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleExternalDrop = useCallback(
     e => {
-      const { draggedItem } = e.detail;
-      if (draggedItem && dropLinePosition) {
-        const { data: track } = draggedItem;
+      const currentDraggedItem = draggedItemRef.current;
+      if (currentDraggedItem && dropLinePosition) {
+        const { data: track } = currentDraggedItem;
         const newTracks = [...localTracks];
         const insertIndex = dropLinePosition.index;
 
@@ -462,7 +467,6 @@ const DraggableTrackList = ({
       }
     },
     [
-      draggedItem,
       dropLinePosition,
       localTracks,
       onTrackOrderChange,
