@@ -14,6 +14,8 @@ import TermsOfService from './components/TermsOfService';
 import { DragProvider, useDrag } from './components/DragContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
+import styles from './App.module.css';
+
 // Custom hooks for state management
 import { useAppState } from './hooks/useAppState';
 import { useMixOptions } from './hooks/useMixOptions';
@@ -239,30 +241,16 @@ function App() {
         </Routes>
 
         {/* Footer with links */}
-        <footer
-          style={{
-            textAlign: 'center',
-            padding: '20px',
-            marginTop: '40px',
-            borderTop: '1px solid var(--fern-green)',
-            opacity: '0.7',
-          }}
-        >
-          <Link
-            to="/privacy"
-            style={{ color: 'var(--moss-green)', margin: '0 10px' }}
-          >
+        <footer className={styles.footer}>
+          <Link to="/privacy" className={styles.footerLink}>
             Privacy Policy
           </Link>
           |
-          <Link
-            to="/terms"
-            style={{ color: 'var(--moss-green)', margin: '0 10px' }}
-          >
+          <Link to="/terms" className={styles.footerLink}>
             Terms of Service
           </Link>
           |
-          <Link to="/" style={{ color: 'var(--moss-green)', margin: '0 10px' }}>
+          <Link to="/" className={styles.footerLink}>
             Back to Mixer
           </Link>
         </footer>

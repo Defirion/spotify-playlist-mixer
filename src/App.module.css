@@ -1,0 +1,25 @@
+.container {
+  /* Main container styles - these should already be in globals.css */
+}
+
+.header {
+  /* Header styles - these should already be in globals.css */
+}
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+  border-top: 1px solid var(--fern-green);
+  opacity: 0.7;
+}
+
+.footerLink {
+  color: var(--moss-green);
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}
