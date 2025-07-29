@@ -304,15 +304,29 @@ const PlaylistMixer = ({
       });
 
       // Add tracks to playlist using SpotifyService
+      console.log('DEBUG: mixedTracks before URI extraction:', mixedTracks);
+      console.log('DEBUG: mixedTracks length:', mixedTracks.length);
+
       const trackUris = mixedTracks
-        .filter(track => track.uri)
+        .filter(track => {
+          if (!track || !track.uri) {
+            console.warn('DEBUG: Skipping track due to missing URI:', track);
+            return false;
+          }
+          return true;
+        })
         .map(track => track.uri);
+
+      console.log('DEBUG: Extracted trackUris:', trackUris);
+      console.log('DEBUG: trackUris length:', trackUris.length);
 
       if (trackUris.length === 0) {
         throw new Error('No valid track URIs found');
       }
 
-      await spotifyService.addTracksToPlaylist(newPlaylist.id, trackUris);
+      await spotifyService.addTracksToPlaylist(newPlaylist.id, {
+        uris: trackUris,
+      });
 
       // Calculate total duration for display
       const totalDuration = mixedTracks.reduce(

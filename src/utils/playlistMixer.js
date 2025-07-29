@@ -365,10 +365,16 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
   // Validate inputs
   if (!playlistTracks || safeObjectKeys(playlistTracks).length === 0) {
+    console.log(
+      'DEBUG: playlistTracks is empty or invalid, returning empty array.'
+    );
     return ensureArrayResult([]);
   }
 
   if (!ratioConfig || safeObjectKeys(ratioConfig).length === 0) {
+    console.log(
+      'DEBUG: ratioConfig is empty or invalid, returning empty array.'
+    );
     return ensureArrayResult([]);
   }
 
@@ -397,6 +403,9 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
     const tracks = tracksArray.filter(track => track && track.id && track.uri);
     cleanedPlaylistTracks[playlistId] = tracks;
+    console.log(
+      `DEBUG: Cleaned playlist ${playlistId} has ${tracks.length} tracks.`
+    );
   });
 
   // Create popularity-based pools for each playlist
@@ -411,10 +420,13 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   );
 
   if (playlistIds.length === 0) {
+    console.log(
+      'DEBUG: No valid playlist IDs after filtering, returning empty array.'
+    );
     return ensureArrayResult([]);
   }
 
-  console.log('Valid playlists:', playlistIds.length);
+  console.log('Valid playlists for mixing:', playlistIds.length);
 
   // Calculate total weight for proper ratio distribution
   const totalWeight = playlistIds.reduce(

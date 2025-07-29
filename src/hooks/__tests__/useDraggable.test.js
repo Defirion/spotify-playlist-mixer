@@ -82,8 +82,14 @@ describe('useDraggable', () => {
     });
 
     expect(result.current.isDragging).toBe(true);
-    expect(result.current.draggedItem).toBe(testData);
-    expect(onDragStart).toHaveBeenCalledWith(testData, 'default');
+    expect(result.current.draggedItem).toEqual({
+      data: testData,
+      type: 'default',
+    });
+    expect(onDragStart).toHaveBeenCalledWith({
+      data: testData,
+      type: 'default',
+    });
     expect(navigator.vibrate).toHaveBeenCalledWith(50);
   });
 
@@ -109,7 +115,10 @@ describe('useDraggable', () => {
 
     expect(result.current.isDragging).toBe(false);
     expect(result.current.draggedItem).toBe(null);
-    expect(onDragEnd).toHaveBeenCalledWith('success');
+    expect(onDragEnd).toHaveBeenCalledWith(
+      { data: testData, type: 'default' },
+      { reason: 'success', success: true }
+    );
   });
 
   it('should handle HTML5 drag start', () => {
@@ -143,7 +152,7 @@ describe('useDraggable', () => {
       JSON.stringify({ type: 'test-type', data: testData })
     );
     expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith(testData, 'html5');
+    expect(onDragStart).toHaveBeenCalledWith({ data: testData, type: 'html5' });
   });
 
   it('should handle touch start and long press', () => {
@@ -173,7 +182,7 @@ describe('useDraggable', () => {
 
     expect(result.current.touchState.isLongPress).toBe(true);
     expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith(testData, 'touch');
+    expect(onDragStart).toHaveBeenCalledWith({ data: testData, type: 'touch' });
     expect(navigator.vibrate).toHaveBeenCalledWith(100);
   });
 
@@ -237,7 +246,10 @@ describe('useDraggable', () => {
     expect(mockKeyEvent.preventDefault).toHaveBeenCalled();
     expect(result.current.keyboardState.isDragging).toBe(true);
     expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith(testData, 'keyboard');
+    expect(onDragStart).toHaveBeenCalledWith({
+      data: testData,
+      type: 'keyboard',
+    });
 
     // End drag with spacebar again
     act(() => {
@@ -283,8 +295,11 @@ describe('useDraggable', () => {
 
     expect(mockEscapeEvent.preventDefault).toHaveBeenCalled();
     expect(result.current.isDragging).toBe(false);
-    expect(result.current.keyboardState.isDragging).toBe(false);
-    expect(onDragEnd).toHaveBeenCalledWith('cancel');
+    expect(result.current.draggedItem).toBe(null);
+    expect(onDragEnd).toHaveBeenCalledWith(
+      { data: testData, type: 'keyboard' },
+      { reason: 'cancel', success: false }
+    );
   });
 
   it('should provide haptic feedback', () => {
