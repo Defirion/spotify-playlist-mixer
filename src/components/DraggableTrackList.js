@@ -436,6 +436,7 @@ const DraggableTrackList = ({
     [checkAutoScroll, localTracks.length, setDropLinePosition]
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleExternalDrop = useCallback(
     e => {
       const { draggedItem } = e.detail;
