@@ -19,7 +19,13 @@ const DraggableTrackList = ({
   accessToken,
 }) => {
   const { isDragging, draggedItem, endDrag, startDrag } = useDrag();
-  const [localTracks, setLocalTracks] = useState(tracks);
+  const [localTracks, setLocalTracks] = useState(tracks || []);
+
+  // Sync localTracks with tracks prop
+  useEffect(() => {
+    setLocalTracks(tracks || []);
+  }, [tracks]);
+
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [dropLinePosition, setDropLinePosition] = useState(null);
@@ -373,10 +379,10 @@ const DraggableTrackList = ({
     [stopAutoScroll, endDrag]
   );
 
-  // Update local tracks when props change
-  useEffect(() => {
-    setLocalTracks(tracks);
-  }, [tracks]);
+  // This useEffect is redundant - already handled above
+  // useEffect(() => {
+  //   setLocalTracks(tracks || []);
+  // }, [tracks]);
 
   // Handle external drag events from modals (simplified)
   useEffect(() => {
@@ -494,7 +500,10 @@ const DraggableTrackList = ({
 
   // Calculate relative popularity quadrants for track labeling
   const tracksWithPop = useMemo(
-    () => localTracks.filter(t => t.popularity !== undefined),
+    () =>
+      Array.isArray(localTracks)
+        ? localTracks.filter(t => t.popularity !== undefined)
+        : [],
     [localTracks]
   );
 
@@ -916,158 +925,161 @@ const DraggableTrackList = ({
           )}
 
           {/* Track List - Custom Implementation */}
-          {localTracks.map((track, index) => {
-            const sourcePlaylist = selectedPlaylists.find(
-              p => p.id === track.sourcePlaylist
-            );
-            const quadrant = getTrackQuadrant(track);
+          {Array.isArray(localTracks) &&
+            localTracks.map((track, index) => {
+              const sourcePlaylist = selectedPlaylists.find(
+                p => p.id === track.sourcePlaylist
+              );
+              const quadrant = getTrackQuadrant(track);
 
-            const showDropLineAbove =
-              dropLinePosition && dropLinePosition.index === index;
-            const showDropLineBelow =
-              dropLinePosition && dropLinePosition.index === index + 1;
+              const showDropLineAbove =
+                dropLinePosition && dropLinePosition.index === index;
+              const showDropLineBelow =
+                dropLinePosition && dropLinePosition.index === index + 1;
 
-            return (
-              <div
-                key={track.id}
-                draggable={!('ontouchstart' in window)}
-                data-track-index={index}
-                onDragStart={e => handleDragStart(e, index)}
-                onDragOver={e => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                onTouchStart={e => handleTrackTouchStart(e, index)}
-                onTouchMove={e => handleTrackTouchMove(e, index)}
-                onTouchEnd={e => handleTrackTouchEnd(e, index)}
-                className={styles.trackItem}
-                style={{
-                  borderTop: showDropLineAbove
-                    ? '3px solid var(--moss-green)'
-                    : 'none',
-                  boxShadow: showDropLineAbove
-                    ? '0 -2px 8px rgba(144, 169, 85, 0.6)'
-                    : 'none',
-                }}
-              >
-                <div className={styles.trackContent}>
-                  <div className={styles.dragHandle}>⋮⋮</div>
-                  <div className={styles.trackInfo}>
-                    {track.album?.images?.[0]?.url && (
-                      <img
-                        src={
-                          track.album.images[2]?.url ||
-                          track.album.images[1]?.url ||
-                          track.album.images[0]?.url
-                        }
-                        alt={`${track.album.name} album cover`}
-                        className={styles.albumCover}
-                        onError={e => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className={styles.trackDetails}>
-                      <div className={styles.trackName}>
-                        {index + 1}. {track.name}
-                      </div>
-                      <div className={styles.trackMeta}>
-                        <span>
-                          {track.artists?.[0]?.name || 'Unknown Artist'}
-                        </span>
-                        <span>•</span>
-                        <span
-                          style={{
-                            color:
-                              track.sourcePlaylist === 'search'
-                                ? 'var(--mindaro)'
-                                : 'var(--moss-green)',
+              return (
+                <div
+                  key={track.id}
+                  draggable={!('ontouchstart' in window)}
+                  data-track-index={index}
+                  onDragStart={e => handleDragStart(e, index)}
+                  onDragOver={e => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={e => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onTouchStart={e => handleTrackTouchStart(e, index)}
+                  onTouchMove={e => handleTrackTouchMove(e, index)}
+                  onTouchEnd={e => handleTrackTouchEnd(e, index)}
+                  className={styles.trackItem}
+                  style={{
+                    borderTop: showDropLineAbove
+                      ? '3px solid var(--moss-green)'
+                      : 'none',
+                    boxShadow: showDropLineAbove
+                      ? '0 -2px 8px rgba(144, 169, 85, 0.6)'
+                      : 'none',
+                  }}
+                >
+                  <div className={styles.trackContent}>
+                    <div className={styles.dragHandle}>⋮⋮</div>
+                    <div className={styles.trackInfo}>
+                      {track.album?.images?.[0]?.url && (
+                        <img
+                          src={
+                            track.album.images[2]?.url ||
+                            track.album.images[1]?.url ||
+                            track.album.images[0]?.url
+                          }
+                          alt={`${track.album.name} album cover`}
+                          className={styles.albumCover}
+                          onError={e => {
+                            e.target.style.display = 'none';
                           }}
-                        >
-                          {track.sourcePlaylist === 'search' ? (
+                        />
+                      )}
+                      <div className={styles.trackDetails}>
+                        <div className={styles.trackName}>
+                          {index + 1}. {track.name}
+                        </div>
+                        <div className={styles.trackMeta}>
+                          <span>
+                            {track.artists?.[0]?.name || 'Unknown Artist'}
+                          </span>
+                          <span>•</span>
+                          <span
+                            style={{
+                              color:
+                                track.sourcePlaylist === 'search'
+                                  ? 'var(--mindaro)'
+                                  : 'var(--moss-green)',
+                            }}
+                          >
+                            {track.sourcePlaylist === 'search' ? (
+                              <>
+                                <span className={styles.buttonText}>
+                                  🔍 Spotify Search
+                                </span>
+                                <span className={styles.mobileText}>🔍</span>
+                              </>
+                            ) : (
+                              sourcePlaylist?.name || 'Unknown'
+                            )}
+                          </span>
+                          {quadrant && (
                             <>
-                              <span className={styles.buttonText}>
-                                🔍 Spotify Search
+                              <span>•</span>
+                              <span
+                                className={styles.popularityBadge}
+                                style={{
+                                  background:
+                                    quadrant === 'topHits'
+                                      ? 'rgba(255, 87, 34, 0.2)'
+                                      : quadrant === 'popular'
+                                        ? 'rgba(255, 193, 7, 0.2)'
+                                        : quadrant === 'moderate'
+                                          ? 'rgba(0, 188, 212, 0.2)'
+                                          : 'rgba(233, 30, 99, 0.2)',
+                                  color:
+                                    quadrant === 'topHits'
+                                      ? '#FF5722'
+                                      : quadrant === 'popular'
+                                        ? '#FF8F00'
+                                        : quadrant === 'moderate'
+                                          ? '#00BCD4'
+                                          : '#E91E63',
+                                }}
+                                title={
+                                  quadrant === 'topHits'
+                                    ? `Top Hits (${track.popularity})`
+                                    : quadrant === 'popular'
+                                      ? `Popular (${track.popularity})`
+                                      : quadrant === 'moderate'
+                                        ? `Moderate (${track.popularity})`
+                                        : `Deep Cuts (${track.popularity})`
+                                }
+                              >
+                                <span className={styles.buttonText}>
+                                  {quadrant === 'topHits'
+                                    ? `🔥 Top Hits (${track.popularity})`
+                                    : quadrant === 'popular'
+                                      ? `⭐ Popular (${track.popularity})`
+                                      : quadrant === 'moderate'
+                                        ? `📻 Moderate (${track.popularity})`
+                                        : `💎 Deep Cuts (${track.popularity})`}
+                                </span>
+                                <span className={styles.mobileText}>
+                                  {getPopularityIcon(quadrant)}
+                                </span>
                               </span>
-                              <span className={styles.mobileText}>🔍</span>
                             </>
-                          ) : (
-                            sourcePlaylist?.name || 'Unknown'
                           )}
-                        </span>
-                        {quadrant && (
-                          <>
-                            <span>•</span>
-                            <span
-                              className={styles.popularityBadge}
-                              style={{
-                                background:
-                                  quadrant === 'topHits'
-                                    ? 'rgba(255, 87, 34, 0.2)'
-                                    : quadrant === 'popular'
-                                      ? 'rgba(255, 193, 7, 0.2)'
-                                      : quadrant === 'moderate'
-                                        ? 'rgba(0, 188, 212, 0.2)'
-                                        : 'rgba(233, 30, 99, 0.2)',
-                                color:
-                                  quadrant === 'topHits'
-                                    ? '#FF5722'
-                                    : quadrant === 'popular'
-                                      ? '#FF8F00'
-                                      : quadrant === 'moderate'
-                                        ? '#00BCD4'
-                                        : '#E91E63',
-                              }}
-                              title={
-                                quadrant === 'topHits'
-                                  ? `Top Hits (${track.popularity})`
-                                  : quadrant === 'popular'
-                                    ? `Popular (${track.popularity})`
-                                    : quadrant === 'moderate'
-                                      ? `Moderate (${track.popularity})`
-                                      : `Deep Cuts (${track.popularity})`
-                              }
-                            >
-                              <span className={styles.buttonText}>
-                                {quadrant === 'topHits'
-                                  ? `🔥 Top Hits (${track.popularity})`
-                                  : quadrant === 'popular'
-                                    ? `⭐ Popular (${track.popularity})`
-                                    : quadrant === 'moderate'
-                                      ? `📻 Moderate (${track.popularity})`
-                                      : `💎 Deep Cuts (${track.popularity})`}
-                              </span>
-                              <span className={styles.mobileText}>
-                                {getPopularityIcon(quadrant)}
-                              </span>
-                            </span>
-                          </>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className={styles.trackActions}>
-                  <div className={styles.duration}>
-                    {formatDuration(track.duration_ms || 0)}
+                  <div className={styles.trackActions}>
+                    <div className={styles.duration}>
+                      {formatDuration(track.duration_ms || 0)}
+                    </div>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveTrack(index);
+                      }}
+                      className={styles.removeButton}
+                      title="Remove track from playlist"
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleRemoveTrack(index);
-                    }}
-                    className={styles.removeButton}
-                    title="Remove track from playlist"
-                  >
-                    ×
-                  </button>
-                </div>
 
-                {/* Drop line below */}
-                {showDropLineBelow && <div className={styles.dropLineBelow} />}
-              </div>
-            );
-          })}
+                  {/* Drop line below */}
+                  {showDropLineBelow && (
+                    <div className={styles.dropLineBelow} />
+                  )}
+                </div>
+              );
+            })}
         </div>
       </div>
 

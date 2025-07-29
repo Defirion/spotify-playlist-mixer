@@ -14,6 +14,7 @@ import {
 } from '../types';
 
 interface SearchResult {
+  items: SpotifyTrack[];
   tracks: SpotifyTrack[];
   total: number;
   limit: number;
@@ -23,6 +24,7 @@ interface SearchResult {
 
 interface PlaylistsResult {
   items: SpotifyPlaylist[];
+  playlists: SpotifyPlaylist[];
   total: number;
   limit: number;
   offset: number;
@@ -49,6 +51,21 @@ class SpotifyService implements ISpotifyService {
       new ApiErrorHandler({
         enableLogging: process.env.NODE_ENV === 'development',
       });
+  }
+
+  /**
+   * Set access token
+   */
+  setAccessToken(token: string): void {
+    this.accessToken = token;
+    this.api = getSpotifyApi(token);
+  }
+
+  /**
+   * Get access token
+   */
+  getAccessToken(): string | null {
+    return this.accessToken;
   }
 
   /**
@@ -97,8 +114,12 @@ class SpotifyService implements ISpotifyService {
 
         const response = await this.api.get(`/search?${params.toString()}`);
 
+        const filteredTracks = response.data.tracks.items.filter(
+          (track: any) => track && track.id
+        );
         return {
-          tracks: response.data.tracks.items.filter(track => track && track.id),
+          items: filteredTracks,
+          tracks: filteredTracks,
           total: response.data.tracks.total,
           limit: response.data.tracks.limit,
           offset: response.data.tracks.offset,
@@ -122,7 +143,7 @@ class SpotifyService implements ISpotifyService {
   async getPlaylistTracks(
     playlistId: string,
     options: GetPlaylistTracksOptions = {}
-  ): Promise<SpotifyTrack[]> {
+  ): Promise<{ tracks: SpotifyTrack[]; total: number; hasMore: boolean }> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
@@ -176,8 +197,8 @@ class SpotifyService implements ISpotifyService {
       }
 
       const tracks = result.items
-        .filter(item => item.track && item.track.id) // Filter out null/invalid tracks
-        .map(item => ({
+        .filter((item: any) => item.track && item.track.id) // Filter out null/invalid tracks
+        .map((item: any) => ({
           ...item.track,
           added_at: item.added_at,
           added_by: item.added_by,
@@ -205,7 +226,11 @@ class SpotifyService implements ISpotifyService {
       offset += limit;
     }
 
-    return allTracks;
+    return {
+      tracks: allTracks,
+      total: totalTracks || allTracks.length,
+      hasMore: false,
+    };
   }
 
   /**
@@ -247,6 +272,7 @@ class SpotifyService implements ISpotifyService {
 
       return {
         items: allPlaylists,
+        playlists: allPlaylists,
         total: allPlaylists.length,
         limit: allPlaylists.length,
         offset: 0,
@@ -262,6 +288,7 @@ class SpotifyService implements ISpotifyService {
 
       return {
         items: response.data.items,
+        playlists: response.data.items,
         total: response.data.total,
         limit: response.data.limit,
         offset: response.data.offset,
@@ -320,12 +347,13 @@ class SpotifyService implements ISpotifyService {
    */
   async addTracksToPlaylist(
     playlistId: string,
-    trackUris: string[],
-    position?: number | null
+    request: SpotifyAddTracksRequest
   ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
+
+    const { uris: trackUris, position } = request;
 
     if (!Array.isArray(trackUris) || trackUris.length === 0) {
       throw new Error('Track URIs array is required and cannot be empty');
@@ -365,11 +393,13 @@ class SpotifyService implements ISpotifyService {
    */
   async removeTracksFromPlaylist(
     playlistId: string,
-    tracks: Array<{ uri: string; positions?: number[] }>
+    request: SpotifyRemoveTracksRequest
   ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
+
+    const { tracks } = request;
 
     if (!Array.isArray(tracks) || tracks.length === 0) {
       throw new Error('Tracks array is required and cannot be empty');
@@ -379,7 +409,7 @@ class SpotifyService implements ISpotifyService {
       const response = await this.api.delete(
         `/playlists/${playlistId}/tracks`,
         {
-          data: { tracks },
+          data: request,
         }
       );
 
@@ -465,6 +495,35 @@ class SpotifyService implements ISpotifyService {
           response.data.playlists.offset + response.data.playlists.limit <
           response.data.playlists.total,
       };
+    });
+  }
+
+  /**
+   * Get audio features for a track
+   */
+  async getTrackAudioFeatures(trackId: string): Promise<any> {
+    if (!trackId) {
+      throw new Error('Track ID is required');
+    }
+
+    return this.withRetry(async () => {
+      const response = await this.api.get(`/audio-features/${trackId}`);
+      return response.data;
+    });
+  }
+
+  /**
+   * Get audio features for multiple tracks
+   */
+  async getMultipleTrackAudioFeatures(trackIds: string[]): Promise<any[]> {
+    if (!Array.isArray(trackIds) || trackIds.length === 0) {
+      throw new Error('Track IDs array is required and cannot be empty');
+    }
+
+    return this.withRetry(async () => {
+      const ids = trackIds.join(',');
+      const response = await this.api.get(`/audio-features?ids=${ids}`);
+      return response.data.audio_features;
     });
   }
 }

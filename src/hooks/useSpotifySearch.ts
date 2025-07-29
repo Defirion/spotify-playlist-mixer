@@ -104,7 +104,7 @@ const useSpotifySearch = (
       } catch (err) {
         // Don't set error if request was aborted
         if (!abortControllerRef.current?.signal.aborted) {
-          setError(err);
+          setError(err instanceof Error ? err : new Error(String(err)));
           console.error('Search error:', err);
         }
       } finally {

@@ -275,7 +275,7 @@ export interface UseVirtualizationReturn {
     'data-index': number;
   };
   containerProps: {
-    ref: React.RefObject<HTMLElement>;
+    ref: React.RefObject<HTMLDivElement>;
     onScroll: (event: React.UIEvent<HTMLElement>) => void;
     style: {
       height: number;

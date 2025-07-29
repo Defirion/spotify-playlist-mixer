@@ -31,7 +31,7 @@ const useVirtualization = <T = any>({
   const [scrollTop, setScrollTop] = useState<number>(0);
   const [isScrolling, setIsScrolling] = useState<boolean>(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const containerRef = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Calculate visible items and positions
   const virtualizedData = useMemo<VirtualizedData<T>>(() => {
@@ -173,9 +173,9 @@ const useVirtualization = <T = any>({
     onScroll: handleScroll,
     style: {
       height: containerHeight,
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      position: 'relative',
+      overflowY: 'auto' as const,
+      overflowX: 'hidden' as const,
+      position: 'relative' as const,
     },
   };
 
@@ -183,7 +183,7 @@ const useVirtualization = <T = any>({
   const spacerProps = {
     style: {
       height: virtualizedData.totalHeight,
-      position: 'relative',
+      position: 'relative' as const,
     },
   };
 

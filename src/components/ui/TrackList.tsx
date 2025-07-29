@@ -236,13 +236,14 @@ const TrackList = memo<TrackListProps>(
     return (
       <div
         className={trackListClasses}
-        style={{
-          height: virtualized ? containerHeight : 'auto',
-          ...style,
-        }}
         data-testid="track-list"
         {...(virtualized ? containerProps : {})}
         {...otherProps}
+        style={{
+          height: virtualized ? containerHeight : 'auto',
+          ...style,
+          ...(virtualized ? containerProps.style : {}),
+        }}
       >
         {virtualized && (
           // Spacer for virtualization

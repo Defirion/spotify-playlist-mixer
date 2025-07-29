@@ -714,10 +714,10 @@ const useDraggable = ({
   const dropZoneProps = {
     onDragOver: handleDragOver,
     onDrop: handleDrop,
-    onDragLeave: e => {
+    onDragLeave: (e: React.DragEvent<HTMLElement>) => {
       // Clear drop position when leaving drop zone
       setTimeout(() => {
-        if (!e.relatedTarget?.closest('[draggable="true"]')) {
+        if (!(e.relatedTarget as Element)?.closest('[draggable="true"]')) {
           setDropPosition(null);
         }
       }, 10);

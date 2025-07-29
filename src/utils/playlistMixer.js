@@ -1,3 +1,28 @@
+// Defensive Object.keys helper to ensure proper array behavior
+const safeObjectKeys = obj => {
+  if (!obj || typeof obj !== 'object') {
+    return [];
+  }
+
+  const keys = Object.keys(obj);
+
+  // Ensure the result is a proper array with filter method
+  if (!Array.isArray(keys) || typeof keys.filter !== 'function') {
+    console.warn(
+      '⚠️ Object.keys returned invalid array, creating manual array'
+    );
+    const manualKeys = [];
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        manualKeys.push(key);
+      }
+    }
+    return manualKeys;
+  }
+
+  return keys;
+};
+
 // Shuffle array using Fisher-Yates algorithm
 const shuffleArray = array => {
   const shuffled = [...array];
@@ -106,7 +131,7 @@ const createPopularityPools = (playlistTracks, options) => {
 
   const popularityPools = {};
 
-  Object.keys(playlistTracks).forEach(playlistId => {
+  safeObjectKeys(playlistTracks).forEach(playlistId => {
     const tracks = playlistTracks[playlistId];
     if (tracks.length === 0) {
       popularityPools[playlistId] = {
@@ -287,6 +312,18 @@ const getTracksForPosition = (
 };
 
 export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
+  // Wrapper function to ensure we always return a proper array
+  const ensureArrayResult = result => {
+    if (!Array.isArray(result)) {
+      console.error(
+        '❌ mixPlaylists returning non-array:',
+        typeof result,
+        result
+      );
+      return [];
+    }
+    return result;
+  };
   const {
     totalSongs,
     targetDuration,
@@ -307,31 +344,58 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       continueWhenPlaylistEmpty,
       popularityStrategy,
     });
+
+    // Debug the input parameters
+    console.log('🔍 DEBUG: playlistTracks type:', typeof playlistTracks);
+    console.log(
+      '🔍 DEBUG: playlistTracks keys:',
+      safeObjectKeys(playlistTracks)
+    );
+    console.log('🔍 DEBUG: playlistTracks structure:', playlistTracks);
+    console.log('🔍 DEBUG: ratioConfig:', ratioConfig);
   }
 
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
     console.log('=== POPULARITY-AWARE MIXER ===');
-    console.log('Playlists:', Object.keys(playlistTracks).length);
+    console.log('Playlists:', safeObjectKeys(playlistTracks).length);
     console.log('Strategy:', popularityStrategy);
     console.log('Recency boost:', recencyBoost);
   }
 
   // Validate inputs
-  if (!playlistTracks || Object.keys(playlistTracks).length === 0) {
-    return [];
+  if (!playlistTracks || safeObjectKeys(playlistTracks).length === 0) {
+    return ensureArrayResult([]);
   }
 
-  if (!ratioConfig || Object.keys(ratioConfig).length === 0) {
-    return [];
+  if (!ratioConfig || safeObjectKeys(ratioConfig).length === 0) {
+    return ensureArrayResult([]);
   }
 
   // Filter out invalid tracks first
   const cleanedPlaylistTracks = {};
-  Object.keys(playlistTracks).forEach(playlistId => {
-    const tracks = (playlistTracks[playlistId] || []).filter(
-      track => track && track.id && track.uri
-    );
+  safeObjectKeys(playlistTracks).forEach(playlistId => {
+    const playlistData = playlistTracks[playlistId];
+
+    // Ensure we have an array before calling filter
+    let tracksArray;
+    if (Array.isArray(playlistData)) {
+      tracksArray = playlistData;
+    } else if (
+      playlistData &&
+      typeof playlistData === 'object' &&
+      Array.isArray(playlistData.tracks)
+    ) {
+      // Handle case where data might be wrapped in an object with tracks property
+      tracksArray = playlistData.tracks;
+    } else {
+      console.warn(
+        `⚠️ WARNING: Invalid playlist data for ${playlistId}, using empty array`
+      );
+      tracksArray = [];
+    }
+
+    const tracks = tracksArray.filter(track => track && track.id && track.uri);
     cleanedPlaylistTracks[playlistId] = tracks;
   });
 
@@ -342,12 +406,12 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
   const popularityPools = createPopularityPools(cleanedPlaylistTracks, options);
 
   // Get valid playlist IDs
-  const playlistIds = Object.keys(ratioConfig).filter(
+  const playlistIds = safeObjectKeys(ratioConfig).filter(
     id => cleanedPlaylistTracks[id] && cleanedPlaylistTracks[id].length > 0
   );
 
   if (playlistIds.length === 0) {
-    return [];
+    return ensureArrayResult([]);
   }
 
   console.log('Valid playlists:', playlistIds.length);
@@ -619,7 +683,8 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
 
   // Helper function to check if we should stop due to exhausted playlists
   const shouldStopDueToExhaustion = () => {
-    const exhaustedPlaylists = Object.keys(playlistExhausted).filter(
+    // Use safe Object.keys to avoid filter method issues
+    const exhaustedPlaylists = safeObjectKeys(playlistExhausted).filter(
       id => playlistExhausted[id]
     );
     const totalPlaylists = playlistIds.length;
@@ -804,7 +869,7 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     }
 
     // Add metadata to trimmed tracks as well
-    const exhaustedPlaylists = Object.keys(playlistExhausted).filter(
+    const exhaustedPlaylists = safeObjectKeys(playlistExhausted).filter(
       id => playlistExhausted[id]
     );
     trimmedTracks.exhaustedPlaylists = exhaustedPlaylists;
@@ -825,11 +890,11 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
       }
     }
 
-    return trimmedTracks;
+    return ensureArrayResult(trimmedTracks);
   }
 
   // Add metadata about exhausted playlists to the result
-  const exhaustedPlaylists = Object.keys(playlistExhausted).filter(
+  const exhaustedPlaylists = safeObjectKeys(playlistExhausted).filter(
     id => playlistExhausted[id]
   );
 
@@ -853,5 +918,5 @@ export const mixPlaylists = (playlistTracks, ratioConfig, options) => {
     }
   }
 
-  return result;
+  return ensureArrayResult(result);
 };

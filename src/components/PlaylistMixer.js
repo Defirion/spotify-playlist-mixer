@@ -57,23 +57,73 @@ const PlaylistMixer = ({
       setCustomTrackOrder(reorderedTracks);
 
       // Recalculate stats for the updated track list
-      if (preview && reorderedTracks) {
+      if (preview && reorderedTracks && Array.isArray(reorderedTracks)) {
         const updatedStats = {};
         selectedPlaylists.forEach(playlist => {
+          // TARGETED DEBUG: Log reorderedTracks immediately before filter call
+          console.log(
+            '🔍 REORDERED TRACKS PRE-FILTER DEBUG for playlist',
+            playlist.id
+          );
+          console.log('🔍 typeof reorderedTracks:', typeof reorderedTracks);
+          console.log(
+            '🔍 Array.isArray(reorderedTracks):',
+            Array.isArray(reorderedTracks)
+          );
+          console.log(
+            '🔍 reorderedTracks.constructor:',
+            reorderedTracks?.constructor?.name
+          );
+          console.log(
+            '🔍 reorderedTracks.filter type:',
+            typeof reorderedTracks.filter
+          );
+          console.log('🔍 reorderedTracks value:', reorderedTracks);
+          console.log('🔍 reorderedTracks length:', reorderedTracks?.length);
+
+          console.log('🔍 About to call reorderedTracks.filter for count...');
+          const playlistTracksForCount = reorderedTracks.filter(
+            track => track && track.sourcePlaylist === playlist.id
+          );
+          console.log(
+            '🔍 Count filter successful, got',
+            playlistTracksForCount.length,
+            'tracks'
+          );
+
+          console.log(
+            '🔍 About to call reorderedTracks.filter for duration...'
+          );
+          const playlistTracksForDuration = reorderedTracks.filter(
+            track => track && track.sourcePlaylist === playlist.id
+          );
+          console.log(
+            '🔍 Duration filter successful, got',
+            playlistTracksForDuration.length,
+            'tracks'
+          );
+
           updatedStats[playlist.id] = {
             name: playlist.name,
-            count: reorderedTracks.filter(
-              track => track.sourcePlaylist === playlist.id
-            ).length,
-            totalDuration: reorderedTracks
-              .filter(track => track.sourcePlaylist === playlist.id)
-              .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
+            count: playlistTracksForCount.length,
+            totalDuration: playlistTracksForDuration.reduce(
+              (sum, track) => sum + (track.duration_ms || 0),
+              0
+            ),
           };
         });
 
         // Add Spotify Search stats if there are any search tracks
+        console.log(
+          '🔍 About to call reorderedTracks.filter for search tracks...'
+        );
         const searchTracks = reorderedTracks.filter(
-          track => track.sourcePlaylist === 'search'
+          track => track && track.sourcePlaylist === 'search'
+        );
+        console.log(
+          '🔍 Search tracks filter successful, got',
+          searchTracks.length,
+          'tracks'
         );
         if (searchTracks.length > 0) {
           updatedStats['search'] = {
@@ -90,10 +140,34 @@ const PlaylistMixer = ({
           ...preview,
           tracks: reorderedTracks,
           stats: updatedStats,
-          totalDuration: reorderedTracks.reduce(
-            (sum, track) => sum + (track.duration_ms || 0),
-            0
-          ),
+          totalDuration: (() => {
+            console.log('🔍 REORDERED TRACKS REDUCE PRE-CALL DEBUG');
+            console.log(
+              '🔍 typeof reorderedTracks for reduce:',
+              typeof reorderedTracks
+            );
+            console.log(
+              '🔍 Array.isArray(reorderedTracks) for reduce:',
+              Array.isArray(reorderedTracks)
+            );
+            console.log(
+              '🔍 reorderedTracks.reduce type:',
+              typeof reorderedTracks.reduce
+            );
+            console.log('🔍 About to call reorderedTracks.reduce...');
+
+            const result = reorderedTracks.reduce(
+              (sum, track) =>
+                sum + (track && track.duration_ms ? track.duration_ms : 0),
+              0
+            );
+
+            console.log(
+              '🔍 Reordered tracks reduce call successful, result:',
+              result
+            );
+            return result;
+          })(),
         };
 
         setPreview(updatedPreview);
@@ -150,19 +224,63 @@ const PlaylistMixer = ({
         mixedTracks = customTrackOrder;
       } else {
         // Generate new mix using the standard algorithm
-        mixedTracks = mixPlaylists(
+        const mixResult = mixPlaylists(
           playlistTracks,
           ratioConfig,
           localMixOptions
         );
 
+        // Extract tracks array and metadata from the mix result
+        // Ensure we always have a valid array for mixedTracks
+        let exhaustedPlaylists = [];
+        let stoppedEarly = false;
+
+        // More robust handling of mixResult
+        if (mixResult === null || mixResult === undefined) {
+          console.error('mixResult is null or undefined in handleMix');
+          mixedTracks = [];
+        } else if (Array.isArray(mixResult)) {
+          mixedTracks = [...mixResult]; // Create a new array to avoid reference issues
+          exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
+          stoppedEarly = mixResult.stoppedEarly || false;
+        } else if (mixResult && typeof mixResult === 'object') {
+          if (Array.isArray(mixResult.tracks)) {
+            mixedTracks = [...mixResult.tracks]; // Create a new array
+          } else {
+            console.error(
+              'mixResult.tracks is not an array in handleMix:',
+              mixResult.tracks
+            );
+            mixedTracks = [];
+          }
+          exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
+          stoppedEarly = mixResult.stoppedEarly || false;
+        } else {
+          console.error(
+            'mixResult is not an array or object in handleMix:',
+            typeof mixResult,
+            mixResult
+          );
+          mixedTracks = [];
+        }
+
+        // Final safety check
+        if (!Array.isArray(mixedTracks)) {
+          console.error(
+            '❌ CRITICAL: mixedTracks is not an array after processing in handleMix!'
+          );
+          console.error('mixedTracks type:', typeof mixedTracks);
+          console.error('mixedTracks value:', mixedTracks);
+          mixedTracks = [];
+        }
+
         // Show warning if playlists were exhausted and mixing stopped early
         if (
-          mixedTracks.stoppedEarly &&
-          mixedTracks.exhaustedPlaylists &&
-          mixedTracks.exhaustedPlaylists.length > 0
+          stoppedEarly &&
+          exhaustedPlaylists &&
+          exhaustedPlaylists.length > 0
         ) {
-          const exhaustedNames = mixedTracks.exhaustedPlaylists
+          const exhaustedNames = exhaustedPlaylists
             .map(id => selectedPlaylists.find(p => p.id === id)?.name || id)
             .join(', ');
           console.warn(
@@ -232,12 +350,90 @@ const PlaylistMixer = ({
         playlistTracks[playlist.id] = tracks;
       }
 
+      // Debug logging before calling mixPlaylists
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 Calling mixPlaylists with:', {
+          playlistTracks: Object.keys(playlistTracks),
+          ratioConfig,
+          localMixOptions,
+        });
+      }
+
       // Generate full sample using actual settings
-      const previewTracks = mixPlaylists(
+      const mixResult = mixPlaylists(
         playlistTracks,
         ratioConfig,
         localMixOptions
       );
+
+      // Debug logging of mixResult
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 mixResult type:', typeof mixResult);
+        console.log('🔧 mixResult isArray:', Array.isArray(mixResult));
+        console.log('🔧 mixResult:', mixResult);
+        if (mixResult) {
+          console.log('🔧 mixResult.length:', mixResult.length);
+          console.log('🔧 mixResult.tracks:', mixResult.tracks);
+        }
+      }
+
+      // Extract tracks array and metadata from the mix result
+      // Ensure we always have a valid array for previewTracks
+      let previewTracks = [];
+      let exhaustedPlaylists = [];
+      let stoppedEarly = false;
+
+      // More robust handling of mixResult
+      if (mixResult === null || mixResult === undefined) {
+        console.error('mixResult is null or undefined');
+        previewTracks = [];
+      } else if (Array.isArray(mixResult)) {
+        previewTracks = [...mixResult]; // Create a new array to avoid reference issues
+        exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
+        stoppedEarly = mixResult.stoppedEarly || false;
+      } else if (mixResult && typeof mixResult === 'object') {
+        if (Array.isArray(mixResult.tracks)) {
+          previewTracks = [...mixResult.tracks]; // Create a new array
+        } else {
+          console.error('mixResult.tracks is not an array:', mixResult.tracks);
+          previewTracks = [];
+        }
+        exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
+        stoppedEarly = mixResult.stoppedEarly || false;
+      } else {
+        console.error(
+          'mixResult is not an array or object:',
+          typeof mixResult,
+          mixResult
+        );
+        previewTracks = [];
+      }
+
+      // Final safety check with detailed logging
+      if (!Array.isArray(previewTracks)) {
+        console.error(
+          '❌ CRITICAL: previewTracks is not an array after processing!'
+        );
+        console.error('previewTracks type:', typeof previewTracks);
+        console.error('previewTracks value:', previewTracks);
+        console.error(
+          'previewTracks constructor:',
+          previewTracks?.constructor?.name
+        );
+        previewTracks = [];
+      }
+
+      // Additional check that previewTracks has filter method
+      if (typeof previewTracks.filter !== 'function') {
+        console.error(
+          '❌ CRITICAL: previewTracks does not have filter method!'
+        );
+        console.error(
+          'previewTracks methods:',
+          Object.getOwnPropertyNames(previewTracks)
+        );
+        previewTracks = [];
+      }
 
       // Debug logging for useAllSongs
       if (
@@ -250,30 +446,109 @@ const PlaylistMixer = ({
         console.log('Local mix options:', localMixOptions);
       }
 
-      // Calculate some stats
+      // Calculate some stats with error handling
       const playlistStats = {};
-      selectedPlaylists.forEach(playlist => {
-        playlistStats[playlist.id] = {
-          name: playlist.name,
-          count: previewTracks.filter(
-            track => track.sourcePlaylist === playlist.id
-          ).length,
-          totalDuration: previewTracks
-            .filter(track => track.sourcePlaylist === playlist.id)
-            .reduce((sum, track) => sum + (track.duration_ms || 0), 0),
-        };
-      });
+      try {
+        selectedPlaylists.forEach(playlist => {
+          // TARGETED DEBUG: Log previewTracks immediately before filter call
+          console.log(
+            '🔍 IMMEDIATE PRE-FILTER DEBUG for playlist',
+            playlist.id
+          );
+          console.log('🔍 typeof previewTracks:', typeof previewTracks);
+          console.log(
+            '🔍 Array.isArray(previewTracks):',
+            Array.isArray(previewTracks)
+          );
+          console.log(
+            '🔍 previewTracks.constructor:',
+            previewTracks?.constructor?.name
+          );
+          console.log(
+            '🔍 previewTracks.filter type:',
+            typeof previewTracks.filter
+          );
+          console.log('🔍 previewTracks value:', previewTracks);
+          console.log('🔍 previewTracks length:', previewTracks?.length);
+
+          // Double-check that previewTracks is still an array before filtering
+          if (!Array.isArray(previewTracks)) {
+            throw new Error(
+              `previewTracks became non-array during stats calculation: ${typeof previewTracks}`
+            );
+          }
+
+          if (typeof previewTracks.filter !== 'function') {
+            throw new Error(
+              `previewTracks.filter is not a function: ${typeof previewTracks.filter}`
+            );
+          }
+
+          console.log('🔍 About to call previewTracks.filter...');
+          const playlistTracks = previewTracks.filter(
+            track => track && track.sourcePlaylist === playlist.id
+          );
+          console.log(
+            '🔍 Filter call successful, got',
+            playlistTracks.length,
+            'tracks'
+          );
+
+          playlistStats[playlist.id] = {
+            name: playlist.name,
+            count: playlistTracks.length,
+            totalDuration: playlistTracks.reduce(
+              (sum, track) =>
+                sum + (track && track.duration_ms ? track.duration_ms : 0),
+              0
+            ),
+          };
+        });
+      } catch (statsError) {
+        console.error('❌ Error calculating playlist stats:', statsError);
+        console.error('❌ previewTracks at error time:', previewTracks);
+        console.error(
+          '❌ previewTracks type at error time:',
+          typeof previewTracks
+        );
+        console.error(
+          '❌ previewTracks constructor at error time:',
+          previewTracks?.constructor?.name
+        );
+        throw new Error(`Stats calculation failed: ${statsError.message}`);
+      }
 
       setPreview({
         tracks: previewTracks,
         stats: playlistStats,
-        totalDuration: previewTracks.reduce(
-          (sum, track) => sum + (track.duration_ms || 0),
-          0
-        ),
+        totalDuration: (() => {
+          console.log('🔍 FINAL REDUCE PRE-CALL DEBUG');
+          console.log(
+            '🔍 typeof previewTracks for reduce:',
+            typeof previewTracks
+          );
+          console.log(
+            '🔍 Array.isArray(previewTracks) for reduce:',
+            Array.isArray(previewTracks)
+          );
+          console.log(
+            '🔍 previewTracks.reduce type:',
+            typeof previewTracks.reduce
+          );
+          console.log('🔍 About to call previewTracks.reduce...');
+
+          const result = previewTracks.reduce(
+            (sum, track) =>
+              sum + (track && track.duration_ms ? track.duration_ms : 0),
+            0
+          );
+
+          console.log('🔍 Reduce call successful, result:', result);
+          return result;
+        })(),
         usedStrategy: localMixOptions.popularityStrategy,
-        exhaustedPlaylists: previewTracks.exhaustedPlaylists || [],
-        stoppedEarly: previewTracks.stoppedEarly || false,
+        exhaustedPlaylists: exhaustedPlaylists,
+        stoppedEarly: stoppedEarly,
       });
     } catch (err) {
       onError('Failed to generate preview: ' + err.message);
