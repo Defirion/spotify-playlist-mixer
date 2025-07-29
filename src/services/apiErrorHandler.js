@@ -292,7 +292,6 @@ export class ApiErrorHandler {
    * Retry wrapper with intelligent retry logic
    */
   async withRetry(apiCall, context = {}) {
-    let lastError;
     let attemptNumber = 0;
 
     while (true) {
@@ -303,7 +302,6 @@ export class ApiErrorHandler {
           ...context,
           attemptNumber,
         });
-        lastError = apiError;
 
         if (!apiError.shouldRetry(attemptNumber)) {
           this.handleError(apiError, context);

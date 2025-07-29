@@ -158,7 +158,7 @@ const DraggableTrackList = ({
         restoreScrollPosition();
       });
     }
-  }, [localTracks, restoreScrollPosition]);
+  }, [localTracks, restoreScrollPosition, captureScrollPosition]);
 
   // Drag and drop handlers
   const handleDragStart = useCallback(
@@ -384,12 +384,11 @@ const DraggableTrackList = ({
   //   setLocalTracks(tracks || []);
   // }, [tracks]);
 
-  // Handle external drag events from modals (simplified)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+  const handleExternalDragOver = useCallback(
+    e => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
 
-    const handleExternalDragOver = e => {
       const { clientX, clientY } = e.detail;
       checkAutoScroll(clientY);
 
@@ -433,9 +432,12 @@ const DraggableTrackList = ({
           setDropLinePosition({ index: localTracks.length, isTopHalf: false });
         }
       }
-    };
+    },
+    [checkAutoScroll, localTracks.length, setDropLinePosition]
+  );
 
-    const handleExternalDrop = e => {
+  const handleExternalDrop = useCallback(
+    e => {
       const { draggedItem } = e.detail;
       if (draggedItem && dropLinePosition) {
         const { data: track } = draggedItem;
@@ -457,7 +459,22 @@ const DraggableTrackList = ({
         setDropLinePosition(null);
         endDrag('success');
       }
-    };
+    },
+    [
+      draggedItem,
+      dropLinePosition,
+      localTracks,
+      onTrackOrderChange,
+      captureScrollPosition,
+      setDropLinePosition,
+      endDrag,
+    ]
+  );
+
+  // Handle external drag events from modals (simplified)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
     container.addEventListener('externalDragOver', handleExternalDragOver);
     container.addEventListener('externalDrop', handleExternalDrop);
@@ -465,13 +482,7 @@ const DraggableTrackList = ({
       container.removeEventListener('externalDragOver', handleExternalDragOver);
       container.removeEventListener('externalDrop', handleExternalDrop);
     };
-  }, [
-    dropLinePosition,
-    endDrag,
-    localTracks,
-    onTrackOrderChange,
-    checkAutoScroll,
-  ]);
+  }, [handleExternalDragOver, handleExternalDrop]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -786,6 +797,9 @@ const DraggableTrackList = ({
           ref={scrollContainerRef}
           data-preview-panel="true"
           className={`${styles.scrollContainer} ${isDragging || draggedIndex !== null ? styles.dragging : ''}`}
+          role="region"
+          aria-label="Draggable Track List Container"
+          tabIndex={0}
           onTouchMove={handleExternalTouchMove}
           onDragOver={e => {
             e.preventDefault();
@@ -950,6 +964,22 @@ const DraggableTrackList = ({
                   onTouchStart={e => handleTrackTouchStart(e, index)}
                   onTouchMove={e => handleTrackTouchMove(e, index)}
                   onTouchEnd={e => handleTrackTouchEnd(e, index)}
+                  // onMouseDown={e => e.preventDefault()} // Added for a11y
+                  onKeyPress={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRemoveTrack(index);
+                    }
+                  }}
+                  onKeyUp={e => {
+                    // Added for a11y
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRemoveTrack(index);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className={styles.trackItem}
                   style={{
                     borderTop: showDropLineAbove

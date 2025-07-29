@@ -166,7 +166,12 @@ const AddUnselectedModal = memo(
           isDragging: false,
         });
       },
-      [startDrag, touchState.longPressTimer]
+      [
+        startDrag,
+        touchState.longPressTimer,
+        touchState.currentX,
+        touchState.currentY,
+      ]
     );
 
     const handleTrackTouchMove = useCallback(
