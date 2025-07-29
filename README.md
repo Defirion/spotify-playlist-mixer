@@ -13,7 +13,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 ## ✨ Key Features
 
 ### 🎯 **Smart Preset Templates**
+
 **One-click professional mixing patterns:**
+
 - **💃 Karimctiva**: Intelligent bachata/salsa mixing with dance flow optimization
   - Automatically detects bachata/salsa playlists
   - Uses time-based balancing for perfect genre transitions
@@ -22,7 +24,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 - **🚗 Road Trip**: Epic crescendo build-up for sing-along moments (3 hours)
 
 ### 🎛️ **Advanced Inline Slider Controls**
+
 **Revolutionary space-optimized interface:**
+
 - **Adaptive Grid Layout**: Maximizes horizontal space usage with CSS Grid
 - **Dual-Range Sliders**: Set precise "Play Together" ranges (1-8 songs per group)
 - **High-Precision Priority**: 100-step granular control (vs. traditional 10-step)
@@ -31,7 +35,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 - **Professional Styling**: Consistent visual design with proper padding/borders
 
 ### ⚖️ **Intelligent Balance Methods**
+
 **Two sophisticated balancing approaches:**
+
 - **Same Play Time**: Perfect for mixing genres with different song lengths
   - Accounts for salsa (~4.5min) vs bachata (~3.5min) differences
   - Ensures equal listening time per genre
@@ -39,7 +45,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 - **Auto-Detection**: Presets automatically select optimal balance method
 
 ### 🎯 **Advanced Popularity Strategies**
+
 **Four professional mixing algorithms:**
+
 - **🎲 Random Mix**: Evenly distributed across all popularity levels
 - **🔥 Hits First**: Popular tracks upfront, fade to deep cuts
 - **🎉 Party Mode**: Build to biggest hits in the middle (perfect for events!)
@@ -47,7 +55,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 - **Recency Boost**: Optional newer song prioritization
 
 ### 🎨 **Professional Preview System**
+
 **Full playlist preview with studio-grade controls:**
+
 - **Drag & Drop Reordering**: Precise track positioning with visual drop indicators
 - **Album Artwork Display**: 40x40px covers for easy track identification
 - **Real-Time Statistics**: Live updates as you modify tracks
@@ -56,7 +66,9 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 - **Duration Calculations**: Exact timing for each playlist contribution
 
 ### 📊 **Real-Time Analytics**
+
 **Live feedback and calculations:**
+
 - **Mix Distribution**: See exact percentages for each playlist
 - **Duration Breakdown**: Time contribution per source
 - **Track Count Analysis**: Song distribution across playlists
@@ -66,11 +78,13 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 1. **Spotify Developer Account**: Create an app at [developer.spotify.com](https://developer.spotify.com/dashboard)
 2. **Client ID**: Copy your Spotify app's Client ID
 3. **Redirect URI**: Add your domain to your Spotify app settings
 
 ### Quick Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/spotify-playlist-mixer.git
@@ -87,6 +101,7 @@ npm start
 ```
 
 ### First Mix in 60 Seconds
+
 1. **🔗 Connect**: Authorize with your Spotify account
 2. **📋 Add Playlists**: Paste 2-10 Spotify playlist URLs
 3. **🎯 Choose Template**: Select Karimctiva, Workout, or Road Trip
@@ -96,6 +111,7 @@ npm start
 ## 🎵 Professional Use Cases
 
 ### 🎉 **Party DJ Setup**
+
 ```
 Bachata Playlist: 2-2 songs per group, Max Priority (100), Time-balanced
 Salsa Playlist: 1-2 songs per group, High Priority (80), Time-balanced
@@ -108,6 +124,7 @@ Result: Perfect energy curve that peaks when everyone's dancing!
 ```
 
 ### 💪 **Fitness Instructor**
+
 ```
 High Energy: 3-5 songs per group, Max Priority (100)
 Motivation: 2-4 songs per group, High Priority (80)
@@ -119,6 +136,7 @@ Result: Maximum energy start with gradual cool-down!
 ```
 
 ### 🚗 **Road Trip Organizer**
+
 ```
 Classic Rock: 2-3 songs per group, Normal Priority (50)
 Sing-Alongs: 2-3 songs per group, Normal Priority (50)
@@ -132,6 +150,7 @@ Result: Epic finale with everyone singing along!
 ## 🛠️ Technical Excellence
 
 ### **Architecture**
+
 - **React 18.2.0**: Modern hooks and concurrent features
 - **Spotify Web API**: Full integration with official API
 - **Advanced Algorithms**: Custom playlist mixing logic
@@ -139,12 +158,14 @@ Result: Epic finale with everyone singing along!
 - **Cross-Browser**: Chrome, Firefox, Safari support
 
 ### **Performance Features**
+
 - **Lazy Loading**: Components load on demand
 - **Real-Time Updates**: Instant feedback without page refreshes
 - **Efficient API Calls**: Optimized Spotify API usage
 - **Memory Management**: Clean component lifecycle handling
 
 ### **Code Quality**
+
 - **TypeScript Ready**: Type definitions included
 - **ESLint Configuration**: Consistent code standards
 - **Modern JavaScript**: ES6+ features throughout
@@ -153,15 +174,16 @@ Result: Epic finale with everyone singing along!
 ## 🎨 Design System
 
 ### **Color Palette**
+
 ```css
---dark-green: #132a13    /* Deep backgrounds */
---hunter-green: #31572c  /* Card backgrounds */
---fern-green: #4f772d    /* Borders and accents */
---moss-green: #90a955    /* Interactive elements */
---mindaro: #ecf39e       /* Text and highlights */
+--dark-green: #132a13 /* Deep backgrounds */ --hunter-green: #31572c
+  /* Card backgrounds */ --fern-green: #4f772d /* Borders and accents */
+  --moss-green: #90a955 /* Interactive elements */ --mindaro: #ecf39e
+  /* Text and highlights */;
 ```
 
 ### **UI Components**
+
 - **Adaptive Sliders**: Professional dual-range and single controls
 - **Interactive Cards**: Hover effects and smooth transitions
 - **Toast Notifications**: Success feedback with timestamps
@@ -171,18 +193,21 @@ Result: Epic finale with everyone singing along!
 ## 📈 Advanced Features
 
 ### **Intelligent Automation**
+
 - **Genre Detection**: Automatic bachata/salsa playlist recognition
 - **Balance Method Selection**: Smart time vs. frequency balancing
 - **Popularity Analysis**: Relative ranking within your music collection
 - **Duration Optimization**: Perfect timing for any event length
 
 ### **Customization Options**
+
 - **Manual Override**: Full control over all automated settings
 - **Fine-Tuning**: 100-step precision on all controls
 - **Visual Feedback**: Real-time percentage and duration updates
 - **Flexible Input**: Support for any public Spotify playlist
 
 ### **Professional Controls**
+
 - **Drag & Drop**: Precise track reordering
 - **Bulk Operations**: Multi-track selection and management
 - **Preview System**: Full playlist preview before creation
@@ -190,9 +215,10 @@ Result: Epic finale with everyone singing along!
 
 ## 🤝 Contributing
 
-We welcome contributions from music lovers and developers! 
+We welcome contributions from music lovers and developers!
 
 ### **Development Setup**
+
 ```bash
 # Fork the repository
 git clone https://github.com/yourusername/spotify-playlist-mixer.git
@@ -208,6 +234,7 @@ git push origin feature/amazing-feature
 ```
 
 ### **Areas for Contribution**
+
 - 🎵 New preset templates
 - 🎨 UI/UX improvements
 - 🔧 Performance optimizations
@@ -233,7 +260,7 @@ MIT License - Use, modify, and distribute freely!
 
 [🚀 **Get Started Now**](#getting-started) | [📖 **View Documentation**](#features) | [🐛 **Report Issues**](https://github.com/yourusername/spotify-playlist-mixer/issues)
 
-*"Mix your music, not your genres randomly!"* 🎵✨
+_"Mix your music, not your genres randomly!"_ 🎵✨
 
 ---
 

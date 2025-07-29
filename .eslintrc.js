@@ -5,14 +5,8 @@ module.exports = {
     node: true,
     jest: true,
   },
-  extends: [
-    'react-app',
-    'react-app/jest',
-    'prettier',
-  ],
-  plugins: [
-    'prettier',
-  ],
+  extends: ['react-app', 'react-app/jest', 'prettier'],
+  plugins: ['prettier'],
   rules: {
     'prettier/prettier': 'error',
     'no-unused-vars': 'warn',

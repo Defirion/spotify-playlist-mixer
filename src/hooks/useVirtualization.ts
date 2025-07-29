@@ -1,29 +1,40 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { UseVirtualizationReturn } from '../types';
+
+interface VirtualizationOptions<T = any> {
+  items: T[];
+  itemHeight: number;
+  containerHeight: number;
+  overscan?: number;
+  getItemHeight?: ((index: number, item: T) => number) | null;
+}
+
+interface VirtualizedData<T = any> {
+  visibleItems: T[];
+  totalHeight: number;
+  startIndex: number;
+  endIndex: number;
+  offsetY: number;
+  visibleCount: number;
+}
 
 /**
  * Custom hook for virtualizing large lists efficiently
- * @param {Object} options - Virtualization options
- * @param {Array} options.items - Array of items to virtualize
- * @param {number} options.itemHeight - Height of each item in pixels
- * @param {number} options.containerHeight - Height of the container in pixels
- * @param {number} options.overscan - Number of items to render outside visible area (default: 5)
- * @param {Function} options.getItemHeight - Optional function to get dynamic item height
- * @returns {Object} Virtualization state and methods
  */
-const useVirtualization = ({
+const useVirtualization = <T = any>({
   items = [],
   itemHeight = 64,
   containerHeight = 400,
   overscan = 5,
   getItemHeight = null,
-}) => {
-  const [scrollTop, setScrollTop] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeoutRef = useRef(null);
-  const containerRef = useRef(null);
+}: VirtualizationOptions<T>): UseVirtualizationReturn => {
+  const [scrollTop, setScrollTop] = useState<number>(0);
+  const [isScrolling, setIsScrolling] = useState<boolean>(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
 
   // Calculate visible items and positions
-  const virtualizedData = useMemo(() => {
+  const virtualizedData = useMemo<VirtualizedData<T>>(() => {
     if (items.length === 0) {
       return {
         visibleItems: [],
@@ -31,6 +42,7 @@ const useVirtualization = ({
         startIndex: 0,
         endIndex: -1,
         offsetY: 0,
+        visibleCount: 0,
       };
     }
 
@@ -66,8 +78,8 @@ const useVirtualization = ({
   }, [items, itemHeight, containerHeight, scrollTop, overscan]);
 
   // Handle scroll events
-  const handleScroll = useCallback(event => {
-    const newScrollTop = event.target.scrollTop;
+  const handleScroll = useCallback((event: React.UIEvent<HTMLElement>) => {
+    const newScrollTop = (event.target as HTMLElement).scrollTop;
     setScrollTop(newScrollTop);
 
     // Set scrolling state
@@ -86,7 +98,7 @@ const useVirtualization = ({
 
   // Scroll to specific item
   const scrollToItem = useCallback(
-    (index, align = 'auto') => {
+    (index: number, align: 'start' | 'center' | 'end' | 'auto' = 'auto') => {
       if (!containerRef.current || index < 0 || index >= items.length) {
         return;
       }
@@ -129,7 +141,7 @@ const useVirtualization = ({
 
   // Get item position info
   const getItemPosition = useCallback(
-    index => {
+    (index: number) => {
       return {
         top: index * itemHeight,
         height: itemHeight,
@@ -177,13 +189,13 @@ const useVirtualization = ({
 
   // Get props for individual items
   const getItemProps = useCallback(
-    index => {
+    (index: number) => {
       const actualIndex = virtualizedData.startIndex + index;
       const position = getItemPosition(actualIndex);
 
       return {
         style: {
-          position: 'absolute',
+          position: 'absolute' as const,
           top: position.top,
           left: 0,
           right: 0,

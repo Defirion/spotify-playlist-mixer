@@ -5,8 +5,9 @@
 The DraggableTrackList component had conflicting HTML5 drag events and custom DragContext that caused stuck drag states:
 
 ### Core Issues
+
 - HTML5 `dragend` fired before custom drop processing completed
-- Dual drag states (`draggedIndex` + `isDragging`) got desynchronized  
+- Dual drag states (`draggedIndex` + `isDragging`) got desynchronized
 - Failed/cancelled drags didn't properly reset both systems
 - Component unmount during drag could leave states stuck
 - Rapid multi-system drag attempts caused conflicts
@@ -18,6 +19,7 @@ The DraggableTrackList component had conflicting HTML5 drag events and custom Dr
 **File: `src/contexts/DragContext.js`**
 
 Key improvements:
+
 - **Unified cleanup function** that handles both HTML5 and custom states consistently
 - **Failsafe timers** with timeout-based cleanup for stuck states (5-second timeout)
 - **Coordination methods** for HTML5 drag lifecycle (`notifyHTML5DragStart`, `notifyHTML5DragEnd`)
@@ -26,19 +28,22 @@ Key improvements:
 
 ```javascript
 // Core coordination logic
-const endDrag = useCallback((reason = 'success') => {
-  setIsDropSuccessful(reason === 'success');
-  dragStateRef.current.customActive = false;
-  
-  // If no HTML5 drag is active, do immediate cleanup
-  if (!dragStateRef.current.html5Active) {
-    unifiedCleanup(`end-drag-${reason}`);
-  } else {
-    // HTML5 drag still active, delay cleanup to coordinate with dragend
-    dragStateRef.current.pendingCleanup = true;
-    scheduleFailsafeCleanup(1000); // Shorter failsafe for coordination
-  }
-}, [unifiedCleanup, scheduleFailsafeCleanup]);
+const endDrag = useCallback(
+  (reason = 'success') => {
+    setIsDropSuccessful(reason === 'success');
+    dragStateRef.current.customActive = false;
+
+    // If no HTML5 drag is active, do immediate cleanup
+    if (!dragStateRef.current.html5Active) {
+      unifiedCleanup(`end-drag-${reason}`);
+    } else {
+      // HTML5 drag still active, delay cleanup to coordinate with dragend
+      dragStateRef.current.pendingCleanup = true;
+      scheduleFailsafeCleanup(1000); // Shorter failsafe for coordination
+    }
+  },
+  [unifiedCleanup, scheduleFailsafeCleanup]
+);
 ```
 
 ### 2. Updated DraggableTrackList Integration
@@ -46,6 +51,7 @@ const endDrag = useCallback((reason = 'success') => {
 **File: `src/components/DraggableTrackList.js`**
 
 Key changes:
+
 - **HTML5 drag coordination**: Notify context on `dragstart` and `dragend`
 - **Enhanced cleanup**: Component unmount triggers unified cleanup
 - **Touch drag coordination**: Proper integration with context system
@@ -60,14 +66,17 @@ const handleDragStart = (e, index) => {
   e.dataTransfer.setData('text/html', e.target.outerHTML);
 };
 
-const handleDragEnd = (e) => {
+const handleDragEnd = e => {
   console.log('[DraggableTrackList] HTML5 drag end');
   notifyHTML5DragEnd(); // Coordinate with context
   setDraggedIndex(null);
   setDropLinePosition(null);
-  
+
   const wasSuccessful = e?.dataTransfer?.dropEffect !== 'none';
-  console.log('[DraggableTrackList] HTML5 drag ended, successful:', wasSuccessful);
+  console.log(
+    '[DraggableTrackList] HTML5 drag ended, successful:',
+    wasSuccessful
+  );
 };
 ```
 
@@ -76,24 +85,31 @@ const handleDragEnd = (e) => {
 **File: `src/components/AddUnselectedModal.js`**
 
 Improvements:
+
 - **Drag type specification**: Pass drag type to `startDrag` for better coordination
 - **HTML5 dragend handling**: Proper cleanup when drags are cancelled
 - **Touch drag integration**: Coordinated touch drag with context system
 
 ```javascript
 const handleDragStart = (e, track) => {
-  startDrag({
-    data: track,
-    type: 'modal-track',
-    style: { background: 'var(--moss-green)', border: 'var(--fern-green)' }
-  }, 'html5'); // Specify drag type for coordination
+  startDrag(
+    {
+      data: track,
+      type: 'modal-track',
+      style: { background: 'var(--moss-green)', border: 'var(--fern-green)' },
+    },
+    'html5'
+  ); // Specify drag type for coordination
 
   // DataTransfer fallback for compatibility
   if (e.dataTransfer) {
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'modal-track',
-      track: track
-    }));
+    e.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({
+        type: 'modal-track',
+        track: track,
+      })
+    );
   }
 };
 ```
@@ -103,6 +119,7 @@ const handleDragStart = (e, track) => {
 **File: `src/contexts/__tests__/DragContext.test.js`**
 
 Comprehensive test suite covering:
+
 - ✅ Basic drag state management
 - ✅ HTML5 and custom drag coordination
 - ✅ Failsafe cleanup timers
@@ -117,7 +134,7 @@ All tests pass, confirming the coordination system works correctly.
 ✅ **Internal track reordering** (HTML5 drag within list)  
 ✅ **External modal drags** (custom context from modals)  
 ✅ **Mobile touch drags** (long-press activation)  
-✅ **Scroll lock management** (prevents page scroll during drag)  
+✅ **Scroll lock management** (prevents page scroll during drag)
 
 ## Test Scenarios Handled
 
@@ -125,12 +142,12 @@ All tests pass, confirming the coordination system works correctly.
 ✅ **Custom modal drag/drop + cancel outside**  
 ✅ **Touch mobile drag/drop + cancel**  
 ✅ **Component unmount during drag**  
-✅ **Rapid multi-system drag attempts**  
+✅ **Rapid multi-system drag attempts**
 
 ## Benefits
 
 1. **No more stuck drag states** - Unified cleanup ensures consistent state reset
-2. **Robust error handling** - Failsafe timers prevent permanent stuck states  
+2. **Robust error handling** - Failsafe timers prevent permanent stuck states
 3. **Better coordination** - HTML5 and custom systems work together seamlessly
 4. **Improved debugging** - Comprehensive logging for drag state transitions
 5. **Maintained functionality** - All existing drag features continue to work
@@ -144,11 +161,7 @@ The solution is transparent to existing code. Components continue to use the sam
 const { isDragging, draggedItem, startDrag, endDrag } = useDrag();
 
 // New coordination methods available if needed
-const { 
-  notifyHTML5DragStart, 
-  notifyHTML5DragEnd, 
-  unifiedCleanup 
-} = useDrag();
+const { notifyHTML5DragStart, notifyHTML5DragEnd, unifiedCleanup } = useDrag();
 ```
 
 ## Monitoring

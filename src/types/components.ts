@@ -56,9 +56,12 @@ export interface ModalProps extends BaseComponentProps {
   size?: ModalSize;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
+  closeOnBackdropClick?: boolean;
   showCloseButton?: boolean;
   footer?: React.ReactNode;
   maxHeight?: string;
+  style?: React.CSSProperties;
+  backdropStyle?: React.CSSProperties;
 }
 
 // TrackItem component types
@@ -76,6 +79,21 @@ export interface TrackItemProps extends BaseComponentProps {
   showIndex?: boolean;
   index?: number;
   compact?: boolean;
+  showCheckbox?: boolean;
+  showDragHandle?: boolean;
+  showAlbumArt?: boolean;
+  showSourcePlaylist?: boolean;
+  style?: React.CSSProperties;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>, track: SpotifyTrack) => void;
+  onMouseEnter?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseUp?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onTouchStart?: (e: React.TouchEvent<HTMLDivElement>) => void;
+  onTouchMove?: (e: React.TouchEvent<HTMLDivElement>) => void;
+  onTouchEnd?: (e: React.TouchEvent<HTMLDivElement>) => void;
 }
 
 // TrackList component types
@@ -99,6 +117,66 @@ export interface TrackListProps extends BaseComponentProps {
   sortDirection?: 'asc' | 'desc';
   onSort?: (sortBy: string, direction: 'asc' | 'desc') => void;
   virtualizationOptions?: Partial<VirtualizationOptions>;
+  style?: React.CSSProperties;
+  itemHeight?: number;
+  containerHeight?: number;
+  overscan?: number;
+  showCheckbox?: boolean;
+  showDragHandle?: boolean;
+  showPopularity?: boolean;
+  showDuration?: boolean;
+  showAlbumArt?: boolean;
+  showSourcePlaylist?: boolean;
+  onTrackClick?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackMouseEnter?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackMouseLeave?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackMouseDown?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackMouseUp?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackDragStart?: (
+    e: React.DragEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackDragEnd?: (
+    e: React.DragEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackTouchStart?: (
+    e: React.TouchEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackTouchMove?: (
+    e: React.TouchEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
+  onTrackTouchEnd?: (
+    e: React.TouchEvent<HTMLDivElement>,
+    track: SpotifyTrack,
+    index: number
+  ) => void;
 }
 
 // PlaylistItem component types

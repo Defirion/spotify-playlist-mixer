@@ -61,12 +61,13 @@ export interface UseSpotifySearchOptions extends SearchTracksOptions {
 
 export interface UseSpotifySearchReturn extends SearchState<SpotifyTrack> {
   setQuery: (query: string) => void;
-  search: (query: string) => Promise<void>;
-  loadMore: () => Promise<void>;
+  search: (query?: string) => Promise<void>;
+  loadMore: () => void;
   clear: () => void;
-  retry: () => Promise<void>;
+  retry: () => void;
   isInitialLoad: boolean;
   isLoadingMore: boolean;
+  isEmpty: boolean;
 }
 
 export interface UsePlaylistTracksOptions extends GetPlaylistTracksOptions {
@@ -179,23 +180,53 @@ export interface UseAppStateReturn {
 
 // UI hooks
 export interface UseDraggableOptions {
-  type: string;
-  data: any;
+  type?: string;
+  data?: any;
   onDragStart?: (item: DragItem) => void;
   onDragEnd?: (item: DragItem, result: DropResult | null) => void;
+  onDrop?: (item: DragItem, result: DropResult) => void;
+  onDragOver?: (item: DragItem, position: any) => void;
   disabled?: boolean;
+  longPressDelay?: number;
+  scrollThreshold?: number;
+  scrollContainer?: HTMLElement | null;
   preview?: HTMLElement | null;
 }
 
 export interface UseDraggableReturn {
   dragHandleProps: {
     draggable: boolean;
-    onDragStart: (event: React.DragEvent) => void;
-    onDragEnd: (event: React.DragEvent) => void;
+    onDragStart: (event: React.DragEvent<HTMLElement>) => void;
+    onDragEnd: (event: React.DragEvent<HTMLElement>) => void;
+    onTouchStart: (event: React.TouchEvent<HTMLElement>) => void;
+    onTouchMove: (event: React.TouchEvent<HTMLElement>) => void;
+    onTouchEnd: (event: React.TouchEvent<HTMLElement>) => void;
+    onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
+    tabIndex: number;
+    role: string;
+    'aria-grabbed': boolean;
+  };
+  dropZoneProps: {
+    onDragOver: (event: React.DragEvent<HTMLElement>) => void;
+    onDrop: (event: React.DragEvent<HTMLElement>) => void;
+    onDragLeave: (event: React.DragEvent<HTMLElement>) => void;
   };
   isDragging: boolean;
   draggedItem: DragItem | null;
-  previewElement: HTMLElement | null;
+  dropPosition: any;
+  touchState: {
+    isLongPress: boolean;
+    isActive: boolean;
+  };
+  keyboardState: {
+    isDragging: boolean;
+    selectedIndex: number;
+  };
+  startDrag: (item: any, dragType?: string) => void;
+  endDrag: (reason?: 'success' | 'cancel') => void;
+  checkAutoScroll: (clientY: number) => void;
+  stopAutoScroll: () => void;
+  provideHapticFeedback: (pattern: number | number[]) => void;
 }
 
 export interface UseDroppableOptions {
@@ -220,14 +251,45 @@ export interface UseDroppableReturn {
 }
 
 export interface UseVirtualizationReturn {
-  virtualItems: VirtualItem[];
-  totalSize: number;
-  scrollToIndex: (
+  visibleItems: any[];
+  totalHeight: number;
+  startIndex: number;
+  endIndex: number;
+  offsetY: number;
+  visibleCount: number;
+  scrollTop: number;
+  isScrolling: boolean;
+  scrollToItem: (
     index: number,
-    alignment?: 'start' | 'center' | 'end' | 'auto'
+    align?: 'start' | 'center' | 'end' | 'auto'
   ) => void;
-  scrollToOffset: (offset: number) => void;
-  measureItem: (index: number, size: number) => void;
+  getItemPosition: (index: number) => { top: number; height: number };
+  getItemProps: (index: number) => {
+    style: {
+      position: 'absolute';
+      top: number;
+      left: number;
+      right: number;
+      height: number;
+    };
+    'data-index': number;
+  };
+  containerProps: {
+    ref: React.RefObject<HTMLElement>;
+    onScroll: (event: React.UIEvent<HTMLElement>) => void;
+    style: {
+      height: number;
+      overflowY: 'auto';
+      overflowX: 'hidden';
+      position: 'relative';
+    };
+  };
+  spacerProps: {
+    style: {
+      height: number;
+      position: 'relative';
+    };
+  };
 }
 
 export interface UseKeyboardNavigationOptions {

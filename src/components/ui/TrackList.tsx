@@ -1,9 +1,10 @@
 import React, { useMemo, memo, useCallback } from 'react';
 import TrackItem from './TrackItem';
 import useVirtualization from '../../hooks/useVirtualization';
+import { TrackListProps, SpotifyTrack } from '../../types';
 import styles from './TrackList.module.css';
 
-const TrackList = memo(
+const TrackList = memo<TrackListProps>(
   ({
     tracks = [],
     onTrackSelect,
@@ -65,7 +66,7 @@ const TrackList = memo(
 
     // Stabilize event handlers with useCallback
     const handleTrackSelect = useCallback(
-      track => {
+      (track: SpotifyTrack) => {
         if (onTrackSelect) {
           onTrackSelect(track);
         }
@@ -74,7 +75,7 @@ const TrackList = memo(
     );
 
     const handleTrackRemove = useCallback(
-      track => {
+      (track: SpotifyTrack) => {
         if (onTrackRemove) {
           onTrackRemove(track);
         }
@@ -84,7 +85,7 @@ const TrackList = memo(
 
     // Memoize track item rendering function
     const renderTrackItem = useCallback(
-      (track, index) => {
+      (track: SpotifyTrack, index: number) => {
         const actualIndex = virtualized ? startIndex + index : index;
         const isSelected = selectedTracks.has(track.id);
 
@@ -113,52 +114,62 @@ const TrackList = memo(
               showSourcePlaylist={showSourcePlaylist}
               onClick={
                 onTrackClick
-                  ? e => onTrackClick(e, track, actualIndex)
+                  ? (e: React.MouseEvent<HTMLDivElement>) =>
+                      onTrackClick(e, track, actualIndex)
                   : undefined
               }
               onMouseEnter={
                 onTrackMouseEnter
-                  ? e => onTrackMouseEnter(e, track, actualIndex)
+                  ? (e: React.MouseEvent<HTMLDivElement>) =>
+                      onTrackMouseEnter(e, track, actualIndex)
                   : undefined
               }
               onMouseLeave={
                 onTrackMouseLeave
-                  ? e => onTrackMouseLeave(e, track, actualIndex)
+                  ? (e: React.MouseEvent<HTMLDivElement>) =>
+                      onTrackMouseLeave(e, track, actualIndex)
                   : undefined
               }
               onMouseDown={
                 onTrackMouseDown
-                  ? e => onTrackMouseDown(e, track, actualIndex)
+                  ? (e: React.MouseEvent<HTMLDivElement>) =>
+                      onTrackMouseDown(e, track, actualIndex)
                   : undefined
               }
               onMouseUp={
                 onTrackMouseUp
-                  ? e => onTrackMouseUp(e, track, actualIndex)
+                  ? (e: React.MouseEvent<HTMLDivElement>) =>
+                      onTrackMouseUp(e, track, actualIndex)
                   : undefined
               }
               onDragStart={
                 onTrackDragStart
-                  ? e => onTrackDragStart(e, track, actualIndex)
+                  ? (e: React.DragEvent<HTMLDivElement>) =>
+                      onTrackDragStart(e, track, actualIndex)
                   : undefined
               }
               onDragEnd={
                 onTrackDragEnd
-                  ? e => onTrackDragEnd(e, track, actualIndex)
+                  ? (e: React.DragEvent<HTMLDivElement>) =>
+                      onTrackDragEnd(e, track, actualIndex)
                   : undefined
               }
               onTouchStart={
                 onTrackTouchStart
-                  ? e => onTrackTouchStart(e, track, actualIndex)
+                  ? (e: React.TouchEvent<HTMLDivElement>) =>
+                      onTrackTouchStart(e, track, actualIndex)
                   : undefined
               }
               onTouchMove={
                 onTrackTouchMove
-                  ? e => onTrackTouchMove(e, track, actualIndex)
+                  ? (e: React.TouchEvent<HTMLDivElement>) =>
+                      onTrackTouchMove(e, track, actualIndex)
                   : undefined
               }
               onTouchEnd={
                 onTrackTouchEnd
-                  ? e => onTrackTouchEnd(e, track, actualIndex)
+                  ? (e: React.TouchEvent<HTMLDivElement>) =>
+                      onTrackTouchEnd(e, track, actualIndex)
                   : undefined
               }
               style={virtualized ? { height: itemHeight } : undefined}

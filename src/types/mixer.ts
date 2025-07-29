@@ -74,17 +74,20 @@ export interface PlaylistMixerState {
 
 // Drag and drop types
 export interface DragItem {
-  id: string;
-  type: 'track' | 'playlist';
-  data: SpotifyTrack | SpotifyPlaylist;
-  sourceIndex: number;
+  id?: string;
+  type: string;
+  data: any;
+  sourceIndex?: number;
   sourceContainer?: string;
 }
 
 export interface DropResult {
-  targetIndex: number;
+  targetIndex?: number;
   targetContainer?: string;
-  dropEffect: 'move' | 'copy';
+  dropEffect?: 'move' | 'copy';
+  success?: boolean;
+  reason?: string;
+  position?: any;
 }
 
 export interface DragState {

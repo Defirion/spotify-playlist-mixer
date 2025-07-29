@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useCallback, memo } from 'react';
+import { ModalProps } from '../../types';
 import styles from './Modal.module.css';
 
-const Modal = memo(
+const Modal = memo<ModalProps>(
   ({
     isOpen,
     onClose,
@@ -15,12 +16,12 @@ const Modal = memo(
     style = {},
     backdropStyle = {},
   }) => {
-    const modalRef = useRef(null);
-    const previousActiveElement = useRef(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+    const previousActiveElement = useRef<Element | null>(null);
 
     // Handle escape key press
     const handleEscapeKey = useCallback(
-      event => {
+      (event: KeyboardEvent) => {
         if (closeOnEscape && event.key === 'Escape' && isOpen) {
           onClose();
         }
@@ -30,7 +31,7 @@ const Modal = memo(
 
     // Handle backdrop click
     const handleBackdropClick = useCallback(
-      event => {
+      (event: React.MouseEvent<HTMLDivElement>) => {
         if (closeOnBackdropClick && event.target === event.currentTarget) {
           onClose();
         }
@@ -58,41 +59,46 @@ const Modal = memo(
           // Restore focus to the previously focused element
           if (
             previousActiveElement.current &&
-            previousActiveElement.current.focus
+            'focus' in previousActiveElement.current
           ) {
-            previousActiveElement.current.focus();
+            (previousActiveElement.current as HTMLElement).focus();
           }
         };
       }
     }, [isOpen, handleEscapeKey]);
 
     // Focus trap within modal
-    const handleKeyDown = useCallback(event => {
-      if (event.key === 'Tab') {
-        const focusableElements = modalRef.current?.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+    const handleKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Tab') {
+          const focusableElements = modalRef.current?.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
 
-        if (focusableElements && focusableElements.length > 0) {
-          const firstElement = focusableElements[0];
-          const lastElement = focusableElements[focusableElements.length - 1];
+          if (focusableElements && focusableElements.length > 0) {
+            const firstElement = focusableElements[0] as HTMLElement;
+            const lastElement = focusableElements[
+              focusableElements.length - 1
+            ] as HTMLElement;
 
-          if (event.shiftKey) {
-            // Shift + Tab
-            if (document.activeElement === firstElement) {
-              event.preventDefault();
-              lastElement.focus();
-            }
-          } else {
-            // Tab
-            if (document.activeElement === lastElement) {
-              event.preventDefault();
-              firstElement.focus();
+            if (event.shiftKey) {
+              // Shift + Tab
+              if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+              }
+            } else {
+              // Tab
+              if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+              }
             }
           }
         }
-      }
-    }, []);
+      },
+      []
+    );
 
     // Generate CSS classes
     const modalClasses = [styles.modal, styles[size], className]

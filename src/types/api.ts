@@ -25,11 +25,17 @@ export interface GetPlaylistTracksOptions {
   offset?: number;
   fields?: string;
   market?: string;
+  onProgress?: (progress: {
+    loaded: number;
+    total: number;
+    percentage: number;
+  }) => void;
 }
 
 export interface GetUserPlaylistsOptions {
   limit?: number;
   offset?: number;
+  all?: boolean;
 }
 
 export interface SearchTracksOptions extends SearchOptions {

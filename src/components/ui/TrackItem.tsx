@@ -4,10 +4,11 @@ import {
   getTrackQuadrant,
   getPopularityStyle,
 } from '../../utils/dragAndDrop';
+import { TrackItemProps } from '../../types';
 import styles from './TrackItem.module.css';
 
 const TrackItem = memo(
-  forwardRef(
+  forwardRef<HTMLDivElement, TrackItemProps>(
     (
       {
         track,
@@ -67,7 +68,7 @@ const TrackItem = memo(
 
       // Stabilize event handlers with useCallback
       const handleClick = useCallback(
-        e => {
+        (e: React.MouseEvent<HTMLDivElement>) => {
           if (onClick) {
             onClick(e, track);
           } else if (onSelect) {
@@ -78,7 +79,7 @@ const TrackItem = memo(
       );
 
       const handleRemoveClick = useCallback(
-        e => {
+        (e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           if (onRemove) {
             onRemove(track);
@@ -102,10 +103,10 @@ const TrackItem = memo(
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          onKeyDown={e => {
+          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              handleClick(e);
+              handleClick(e as any);
             }
           }}
           style={style}
@@ -140,8 +141,8 @@ const TrackItem = memo(
               }
               alt={`${track.album.name} album cover`}
               className={styles.albumArt}
-              onError={e => {
-                e.target.style.display = 'none';
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
           )}

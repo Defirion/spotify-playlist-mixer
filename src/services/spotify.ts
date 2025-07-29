@@ -1,12 +1,44 @@
 import { getSpotifyApi } from '../utils/spotify';
 import { ApiErrorHandler } from './apiErrorHandler';
+import {
+  ISpotifyService,
+  SpotifyTrack,
+  SpotifyPlaylist,
+  SpotifyUserProfile,
+  SearchTracksOptions,
+  GetPlaylistTracksOptions,
+  GetUserPlaylistsOptions,
+  SpotifyCreatePlaylistRequest,
+  SpotifyAddTracksRequest,
+  SpotifyRemoveTracksRequest,
+} from '../types';
+
+interface SearchResult {
+  tracks: SpotifyTrack[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+interface PlaylistsResult {
+  items: SpotifyPlaylist[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
 
 /**
  * Centralized Spotify API service class
  * Handles all Spotify API interactions with automatic pagination, error handling, and retry logic
  */
-class SpotifyService {
-  constructor(accessToken, errorHandler = null) {
+class SpotifyService implements ISpotifyService {
+  private api: any;
+  private accessToken: string;
+  private errorHandler: ApiErrorHandler;
+
+  constructor(accessToken: string, errorHandler?: ApiErrorHandler | null) {
     if (!accessToken) {
       throw new Error('Access token is required for SpotifyService');
     }
@@ -21,11 +53,11 @@ class SpotifyService {
 
   /**
    * Generic retry wrapper for API calls using the centralized error handler
-   * @param {Function} apiCall - The API call function to retry
-   * @param {Object} context - Additional context for error handling
-   * @returns {Promise} - The API response
    */
-  async withRetry(apiCall, context = {}) {
+  private async withRetry<T>(
+    apiCall: () => Promise<T>,
+    context: Record<string, any> = {}
+  ): Promise<T> {
     return this.errorHandler.withRetry(apiCall, {
       service: 'SpotifyService',
       accessToken: this.accessToken ? 'present' : 'missing',
@@ -35,14 +67,11 @@ class SpotifyService {
 
   /**
    * Search for tracks on Spotify
-   * @param {string} query - Search query
-   * @param {Object} options - Search options
-   * @param {number} options.limit - Number of results to return (default: 20, max: 50)
-   * @param {number} options.offset - Offset for pagination (default: 0)
-   * @param {string} options.market - Market code for track availability
-   * @returns {Promise<Object>} - Search results with tracks array and pagination info
    */
-  async searchTracks(query, options = {}) {
+  async searchTracks(
+    query: string,
+    options: SearchTracksOptions = {}
+  ): Promise<SearchResult> {
     const { limit = 20, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {
@@ -89,22 +118,20 @@ class SpotifyService {
 
   /**
    * Get all tracks from a playlist with automatic pagination
-   * @param {string} playlistId - Spotify playlist ID
-   * @param {Object} options - Options for fetching tracks
-   * @param {string} options.market - Market code for track availability
-   * @param {Function} options.onProgress - Progress callback function
-   * @returns {Promise<Array>} - Array of all tracks in the playlist
    */
-  async getPlaylistTracks(playlistId, options = {}) {
+  async getPlaylistTracks(
+    playlistId: string,
+    options: GetPlaylistTracksOptions = {}
+  ): Promise<SpotifyTrack[]> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
 
     const { market, onProgress } = options;
-    let allTracks = [];
+    let allTracks: SpotifyTrack[] = [];
     let offset = 0;
     const limit = 100; // Maximum allowed by Spotify API
-    let totalTracks = null;
+    let totalTracks: number | null = null;
 
     while (true) {
       const currentOffset = offset;
@@ -162,9 +189,9 @@ class SpotifyService {
       if (onProgress && typeof onProgress === 'function') {
         onProgress({
           loaded: allTracks.length,
-          total: totalTracks,
+          total: totalTracks || 0,
           percentage:
-            totalTracks > 0
+            totalTracks && totalTracks > 0
               ? Math.round((allTracks.length / totalTracks) * 100)
               : 0,
         });
@@ -183,13 +210,10 @@ class SpotifyService {
 
   /**
    * Get user's playlists with automatic pagination
-   * @param {Object} options - Options for fetching playlists
-   * @param {number} options.limit - Number of playlists per request (default: 50, max: 50)
-   * @param {number} options.offset - Offset for pagination (default: 0)
-   * @param {boolean} options.all - Fetch all playlists automatically (default: false)
-   * @returns {Promise<Object>} - Playlists data with pagination info
    */
-  async getUserPlaylists(options = {}) {
+  async getUserPlaylists(
+    options: GetUserPlaylistsOptions = {}
+  ): Promise<PlaylistsResult> {
     const { limit = 50, offset = 0, all = false } = options;
 
     if (limit > 50) {
@@ -198,7 +222,7 @@ class SpotifyService {
 
     if (all) {
       // Fetch all playlists automatically
-      let allPlaylists = [];
+      let allPlaylists: SpotifyPlaylist[] = [];
       let currentOffset = 0;
       const pageLimit = 50;
 
@@ -249,9 +273,8 @@ class SpotifyService {
 
   /**
    * Get user's profile information
-   * @returns {Promise<Object>} - User profile data
    */
-  async getUserProfile() {
+  async getUserProfile(): Promise<SpotifyUserProfile> {
     return this.withRetry(async () => {
       const response = await this.api.get('/me');
       return response.data;
@@ -260,15 +283,11 @@ class SpotifyService {
 
   /**
    * Create a new playlist for the user
-   * @param {string} userId - Spotify user ID
-   * @param {Object} playlistData - Playlist creation data
-   * @param {string} playlistData.name - Playlist name
-   * @param {string} playlistData.description - Playlist description (optional)
-   * @param {boolean} playlistData.public - Whether playlist is public (default: false)
-   * @param {boolean} playlistData.collaborative - Whether playlist is collaborative (default: false)
-   * @returns {Promise<Object>} - Created playlist data
    */
-  async createPlaylist(userId, playlistData) {
+  async createPlaylist(
+    userId: string,
+    playlistData: SpotifyCreatePlaylistRequest
+  ): Promise<SpotifyPlaylist> {
     if (!userId) {
       throw new Error('User ID is required');
     }
@@ -298,12 +317,12 @@ class SpotifyService {
 
   /**
    * Add tracks to a playlist (handles batching for large track lists)
-   * @param {string} playlistId - Spotify playlist ID
-   * @param {Array<string>} trackUris - Array of Spotify track URIs
-   * @param {number} position - Position to insert tracks (optional)
-   * @returns {Promise<Object>} - Response with snapshot_id
    */
-  async addTracksToPlaylist(playlistId, trackUris, position = null) {
+  async addTracksToPlaylist(
+    playlistId: string,
+    trackUris: string[],
+    position?: number | null
+  ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
@@ -314,13 +333,13 @@ class SpotifyService {
 
     // Spotify API allows maximum 100 tracks per request
     const batchSize = 100;
-    const results = [];
+    const results: { snapshot_id: string }[] = [];
 
     for (let i = 0; i < trackUris.length; i += batchSize) {
       const batch = trackUris.slice(i, i + batchSize);
 
       const result = await this.withRetry(async () => {
-        const requestBody = { uris: batch };
+        const requestBody: SpotifyAddTracksRequest = { uris: batch };
 
         // Only add position for the first batch
         if (position !== null && i === 0) {
@@ -343,11 +362,11 @@ class SpotifyService {
 
   /**
    * Remove tracks from a playlist
-   * @param {string} playlistId - Spotify playlist ID
-   * @param {Array<Object>} tracks - Array of track objects with uri and positions
-   * @returns {Promise<Object>} - Response with snapshot_id
    */
-  async removeTracksFromPlaylist(playlistId, tracks) {
+  async removeTracksFromPlaylist(
+    playlistId: string,
+    tracks: Array<{ uri: string; positions?: number[] }>
+  ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
@@ -370,13 +389,11 @@ class SpotifyService {
 
   /**
    * Get a specific playlist's details
-   * @param {string} playlistId - Spotify playlist ID
-   * @param {Object} options - Options for fetching playlist
-   * @param {string} options.market - Market code for track availability
-   * @param {string} options.fields - Comma-separated list of fields to return
-   * @returns {Promise<Object>} - Playlist data
    */
-  async getPlaylist(playlistId, options = {}) {
+  async getPlaylist(
+    playlistId: string,
+    options: { market?: string; fields?: string } = {}
+  ): Promise<SpotifyPlaylist> {
     if (!playlistId) {
       throw new Error('Playlist ID is required');
     }
@@ -404,14 +421,17 @@ class SpotifyService {
 
   /**
    * Search for playlists
-   * @param {string} query - Search query
-   * @param {Object} options - Search options
-   * @param {number} options.limit - Number of results to return (default: 20, max: 50)
-   * @param {number} options.offset - Offset for pagination (default: 0)
-   * @param {string} options.market - Market code for playlist availability
-   * @returns {Promise<Object>} - Search results with playlists array and pagination info
    */
-  async searchPlaylists(query, options = {}) {
+  async searchPlaylists(
+    query: string,
+    options: { limit?: number; offset?: number; market?: string } = {}
+  ): Promise<{
+    playlists: SpotifyPlaylist[];
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  }> {
     const { limit = 20, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {

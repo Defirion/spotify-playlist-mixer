@@ -53,106 +53,112 @@ src/
 ### Core UI Components
 
 #### Modal Component
+
 ```javascript
 // components/ui/Modal.js
-const Modal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
   size = 'medium',
-  className 
+  className,
 }) => {
   // Unified modal implementation
   // Handles backdrop clicks, ESC key, focus management
   // Supports different sizes and custom styling
-}
+};
 ```
 
 #### TrackList Component
+
 ```javascript
 // components/ui/TrackList.js
-const TrackList = ({ 
-  tracks, 
-  onTrackSelect, 
+const TrackList = ({
+  tracks,
+  onTrackSelect,
   onTrackRemove,
   virtualized = false,
   draggable = false,
   selectable = false,
   renderTrackActions,
-  className 
+  className,
 }) => {
   // Unified track list with optional virtualization
   // Supports different interaction modes
   // Customizable track actions via render props
-}
+};
 ```
 
 #### TrackItem Component
+
 ```javascript
 // components/ui/TrackItem.js
-const TrackItem = ({ 
-  track, 
-  onSelect, 
+const TrackItem = ({
+  track,
+  onSelect,
   onRemove,
   draggable = false,
   selected = false,
   actions,
-  className 
+  className,
 }) => {
   // Single track display component
   // Handles popularity indicators, duration formatting
   // Supports drag handles and custom actions
-}
+};
 ```
 
 ### Feature Components
 
 #### Drag and Drop System
+
 ```javascript
 // hooks/useDraggable.js
-const useDraggable = ({ 
-  onDragStart, 
-  onDragEnd, 
+const useDraggable = ({
+  onDragStart,
+  onDragEnd,
   onDrop,
   type = 'default',
-  data 
+  data,
 }) => {
   // Unified drag-and-drop logic
   // Handles mouse, touch, and keyboard interactions
   // Provides auto-scroll functionality
   // Manages drag state and cleanup
-  
+
   return {
     dragHandleProps,
     dropZoneProps,
     isDragging,
     draggedItem,
-    previewElement
-  }
-}
+    previewElement,
+  };
+};
 ```
 
 #### Playlist Mixer Refactored
+
 ```javascript
 // components/features/mixer/PlaylistMixer.js
-const PlaylistMixer = ({ 
-  accessToken, 
-  selectedPlaylists, 
-  ratioConfig, 
-  mixOptions, 
-  onMixedPlaylist, 
-  onError 
+const PlaylistMixer = ({
+  accessToken,
+  selectedPlaylists,
+  ratioConfig,
+  mixOptions,
+  onMixedPlaylist,
+  onError,
 }) => {
   // Simplified mixer component
   // Uses custom hooks for API calls and state management
   // Delegates preview functionality to separate component
-}
+};
 ```
 
 ### API Service Layer
 
 #### Spotify API Service
+
 ```javascript
 // services/spotify.js
 class SpotifyService {
@@ -188,24 +194,26 @@ class SpotifyService {
 ```
 
 #### Custom API Hooks
+
 ```javascript
 // hooks/useSpotifyApi.js
 const useSpotifySearch = (query, options = {}) => {
   // Returns { data, loading, error, refetch }
-}
+};
 
 const usePlaylistTracks = (playlistId, options = {}) => {
   // Returns { tracks, loading, error, hasMore, loadMore }
-}
+};
 
 const useUserPlaylists = (options = {}) => {
   // Returns { playlists, loading, error, refetch }
-}
+};
 ```
 
 ## Data Models
 
 ### Track Interface
+
 ```typescript
 interface Track {
   id: string;
@@ -237,6 +245,7 @@ interface Album {
 ```
 
 ### Playlist Interface
+
 ```typescript
 interface Playlist {
   id: string;
@@ -257,6 +266,7 @@ interface Playlist {
 ```
 
 ### Mix Configuration
+
 ```typescript
 interface MixOptions {
   totalSongs: number;
@@ -283,6 +293,7 @@ interface RatioConfig {
 ## Error Handling
 
 ### Error Boundary Implementation
+
 ```javascript
 // components/ErrorBoundary.js
 class ErrorBoundary extends React.Component {
@@ -293,6 +304,7 @@ class ErrorBoundary extends React.Component {
 ```
 
 ### API Error Handling
+
 ```javascript
 // services/errorHandler.js
 class APIErrorHandler {
@@ -306,6 +318,7 @@ class APIErrorHandler {
 ```
 
 ### Error Types
+
 - **Authentication Errors**: Token expiry, invalid credentials
 - **Network Errors**: Connection issues, timeouts
 - **Rate Limiting**: Spotify API rate limits
@@ -315,23 +328,27 @@ class APIErrorHandler {
 ## Testing Strategy
 
 ### Unit Testing
+
 - **Components**: Test rendering, props handling, user interactions
 - **Hooks**: Test state management, side effects, cleanup
 - **Services**: Test API calls with mocked responses
 - **Utilities**: Test pure functions and data transformations
 
 ### Integration Testing
+
 - **Component Integration**: Test component interactions and data flow
 - **API Integration**: Test service layer with real API responses
 - **User Workflows**: Test complete user journeys
 
 ### Testing Tools
+
 - **Jest**: Test runner and assertion library
 - **React Testing Library**: Component testing utilities
 - **MSW (Mock Service Worker)**: API mocking for tests
 - **User Event**: Realistic user interaction simulation
 
 ### Test Structure
+
 ```
 src/
 ├── __tests__/
@@ -350,35 +367,43 @@ src/
 ## Performance Optimizations
 
 ### Virtualization Strategy
+
 ```javascript
 // hooks/useVirtualization.js
-const useVirtualization = ({ 
-  items, 
-  itemHeight, 
-  containerHeight, 
-  overscan = 5 
+const useVirtualization = ({
+  items,
+  itemHeight,
+  containerHeight,
+  overscan = 5,
 }) => {
   // Calculates visible items based on scroll position
   // Returns only items that need to be rendered
   // Handles dynamic item heights
   // Provides smooth scrolling experience
-}
+};
 ```
 
 ### Memoization Strategy
+
 - **React.memo**: Prevent unnecessary re-renders of pure components
 - **useMemo**: Cache expensive calculations (track filtering, sorting)
 - **useCallback**: Stabilize function references for child components
 - **Component-level memoization**: Cache API responses and computed data
 
 ### Code Splitting
+
 ```javascript
 // Lazy load heavy components
-const PlaylistMixer = React.lazy(() => import('./components/features/mixer/PlaylistMixer'));
-const SpotifySearchModal = React.lazy(() => import('./components/features/search/SpotifySearchModal'));
+const PlaylistMixer = React.lazy(
+  () => import('./components/features/mixer/PlaylistMixer')
+);
+const SpotifySearchModal = React.lazy(
+  () => import('./components/features/search/SpotifySearchModal')
+);
 ```
 
 ### Bundle Optimization
+
 - **Tree shaking**: Remove unused code
 - **Code splitting**: Load components on demand
 - **Asset optimization**: Optimize images and fonts
@@ -387,28 +412,31 @@ const SpotifySearchModal = React.lazy(() => import('./components/features/search
 ## Accessibility Enhancements
 
 ### Keyboard Navigation
+
 ```javascript
 // hooks/useKeyboardNavigation.js
-const useKeyboardNavigation = ({ 
-  items, 
-  onSelect, 
-  onMove, 
-  orientation = 'vertical' 
+const useKeyboardNavigation = ({
+  items,
+  onSelect,
+  onMove,
+  orientation = 'vertical',
 }) => {
   // Handles arrow key navigation
   // Supports item selection and reordering
   // Provides focus management
   // Announces changes to screen readers
-}
+};
 ```
 
 ### Screen Reader Support
+
 - **ARIA labels**: Descriptive labels for interactive elements
 - **Live regions**: Announce dynamic content changes
 - **Focus management**: Proper focus handling in modals and lists
 - **Semantic HTML**: Use appropriate HTML elements and roles
 
 ### Accessibility Features
+
 - **High contrast mode**: Support for high contrast themes
 - **Reduced motion**: Respect user's motion preferences
 - **Keyboard shortcuts**: Provide keyboard alternatives for all actions
@@ -417,24 +445,28 @@ const useKeyboardNavigation = ({
 ## Migration Strategy
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 1. Set up new directory structure
 2. Create base UI components (Modal, TrackList, TrackItem)
 3. Implement centralized API service
 4. Add TypeScript configuration and basic types
 
 ### Phase 2: Core Refactoring (Weeks 3-4)
+
 1. Refactor drag-and-drop system with useDraggable hook
 2. Consolidate modal components
 3. Implement virtualization for track lists
 4. Replace inline styles with CSS modules
 
 ### Phase 3: Performance & Polish (Weeks 5-6)
+
 1. Add comprehensive testing suite
 2. Implement accessibility features
 3. Optimize performance with memoization
 4. Add error boundaries and improved error handling
 
 ### Phase 4: Advanced Features (Week 7)
+
 1. Add keyboard navigation
 2. Implement advanced TypeScript types
 3. Add development tooling (ESLint, Prettier, pre-commit hooks)
@@ -443,11 +475,13 @@ const useKeyboardNavigation = ({
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Breaking Changes**: Maintain backward compatibility during migration
 - **Performance Regression**: Benchmark before and after changes
 - **API Changes**: Abstract API calls to minimize impact of Spotify API changes
 
 ### Mitigation Strategies
+
 - **Feature Flags**: Use feature flags to gradually roll out changes
 - **Rollback Plan**: Maintain ability to quickly revert changes
 - **Comprehensive Testing**: Ensure all functionality works after refactoring
@@ -456,12 +490,14 @@ const useKeyboardNavigation = ({
 ## Success Metrics
 
 ### Code Quality Metrics
+
 - **Reduced Code Duplication**: Eliminate redundant components and logic
 - **Improved Test Coverage**: Achieve >80% test coverage
 - **Better Performance**: Reduce bundle size by 20%, improve load times
 - **Enhanced Maintainability**: Reduce cyclomatic complexity
 
 ### User Experience Metrics
+
 - **Improved Accessibility**: Pass WCAG 2.1 AA compliance
 - **Better Performance**: Support playlists with 1000+ tracks smoothly
 - **Enhanced Usability**: Maintain all existing functionality while improving UX

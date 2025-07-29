@@ -1,20 +1,37 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDrag } from '../components/DragContext';
+import {
+  UseDraggableOptions,
+  UseDraggableReturn,
+  DragItem,
+  DropResult,
+} from '../types';
+
+interface TouchState {
+  isActive: boolean;
+  startY: number;
+  currentY: number;
+  startX: number;
+  currentX: number;
+  longPressTimer: NodeJS.Timeout | null;
+  isLongPress: boolean;
+  element: HTMLElement | null;
+}
+
+interface KeyboardState {
+  isActive: boolean;
+  selectedIndex: number;
+  isDragging: boolean;
+}
+
+interface DragStateRef {
+  html5Active: boolean;
+  touchActive: boolean;
+  keyboardActive: boolean;
+}
 
 /**
  * Unified drag-and-drop hook that handles mouse, touch, and keyboard interactions
- * @param {Object} options - Configuration options
- * @param {Function} options.onDragStart - Called when drag starts
- * @param {Function} options.onDragEnd - Called when drag ends
- * @param {Function} options.onDrop - Called when item is dropped
- * @param {Function} options.onDragOver - Called during drag over
- * @param {string} options.type - Type of draggable item (default: 'default')
- * @param {*} options.data - Data to be dragged
- * @param {boolean} options.disabled - Whether dragging is disabled
- * @param {number} options.longPressDelay - Long press delay in ms (default: 250)
- * @param {number} options.scrollThreshold - Auto-scroll threshold in px (default: 80)
- * @param {HTMLElement} options.scrollContainer - Container for auto-scrolling
- * @returns {Object} Drag handlers and state
  */
 const useDraggable = ({
   onDragStart,
@@ -27,16 +44,16 @@ const useDraggable = ({
   longPressDelay = 250,
   scrollThreshold = 80,
   scrollContainer,
-} = {}) => {
+}: UseDraggableOptions = {}): UseDraggableReturn => {
   const dragContext = useDrag();
 
   // Internal state
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [dropPosition, setDropPosition] = useState(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
+  const [dropPosition, setDropPosition] = useState<any>(null);
 
   // Touch state
-  const [touchState, setTouchState] = useState({
+  const [touchState, setTouchState] = useState<TouchState>({
     isActive: false,
     startY: 0,
     currentY: 0,
@@ -48,16 +65,16 @@ const useDraggable = ({
   });
 
   // Keyboard state
-  const [keyboardState, setKeyboardState] = useState({
+  const [keyboardState, setKeyboardState] = useState<KeyboardState>({
     isActive: false,
     selectedIndex: -1,
     isDragging: false,
   });
 
   // Refs for cleanup and state tracking
-  const autoScrollRef = useRef(null);
-  const currentScrollSpeed = useRef(0);
-  const dragStateRef = useRef({
+  const autoScrollRef = useRef<number | null>(null);
+  const currentScrollSpeed = useRef<number>(0);
+  const dragStateRef = useRef<DragStateRef>({
     html5Active: false,
     touchActive: false,
     keyboardActive: false,
@@ -73,7 +90,11 @@ const useDraggable = ({
   }, []);
 
   const calculateScrollSpeed = useCallback(
-    (distanceFromEdge, maxDistance, isOutOfBounds = false) => {
+    (
+      distanceFromEdge: number,
+      maxDistance: number,
+      isOutOfBounds = false
+    ): number => {
       if (isOutOfBounds) {
         const outOfBoundsDistance = Math.abs(distanceFromEdge);
         const baseOutOfBoundsSpeed = 30;
@@ -99,7 +120,7 @@ const useDraggable = ({
   );
 
   const startAutoScroll = useCallback(
-    (direction, targetSpeed) => {
+    (direction: 'up' | 'down', targetSpeed: number) => {
       if (!scrollContainer) return;
 
       if (autoScrollRef.current) {
@@ -142,7 +163,7 @@ const useDraggable = ({
   );
 
   const checkAutoScroll = useCallback(
-    clientY => {
+    (clientY: number) => {
       if (!scrollContainer) return;
 
       const containerRect = scrollContainer.getBoundingClientRect();
@@ -210,7 +231,7 @@ const useDraggable = ({
   );
 
   // Provide haptic feedback
-  const provideHapticFeedback = useCallback(pattern => {
+  const provideHapticFeedback = useCallback((pattern: number | number[]) => {
     if (navigator.vibrate) {
       navigator.vibrate(pattern);
     }
@@ -218,20 +239,25 @@ const useDraggable = ({
 
   // Unified drag start
   const startDrag = useCallback(
-    (item, dragType = type) => {
+    (item: any, dragType = type) => {
       if (disabled) return;
 
+      const dragItem: DragItem = {
+        type: dragType,
+        data: item,
+      };
+
       setIsDragging(true);
-      setDraggedItem(item);
+      setDraggedItem(dragItem);
 
       // Notify context
       if (dragContext) {
-        dragContext.startDrag(item, dragType);
+        dragContext.startDrag(dragItem, dragType);
       }
 
       // Call user callback
       if (onDragStart) {
-        onDragStart(item, dragType);
+        onDragStart(dragItem);
       }
 
       // Provide haptic feedback
@@ -242,7 +268,9 @@ const useDraggable = ({
 
   // Unified drag end
   const endDrag = useCallback(
-    (reason = 'success') => {
+    (reason: 'success' | 'cancel' = 'success') => {
+      const currentDraggedItem = draggedItem;
+
       setIsDragging(false);
       setDraggedItem(null);
       setDropPosition(null);
@@ -269,8 +297,12 @@ const useDraggable = ({
       }
 
       // Call user callback
-      if (onDragEnd) {
-        onDragEnd(reason);
+      if (onDragEnd && currentDraggedItem) {
+        const result: DropResult = {
+          success: reason === 'success',
+          reason,
+        };
+        onDragEnd(currentDraggedItem, result);
       }
 
       // Reset state tracking
@@ -280,12 +312,12 @@ const useDraggable = ({
         keyboardActive: false,
       };
     },
-    [dragContext, onDragEnd, stopAutoScroll]
+    [dragContext, onDragEnd, stopAutoScroll, draggedItem]
   );
 
   // HTML5 Drag Handlers
   const handleDragStart = useCallback(
-    e => {
+    (e: React.DragEvent<HTMLElement>) => {
       if (disabled) {
         e.preventDefault();
         return;
@@ -298,7 +330,7 @@ const useDraggable = ({
       }
 
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/html', e.target.outerHTML);
+      e.dataTransfer.setData('text/html', (e.target as HTMLElement).outerHTML);
 
       if (data) {
         e.dataTransfer.setData(
@@ -313,7 +345,7 @@ const useDraggable = ({
   );
 
   const handleDragEnd = useCallback(
-    e => {
+    (e: React.DragEvent<HTMLElement>) => {
       dragStateRef.current.html5Active = false;
 
       if (dragContext) {
@@ -327,7 +359,7 @@ const useDraggable = ({
   );
 
   const handleDragOver = useCallback(
-    e => {
+    (e: React.DragEvent<HTMLElement>) => {
       if (disabled) return;
 
       e.preventDefault();
@@ -337,7 +369,7 @@ const useDraggable = ({
       checkAutoScroll(e.clientY);
 
       // Calculate drop position
-      const rect = e.currentTarget.getBoundingClientRect();
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const midpoint = rect.top + rect.height / 2;
       const isTopHalf = e.clientY < midpoint;
 
@@ -350,21 +382,21 @@ const useDraggable = ({
 
       setDropPosition(position);
 
-      if (onDragOver) {
-        onDragOver(e, position);
+      if (onDragOver && draggedItem) {
+        onDragOver(draggedItem, position);
       }
     },
-    [disabled, checkAutoScroll, onDragOver]
+    [disabled, checkAutoScroll, onDragOver, draggedItem]
   );
 
   const handleDrop = useCallback(
-    e => {
+    (e: React.DragEvent<HTMLElement>) => {
       if (disabled) return;
 
       e.preventDefault();
       stopAutoScroll();
 
-      let dropData = null;
+      let dropData: DragItem | null = null;
 
       // Try to get data from context first
       if (dragContext && dragContext.draggedItem) {
@@ -374,7 +406,11 @@ const useDraggable = ({
         try {
           const jsonData = e.dataTransfer.getData('application/json');
           if (jsonData) {
-            dropData = JSON.parse(jsonData);
+            const parsed = JSON.parse(jsonData);
+            dropData = {
+              type: parsed.type || type,
+              data: parsed.data || parsed,
+            };
           }
         } catch (error) {
           console.warn('Failed to parse drop data:', error);
@@ -382,21 +418,26 @@ const useDraggable = ({
       }
 
       if (onDrop && dropData) {
-        onDrop(dropData, dropPosition, e);
+        const result: DropResult = {
+          success: true,
+          reason: 'success',
+          position: dropPosition,
+        };
+        onDrop(dropData, result);
       }
 
       endDrag('success');
     },
-    [disabled, stopAutoScroll, dragContext, onDrop, dropPosition, endDrag]
+    [disabled, stopAutoScroll, dragContext, onDrop, dropPosition, endDrag, type]
   );
 
   // Touch Handlers
   const handleTouchStart = useCallback(
-    e => {
+    (e: React.TouchEvent<HTMLElement>) => {
       if (disabled) return;
 
       const touch = e.touches[0];
-      const element = e.currentTarget;
+      const element = e.currentTarget as HTMLElement;
 
       // Clear any existing timer
       if (touchState.longPressTimer) {
@@ -451,7 +492,7 @@ const useDraggable = ({
   );
 
   const handleTouchMove = useCallback(
-    e => {
+    (e: React.TouchEvent<HTMLElement>) => {
       if (disabled || !touchState.isActive) return;
 
       const touch = e.touches[0];
@@ -516,7 +557,7 @@ const useDraggable = ({
   );
 
   const handleTouchEnd = useCallback(
-    e => {
+    (e: React.TouchEvent<HTMLElement>) => {
       if (disabled || !touchState.isActive) return;
 
       // Clear long press timer
@@ -574,7 +615,7 @@ const useDraggable = ({
 
   // Keyboard Handlers
   const handleKeyDown = useCallback(
-    e => {
+    (e: React.KeyboardEvent<HTMLElement>) => {
       if (disabled) return;
 
       const { key } = e;
@@ -588,8 +629,13 @@ const useDraggable = ({
             startDrag(data || e.target, 'keyboard');
           } else {
             // Drop
-            if (onDrop) {
-              onDrop({ data, type }, dropPosition, e);
+            if (onDrop && draggedItem) {
+              const result: DropResult = {
+                success: true,
+                reason: 'success',
+                position: dropPosition,
+              };
+              onDrop(draggedItem, result);
             }
             endDrag('success');
           }
@@ -597,19 +643,19 @@ const useDraggable = ({
 
         case 'ArrowUp':
           e.preventDefault();
-          if (keyboardState.isDragging && onDragOver) {
+          if (keyboardState.isDragging && onDragOver && draggedItem) {
             const position = { direction: 'up', key: 'ArrowUp' };
             setDropPosition(position);
-            onDragOver(e, position);
+            onDragOver(draggedItem, position);
           }
           break;
 
         case 'ArrowDown':
           e.preventDefault();
-          if (keyboardState.isDragging && onDragOver) {
+          if (keyboardState.isDragging && onDragOver && draggedItem) {
             const position = { direction: 'down', key: 'ArrowDown' };
             setDropPosition(position);
-            onDragOver(e, position);
+            onDragOver(draggedItem, position);
           }
           break;
 
@@ -636,6 +682,7 @@ const useDraggable = ({
       dropPosition,
       endDrag,
       onDragOver,
+      draggedItem,
     ]
   );
 

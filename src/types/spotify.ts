@@ -54,6 +54,7 @@ export interface SpotifyTrack {
   available_markets?: string[];
   // Custom properties for our app
   sourcePlaylist?: string;
+  sourcePlaylistName?: string;
   addedAt?: string;
 }
 
@@ -167,12 +168,18 @@ export interface SpotifyCreatePlaylistRequest {
   collaborative?: boolean;
 }
 
+// Alias for compatibility
+export type CreatePlaylistRequest = SpotifyCreatePlaylistRequest;
+
 export interface SpotifyCreatePlaylistResponse extends SpotifyPlaylist {}
 
 export interface SpotifyAddTracksRequest {
   uris: string[];
   position?: number;
 }
+
+// Alias for compatibility
+export type AddTracksRequest = SpotifyAddTracksRequest;
 
 export interface SpotifyAddTracksResponse {
   snapshot_id: string;
@@ -185,6 +192,9 @@ export interface SpotifyRemoveTracksRequest {
   }>;
   snapshot_id?: string;
 }
+
+// Alias for compatibility
+export type RemoveTracksRequest = SpotifyRemoveTracksRequest;
 
 export interface SpotifyRemoveTracksResponse {
   snapshot_id: string;

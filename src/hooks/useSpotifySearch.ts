@@ -1,34 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import SpotifyService from '../services/spotify';
+import { UseSpotifySearchOptions, UseSpotifySearchReturn } from '../types';
 
 /**
  * Custom hook for Spotify search functionality
  * Provides search functionality with loading states, error handling, and debouncing
- *
- * @param {string} accessToken - Spotify access token
- * @param {Object} options - Hook options
- * @param {number} options.debounceMs - Debounce delay in milliseconds (default: 300)
- * @param {boolean} options.autoSearch - Whether to search automatically when query changes (default: true)
- * @param {number} options.limit - Number of results per page (default: 20)
- * @param {string} options.market - Market code for track availability
- * @returns {Object} - Hook state and methods
  */
-const useSpotifySearch = (accessToken, options = {}) => {
+const useSpotifySearch = (
+  accessToken: string | null,
+  options: UseSpotifySearchOptions = {}
+): UseSpotifySearchReturn => {
   const { debounceMs = 300, autoSearch = true, limit = 20, market } = options;
 
   // State
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
+  const [query, setQuery] = useState<string>('');
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [total, setTotal] = useState<number>(0);
+  const [offset, setOffset] = useState<number>(0);
 
   // Refs
-  const debounceTimeoutRef = useRef(null);
-  const spotifyServiceRef = useRef(null);
-  const abortControllerRef = useRef(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize Spotify service when access token changes
   useEffect(() => {
@@ -52,12 +48,9 @@ const useSpotifySearch = (accessToken, options = {}) => {
 
   /**
    * Perform search with the current query
-   * @param {Object} searchOptions - Search options
-   * @param {boolean} searchOptions.append - Whether to append results (for pagination)
-   * @param {number} searchOptions.customOffset - Custom offset for pagination
    */
   const performSearch = useCallback(
-    async (searchOptions = {}) => {
+    async (searchOptions: { append?: boolean; customOffset?: number } = {}) => {
       const { append = false, customOffset } = searchOptions;
 
       if (!spotifyServiceRef.current) {
@@ -161,7 +154,7 @@ const useSpotifySearch = (accessToken, options = {}) => {
    * Manually trigger a search (useful when autoSearch is false)
    */
   const search = useCallback(
-    async searchQuery => {
+    async (searchQuery?: string) => {
       const queryToSearch = searchQuery !== undefined ? searchQuery : query;
 
       if (searchQuery !== undefined) {
@@ -215,7 +208,7 @@ const useSpotifySearch = (accessToken, options = {}) => {
       } catch (err) {
         // Don't set error if request was aborted
         if (!abortControllerRef.current?.signal.aborted) {
-          setError(err);
+          setError(err as Error);
           console.error('Search error:', err);
         }
       } finally {

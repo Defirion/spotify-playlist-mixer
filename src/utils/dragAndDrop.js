@@ -93,6 +93,19 @@ export const getPopularityIcon = quadrant => {
  * @param {number} popularity - The popularity score
  * @returns {Object} - Object with text, background, and color properties
  */
+/**
+ * @typedef {Object} PopularityStyle
+ * @property {string} text - Display text with icon and popularity score
+ * @property {string} background - Background color
+ * @property {string} color - Text color
+ */
+
+/**
+ * Get popularity display text and styling
+ * @param {string|null} quadrant - The popularity quadrant
+ * @param {number} popularity - The popularity score
+ * @returns {PopularityStyle|null} - Object with text, background, and color properties
+ */
 export const getPopularityStyle = (quadrant, popularity) => {
   const styles = {
     topHits: {
@@ -116,6 +129,8 @@ export const getPopularityStyle = (quadrant, popularity) => {
       color: '#E91E63',
     },
   };
+
+  if (!quadrant) return null;
 
   return (
     styles[quadrant] || {

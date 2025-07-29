@@ -244,15 +244,15 @@ const DraggableTrackList = ({
         '[DraggableTrackList] handleDrop called, isDragging:',
         isDragging,
         'draggedItem:',
-        draggedItem
+        draggedItem,
+        'draggedIndex:',
+        draggedIndex
       );
 
       stopAutoScroll();
 
-      let dropProcessed = false;
-
       // Handle external drag from context first (most reliable)
-      if (isDragging && draggedItem) {
+      if (isDragging && draggedItem && draggedItem.type !== 'internal-track') {
         console.log(
           '[DraggableTrackList] Processing external drag drop:',
           draggedItem
@@ -272,59 +272,61 @@ const DraggableTrackList = ({
 
         setDropLinePosition(null);
         endDrag('success');
-
-        dropProcessed = true;
+        return;
       }
 
       // Fallback: Check dataTransfer for external drags
-      if (!dropProcessed) {
-        try {
-          const dragData = e.dataTransfer.getData('application/json');
-          if (dragData) {
-            const { type, track } = JSON.parse(dragData);
-            if (type === 'modal-track' || type === 'search-track') {
-              const newTracks = [...localTracks];
-              const insertIndex = dropLinePosition
-                ? dropLinePosition.index
-                : localTracks.length;
+      try {
+        const dragData = e.dataTransfer.getData('application/json');
+        if (dragData) {
+          const { type, track } = JSON.parse(dragData);
+          if (type === 'modal-track' || type === 'search-track') {
+            console.log(
+              '[DraggableTrackList] Processing dataTransfer external drag:',
+              type
+            );
+            const newTracks = [...localTracks];
+            const insertIndex = dropLinePosition
+              ? dropLinePosition.index
+              : localTracks.length;
 
-              newTracks.splice(insertIndex, 0, track);
+            newTracks.splice(insertIndex, 0, track);
 
-              if (onTrackOrderChange) {
-                captureScrollPosition();
-                onTrackOrderChange(newTracks);
-              }
-
-              setDropLinePosition(null);
-              dropProcessed = true;
+            if (onTrackOrderChange) {
+              captureScrollPosition();
+              onTrackOrderChange(newTracks);
             }
+
+            setDropLinePosition(null);
+            return;
           }
-        } catch (error) {
-          // Not a modal or search track, continue with normal drag handling
         }
+      } catch (error) {
+        // Not a modal or search track, continue with normal drag handling
       }
 
       // Handle normal internal drag and drop
-      if (!dropProcessed) {
-        if (draggedIndex === null || !dropLinePosition) {
-          console.log(
-            '[DraggableTrackList] Invalid internal drop - cleaning up'
-          );
-          setDraggedIndex(null);
-          setDropLinePosition(null);
-          return;
-        }
+      if (draggedIndex !== null && dropLinePosition) {
+        console.log(
+          '[DraggableTrackList] Processing internal drag drop from index:',
+          draggedIndex,
+          'to position:',
+          dropLinePosition.index
+        );
 
         const newTracks = [...localTracks];
         const draggedTrack = newTracks[draggedIndex];
 
+        // Remove the dragged track from its original position
         newTracks.splice(draggedIndex, 1);
 
+        // Calculate the correct insertion index after removal
         let insertIndex = dropLinePosition.index;
         if (draggedIndex < dropLinePosition.index) {
           insertIndex = dropLinePosition.index - 1;
         }
 
+        // Insert the track at the new position
         newTracks.splice(insertIndex, 0, draggedTrack);
 
         if (onTrackOrderChange) {
@@ -332,13 +334,18 @@ const DraggableTrackList = ({
           onTrackOrderChange(newTracks);
         }
 
-        setDraggedIndex(null);
-        setDropLinePosition(null);
-
         console.log(
           '[DraggableTrackList] Internal drop completed successfully'
         );
+      } else {
+        console.log(
+          '[DraggableTrackList] Invalid internal drop - missing draggedIndex or dropLinePosition'
+        );
       }
+
+      // Clean up states
+      setDraggedIndex(null);
+      setDropLinePosition(null);
     },
     [
       isDragging,
@@ -675,19 +682,27 @@ const DraggableTrackList = ({
 
       // Handle drop if long press was active
       if (touchDragState.draggedTrackIndex !== null && dropLinePosition) {
-        console.log('[DraggableTrackList] Touch drop detected');
+        console.log(
+          '[DraggableTrackList] Touch drop detected from index:',
+          touchDragState.draggedTrackIndex,
+          'to position:',
+          dropLinePosition.index
+        );
 
         const draggedTrackIndex = touchDragState.draggedTrackIndex;
         const newTracks = [...localTracks];
         const draggedTrack = newTracks[draggedTrackIndex];
 
+        // Remove the dragged track from its original position
         newTracks.splice(draggedTrackIndex, 1);
 
+        // Calculate the correct insertion index after removal
         let insertIndex = dropLinePosition.index;
         if (draggedTrackIndex < dropLinePosition.index) {
           insertIndex = dropLinePosition.index - 1;
         }
 
+        // Insert the track at the new position
         newTracks.splice(insertIndex, 0, draggedTrack);
 
         if (onTrackOrderChange) {
@@ -699,6 +714,8 @@ const DraggableTrackList = ({
         if (navigator.vibrate) {
           navigator.vibrate([30, 50, 30]);
         }
+
+        console.log('[DraggableTrackList] Touch drop completed successfully');
       }
 
       // End drag in context for consistent background styling
