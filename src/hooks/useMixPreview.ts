@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { mixPlaylists } from '../utils/playlistMixer';
 import SpotifyService from '../services/spotify';
 import {
@@ -69,9 +69,13 @@ export const useMixPreview = (
   const spotifyServiceRef = useRef<SpotifyService | null>(null);
 
   // Initialize Spotify service
-  if (accessToken && !spotifyServiceRef.current) {
-    spotifyServiceRef.current = new SpotifyService(accessToken);
-  }
+  useEffect(() => {
+    if (accessToken) {
+      spotifyServiceRef.current = new SpotifyService(accessToken);
+    } else {
+      spotifyServiceRef.current = null;
+    }
+  }, [accessToken]);
 
   const calculatePlaylistStats = useCallback(
     (

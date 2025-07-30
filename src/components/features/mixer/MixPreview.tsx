@@ -17,6 +17,8 @@ interface MixPreviewProps {
   totalDuration: number;
   loading: boolean;
   onTrackOrderChange: (reorderedTracks: MixedTrack[]) => void;
+  accessToken: string;
+  selectedPlaylists: any[];
 }
 
 const MixPreview: React.FC<MixPreviewProps> = ({
@@ -25,6 +27,8 @@ const MixPreview: React.FC<MixPreviewProps> = ({
   totalDuration,
   loading,
   onTrackOrderChange,
+  accessToken,
+  selectedPlaylists,
 }) => {
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
@@ -84,14 +88,14 @@ const MixPreview: React.FC<MixPreviewProps> = ({
         <div className={styles.trackListContainer}>
           <DraggableTrackList
             tracks={tracks}
-            selectedPlaylists={[]}
+            selectedPlaylists={selectedPlaylists}
             onTrackOrderChange={onTrackOrderChange}
             formatDuration={(ms: number) => {
               const minutes = Math.floor(ms / 60000);
               const seconds = Math.floor((ms % 60000) / 1000);
               return `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }}
-            accessToken=""
+            accessToken={accessToken}
           />
         </div>
       </div>

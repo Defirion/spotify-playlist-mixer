@@ -23,7 +23,7 @@ const MixControls: React.FC<MixControlsProps> = ({
 }) => {
   const canGeneratePreview = selectedPlaylists.length >= 2;
   const canCreatePlaylist =
-    canGeneratePreview && mixOptions.playlistName.trim() && hasPreview;
+    canGeneratePreview && mixOptions.playlistName.trim();
 
   return (
     <div className={styles.actionButtons}>

@@ -1,11 +1,14 @@
 /* PlaylistMixer Component Styles */
 
 .container {
-  background: var(--card-background);
+  background: rgba(49, 87, 44, 0.3);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 24px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
+  border: 1px solid var(--fern-green);
+  box-shadow:
+    0 4px 6px -1px rgba(19, 42, 19, 0.1),
+    0 2px 4px -1px rgba(19, 42, 19, 0.06);
 }
 
 .header {
@@ -16,7 +19,7 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: var(--text-primary);
+  color: var(--mindaro);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -25,7 +28,7 @@
 .subtitle {
   margin: 0 0 24px 0;
   opacity: 0.8;
-  color: var(--text-secondary);
+  color: rgba(236, 243, 158, 0.7);
   font-size: 16px;
 }
 
@@ -44,7 +47,7 @@
   gap: 8px;
   font-size: 18px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--mindaro);
 }
 
 .formGrid {
@@ -61,7 +64,7 @@
 
 .label {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--mindaro);
   font-size: 14px;
 }
 
@@ -69,16 +72,16 @@
   font-size: 16px;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--input-background);
-  color: var(--text-primary);
+  border: 1px solid var(--fern-green);
+  background: var(--hunter-green);
+  color: var(--mindaro);
   transition: border-color 0.2s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--fern-green);
-  box-shadow: 0 0 0 2px rgba(var(--fern-green-rgb), 0.2);
+  border-color: var(--moss-green);
+  box-shadow: 0 0 0 2px rgba(144, 169, 85, 0.2);
 }
 
 .toggleGroup {
@@ -89,9 +92,9 @@
 
 .toggleOption {
   padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  background: var(--button-secondary);
-  color: var(--text-primary);
+  border: 1px solid var(--fern-green);
+  background: var(--hunter-green);
+  color: var(--mindaro);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -100,13 +103,13 @@
 }
 
 .toggleOption:hover {
-  background: var(--button-secondary-hover);
+  background: var(--fern-green);
 }
 
 .toggleOption.active {
   background: var(--fern-green);
   border-color: var(--moss-green);
-  color: var(--text-on-primary);
+  color: var(--mindaro);
 }
 
 .warningBox {
@@ -129,7 +132,7 @@
 
 .warningText {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--mindaro);
   line-height: 1.4;
 }
 
@@ -149,7 +152,7 @@
 .previewTitle {
   font-size: 18px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--mindaro);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -160,7 +163,7 @@
   gap: 16px;
   flex-wrap: wrap;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: rgba(236, 243, 158, 0.7);
 }
 
 .previewStat {
@@ -170,10 +173,10 @@
 }
 
 .previewContent {
-  background: var(--background-secondary);
+  background: var(--dark-green);
   border-radius: 8px;
   padding: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--fern-green);
 }
 
 .playlistBreakdown {
@@ -184,32 +187,32 @@
 }
 
 .playlistStat {
-  background: var(--card-background);
+  background: var(--hunter-green);
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--fern-green);
 }
 
 .playlistStatName {
   font-weight: 500;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--mindaro);
   margin-bottom: 4px;
 }
 
 .playlistStatDetails {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: rgba(236, 243, 158, 0.7);
   display: flex;
   justify-content: space-between;
 }
 
 .trackListContainer {
-  max-height: 400px;
+  max-height: 85vh;
   overflow-y: auto;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--fern-green);
   border-radius: 6px;
-  background: var(--background-primary);
+  background: var(--dark-green);
 }
 
 .actionButtons {
@@ -242,18 +245,18 @@
 }
 
 .buttonSecondary {
-  background: var(--button-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: var(--hunter-green);
+  color: var(--mindaro);
+  border: 1px solid var(--fern-green);
 }
 
 .buttonSecondary:hover:not(:disabled) {
-  background: var(--button-secondary-hover);
+  background: var(--fern-green);
 }
 
 .buttonPrimary {
   background: var(--fern-green);
-  color: var(--text-on-primary);
+  color: var(--mindaro);
   border: 2px solid var(--moss-green);
   padding: 16px 32px;
   font-size: 18px;
@@ -270,7 +273,7 @@
   margin: 12px 0 0 0;
   font-size: 13px;
   opacity: 0.7;
-  color: var(--text-secondary);
+  color: rgba(236, 243, 158, 0.7);
   line-height: 1.4;
 }
 
