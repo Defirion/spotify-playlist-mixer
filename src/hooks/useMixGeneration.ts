@@ -84,13 +84,13 @@ export const useMixGeneration = (
         const playlistTracks: Record<string, SpotifyTrack[]> = {};
         for (const playlist of selectedPlaylists) {
           try {
-            const tracks = await spotifyServiceRef.current.getPlaylistTracks(
+            const result = await spotifyServiceRef.current.getPlaylistTracks(
               playlist.id
             );
-            if (tracks.length === 0) {
+            if (result.tracks.length === 0) {
               console.warn(`Playlist ${playlist.name} has no tracks`);
             }
-            playlistTracks[playlist.id] = tracks;
+            playlistTracks[playlist.id] = result.tracks;
           } catch (err) {
             console.error(`Failed to fetch tracks from ${playlist.name}:`, err);
             playlistTracks[playlist.id] = []; // Continue with empty array
@@ -122,17 +122,18 @@ export const useMixGeneration = (
           exhaustedPlaylists = (mixResult as any).exhaustedPlaylists || [];
           stoppedEarly = (mixResult as any).stoppedEarly || false;
         } else if (mixResult && typeof mixResult === 'object') {
-          if (Array.isArray(mixResult.tracks)) {
-            mixedTracks = [...mixResult.tracks];
+          const resultObj = mixResult as any;
+          if (Array.isArray(resultObj.tracks)) {
+            mixedTracks = [...resultObj.tracks];
           } else {
             console.error(
               'mixResult.tracks is not an array:',
-              mixResult.tracks
+              resultObj.tracks
             );
             mixedTracks = [];
           }
-          exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
-          stoppedEarly = mixResult.stoppedEarly || false;
+          exhaustedPlaylists = resultObj.exhaustedPlaylists || [];
+          stoppedEarly = resultObj.stoppedEarly || false;
         } else {
           console.error(
             'mixResult is not an array or object:',
@@ -191,7 +192,7 @@ export const useMixGeneration = (
         throw err;
       }
     },
-    [accessToken, onError, onSuccess]
+    [onError, onSuccess]
   );
 
   const createPlaylist = useCallback(
@@ -282,7 +283,7 @@ export const useMixGeneration = (
         throw err;
       }
     },
-    [accessToken, onError]
+    [onError]
   );
 
   const reset = useCallback(() => {

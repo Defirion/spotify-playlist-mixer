@@ -140,10 +140,10 @@ export const useMixPreview = (
         // Fetch all tracks from selected playlists
         const playlistTracks: Record<string, SpotifyTrack[]> = {};
         for (const playlist of selectedPlaylists) {
-          const tracks = await spotifyServiceRef.current.getPlaylistTracks(
+          const result = await spotifyServiceRef.current.getPlaylistTracks(
             playlist.id
           );
-          playlistTracks[playlist.id] = tracks;
+          playlistTracks[playlist.id] = result.tracks;
         }
 
         // Generate full sample using actual settings
@@ -162,17 +162,18 @@ export const useMixPreview = (
           exhaustedPlaylists = (mixResult as any).exhaustedPlaylists || [];
           stoppedEarly = (mixResult as any).stoppedEarly || false;
         } else if (mixResult && typeof mixResult === 'object') {
-          if (Array.isArray(mixResult.tracks)) {
-            previewTracks = [...mixResult.tracks];
+          const resultObj = mixResult as any;
+          if (Array.isArray(resultObj.tracks)) {
+            previewTracks = [...resultObj.tracks];
           } else {
             console.error(
               'mixResult.tracks is not an array:',
-              mixResult.tracks
+              resultObj.tracks
             );
             previewTracks = [];
           }
-          exhaustedPlaylists = mixResult.exhaustedPlaylists || [];
-          stoppedEarly = mixResult.stoppedEarly || false;
+          exhaustedPlaylists = resultObj.exhaustedPlaylists || [];
+          stoppedEarly = resultObj.stoppedEarly || false;
         } else {
           console.error(
             'mixResult is not an array or object:',
@@ -228,7 +229,7 @@ export const useMixPreview = (
         }
       }
     },
-    [accessToken, calculatePlaylistStats, onError]
+    [calculatePlaylistStats, onError]
   );
 
   const updateTrackOrder = useCallback(

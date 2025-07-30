@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
-import { useMixOptions } from '../hooks/useMixOptions';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
 import MixControls from './features/mixer/MixControls';

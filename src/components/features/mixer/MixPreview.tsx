@@ -26,12 +26,6 @@ const MixPreview: React.FC<MixPreviewProps> = ({
   loading,
   onTrackOrderChange,
 }) => {
-  const formatDuration = (ms: number) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
@@ -90,9 +84,14 @@ const MixPreview: React.FC<MixPreviewProps> = ({
         <div className={styles.trackListContainer}>
           <DraggableTrackList
             tracks={tracks}
-            onOrderChange={onTrackOrderChange}
-            showSourcePlaylist={true}
-            virtualized={tracks.length > 100}
+            selectedPlaylists={[]}
+            onTrackOrderChange={onTrackOrderChange}
+            formatDuration={(ms: number) => {
+              const minutes = Math.floor(ms / 60000);
+              const seconds = Math.floor((ms % 60000) / 1000);
+              return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }}
+            accessToken=""
           />
         </div>
       </div>
