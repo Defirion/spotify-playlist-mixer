@@ -485,3 +485,52 @@ export interface UseRenderCountReturn {
   renderCount: number;
   reset: () => void;
 }
+
+// Mix generation hooks
+export interface UseMixGenerationOptions {
+  onError?: (error: string) => void;
+  onSuccess?: (tracks: any[]) => void;
+}
+
+export interface UseMixGenerationState {
+  loading: boolean;
+  error: string | null;
+  mixedTracks: any[];
+  exhaustedPlaylists: string[];
+  stoppedEarly: boolean;
+}
+
+export interface UseMixGenerationReturn {
+  state: UseMixGenerationState;
+  generateMix: (
+    selectedPlaylists: SpotifyPlaylist[],
+    ratioConfig: RatioConfig,
+    mixOptions: MixOptions
+  ) => Promise<any[]>;
+  createPlaylist: (playlistName: string, tracks: any[]) => Promise<any>;
+  reset: () => void;
+}
+
+// Mix preview hooks
+export interface UseMixPreviewOptions {
+  onError?: (error: string) => void;
+}
+
+export interface UseMixPreviewState {
+  preview: any | null;
+  loading: boolean;
+  error: string | null;
+  customTrackOrder: any[] | null;
+}
+
+export interface UseMixPreviewReturn {
+  state: UseMixPreviewState;
+  generatePreview: (
+    selectedPlaylists: SpotifyPlaylist[],
+    ratioConfig: RatioConfig,
+    mixOptions: MixOptions
+  ) => Promise<void>;
+  updateTrackOrder: (reorderedTracks: any[]) => void;
+  clearPreview: () => void;
+  getPreviewTracks: () => any[];
+}
