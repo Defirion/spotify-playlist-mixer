@@ -1,10 +1,4 @@
-.container {
-  /* Main container styles - these should already be in globals.css */
-}
-
-.header {
-  /* Header styles - these should already be in globals.css */
-}
+/* Container and header styles are defined in index.css */
 
 .footer {
   text-align: center;

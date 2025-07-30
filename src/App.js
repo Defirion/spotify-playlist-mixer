@@ -23,7 +23,7 @@ import { usePlaylistSelection } from './hooks/usePlaylistSelection';
 import { useRatioConfig } from './hooks/useRatioConfig';
 
 function MainApp() {
-  const { isDragging, isDropSuccessful, cancelDrag } = useDrag();
+  const { isDragging, cancelDrag } = useDrag();
 
   // Use custom hooks for state management
   const {
@@ -72,20 +72,17 @@ function MainApp() {
     const handleDragEnd = e => {
       // Only cancel drag for desktop dragend events, not touch events
       // Touch events should be handled by the specific components
-      if (e.type === 'dragend' && isDragging && !isDropSuccessful) {
+      if (e.type === 'dragend' && isDragging) {
         cancelDrag();
       }
     };
 
     window.addEventListener('dragend', handleDragEnd);
-    // Remove touchend listener - let components handle their own touch events
-    // window.addEventListener('touchend', handleDragEnd);
 
     return () => {
       window.removeEventListener('dragend', handleDragEnd);
-      // window.removeEventListener('touchend', handleDragEnd);
     };
-  }, [isDragging, isDropSuccessful, cancelDrag]);
+  }, [isDragging, cancelDrag]);
 
   const handlePlaylistSelection = useCallback(
     playlist => {
