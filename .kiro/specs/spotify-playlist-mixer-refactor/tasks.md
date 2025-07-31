@@ -261,7 +261,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: fully refactor DraggableTrackList to TSX with useDraggable integration"`
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 14.3 Fully refactor RatioConfig component
+- [-] 14.3 Fully refactor RatioConfig component
+
+
   - Convert RatioConfig.js to RatioConfig.tsx with proper ratio configuration types
   - Remove embedded `<style>` tag and replace with CSS modules (RatioConfig.module.css)
   - Extract ratio calculation logic into custom hook (useRatioCalculation)
@@ -269,7 +271,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: fully refactor RatioConfig to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 14.4 Fully refactor AddUnselectedModal component
+- [x] 14.4 Fully refactor AddUnselectedModal component
+
+
 
 
 

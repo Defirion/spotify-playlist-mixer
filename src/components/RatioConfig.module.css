@@ -1,0 +1,307 @@
+/* RatioConfig component styles */
+
+.ratioConfigSlider {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  height: 6px !important;
+  background: var(--hunter-green) !important;
+  border-radius: 3px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  border: 1px solid var(--fern-green) !important;
+  padding: 12px 1px !important;
+  margin: 0 !important;
+}
+
+.ratioConfigSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid var(--mindaro);
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+}
+
+.ratioConfigSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--moss-green);
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid var(--mindaro);
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3);
+}
+
+.ratioConfigSlider:hover::-webkit-slider-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+.ratioConfigSlider:hover::-moz-range-thumb {
+  background: var(--fern-green);
+  transform: scale(1.1);
+}
+
+.dualRangeSlider {
+  width: 100% !important;
+}
+
+.dualRangeSlider::before {
+  position: absolute !important;
+  top: 50% !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 6px !important;
+  background: var(--hunter-green) !important;
+  border-radius: 3px !important;
+  transform: translateY(-50%) !important;
+  z-index: 1 !important;
+}
+
+.dualRangeSlider input[type="range"] {
+  position: absolute !important;
+  width: 100% !important;
+  height: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  pointer-events: none !important;
+  border-radius: 3px !important;
+}
+
+.dualRangeSlider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: var(--moss-green) !important;
+  border-radius: 4px !important;
+  border: 2px solid var(--mindaro) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3) !important;
+  pointer-events: all !important;
+  position: relative !important;
+}
+
+.dualRangeSlider input[type="range"]::-moz-range-thumb {
+  width: 18px !important;
+  height: 18px !important;
+  background: var(--moss-green) !important;
+  border-radius: 4px !important;
+  border: 2px solid var(--mindaro) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(19, 42, 19, 0.3) !important;
+  pointer-events: all !important;
+  position: relative !important;
+}
+
+.rangeMin {
+  z-index: 2 !important;
+}
+
+.rangeMax {
+  z-index: 3 !important;
+}
+
+.rangeMin::-webkit-slider-thumb {
+  background: var(--fern-green) !important;
+  z-index: 2 !important;
+}
+
+.rangeMax::-webkit-slider-thumb {
+  background: var(--moss-green) !important;
+  z-index: 3 !important;
+}
+
+.ratioGrid {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.ratioGridNoImage {
+  grid-template-columns: auto 1fr;
+}
+
+.playlistCover {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.playlistInfo {
+  min-width: 0;
+}
+
+.playlistName {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.playlistDetails {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.playlistDurationInfo {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.sliderContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sliderLabel {
+  font-size: 12px;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.sliderWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sliderMinMax {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.dualRangeBackground {
+  width: 100%;
+  height: 6px;
+  background: var(--hunter-green);
+  border: 1px solid var(--fern-green);
+  border-radius: 3px;
+  padding: 12px 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dualRangeSliderContainer {
+  width: 100%;
+  height: 6px;
+  position: relative;
+}
+
+.removeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.removeButton:hover {
+  background: #cc0000;
+}
+
+.balanceMethodContainer {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.balanceMethodLabel {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.balanceMethodDescription {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+.ratioControls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.playlistContainer {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.exampleMixContainer {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.exampleMixContent {
+  padding: 8px;
+  background: rgba(29, 185, 84, 0.1);
+  border-radius: 4px;
+}
+
+.exampleMixTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.exampleMixList {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.exampleMixItem {
+  margin-bottom: 2px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .ratioGrid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .ratioGrid > * {
+    grid-column: 1 / -1 !important;
+  }
+  
+  .playlistCover {
+    margin: 0 auto 16px;
+  }
+  
+  .sliderContainer {
+    width: 100%;
+  }
+}
