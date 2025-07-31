@@ -300,6 +300,34 @@ export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export type OptionalFields<T, K extends keyof T> = Omit<T, K> &
   Partial<Pick<T, K>>;
 
+// Preset template types
+export type PresetStrategy = 'mid-peak' | 'front-loaded' | 'crescendo';
+
+export interface PresetSettings {
+  recencyBoost: boolean;
+  shuffleWithinGroups: boolean;
+  useTimeLimit: boolean;
+  targetDuration: number; // in minutes
+  useAllSongs: boolean;
+}
+
+export interface PresetTemplate {
+  id: string;
+  name: string;
+  description: string;
+  strategy: PresetStrategy;
+  strategyLabel: string;
+  ratios: (playlists: SpotifyPlaylist[]) => RatioConfigItem[];
+  settings: PresetSettings;
+}
+
+export interface PresetApplyData {
+  ratioConfig: RatioConfig;
+  strategy: PresetStrategy;
+  settings: PresetSettings;
+  presetName: string;
+}
+
 // Event handler types
 export type TrackSelectHandler = (track: SpotifyTrack) => void;
 export type TrackRemoveHandler = (track: SpotifyTrack) => void;
@@ -310,3 +338,4 @@ export type DragEndHandler = (
   result: DropResult | null
 ) => void;
 export type DropHandler = (item: DragItem, result: DropResult) => void;
+export type PresetApplyHandler = (data: PresetApplyData) => void;

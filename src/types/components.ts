@@ -432,6 +432,11 @@ export interface AddUnselectedModalProps extends BaseComponentProps {
   loading?: boolean;
 }
 
+export interface PresetTemplatesProps extends BaseComponentProps {
+  selectedPlaylists: SpotifyPlaylist[];
+  onApplyPreset: (data: import('./mixer').PresetApplyData) => void;
+}
+
 // Context types
 export interface AuthContextValue {
   accessToken: string | null;

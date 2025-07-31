@@ -305,6 +305,8 @@
 
 
 
+
+
   - Convert PlaylistSelector.js to PlaylistSelector.tsx with playlist selection types
   - Replace all inline styles with CSS modules (PlaylistSelector.module.css)
   - Extract playlist filtering and selection logic into custom hooks
@@ -314,6 +316,10 @@
 
 - [ ] 15. Migrate remaining individual components (atomic migrations)
 - [ ] 15.1 Migrate PresetTemplates component
+
+
+
+
   - Convert PresetTemplates.js to PresetTemplates.tsx with preset configuration types
   - Replace all inline styles with CSS modules (PresetTemplates.module.css)
   - Update and verify all related unit and integration tests
