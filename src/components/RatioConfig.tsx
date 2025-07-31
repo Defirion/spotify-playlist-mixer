@@ -255,9 +255,16 @@ const RatioConfig = memo<RatioConfigProps>(
                           value={config.max}
                           onChange={e => {
                             const newMax = parseInt(e.target.value);
-                            if (newMax >= config.min) {
-                              handleConfigChange(playlist.id, 'max', newMax);
-                            }
+                            const adjustedMin =
+                              newMax < config.min ? newMax : config.min;
+                            const adjustedMax = newMax;
+
+                            onRatioUpdate(playlist.id, {
+                              min: adjustedMin,
+                              max: adjustedMax,
+                              weight: config.weight,
+                              weightType: config.weightType,
+                            });
                           }}
                           className={styles.rangeMax}
                         />
