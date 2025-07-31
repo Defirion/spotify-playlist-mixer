@@ -281,7 +281,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: fully refactor AddUnselectedModal to TSX with CSS modules"`
   - _Requirements: 1.2, 2.1, 2.4, 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 14.5 Fully refactor SpotifySearchModal component
+- [x] 14.5 Fully refactor SpotifySearchModal component
+
+
 
 
 
