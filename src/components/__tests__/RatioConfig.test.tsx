@@ -153,7 +153,6 @@ describe('RatioConfig', () => {
   });
 
   it('updates all playlists when global balance method changes', async () => {
-    const user = userEvent.setup();
     const multiplePlaylistsProps = {
       ...defaultProps,
       selectedPlaylists: [
@@ -169,7 +168,7 @@ describe('RatioConfig', () => {
     render(<RatioConfig {...multiplePlaylistsProps} />);
 
     const timeButton = screen.getByText('Same Play Time');
-    await user.click(timeButton);
+    fireEvent.click(timeButton);
 
     await waitFor(() => {
       expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
@@ -222,14 +221,18 @@ describe('RatioConfig', () => {
 
     render(<RatioConfig {...multiplePlaylistsProps} />);
 
-    expect(screen.getByText('🎯 Example Mix (per 100 songs):')).toBeInTheDocument();
+    expect(
+      screen.getByText('🎯 Example Mix (per 100 songs):')
+    ).toBeInTheDocument();
     expect(screen.getByText(/~60 songs \(60%\)/)).toBeInTheDocument();
   });
 
   it('does not render example mix display for single playlist', () => {
     render(<RatioConfig {...defaultProps} />);
 
-    expect(screen.queryByText('🎯 Example Mix (per 100 songs):')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('🎯 Example Mix (per 100 songs):')
+    ).not.toBeInTheDocument();
   });
 
   it('ensures max slider cannot be less than min slider', async () => {
@@ -255,11 +258,9 @@ describe('RatioConfig', () => {
   });
 
   it('applies custom className', () => {
-    render(
-      <RatioConfig {...defaultProps} className="custom-class" />
-    );
+    render(<RatioConfig {...defaultProps} className="custom-class" />);
 
-    const component = screen.getByText('🎛️ Customize Your Mix').closest('.card');
+    const component = screen.getByText('🎛️ Customize Your Mix').parentElement;
     expect(component).toHaveClass('card', 'custom-class');
   });
 
@@ -309,12 +310,7 @@ describe('RatioConfig', () => {
       '1': { min: 1, max: 2, weight: 3, weightType: 'time' },
     };
 
-    render(
-      <RatioConfig
-        {...defaultProps}
-        ratioConfig={timeBasedConfig}
-      />
-    );
+    render(<RatioConfig {...defaultProps} ratioConfig={timeBasedConfig} />);
 
     // The component should detect time-based config and update the toggle
     const timeButton = screen.getByText('Same Play Time');

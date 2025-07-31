@@ -1,6 +1,10 @@
 import React, { useState, memo, useCallback, useEffect } from 'react';
 import { SpotifyPlaylist } from '../types/spotify';
-import { RatioConfig as RatioConfigType, RatioConfigItem, WeightType } from '../types/mixer';
+import {
+  RatioConfig as RatioConfigType,
+  RatioConfigItem,
+  WeightType,
+} from '../types/mixer';
 import { useRatioCalculation } from '../hooks/useRatioCalculation';
 import styles from './RatioConfig.module.css';
 
@@ -50,14 +54,18 @@ interface RatioConfigProps {
 }
 
 const RatioConfig = memo<RatioConfigProps>(
-  ({ selectedPlaylists, ratioConfig, onRatioUpdate, onPlaylistRemove, className }) => {
-    const [globalBalanceMethod, setGlobalBalanceMethod] = useState<WeightType>('frequency');
+  ({
+    selectedPlaylists,
+    ratioConfig,
+    onRatioUpdate,
+    onPlaylistRemove,
+    className,
+  }) => {
+    const [globalBalanceMethod, setGlobalBalanceMethod] =
+      useState<WeightType>('frequency');
 
-    const { formatDurationFromSeconds, getPlaylistPercentage } = useRatioCalculation(
-      selectedPlaylists,
-      ratioConfig,
-      globalBalanceMethod
-    );
+    const { formatDurationFromSeconds, getPlaylistPercentage } =
+      useRatioCalculation(selectedPlaylists, ratioConfig, globalBalanceMethod);
 
     // Update global balance method when ratioConfig changes (from presets)
     useEffect(() => {
@@ -77,15 +85,20 @@ const RatioConfig = memo<RatioConfigProps>(
     }, [ratioConfig, selectedPlaylists, globalBalanceMethod]);
 
     const handleConfigChange = useCallback(
-      (playlistId: string, field: keyof RatioConfigItem, value: string | number) => {
+      (
+        playlistId: string,
+        field: keyof RatioConfigItem,
+        value: string | number
+      ) => {
         const currentConfig = ratioConfig[playlistId] || {
           min: 1,
           max: 2,
           weight: 2,
           weightType: 'frequency' as WeightType,
         };
-        
-        const newValue = field === 'weightType' ? value : parseInt(value as string) || 1;
+
+        const newValue =
+          field === 'weightType' ? value : parseInt(value as string) || 1;
         onRatioUpdate(playlistId, {
           ...currentConfig,
           [field]: newValue,
@@ -105,22 +118,28 @@ const RatioConfig = memo<RatioConfigProps>(
       [selectedPlaylists, handleConfigChange]
     );
 
-    const getWeightDescription = useCallback((weight: number, playlistId: string): string => {
-      const percentage = getPlaylistPercentage(playlistId);
-      
-      if (weight <= 20) return `Low (${weight}) - ~${percentage}% of mix`;
-      if (weight <= 40) return `Normal (${weight}) - ~${percentage}% of mix`;
-      if (weight <= 60) return `High (${weight}) - ~${percentage}% of mix`;
-      if (weight <= 80) return `Top (${weight}) - ~${percentage}% of mix`;
-      return `Max (${weight}) - ~${percentage}% of mix`;
-    }, [getPlaylistPercentage]);
+    const getWeightDescription = useCallback(
+      (weight: number, playlistId: string): string => {
+        const percentage = getPlaylistPercentage(playlistId);
 
-    const getGroupDescription = useCallback((min: number, max: number): string => {
-      if (min === max) {
-        return min === 1 ? '1 song' : `${min} songs`;
-      }
-      return `${min}-${max} songs`;
-    }, []);
+        if (weight <= 20) return `Low (${weight}) - ~${percentage}% of mix`;
+        if (weight <= 40) return `Normal (${weight}) - ~${percentage}% of mix`;
+        if (weight <= 60) return `High (${weight}) - ~${percentage}% of mix`;
+        if (weight <= 80) return `Top (${weight}) - ~${percentage}% of mix`;
+        return `Max (${weight}) - ~${percentage}% of mix`;
+      },
+      [getPlaylistPercentage]
+    );
+
+    const getGroupDescription = useCallback(
+      (min: number, max: number): string => {
+        if (min === max) {
+          return min === 1 ? '1 song' : `${min} songs`;
+        }
+        return `${min}-${max} songs`;
+      },
+      []
+    );
 
     return (
       <div className={`card ${className || ''}`}>
@@ -179,9 +198,7 @@ const RatioConfig = memo<RatioConfigProps>(
                     />
                   )}
                   <div className={styles.playlistInfo}>
-                    <div className={styles.playlistName}>
-                      {playlist.name}
-                    </div>
+                    <div className={styles.playlistName}>{playlist.name}</div>
                     <div className={styles.playlistDetails}>
                       {playlist.tracks.total} tracks
                       {playlist.realAverageDurationSeconds && (
@@ -208,48 +225,49 @@ const RatioConfig = memo<RatioConfigProps>(
                   {/* Inline Sliders */}
                   <div className={styles.sliderContainer}>
                     <div className={styles.sliderLabel}>
-                      🎵 Play together: {getGroupDescription(config.min, config.max)}
+                      🎵 Play together:{' '}
+                      {getGroupDescription(config.min, config.max)}
                     </div>
                     <div className={styles.sliderWrapper}>
                       <span className={styles.sliderMinMax}>1</span>
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <div className={styles.dualRangeBackground}>
-                          <div className={styles.dualRangeSliderContainer}>
-                            <input
-                              type="range"
-                              min="1"
-                              max="8"
-                              value={config.min}
-                              onChange={e => {
-                                const newMin = parseInt(e.target.value);
-                                handleConfigChange(playlist.id, 'min', newMin);
-                                if (newMin > config.max) {
-                                  handleConfigChange(playlist.id, 'max', newMin);
-                                }
-                              }}
-                              className={`${styles.ratioConfigSlider} ${styles.rangeMin}`}
-                            />
-                            <input
-                              type="range"
-                              min="1"
-                              max="8"
-                              value={config.max}
-                              onChange={e => {
-                                const newMax = parseInt(e.target.value);
-                                if (newMax >= config.min) {
-                                  handleConfigChange(playlist.id, 'max', newMax);
-                                }
-                              }}
-                              className={`${styles.ratioConfigSlider} ${styles.rangeMax}`}
-                            />
-                          </div>
-                        </div>
+                      <div
+                        className={styles.dualRangeSlider}
+                        style={{ flex: 1 }}
+                      >
+                        <input
+                          type="range"
+                          min="1"
+                          max="8"
+                          value={config.min}
+                          onChange={e => {
+                            const newMin = parseInt(e.target.value);
+                            handleConfigChange(playlist.id, 'min', newMin);
+                            if (newMin > config.max) {
+                              handleConfigChange(playlist.id, 'max', newMin);
+                            }
+                          }}
+                          className={styles.rangeMin}
+                        />
+                        <input
+                          type="range"
+                          min="1"
+                          max="8"
+                          value={config.max}
+                          onChange={e => {
+                            const newMax = parseInt(e.target.value);
+                            if (newMax >= config.min) {
+                              handleConfigChange(playlist.id, 'max', newMax);
+                            }
+                          }}
+                          className={styles.rangeMax}
+                        />
                       </div>
                       <span className={styles.sliderMinMax}>8</span>
                     </div>
 
                     <div className={styles.sliderLabel}>
-                      🎲 Priority: {getWeightDescription(config.weight, playlist.id)}
+                      🎲 Priority:{' '}
+                      {getWeightDescription(config.weight, playlist.id)}
                     </div>
                     <div className={styles.sliderWrapper}>
                       <span className={styles.sliderMinMax}>Low</span>
@@ -259,7 +277,11 @@ const RatioConfig = memo<RatioConfigProps>(
                         max="100"
                         value={config.weight}
                         onChange={e =>
-                          handleConfigChange(playlist.id, 'weight', e.target.value)
+                          handleConfigChange(
+                            playlist.id,
+                            'weight',
+                            e.target.value
+                          )
                         }
                         className={styles.ratioConfigSlider}
                         style={{ flex: 1 }}

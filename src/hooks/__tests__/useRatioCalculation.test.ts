@@ -38,7 +38,11 @@ const mockRatioConfig: RatioConfig = {
 describe('useRatioCalculation', () => {
   it('calculates total weight correctly', () => {
     const { result } = renderHook(() =>
-      useRatioCalculation([mockPlaylist1, mockPlaylist2], mockRatioConfig, 'frequency')
+      useRatioCalculation(
+        [mockPlaylist1, mockPlaylist2],
+        mockRatioConfig,
+        'frequency'
+      )
     );
 
     expect(result.current.getTotalWeight()).toBe(5); // 3 + 2
@@ -46,7 +50,11 @@ describe('useRatioCalculation', () => {
 
   it('calculates playlist percentage correctly', () => {
     const { result } = renderHook(() =>
-      useRatioCalculation([mockPlaylist1, mockPlaylist2], mockRatioConfig, 'frequency')
+      useRatioCalculation(
+        [mockPlaylist1, mockPlaylist2],
+        mockRatioConfig,
+        'frequency'
+      )
     );
 
     expect(result.current.getPlaylistPercentage('1')).toBe(60); // 3/5 * 100
@@ -65,15 +73,21 @@ describe('useRatioCalculation', () => {
 
   it('generates example mix data for frequency mode', () => {
     const { result } = renderHook(() =>
-      useRatioCalculation([mockPlaylist1, mockPlaylist2], mockRatioConfig, 'frequency')
+      useRatioCalculation(
+        [mockPlaylist1, mockPlaylist2],
+        mockRatioConfig,
+        'frequency'
+      )
     );
 
     const { exampleMixData } = result.current;
 
     expect(exampleMixData.exampleTitle).toBe('Example Mix (per 100 songs):');
     expect(exampleMixData.playlistExamples).toHaveLength(2);
-    
-    const playlist1Example = exampleMixData.playlistExamples.find(p => p.id === '1');
+
+    const playlist1Example = exampleMixData.playlistExamples.find(
+      p => p.id === '1'
+    );
     expect(playlist1Example?.displayText).toContain('~60 songs (60%)');
     expect(playlist1Example?.groupText).toBe('1-2 at a time');
     expect(playlist1Example?.weightTypeText).toBe('same song count');
@@ -86,14 +100,20 @@ describe('useRatioCalculation', () => {
     };
 
     const { result } = renderHook(() =>
-      useRatioCalculation([mockPlaylist1, mockPlaylist2], timeRatioConfig, 'time')
+      useRatioCalculation(
+        [mockPlaylist1, mockPlaylist2],
+        timeRatioConfig,
+        'time'
+      )
     );
 
     const { exampleMixData } = result.current;
 
     expect(exampleMixData.exampleTitle).toBe('Example Mix (per 60 minutes):');
-    
-    const playlist1Example = exampleMixData.playlistExamples.find(p => p.id === '1');
+
+    const playlist1Example = exampleMixData.playlistExamples.find(
+      p => p.id === '1'
+    );
     expect(playlist1Example?.displayText).toContain('36.0 min, 60%');
     expect(playlist1Example?.weightTypeText).toBe('same play time');
   });
@@ -110,7 +130,7 @@ describe('useRatioCalculation', () => {
 
     const { exampleMixData } = result.current;
     const playlistExample = exampleMixData.playlistExamples[0];
-    
+
     // When there's no duration data, it should fall back to song count calculation
     // With weight 3 out of total 3, it should be 100%
     expect(playlistExample.displayText).toContain('~60 songs (100%)'); // 60 minutes * 100% = 60 songs
@@ -146,7 +166,7 @@ describe('useRatioCalculation', () => {
 
     const { exampleMixData } = result.current;
     const playlistExample = exampleMixData.playlistExamples[0];
-    
+
     expect(playlistExample.groupText).toBe('1 at a time');
   });
 
@@ -161,7 +181,7 @@ describe('useRatioCalculation', () => {
 
     const { exampleMixData } = result.current;
     const playlistExample = exampleMixData.playlistExamples[0];
-    
+
     expect(playlistExample.groupText).toBe('3 at a time');
   });
 
