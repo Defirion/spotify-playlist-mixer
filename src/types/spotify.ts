@@ -91,6 +91,7 @@ export interface SpotifyPlaylist {
   };
   // Custom properties for our app
   realAverageDurationSeconds?: number;
+  tracksWithDuration?: number;
 }
 
 export interface SpotifyPlaylistTrackItem {
