@@ -247,7 +247,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: fully refactor PlaylistMixer to TSX with CSS modules and hooks"`
   - _Requirements: 1.1, 5.1, 5.2, 6.1, 6.4, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 14.2 Fully refactor DraggableTrackList component (HIGH PRIORITY)
+- [x] 14.2 Fully refactor DraggableTrackList component (HIGH PRIORITY)
+
+
 
 
 
@@ -268,6 +270,10 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 14.4 Fully refactor AddUnselectedModal component
+
+
+
+
   - Convert AddUnselectedModal.js to AddUnselectedModal.tsx with proper prop and state types
   - Replace all inline styles with CSS modules (AddUnselectedModal.module.css)
   - Integrate with useDraggable.ts hook and remove legacy touch handling
@@ -275,7 +281,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: fully refactor AddUnselectedModal to TSX with CSS modules"`
   - _Requirements: 1.2, 2.1, 2.4, 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 14.5 Fully refactor SpotifySearchModal component
+- [-] 14.5 Fully refactor SpotifySearchModal component
+
+
+
   - Convert SpotifySearchModal.js to SpotifySearchModal.tsx with search-specific types
   - Replace all inline styles with CSS modules (SpotifySearchModal.module.css)
   - Integrate with useDraggable.ts hook and remove legacy touch handling

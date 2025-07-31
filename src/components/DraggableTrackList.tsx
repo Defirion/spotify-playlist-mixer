@@ -5,9 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
-// @ts-ignore - TODO: Convert to TypeScript
 import AddUnselectedModal from './AddUnselectedModal';
-// @ts-ignore - TODO: Convert to TypeScript
 import SpotifySearchModal from './SpotifySearchModal';
 import TrackListItem from './TrackListItem';
 import { useDrag } from './DragContext';
@@ -481,21 +479,21 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
       </div>
 
       {/* Modals */}
-      {(AddUnselectedModal as any)({
-        isOpen: showAddUnselectedModal,
-        onClose: () => setShowAddUnselectedModal(false),
-        accessToken,
-        selectedPlaylists,
-        currentTracks: localTracks,
-        onAddTracks: handleAddUnselectedTracks,
-      })}
+      <AddUnselectedModal
+        isOpen={showAddUnselectedModal}
+        onClose={() => setShowAddUnselectedModal(false)}
+        accessToken={accessToken}
+        selectedPlaylists={selectedPlaylists}
+        currentTracks={localTracks}
+        onAddTracks={handleAddUnselectedTracks}
+      />
 
-      {(SpotifySearchModal as any)({
-        isOpen: showSpotifySearch,
-        onClose: () => setShowSpotifySearch(false),
-        accessToken,
-        onAddTracks: handleAddSpotifyTracks,
-      })}
+      <SpotifySearchModal
+        isOpen={showSpotifySearch}
+        onClose={() => setShowSpotifySearch(false)}
+        accessToken={accessToken}
+        onAddTracks={handleAddSpotifyTracks}
+      />
     </>
   );
 };

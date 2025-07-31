@@ -1,0 +1,218 @@
+/* SpotifySearchModal CSS Module */
+
+.modal {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
+}
+
+.modal.dragging {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.backdrop {
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.backdrop.dragging {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.header {
+  padding: 0 20px 16px 20px;
+  border-bottom: 1px solid var(--fern-green);
+}
+
+.headerInfo {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.7;
+  color: var(--mindaro);
+}
+
+.searchSection {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--fern-green);
+}
+
+.searchContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 1px solid var(--fern-green);
+  border-radius: 8px;
+  background-color: var(--dark-green);
+  color: var(--mindaro);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--moss-green);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.searchButton {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1db954;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.searchButton:hover:not(:disabled) {
+  background-color: #1ed760;
+}
+
+.searchButton:disabled {
+  background-color: rgba(29, 185, 84, 0.3);
+  cursor: not-allowed;
+}
+
+.trackListContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--mindaro);
+  opacity: 0.7;
+}
+
+.errorState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--mindaro);
+  opacity: 0.7;
+  text-align: center;
+}
+
+.trackList {
+  height: 400px;
+  overflow-y: auto;
+}
+
+.footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--fern-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.footerInfo {
+  font-size: 14px;
+  opacity: 0.7;
+  color: var(--mindaro);
+}
+
+.footerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton {
+  padding: 8px 16px;
+  border: 1px solid var(--fern-green);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--mindaro);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.addButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1db954;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.addButton:hover:not(:disabled) {
+  background-color: #1ed760;
+}
+
+.addButton:disabled {
+  background-color: rgba(29, 185, 84, 0.3);
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header,
+  .searchSection,
+  .footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .searchContainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .searchButton {
+    width: 100%;
+  }
+
+  .footerActions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .cancelButton,
+  .addButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .trackList {
+    height: 300px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .footerInfo {
+    text-align: center;
+  }
+}

@@ -1,0 +1,128 @@
+/* AddUnselectedModal CSS Module */
+
+.modal {
+  /* Modal-specific overrides if needed */
+}
+
+.header {
+  padding: 0 20px 16px 20px;
+  border-bottom: 1px solid var(--fern-green);
+}
+
+.headerInfo {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.7;
+  color: var(--mindaro);
+}
+
+.searchContainer {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--fern-green);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 1px solid var(--fern-green);
+  border-radius: 8px;
+  background-color: var(--dark-green);
+  color: var(--mindaro);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--moss-green);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.trackListContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--mindaro);
+  opacity: 0.7;
+}
+
+.footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--fern-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.footerInfo {
+  font-size: 14px;
+  opacity: 0.7;
+  color: var(--mindaro);
+}
+
+.footerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton {
+  padding: 8px 16px;
+  border: 1px solid var(--fern-green);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--mindaro);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.addButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.addButton:enabled {
+  background-color: var(--moss-green);
+}
+
+.addButton:enabled:hover {
+  background-color: var(--fern-green);
+}
+
+.addButton:disabled {
+  background-color: rgba(144, 169, 85, 0.3);
+  cursor: not-allowed;
+}
+
+/* Drag state styles */
+.modalDragging {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.backdropDragging {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
