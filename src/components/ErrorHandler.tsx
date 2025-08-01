@@ -1,8 +1,20 @@
 import React from 'react';
 import ApiErrorDisplay from './ui/ApiErrorDisplay';
 import { ApiError } from '../services/apiErrorHandler';
+import { ErrorHandlerProps, ErrorDetails } from '../types/components';
+import styles from './ErrorHandler.module.css';
 
-const ErrorHandler = ({ error, onDismiss, onRetry }) => {
+/**
+ * ErrorHandler component for displaying user-friendly error messages
+ * Handles both ApiError instances and generic errors with fallback logic
+ */
+const ErrorHandler: React.FC<ErrorHandlerProps> = ({
+  error,
+  onDismiss,
+  onRetry,
+  className,
+  testId,
+}) => {
   if (!error) return null;
 
   // If it's an ApiError, use the enhanced display component
@@ -13,15 +25,17 @@ const ErrorHandler = ({ error, onDismiss, onRetry }) => {
         onRetry={onRetry}
         onDismiss={onDismiss}
         showDetails={process.env.NODE_ENV === 'development'}
+        className={className}
+        testId={testId}
       />
     );
   }
 
   // Fall back to legacy error handling for non-API errors
-
-  const getErrorDetails = error => {
-    // Parse different types of errors and provide helpful messages
-    const errorStr = error.toLowerCase();
+  const getErrorDetails = (error: Error | string): ErrorDetails => {
+    const errorStr = (
+      typeof error === 'string' ? error : error.message
+    ).toLowerCase();
 
     if (errorStr.includes('invalid_client') || errorStr.includes('client')) {
       return {
@@ -128,103 +142,73 @@ const ErrorHandler = ({ error, onDismiss, onRetry }) => {
   };
 
   const errorDetails = getErrorDetails(error);
+  const errorString = typeof error === 'string' ? error : error.message;
 
   return (
     <div
-      className="card"
-      style={{
-        border: '2px solid var(--fern-green)',
-        background: 'rgba(79, 119, 45, 0.1)',
-      }}
+      className={`${styles.errorContainer} ${className || ''}`}
+      data-testid={testId}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <h3 style={{ color: 'var(--moss-green)', margin: '0 0 12px 0' }}>
-            {errorDetails.title}
-          </h3>
+      <div className={styles.errorHeader}>
+        <div className={styles.errorContent}>
+          <h3 className={styles.errorTitle}>{errorDetails.title}</h3>
 
-          <p style={{ margin: '0 0 16px 0', lineHeight: '1.5' }}>
-            {errorDetails.message}
-          </p>
+          <p className={styles.errorMessage}>{errorDetails.message}</p>
 
-          <div style={{ marginBottom: '20px' }}>
-            <strong style={{ color: 'var(--moss-green)' }}>💡 Try this:</strong>
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+          <div className={styles.suggestionsContainer}>
+            <strong className={styles.suggestionsTitle}>💡 Try this:</strong>
+            <ul className={styles.suggestionsList}>
               {errorDetails.suggestions.map((suggestion, index) => (
-                <li
-                  key={index}
-                  style={{ marginBottom: '4px', lineHeight: '1.4' }}
-                >
+                <li key={index} className={styles.suggestionItem}>
                   {suggestion}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className={styles.actionsContainer}>
             {errorDetails.canRetry && onRetry && (
               <button
-                className="btn"
+                className={styles.retryButton}
                 onClick={onRetry}
-                style={{ background: 'var(--moss-green)' }}
+                type="button"
+                aria-label="Try again"
               >
                 🔄 Try Again
               </button>
             )}
 
-            <button
-              className="btn"
-              onClick={onDismiss}
-              style={{
-                background: 'var(--hunter-green)',
-                border: '1px solid var(--fern-green)',
-              }}
-            >
-              ✕ Dismiss
-            </button>
+            {onDismiss && (
+              <button
+                className={styles.dismissButton}
+                onClick={onDismiss}
+                type="button"
+                aria-label="Dismiss error"
+              >
+                ✕ Dismiss
+              </button>
+            )}
           </div>
         </div>
 
-        <button
-          onClick={onDismiss}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--moss-green)',
-            cursor: 'pointer',
-            fontSize: '20px',
-            padding: '4px',
-            marginLeft: '12px',
-          }}
-        >
-          ✕
-        </button>
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className={styles.closeButton}
+            type="button"
+            aria-label="Close error message"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Technical details (collapsed by default) */}
-      <details style={{ marginTop: '16px', opacity: '0.7' }}>
-        <summary style={{ cursor: 'pointer', fontSize: '12px' }}>
+      <details className={styles.technicalDetails}>
+        <summary className={styles.technicalSummary}>
           🔧 Technical Details
         </summary>
-        <div
-          style={{
-            marginTop: '8px',
-            padding: '8px',
-            background: 'var(--dark-green)',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontFamily: 'monospace',
-            wordBreak: 'break-all',
-          }}
-        >
-          {error}
-        </div>
+        <div className={styles.technicalContent}>{errorString}</div>
       </details>
     </div>
   );

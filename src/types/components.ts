@@ -218,6 +218,20 @@ export interface SearchInputProps extends BaseComponentProps {
   icon?: React.ReactNode;
 }
 
+// ErrorHandler component types
+export interface ErrorDetails {
+  title: string;
+  message: string;
+  suggestions: string[];
+  canRetry: boolean;
+}
+
+export interface ErrorHandlerProps extends BaseComponentProps {
+  error: Error | string | null;
+  onDismiss?: () => void;
+  onRetry?: () => void;
+}
+
 // ErrorBoundary component types
 export interface ErrorBoundaryProps extends BaseComponentProps {
   fallback?: React.ComponentType<ErrorBoundaryFallbackProps>;
