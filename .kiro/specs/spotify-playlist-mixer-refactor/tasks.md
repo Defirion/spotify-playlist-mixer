@@ -351,7 +351,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate LoadingOverlay to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.4 Migrate SpotifyAuth component
+- [x] 15.4 Migrate SpotifyAuth component
+
+
 
 
 
