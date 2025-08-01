@@ -365,7 +365,9 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 -
 
-- [ ] 15.5 Migrate SuccessToast component
+- [x] 15.5 Migrate SuccessToast component
+
+
 
 
 
@@ -375,7 +377,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate SuccessToast to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.6 Migrate TermsOfService component
+- [-] 15.6 Migrate TermsOfService component
+
+
+
 
 
 

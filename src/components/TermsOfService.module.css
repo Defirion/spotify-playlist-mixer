@@ -1,0 +1,104 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.card {
+  background: rgba(49, 87, 44, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--fern-green);
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  color: var(--moss-green);
+  text-align: center;
+}
+
+.lastUpdated {
+  margin-bottom: 32px;
+  text-align: center;
+  color: var(--mindaro);
+  font-size: 0.9rem;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+  color: var(--moss-green);
+  border-bottom: 2px solid var(--fern-green);
+  padding-bottom: 8px;
+}
+
+.paragraph {
+  margin-bottom: 16px;
+  line-height: 1.6;
+  color: var(--mindaro);
+}
+
+.list {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.listItem {
+  margin-bottom: 8px;
+  line-height: 1.6;
+  color: var(--mindaro);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.3rem;
+  }
+
+  .list {
+    padding-left: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+
+  .card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+
+  .list {
+    padding-left: 12px;
+  }
+}
