@@ -12,11 +12,18 @@ jest.mock('../../utils/spotify');
 jest.mock('../../utils/dragAndDrop');
 jest.mock('../ui/Modal', () => ({
   __esModule: true,
-  default: ({ isOpen, onClose, title, children, backdropStyle, ...props }: any) => {
+  default: ({
+    isOpen,
+    onClose,
+    title,
+    children,
+    backdropStyle,
+    ...props
+  }: any) => {
     // Filter out non-DOM props
     const domProps = { ...props };
     delete domProps.backdropStyle;
-    
+
     return isOpen ? (
       <div data-testid="modal" {...domProps}>
         <div data-testid="modal-title">{title}</div>
@@ -41,23 +48,23 @@ jest.mock('../ui/TrackList', () => ({
     ...props
   }: any) => {
     // Filter out non-DOM props
-    const { 
-      selectable, 
-      showCheckbox, 
-      showAlbumArt, 
-      showPopularity, 
-      showDuration, 
-      showSourcePlaylist, 
+    const {
+      selectable,
+      showCheckbox,
+      showAlbumArt,
+      showPopularity,
+      showDuration,
+      showSourcePlaylist,
       virtualized,
       onTrackTouchMove,
       onTrackTouchEnd,
       onTrackDragEnd,
-      ...domProps 
+      ...domProps
     } = props;
-    
+
     return (
-      <div 
-        data-testid="track-list" 
+      <div
+        data-testid="track-list"
         style={{ height: containerHeight, overflowY: 'auto' }}
         {...domProps}
       >
@@ -375,7 +382,7 @@ describe('AddUnselectedModal', () => {
         ...mockTracks[0],
         sourcePlaylist: 'playlist1',
         sourcePlaylistName: 'Test Playlist 1',
-      })
+      }),
     ]);
   });
 

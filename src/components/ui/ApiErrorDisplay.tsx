@@ -60,33 +60,33 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
   // Get error icon based on type
   const getErrorIcon = (type: ApiErrorType): string => {
     const icons: Record<ApiErrorType, string> = {
-      [ERROR_TYPES.NETWORK]: '🌐',
-      [ERROR_TYPES.AUTHENTICATION]: '🔑',
-      [ERROR_TYPES.AUTHORIZATION]: '🚫',
-      [ERROR_TYPES.RATE_LIMIT]: '⏱️',
-      [ERROR_TYPES.NOT_FOUND]: '📋',
-      [ERROR_TYPES.BAD_REQUEST]: '⚠️',
-      [ERROR_TYPES.SERVER_ERROR]: '🔧',
-      [ERROR_TYPES.TIMEOUT]: '⏰',
-      [ERROR_TYPES.UNKNOWN]: '❓',
-    };
-    return icons[type] || '⚠️';
+      NETWORK: '',
+      AUTHENTICATION: '',
+      AUTHORIZATION: '',
+      RATE_LIMIT: '',
+      NOT_FOUND: '',
+      BAD_REQUEST: '',
+      SERVER_ERROR: '',
+      TIMEOUT: '',
+      UNKNOWN: '',
+    } as Record<ApiErrorType, string>;
+    return icons[type] || 'default-icon';
   };
 
   // Get CSS class name based on error type
   const getErrorTypeClass = (type: ApiErrorType): string => {
     const classMap: Record<ApiErrorType, string> = {
-      [ERROR_TYPES.NETWORK]: 'network',
-      [ERROR_TYPES.AUTHENTICATION]: 'authentication',
-      [ERROR_TYPES.AUTHORIZATION]: 'authorization',
-      [ERROR_TYPES.RATE_LIMIT]: 'rateLimit',
-      [ERROR_TYPES.NOT_FOUND]: 'notFound',
-      [ERROR_TYPES.BAD_REQUEST]: 'badRequest',
-      [ERROR_TYPES.SERVER_ERROR]: 'serverError',
-      [ERROR_TYPES.TIMEOUT]: 'timeout',
-      [ERROR_TYPES.UNKNOWN]: 'unknown',
-    };
-    return classMap[type] || 'unknown';
+      NETWORK: 'network',
+      AUTHENTICATION: 'authentication',
+      AUTHORIZATION: 'authorization',
+      RATE_LIMIT: 'rate-limit',
+      NOT_FOUND: 'not-found',
+      BAD_REQUEST: 'bad-request',
+      SERVER_ERROR: 'server-error',
+      TIMEOUT: 'timeout',
+      UNKNOWN: 'unknown',
+    } as Record<ApiErrorType, string>;
+    return classMap[type] || 'default-class';
   };
 
   const errorIcon = getErrorIcon(error.type);

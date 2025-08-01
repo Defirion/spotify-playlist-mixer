@@ -1,0 +1,124 @@
+You are a senior TypeScript engineer. Your task is to fix a persistent TypeScript error in the `src/components/ui/ApiErrorDisplay.tsx` file.
+
+**DO NO JUDGEMENT AT THIS STAGE.** Your only goal is to fix the provided TypeScript error. Do not introduce new functionality, refactor existing logic beyond what is necessary to fix the type error, or make any other changes.
+
+---
+
+### The Persistent TypeScript Error:
+
+```
+ERROR in src/components/ui/ApiErrorDisplay.tsx:62:11
+TS2740: Type '{ [x: string]: string; }' is missing the following properties from type 'Record<ApiErrorType, string>': NETWORK, AUTHENTICATION, AUTHORIZATION, RATE_LIMIT, and 5 more.
+    60 |   // Get error icon based on type
+    61 |   const getErrorIcon = (type: ApiErrorType): string => {
+  > 62 |     const icons: Record<ApiErrorType, string> = {
+       |           ^^^^^
+    63 |       [ERROR_TYPES.NETWORK]: '',
+    64 |       [ERROR_TYPES.AUTHENTICATION]: '',
+    65 |       [ERROR_TYPES.AUTHORIZATION]: '',
+ERROR in src/components/ui/ApiErrorDisplay.tsx:78:11
+TS2740: Type '{ [x: string]: string; }' is missing the following properties from type 'Record<ApiErrorType, string>': NETWORK, AUTHENTICATION, AUTHORIZATION, RATE_LIMIT, and 5 more.
+    76 |   // Get CSS class name based on error type
+    77 |   const getErrorTypeClass = (type: ApiErrorType): string => {
+  > 78 |     const classMap: Record<ApiErrorType, string> = {
+       |           ^^^^^^^^
+    79 |       [ERROR_TYPES.NETWORK]: 'network',
+    80 |       [ERROR_TYPES.AUTHENTICATION]: 'authentication',
+    81 |       [ERROR_TYPES.AUTHORIZATION]: 'authorization',
+```
+
+**Analysis of the Error:**
+
+The error `TS2740` occurs because TypeScript is inferring the keys of your `icons` and `classMap` objects as generic `string`s (`{ [x: string]: string; }`) rather than the specific literal string types defined in `ApiErrorType` (e.g., `'NETWORK'`, `'AUTHENTICATION'`). This happens because `[ERROR_TYPES.NETWORK]` uses a *computed property name*, and unless `ERROR_TYPES` itself is defined with `as const`, TypeScript widens the type of `ERROR_TYPES.NETWORK` to `string`. Consequently, TypeScript cannot guarantee that all members of `ApiErrorType` are present as literal keys in your object.
+
+To resolve this, you need to ensure that the keys of the `icons` and `classMap` objects are explicitly treated as the literal string types from `ApiErrorType`.
+
+---
+
+### Current Code Snippet from `src/components/ui/ApiErrorDisplay.tsx`:
+
+```typescript
+import React, { useState } from 'react';
+import { ERROR_TYPES } from '../../services/apiErrorHandler';
+import styles from './ApiErrorDisplay.module.css';
+
+export type ApiErrorType =
+  | 'NETWORK'
+  | 'AUTHENTICATION'
+  | 'AUTHORIZATION'
+  | 'RATE_LIMIT'
+  | 'NOT_FOUND'
+  | 'BAD_REQUEST'
+  | 'SERVER_ERROR'
+  | 'TIMEOUT'
+  | 'UNKNOWN';
+
+// ... (other interfaces and component definition) ...
+
+  // Get error icon based on type
+  const getErrorIcon = (type: ApiErrorType): string => {
+    const icons: Record<ApiErrorType, string> = {
+      [ERROR_TYPES.NETWORK]: '',
+      [ERROR_TYPES.AUTHENTICATION]: '',
+      [ERROR_TYPES.AUTHORIZATION]: '',
+      [ERROR_TYPES.RATE_LIMIT]: '',
+      [ERROR_TYPES.NOT_FOUND]: '',
+      [ERROR_TYPES.BAD_REQUEST]: '',
+      [ERROR_TYPES.SERVER_ERROR]: '',
+      [ERROR_TYPES.TIMEOUT]: '',
+      [ERROR_TYPES.UNKNOWN]: '',
+    };
+    return icons[type] || 'default-icon';
+  };
+
+  // Get CSS class name based on error type
+  const getErrorTypeClass = (type: ApiErrorType): string => {
+    const classMap: Record<ApiErrorType, string> = {
+      [ERROR_TYPES.NETWORK]: 'network',
+      [ERROR_TYPES.AUTHENTICATION]: 'authentication',
+      [ERROR_TYPES.AUTHORIZATION]: 'authorization',
+      [ERROR_TYPES.RATE_LIMIT]: 'rate-limit',
+      [ERROR_TYPES.NOT_FOUND]: 'not-found',
+      [ERROR_TYPES.BAD_REQUEST]: 'bad-request',
+      [ERROR_TYPES.SERVER_ERROR]: 'server-error',
+      [ERROR_TYPES.TIMEOUT]: 'timeout',
+      [ERROR_TYPES.UNKNOWN]: 'unknown',
+    };
+    return classMap[type] || 'default-class';
+  };
+
+// ... (rest of the file) ...
+```
+
+---
+
+### Project Context:
+
+*   `ApiErrorType` is a TypeScript type defined in `src/components/ui/ApiErrorDisplay.tsx` itself.
+*   `ERROR_TYPES` is an object imported from `src/services/apiErrorHandler.js`. It contains the following keys, which represent all possible `ApiErrorType` values:
+    *   `NETWORK`
+    *   `RATE_LIMIT`
+    *   `SERVER_ERROR`
+    *   `TIMEOUT`
+    *   `AUTHENTICATION`
+    *   `AUTHORIZATION`
+    *   `NOT_FOUND`
+    *   `BAD_REQUEST`
+    *   `UNKNOWN`
+
+---
+
+### Your Task:
+
+Modify the `icons` and `classMap` objects within `getErrorIcon` and `getErrorTypeClass` functions respectively, to resolve the `TS2740` error.
+
+**Crucial Guidance:** Instead of using computed property names like `[ERROR_TYPES.NETWORK]`, define the object keys directly using the *literal string values* that correspond to the `ApiErrorType` members (e.g., `'NETWORK'`, `'AUTHENTICATION'`). Then, apply a type assertion to `Record<ApiErrorType, string>` to explicitly tell TypeScript the expected type of the object.
+
+*   For `icons`: Assign an empty string `''` to each `ApiErrorType` member.
+*   For `classMap`: Assign a descriptive string (e.g., `'network'`, `'authentication'`) to each `ApiErrorType` member.
+
+---
+
+### Expected Output:
+
+Provide **only** the corrected code snippet for the `getErrorIcon` and `getErrorTypeClass` functions. Ensure the full definitions of `icons` and `classMap` are included, and that the TypeScript error is resolved. Assume `ApiErrorType` and `ERROR_TYPES` are correctly defined and accessible in the environment.
