@@ -1,0 +1,101 @@
+/* ErrorBoundary.module.css */
+.errorBoundaryContainer {
+  padding: 24px;
+  margin: 16px;
+  border: 2px solid var(--fern-green);
+  border-radius: 8px;
+  background: rgba(79, 119, 45, 0.1);
+  text-align: center;
+}
+
+.errorTitle {
+  color: var(--moss-green);
+  margin: 0 0 12px 0;
+}
+
+.errorMessage {
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.tryAgainButton,
+.refreshButton {
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 4px;
+}
+
+.tryAgainButton {
+  background: var(--moss-green);
+}
+
+.refreshButton {
+  background: var(--hunter-green);
+  border: 1px solid var(--fern-green);
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.developerDetails {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.developerDetailsSummary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--moss-green);
+  font-weight: bold;
+}
+
+.developerDetailsContent {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--dark-green);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  overflow: auto;
+  max-height: 200px;
+}
+
+.errorId,
+.errorMessageText {
+  color: var(--moss-green);
+  margin-bottom: 8px;
+}
+
+.componentStack {
+  margin-bottom: 8px;
+}
+
+.stackTrace {
+  white-space: pre-wrap;
+  margin: 4px 0;
+}
+
+.listItem {
+  margin-bottom: 4px;
+}
+
+.listContainer {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  text-align: left;
+  display: inline-block;
+}
+
+.sectionMarginBottom {
+  margin-bottom: 24px;
+}
+
+.errorHeaderContainer {
+  margin-bottom: 20px;
+}

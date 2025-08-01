@@ -394,7 +394,7 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 -
 
-- [ ] 15.7 Migrate ToastError component
+- [x] 15.7 Migrate ToastError component
 
 
   - Convert ToastError.js to ToastError.tsx with error notification types
@@ -418,7 +418,7 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate ApiErrorDisplay to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.9 Migrate ErrorBoundary component
+- [x] 15.9 Migrate ErrorBoundary component
   - Convert ErrorBoundary.js to ErrorBoundary.tsx with error boundary types
   - Replace all inline styles with CSS modules (ErrorBoundary.module.css)
   - Update and verify all related unit and integration tests
