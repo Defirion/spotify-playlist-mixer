@@ -377,7 +377,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate SuccessToast to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.6 Migrate TermsOfService component
+- [x] 15.6 Migrate TermsOfService component
+
+
 
 
 
@@ -401,7 +403,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate ToastError to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.8 Migrate ApiErrorDisplay component
+- [-] 15.8 Migrate ApiErrorDisplay component
+
+
+
 
 
 

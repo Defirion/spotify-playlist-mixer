@@ -1,0 +1,458 @@
+/* ApiErrorDisplay component styles */
+
+.container {
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+  background: rgba(79, 119, 45, 0.1);
+}
+
+.container.network {
+  border: 2px solid var(--moss-green);
+}
+
+.container.authentication {
+  border: 2px solid var(--fern-green);
+}
+
+.container.authorization {
+  border: 2px solid var(--hunter-green);
+}
+
+.container.rateLimit {
+  border: 2px solid var(--moss-green);
+}
+
+.container.notFound {
+  border: 2px solid var(--fern-green);
+}
+
+.container.badRequest {
+  border: 2px solid var(--hunter-green);
+}
+
+.container.serverError {
+  border: 2px solid var(--moss-green);
+}
+
+.container.timeout {
+  border: 2px solid var(--fern-green);
+}
+
+.container.unknown {
+  border: 2px solid var(--hunter-green);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title.network {
+  color: var(--moss-green);
+}
+
+.title.authentication {
+  color: var(--fern-green);
+}
+
+.title.authorization {
+  color: var(--hunter-green);
+}
+
+.title.rateLimit {
+  color: var(--moss-green);
+}
+
+.title.notFound {
+  color: var(--fern-green);
+}
+
+.title.badRequest {
+  color: var(--hunter-green);
+}
+
+.title.serverError {
+  color: var(--moss-green);
+}
+
+.title.timeout {
+  color: var(--fern-green);
+}
+
+.title.unknown {
+  color: var(--hunter-green);
+}
+
+.icon {
+  font-size: 1.2em;
+}
+
+.message {
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+.suggestions {
+  margin-bottom: 20px;
+}
+
+.suggestionsTitle {
+  font-weight: bold;
+}
+
+.suggestionsTitle.network {
+  color: var(--moss-green);
+}
+
+.suggestionsTitle.authentication {
+  color: var(--fern-green);
+}
+
+.suggestionsTitle.authorization {
+  color: var(--hunter-green);
+}
+
+.suggestionsTitle.rateLimit {
+  color: var(--moss-green);
+}
+
+.suggestionsTitle.notFound {
+  color: var(--fern-green);
+}
+
+.suggestionsTitle.badRequest {
+  color: var(--hunter-green);
+}
+
+.suggestionsTitle.serverError {
+  color: var(--moss-green);
+}
+
+.suggestionsTitle.timeout {
+  color: var(--fern-green);
+}
+
+.suggestionsTitle.unknown {
+  color: var(--hunter-green);
+}
+
+.suggestionsList {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  color: var(--text-color);
+}
+
+.suggestionItem {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.actions.hasDetails {
+  margin-bottom: 16px;
+}
+
+.retryButton {
+  background: var(--moss-green);
+  color: white;
+  border: none;
+}
+
+.retryButton.network {
+  background: var(--moss-green);
+}
+
+.retryButton.authentication {
+  background: var(--fern-green);
+}
+
+.retryButton.authorization {
+  background: var(--hunter-green);
+}
+
+.retryButton.rateLimit {
+  background: var(--moss-green);
+}
+
+.retryButton.notFound {
+  background: var(--fern-green);
+}
+
+.retryButton.badRequest {
+  background: var(--hunter-green);
+}
+
+.retryButton.serverError {
+  background: var(--moss-green);
+}
+
+.retryButton.timeout {
+  background: var(--fern-green);
+}
+
+.retryButton.unknown {
+  background: var(--hunter-green);
+}
+
+.dismissButton {
+  background: var(--hunter-green);
+  color: white;
+}
+
+.dismissButton.network {
+  border: 1px solid var(--moss-green);
+}
+
+.dismissButton.authentication {
+  border: 1px solid var(--fern-green);
+}
+
+.dismissButton.authorization {
+  border: 1px solid var(--hunter-green);
+}
+
+.dismissButton.rateLimit {
+  border: 1px solid var(--moss-green);
+}
+
+.dismissButton.notFound {
+  border: 1px solid var(--fern-green);
+}
+
+.dismissButton.badRequest {
+  border: 1px solid var(--hunter-green);
+}
+
+.dismissButton.serverError {
+  border: 1px solid var(--moss-green);
+}
+
+.dismissButton.timeout {
+  border: 1px solid var(--fern-green);
+}
+
+.dismissButton.unknown {
+  border: 1px solid var(--hunter-green);
+}
+
+.detailsButton {
+  background: transparent;
+  font-size: 12px;
+}
+
+.detailsButton.network {
+  border: 1px solid var(--moss-green);
+  color: var(--moss-green);
+}
+
+.detailsButton.authentication {
+  border: 1px solid var(--fern-green);
+  color: var(--fern-green);
+}
+
+.detailsButton.authorization {
+  border: 1px solid var(--hunter-green);
+  color: var(--hunter-green);
+}
+
+.detailsButton.rateLimit {
+  border: 1px solid var(--moss-green);
+  color: var(--moss-green);
+}
+
+.detailsButton.notFound {
+  border: 1px solid var(--fern-green);
+  color: var(--fern-green);
+}
+
+.detailsButton.badRequest {
+  border: 1px solid var(--hunter-green);
+  color: var(--hunter-green);
+}
+
+.detailsButton.serverError {
+  border: 1px solid var(--moss-green);
+  color: var(--moss-green);
+}
+
+.detailsButton.timeout {
+  border: 1px solid var(--fern-green);
+  color: var(--fern-green);
+}
+
+.detailsButton.unknown {
+  border: 1px solid var(--hunter-green);
+  color: var(--hunter-green);
+}
+
+.technicalDetails {
+  margin-top: 16px;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.detailsSummary {
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.detailsSummary.network {
+  color: var(--moss-green);
+}
+
+.detailsSummary.authentication {
+  color: var(--fern-green);
+}
+
+.detailsSummary.authorization {
+  color: var(--hunter-green);
+}
+
+.detailsSummary.rateLimit {
+  color: var(--moss-green);
+}
+
+.detailsSummary.notFound {
+  color: var(--fern-green);
+}
+
+.detailsSummary.badRequest {
+  color: var(--hunter-green);
+}
+
+.detailsSummary.serverError {
+  color: var(--moss-green);
+}
+
+.detailsSummary.timeout {
+  color: var(--fern-green);
+}
+
+.detailsSummary.unknown {
+  color: var(--hunter-green);
+}
+
+.detailsContent {
+  padding: 12px;
+  background: var(--dark-green);
+  border-radius: 4px;
+  font-family: monospace;
+  overflow: auto;
+  max-height: 200px;
+}
+
+.detailsContent.network {
+  border: 1px solid var(--moss-green);
+}
+
+.detailsContent.authentication {
+  border: 1px solid var(--fern-green);
+}
+
+.detailsContent.authorization {
+  border: 1px solid var(--hunter-green);
+}
+
+.detailsContent.rateLimit {
+  border: 1px solid var(--moss-green);
+}
+
+.detailsContent.notFound {
+  border: 1px solid var(--fern-green);
+}
+
+.detailsContent.badRequest {
+  border: 1px solid var(--hunter-green);
+}
+
+.detailsContent.serverError {
+  border: 1px solid var(--moss-green);
+}
+
+.detailsContent.timeout {
+  border: 1px solid var(--fern-green);
+}
+
+.detailsContent.unknown {
+  border: 1px solid var(--hunter-green);
+}
+
+.detailItem {
+  margin-bottom: 8px;
+}
+
+.detailLabel {
+  font-weight: bold;
+}
+
+.detailValue {
+  white-space: pre-wrap;
+  margin: 4px 0;
+  font-size: 11px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px;
+  margin-left: 12px;
+}
+
+.closeButton.network {
+  color: var(--moss-green);
+}
+
+.closeButton.authentication {
+  color: var(--fern-green);
+}
+
+.closeButton.authorization {
+  color: var(--hunter-green);
+}
+
+.closeButton.rateLimit {
+  color: var(--moss-green);
+}
+
+.closeButton.notFound {
+  color: var(--fern-green);
+}
+
+.closeButton.badRequest {
+  color: var(--hunter-green);
+}
+
+.closeButton.serverError {
+  color: var(--moss-green);
+}
+
+.closeButton.timeout {
+  color: var(--fern-green);
+}
+
+.closeButton.unknown {
+  color: var(--hunter-green);
+}

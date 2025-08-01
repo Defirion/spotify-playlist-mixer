@@ -1,5 +1,5 @@
 import React from 'react';
-import ApiErrorDisplay from './ui/ApiErrorDisplay';
+import ApiErrorDisplay, { ApiErrorData } from './ui/ApiErrorDisplay';
 import { ApiError } from '../services/apiErrorHandler';
 import { ErrorHandlerProps, ErrorDetails } from '../types/components';
 import styles from './ErrorHandler.module.css';
@@ -19,9 +19,27 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
 
   // If it's an ApiError, use the enhanced display component
   if (error instanceof ApiError) {
+    const apiErrorData: ApiErrorData = {
+      type: error.type,
+      title: error.title,
+      message: error.message,
+      suggestions: error.suggestions,
+      retryable: error.retryable,
+      timestamp: error.timestamp,
+      status: error.status,
+      statusText: error.statusText,
+      context: error.context,
+      originalError: error.originalError
+        ? {
+            message: error.originalError.message,
+            stack: error.originalError.stack,
+          }
+        : undefined,
+    };
+
     return (
       <ApiErrorDisplay
-        error={error}
+        error={apiErrorData}
         onRetry={onRetry}
         onDismiss={onDismiss}
         showDetails={process.env.NODE_ENV === 'development'}
