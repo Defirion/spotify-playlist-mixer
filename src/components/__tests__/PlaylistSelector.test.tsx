@@ -414,10 +414,14 @@ describe('PlaylistSelector', () => {
       render(<PlaylistSelector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
-      const button = screen.getByRole('button');
+      // Get the button by its initial accessible name "Search"
+      const button = screen.getByRole('button', { name: /Search/i });
 
       // Input should be focused on mount due to useEffect
       expect(input).toHaveFocus();
+
+      // Simulate typing to enable the search button
+      await user.type(input, 'some search query');
 
       // Tab to button
       await user.tab();

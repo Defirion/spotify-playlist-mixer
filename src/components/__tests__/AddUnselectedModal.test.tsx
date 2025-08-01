@@ -11,56 +11,91 @@ import * as dragAndDropUtils from '../../utils/dragAndDrop';
 jest.mock('../../utils/spotify');
 jest.mock('../../utils/dragAndDrop');
 jest.mock('../ui/Modal', () => ({
-  default: ({ isOpen, onClose, title, children, ...props }: any) =>
-    isOpen ? (
-      <div data-testid="modal" {...props}>
+  __esModule: true,
+  default: ({ isOpen, onClose, title, children, backdropStyle, ...props }: any) => {
+    // Filter out non-DOM props
+    const domProps = { ...props };
+    delete domProps.backdropStyle;
+    
+    return isOpen ? (
+      <div data-testid="modal" {...domProps}>
         <div data-testid="modal-title">{title}</div>
         <button data-testid="modal-close" onClick={onClose}>
           Close
         </button>
         {children}
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 jest.mock('../ui/TrackList', () => ({
+  __esModule: true,
   default: ({
     tracks,
     onTrackSelect,
     selectedTracks,
     onTrackDragStart,
     onTrackTouchStart,
+    emptyMessage,
+    containerHeight,
     ...props
-  }: any) => (
-    <div data-testid="track-list" {...props}>
-      {tracks.map((track: SpotifyTrack, index: number) => (
-        <div
-          key={track.id}
-          data-testid={`track-item-${track.id}`}
-          onClick={() => onTrackSelect?.(track)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              onTrackSelect?.(track);
-            }
-          }}
-          onDragStart={e => onTrackDragStart?.(e, track)}
-          onTouchStart={e => onTrackTouchStart?.(e, track)}
-          role="button"
-          tabIndex={0}
-          draggable
-        >
-          {track.name} - {track.artists[0]?.name}
-          {selectedTracks?.has(track.id) && (
-            <span data-testid="selected">Selected</span>
-          )}
-        </div>
-      ))}
-    </div>
-  ),
+  }: any) => {
+    // Filter out non-DOM props
+    const { 
+      selectable, 
+      showCheckbox, 
+      showAlbumArt, 
+      showPopularity, 
+      showDuration, 
+      showSourcePlaylist, 
+      virtualized,
+      onTrackTouchMove,
+      onTrackTouchEnd,
+      onTrackDragEnd,
+      ...domProps 
+    } = props;
+    
+    return (
+      <div 
+        data-testid="track-list" 
+        style={{ height: containerHeight, overflowY: 'auto' }}
+        {...domProps}
+      >
+        {tracks && tracks.length > 0 ? (
+          tracks.map((track: SpotifyTrack, index: number) => (
+            <div
+              key={track.id}
+              data-testid={`track-item-${track.id}`}
+              onClick={() => onTrackSelect?.(track)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  onTrackSelect?.(track);
+                }
+              }}
+              onDragStart={e => onTrackDragStart?.(e, track)}
+              onTouchStart={e => onTrackTouchStart?.(e, track)}
+              role="button"
+              tabIndex={0}
+              draggable
+            >
+              {track.name} - {track.artists[0]?.name}
+              {selectedTracks?.has(track.id) && (
+                <span data-testid="selected">Selected</span>
+              )}
+            </div>
+          ))
+        ) : (
+          <div data-testid="empty-message">{emptyMessage}</div>
+        )}
+      </div>
+    );
+  },
 }));
 const mockStartDrag = jest.fn();
 const mockEndDrag = jest.fn();
 
 jest.mock('../../hooks/useDraggable', () => ({
+  __esModule: true,
   default: () => ({
     isDragging: false,
     startDrag: mockStartDrag,
@@ -259,7 +294,11 @@ describe('AddUnselectedModal', () => {
     await user.click(screen.getByTestId('track-item-track1'));
 
     expect(dragAndDropUtils.handleTrackSelection).toHaveBeenCalledWith(
-      mockTracks[0],
+      expect.objectContaining({
+        ...mockTracks[0],
+        sourcePlaylist: 'playlist1',
+        sourcePlaylistName: 'Test Playlist 1',
+      }),
       expect.any(Set),
       expect.any(Function)
     );
@@ -331,7 +370,13 @@ describe('AddUnselectedModal', () => {
     });
     await user.click(addButton);
 
-    expect(defaultProps.onAddTracks).toHaveBeenCalledWith([mockTracks[0]]);
+    expect(defaultProps.onAddTracks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        ...mockTracks[0],
+        sourcePlaylist: 'playlist1',
+        sourcePlaylistName: 'Test Playlist 1',
+      })
+    ]);
   });
 
   it('clears selected tracks after adding', async () => {
@@ -421,9 +466,9 @@ describe('AddUnselectedModal', () => {
     await user.type(searchInput, 'nonexistent track');
 
     await waitFor(() => {
-      expect(
-        screen.getByText('No tracks match your search')
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('empty-message')).toHaveTextContent(
+        'No tracks match your search'
+      );
     });
   });
 
@@ -436,9 +481,9 @@ describe('AddUnselectedModal', () => {
     render(<AddUnselectedModal {...propsWithAllTracks} />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('All tracks from your playlists are already included')
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('empty-message')).toHaveTextContent(
+        'All tracks from your playlists are already included'
+      );
     });
   });
 

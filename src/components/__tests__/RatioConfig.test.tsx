@@ -5,33 +5,7 @@ import RatioConfig from '../RatioConfig';
 import { SpotifyPlaylist } from '../../types/spotify';
 import { RatioConfig as RatioConfigType } from '../../types/mixer';
 
-// Mock the useRatioCalculation hook
-const mockUseRatioCalculation = jest.fn(() => ({
-  exampleMixData: {
-    exampleTitle: 'Example Mix (per 100 songs):',
-    playlistExamples: [
-      {
-        id: '1',
-        name: 'Test Playlist',
-        displayText: '~60 songs (60%)',
-        groupText: '1-2 at a time',
-        weightTypeText: 'same song count',
-      },
-    ],
-  },
-  getTotalWeight: () => 5,
-  getPlaylistPercentage: () => 60,
-  formatDurationFromSeconds: (seconds: number) => {
-    if (!seconds) return null;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  },
-}));
-
-jest.mock('../../hooks/useRatioCalculation', () => ({
-  useRatioCalculation: mockUseRatioCalculation,
-}));
+// Remove mock to test with actual hook
 
 const mockPlaylist: SpotifyPlaylist = {
   id: '1',
@@ -223,7 +197,7 @@ describe('RatioConfig', () => {
     expect(
       screen.getByText('🎯 Example Mix (per 100 songs):')
     ).toBeInTheDocument();
-    expect(screen.getByText(/~60 songs \(60%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/~75 songs \(75%\)/)).toBeInTheDocument();
   });
 
   it('does not render example mix display for single playlist', () => {
