@@ -289,6 +289,26 @@ export interface ToastProps {
   }>;
 }
 
+// SuccessToast specific types
+export interface MixedPlaylistToast {
+  toastId: string;
+  name: string;
+  tracks?: {
+    total?: number;
+    length?: number;
+  };
+  duration?: number;
+  createdAt: Date;
+  external_urls?: {
+    spotify?: string;
+  };
+}
+
+export interface SuccessToastProps extends BaseComponentProps {
+  mixedPlaylists: MixedPlaylistToast[] | null;
+  onDismiss: (toastId: string) => void;
+}
+
 export interface ToastContextValue {
   toasts: ToastProps[];
   addToast: (toast: Omit<ToastProps, 'id'>) => string;
@@ -449,6 +469,15 @@ export interface AddUnselectedModalProps extends BaseComponentProps {
 export interface PresetTemplatesProps extends BaseComponentProps {
   selectedPlaylists: SpotifyPlaylist[];
   onApplyPreset: (data: import('./mixer').PresetApplyData) => void;
+}
+
+// Authentication component types
+export interface SpotifyAuthProps extends BaseComponentProps {
+  onAuth?: (accessToken: string) => void;
+  onError?: (error: Error) => void;
+  redirectUri?: string;
+  scopes?: string[];
+  clientId?: string;
 }
 
 // Context types

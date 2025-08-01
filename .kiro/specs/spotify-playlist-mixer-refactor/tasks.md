@@ -338,7 +338,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate ErrorHandler to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.3 Migrate LoadingOverlay component
+- [x] 15.3 Migrate LoadingOverlay component
+
+
 
 
 
@@ -350,13 +352,21 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 15.4 Migrate SpotifyAuth component
+
+
+
+
   - Convert SpotifyAuth.js to SpotifyAuth.tsx with authentication types
   - Replace all inline styles with CSS modules (SpotifyAuth.module.css)
   - Update and verify all related unit and integration tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate SpotifyAuth to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
+-
 
 - [ ] 15.5 Migrate SuccessToast component
+
+
+
   - Convert SuccessToast.js to SuccessToast.tsx with toast notification types
   - Replace all inline styles with CSS modules (SuccessToast.module.css)
   - Update and verify all related unit and integration tests
@@ -364,13 +374,20 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 15.6 Migrate TermsOfService component
+
+
+
+
   - Convert TermsOfService.js to TermsOfService.tsx with proper types
   - Replace all inline styles with CSS modules (TermsOfService.module.css)
   - Update and verify all related unit and integration tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate TermsOfService to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
+-
 
 - [ ] 15.7 Migrate ToastError component
+
+
   - Convert ToastError.js to ToastError.tsx with error notification types
   - Replace all inline styles with CSS modules (ToastError.module.css)
   - Update and verify all related unit and integration tests
@@ -378,6 +395,9 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 15.8 Migrate ApiErrorDisplay component
+
+
+
   - Convert ApiErrorDisplay.js to ApiErrorDisplay.tsx with API error types
   - Replace all inline styles with CSS modules (ApiErrorDisplay.module.css)
   - Update and verify all related unit and integration tests

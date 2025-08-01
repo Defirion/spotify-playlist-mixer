@@ -1,0 +1,44 @@
+/* SpotifyAuth component styles */
+
+.container {
+  /* Uses existing .card class styles from global CSS */
+}
+
+.title {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.description {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-secondary, #666);
+  line-height: 1.5;
+}
+
+.buttonContainer {
+  margin-top: 20px;
+}
+
+.connectButton {
+  /* Uses existing .btn class styles from global CSS */
+}
+
+.infoContainer {
+  margin-top: 20px;
+  font-size: 14px;
+  opacity: 0.8;
+  color: var(--text-secondary, #666);
+}
+
+.infoTitle {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.infoText {
+  margin: 0;
+  line-height: 1.4;
+}

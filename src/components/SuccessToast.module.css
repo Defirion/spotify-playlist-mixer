@@ -18,6 +18,32 @@
   padding: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
+  animation: slideInLeft 0.3s ease-out both;
+}
+
+/* Toast stacking animations */
+.toast-0 {
+  animation-delay: 0s;
+  transform: scale(1);
+  opacity: 1;
+}
+
+.toast-1 {
+  animation-delay: 0.1s;
+  transform: scale(0.98);
+  opacity: 1;
+}
+
+.toast-2 {
+  animation-delay: 0.2s;
+  transform: scale(0.98);
+  opacity: 1;
+}
+
+.toast-stacked {
+  animation-delay: 0.3s;
+  transform: scale(0.98);
+  opacity: 0.8;
 }
 
 @keyframes slideInLeft {
@@ -97,4 +123,14 @@
 
 .closeButton:hover {
   opacity: 1;
+}
+
+.spotifyLink {
+  text-decoration: none;
+}
+
+.spotifyLink:focus {
+  outline: 2px solid #1db954;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
