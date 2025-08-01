@@ -104,19 +104,19 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .presetCard {
     padding: 10px;
   }
-  
+
   .presetName {
     font-size: 15px;
   }
-  
+
   .presetDescription {
     font-size: 12px;
   }
-  
+
   .presetMeta {
     font-size: 10px;
   }
@@ -127,11 +127,11 @@
   .presetCard {
     border-width: 2px;
   }
-  
+
   .presetCard:hover {
     border-width: 2px;
   }
-  
+
   .presetName {
     font-weight: 700;
   }
@@ -142,11 +142,11 @@
   .presetCard {
     transition: none;
   }
-  
+
   .presetCard:hover {
     transform: none;
   }
-  
+
   .presetCard:active {
     transform: none;
   }

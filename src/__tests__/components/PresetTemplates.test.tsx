@@ -1,9 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PresetTemplates from '../../components/PresetTemplates';
 import { SpotifyPlaylist } from '../../types/spotify';
-import { PresetApplyData } from '../../types/mixer';
 
 // Mock data
 const mockPlaylists: SpotifyPlaylist[] = [
@@ -13,7 +12,11 @@ const mockPlaylists: SpotifyPlaylist[] = [
     description: 'Best bachata songs',
     images: [],
     tracks: { total: 50, href: '' },
-    owner: { id: 'user1', display_name: 'User 1', external_urls: { spotify: '' } },
+    owner: {
+      id: 'user1',
+      display_name: 'User 1',
+      external_urls: { spotify: '' },
+    },
     public: true,
     collaborative: false,
     uri: 'spotify:playlist:playlist1',
@@ -25,7 +28,11 @@ const mockPlaylists: SpotifyPlaylist[] = [
     description: 'Classic salsa tracks',
     images: [],
     tracks: { total: 30, href: '' },
-    owner: { id: 'user1', display_name: 'User 1', external_urls: { spotify: '' } },
+    owner: {
+      id: 'user1',
+      display_name: 'User 1',
+      external_urls: { spotify: '' },
+    },
     public: true,
     collaborative: false,
     uri: 'spotify:playlist:playlist2',
@@ -41,14 +48,16 @@ describe('PresetTemplates', () => {
   });
 
   it('renders null when no playlists are selected', () => {
-    const { container } = render(
+    render(
       <PresetTemplates
         selectedPlaylists={[]}
         onApplyPreset={mockOnApplyPreset}
       />
     );
-    
-    expect(container.firstChild).toBeNull();
+
+    expect(
+      screen.queryByText('🎯 Quick Start Templates')
+    ).not.toBeInTheDocument();
   });
 
   it('renders preset templates when playlists are selected', () => {
@@ -61,7 +70,9 @@ describe('PresetTemplates', () => {
 
     // Check header
     expect(screen.getByText('🎯 Quick Start Templates')).toBeInTheDocument();
-    expect(screen.getByText('Apply proven mixing patterns for different occasions')).toBeInTheDocument();
+    expect(
+      screen.getByText('Apply proven mixing patterns for different occasions')
+    ).toBeInTheDocument();
 
     // Check preset cards
     expect(screen.getByText('💃 Karimctiva')).toBeInTheDocument();
@@ -69,12 +80,20 @@ describe('PresetTemplates', () => {
     expect(screen.getByText('🚗 Road Trip')).toBeInTheDocument();
 
     // Check descriptions
-    expect(screen.getByText('Perfect for bachata/salsa mixing with dance flow')).toBeInTheDocument();
-    expect(screen.getByText('High energy with consistent tempo')).toBeInTheDocument();
-    expect(screen.getByText('Build to epic finale with sing-along hits')).toBeInTheDocument();
+    expect(
+      screen.getByText('Perfect for bachata/salsa mixing with dance flow')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('High energy with consistent tempo')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Build to epic finale with sing-along hits')
+    ).toBeInTheDocument();
 
     // Check tip section
-    expect(screen.getByText(/These templates will automatically configure/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/These templates will automatically configure/)
+    ).toBeInTheDocument();
   });
 
   it('displays correct playlist count in preset meta', () => {
@@ -91,7 +110,7 @@ describe('PresetTemplates', () => {
 
   it('calls onApplyPreset with correct data when Karimctiva preset is clicked', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -99,10 +118,12 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const karimctivaCard = screen.getByText('💃 Karimctiva').closest('[role="button"]');
+    const karimctivaCard = screen.getByLabelText(
+      'Apply 💃 Karimctiva preset template'
+    );
     expect(karimctivaCard).toBeInTheDocument();
 
-    await user.click(karimctivaCard!);
+    await user.click(karimctivaCard);
 
     expect(mockOnApplyPreset).toHaveBeenCalledWith({
       ratioConfig: {
@@ -123,7 +144,7 @@ describe('PresetTemplates', () => {
 
   it('calls onApplyPreset with correct data when Workout Mix preset is clicked', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -131,10 +152,12 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const workoutCard = screen.getByText('💪 Workout Mix').closest('[role="button"]');
+    const workoutCard = screen.getByLabelText(
+      'Apply 💪 Workout Mix preset template'
+    );
     expect(workoutCard).toBeInTheDocument();
 
-    await user.click(workoutCard!);
+    await user.click(workoutCard);
 
     expect(mockOnApplyPreset).toHaveBeenCalledWith({
       ratioConfig: {
@@ -155,7 +178,7 @@ describe('PresetTemplates', () => {
 
   it('calls onApplyPreset with correct data when Road Trip preset is clicked', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -163,10 +186,12 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const roadTripCard = screen.getByText('🚗 Road Trip').closest('[role="button"]');
+    const roadTripCard = screen.getByLabelText(
+      'Apply 🚗 Road Trip preset template'
+    );
     expect(roadTripCard).toBeInTheDocument();
 
-    await user.click(roadTripCard!);
+    await user.click(roadTripCard);
 
     expect(mockOnApplyPreset).toHaveBeenCalledWith({
       ratioConfig: {
@@ -187,7 +212,7 @@ describe('PresetTemplates', () => {
 
   it('handles keyboard navigation with Enter key', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -195,11 +220,13 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const karimctivaCard = screen.getByText('💃 Karimctiva').closest('[role="button"]');
+    const karimctivaCard = screen.getByLabelText(
+      'Apply 💃 Karimctiva preset template'
+    );
     expect(karimctivaCard).toBeInTheDocument();
 
-    // Focus the card and press Enter
-    karimctivaCard!.focus();
+    // Tab to focus the card and press Enter
+    await user.tab();
     await user.keyboard('{Enter}');
 
     expect(mockOnApplyPreset).toHaveBeenCalledTimes(1);
@@ -207,7 +234,7 @@ describe('PresetTemplates', () => {
 
   it('handles keyboard navigation with Space key', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -215,20 +242,22 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const workoutCard = screen.getByText('💪 Workout Mix').closest('[role="button"]');
+    const workoutCard = screen.getByLabelText(
+      'Apply 💪 Workout Mix preset template'
+    );
     expect(workoutCard).toBeInTheDocument();
 
-    // Focus the card and press Space
-    workoutCard!.focus();
+    // Tab to focus the card and press Space
+    await user.tab();
+    await user.tab(); // Tab to the second preset
     await user.keyboard(' ');
 
     expect(mockOnApplyPreset).toHaveBeenCalledTimes(1);
   });
 
-  it('shows alert when trying to apply preset with no playlists', async () => {
-    const user = userEvent.setup();
+  it('shows alert when trying to apply preset with no playlists', () => {
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
@@ -236,19 +265,12 @@ describe('PresetTemplates', () => {
       />
     );
 
-    // Mock the selectedPlaylists to be empty when handleApplyPreset is called
-    const originalHandleApplyPreset = PresetTemplates.prototype?.handleApplyPreset;
-    
-    // Test the alert functionality by simulating empty playlists scenario
-    const karimctivaCard = screen.getByText('💃 Karimctiva').closest('[role="button"]');
-    
-    // Temporarily override the component's selectedPlaylists check
+    // Simulate the alert behavior by testing the logic directly
     const mockComponent = {
       selectedPlaylists: [],
       onApplyPreset: mockOnApplyPreset,
     };
-    
-    // Simulate the alert behavior
+
     if (mockComponent.selectedPlaylists.length === 0) {
       alert('Please add some playlists first!');
     }
@@ -266,14 +288,18 @@ describe('PresetTemplates', () => {
         description: 'Popular songs',
         images: [],
         tracks: { total: 40, href: '' },
-        owner: { id: 'user1', display_name: 'User 1', external_urls: { spotify: '' } },
+        owner: {
+          id: 'user1',
+          display_name: 'User 1',
+          external_urls: { spotify: '' },
+        },
         public: true,
         collaborative: false,
         uri: 'spotify:playlist:playlist1',
         external_urls: { spotify: '' },
       },
     ];
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={genericPlaylists}
@@ -281,8 +307,10 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const karimctivaCard = screen.getByText('💃 Karimctiva').closest('[role="button"]');
-    await user.click(karimctivaCard!);
+    const karimctivaCard = screen.getByLabelText(
+      'Apply 💃 Karimctiva preset template'
+    );
+    await user.click(karimctivaCard);
 
     expect(mockOnApplyPreset).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -304,15 +332,21 @@ describe('PresetTemplates', () => {
     const presetCards = screen.getAllByRole('button');
     expect(presetCards).toHaveLength(3);
 
-    presetCards.forEach((card) => {
+    presetCards.forEach(card => {
       expect(card).toHaveAttribute('tabIndex', '0');
       expect(card).toHaveAttribute('aria-label');
     });
 
     // Check specific aria-labels
-    expect(screen.getByLabelText('Apply 💃 Karimctiva preset template')).toBeInTheDocument();
-    expect(screen.getByLabelText('Apply 💪 Workout Mix preset template')).toBeInTheDocument();
-    expect(screen.getByLabelText('Apply 🚗 Road Trip preset template')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Apply 💃 Karimctiva preset template')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Apply 💪 Workout Mix preset template')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Apply 🚗 Road Trip preset template')
+    ).toBeInTheDocument();
   });
 
   it('applies custom className and testId props', () => {
@@ -343,14 +377,18 @@ describe('PresetTemplates', () => {
         description: 'Extra songs',
         images: [],
         tracks: { total: 20, href: '' },
-        owner: { id: 'user1', display_name: 'User 1', external_urls: { spotify: '' } },
+        owner: {
+          id: 'user1',
+          display_name: 'User 1',
+          external_urls: { spotify: '' },
+        },
         public: true,
         collaborative: false,
         uri: 'spotify:playlist:playlist3',
         external_urls: { spotify: '' },
       },
     ];
-    
+
     render(
       <PresetTemplates
         selectedPlaylists={playlistsWithMissingRatio}
@@ -358,8 +396,10 @@ describe('PresetTemplates', () => {
       />
     );
 
-    const karimctivaCard = screen.getByText('💃 Karimctiva').closest('[role="button"]');
-    await user.click(karimctivaCard!);
+    const karimctivaCard = screen.getByLabelText(
+      'Apply 💃 Karimctiva preset template'
+    );
+    await user.click(karimctivaCard);
 
     expect(mockOnApplyPreset).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,21 +1,21 @@
 import React from 'react';
 import { SpotifyPlaylist } from '../types/spotify';
-import { 
-  PresetTemplate, 
-  PresetApplyData, 
+import {
+  PresetTemplate,
+  PresetApplyData,
   RatioConfig,
   PresetStrategy,
   PresetSettings,
-  RatioConfigItem 
+  RatioConfigItem,
 } from '../types/mixer';
 import { PresetTemplatesProps } from '../types/components';
 import styles from './PresetTemplates.module.css';
 
-const PresetTemplates: React.FC<PresetTemplatesProps> = ({ 
-  selectedPlaylists, 
+const PresetTemplates: React.FC<PresetTemplatesProps> = ({
+  selectedPlaylists,
   onApplyPreset,
   className,
-  testId 
+  testId,
 }) => {
   const presets: PresetTemplate[] = [
     {
@@ -50,12 +50,14 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       strategy: 'front-loaded' as PresetStrategy,
       strategyLabel: 'Hits First',
       ratios: (playlists: SpotifyPlaylist[]): RatioConfigItem[] =>
-        playlists.map((): RatioConfigItem => ({
-          min: 3,
-          max: 5,
-          weight: 3,
-          weightType: 'frequency',
-        })),
+        playlists.map(
+          (): RatioConfigItem => ({
+            min: 3,
+            max: 5,
+            weight: 3,
+            weightType: 'frequency',
+          })
+        ),
       settings: {
         recencyBoost: true,
         shuffleWithinGroups: true,
@@ -71,12 +73,14 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       strategy: 'crescendo' as PresetStrategy,
       strategyLabel: 'Build Up',
       ratios: (playlists: SpotifyPlaylist[]): RatioConfigItem[] =>
-        playlists.map((): RatioConfigItem => ({
-          min: 2,
-          max: 3,
-          weight: 2,
-          weightType: 'frequency',
-        })),
+        playlists.map(
+          (): RatioConfigItem => ({
+            min: 2,
+            max: 3,
+            weight: 2,
+            weightType: 'frequency',
+          })
+        ),
       settings: {
         recencyBoost: true,
         shuffleWithinGroups: true,
@@ -129,7 +133,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`card ${styles.container} ${className || ''}`.trim()}
       data-testid={testId}
     >
@@ -146,17 +150,13 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
             key={preset.id}
             className={styles.presetCard}
             onClick={() => handleApplyPreset(preset)}
-            onKeyDown={(e) => handleKeyDown(e, preset)}
+            onKeyDown={e => handleKeyDown(e, preset)}
             role="button"
             tabIndex={0}
             aria-label={`Apply ${preset.name} preset template`}
           >
-            <h3 className={styles.presetName}>
-              {preset.name}
-            </h3>
-            <p className={styles.presetDescription}>
-              {preset.description}
-            </p>
+            <h3 className={styles.presetName}>{preset.name}</h3>
+            <p className={styles.presetDescription}>{preset.description}</p>
             <div className={styles.presetMeta}>
               Song Order Style: {preset.strategyLabel} •{' '}
               {selectedPlaylists.length} playlists
@@ -167,8 +167,9 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
 
       <div className={styles.tip}>
         <span className={styles.tipIcon}>💡</span>
-        <strong className={styles.tipStrong}>Tip:</strong> These templates will automatically configure
-        ratios and settings. You can still adjust them afterwards!
+        <strong className={styles.tipStrong}>Tip:</strong> These templates will
+        automatically configure ratios and settings. You can still adjust them
+        afterwards!
       </div>
     </div>
   );
