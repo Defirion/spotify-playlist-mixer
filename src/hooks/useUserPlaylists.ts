@@ -122,7 +122,12 @@ const useUserPlaylists = (
         setLoading(true);
         setError(null);
 
-        let result;
+        let result: {
+          playlists: SpotifyPlaylist[];
+          total: number;
+          hasMore: boolean;
+          nextOffset?: number;
+        };
 
         if (all) {
           // Fetch all playlists
