@@ -8,10 +8,8 @@ import React, {
 import AddUnselectedModal from './AddUnselectedModal';
 import SpotifySearchModal from './SpotifySearchModal';
 import TrackListItem from './TrackListItem';
-import { useDrag } from './DragContext';
 import useDraggable from '../hooks/useDraggable';
 import useTrackReordering from '../hooks/useTrackReordering';
-import useAutoScroll from '../hooks/useAutoScroll';
 import {
   SpotifyTrack,
   SpotifyPlaylist,
@@ -38,48 +36,18 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   formatDuration,
   accessToken,
 }) => {
-  const { isDragging: contextIsDragging } = useDrag();
   const [localTracks, setLocalTracks] = useState<MixedTrack[]>(tracks || []);
   const [showAddUnselectedModal, setShowAddUnselectedModal] = useState(false);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const savedScrollPosition = useRef<number | null>(null);
 
   // Sync localTracks with tracks prop
   useEffect(() => {
     setLocalTracks(tracks || []);
   }, [tracks]);
 
-  // Scroll position preservation helpers
-  const captureScrollPosition = useCallback(() => {
-    if (scrollContainerRef.current) {
-      savedScrollPosition.current = scrollContainerRef.current.scrollTop;
-    }
-  }, []);
-
-  const restoreScrollPosition = useCallback(() => {
-    if (scrollContainerRef.current && savedScrollPosition.current !== null) {
-      scrollContainerRef.current.scrollTop = savedScrollPosition.current;
-      savedScrollPosition.current = null;
-    }
-  }, []);
-
-  // Restore scroll position after localTracks updates
-  useEffect(() => {
-    if (savedScrollPosition.current !== null) {
-      requestAnimationFrame(() => {
-        restoreScrollPosition();
-      });
-    }
-  }, [localTracks, restoreScrollPosition]);
-
   // Initialize custom hooks
-  const { checkAutoScroll, stopAutoScroll } = useAutoScroll({
-    scrollContainer: scrollContainerRef.current,
-    scrollThreshold: 80,
-  });
-
   const {
     dropPosition,
     setDropPosition,
@@ -90,26 +58,18 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   } = useTrackReordering({
     tracks: localTracks,
     onTrackOrderChange,
-    onScrollPositionCapture: captureScrollPosition,
   });
 
-  // Drag handlers
-  const handleDragStart = useCallback((item: DragItem) => {
-    // Drag start handled by useDraggable hook
-  }, []);
-
+  // Drag handlers using useDraggable
   const handleDragEnd = useCallback(
     (item: DragItem, result: DropResult | null) => {
-      stopAutoScroll();
       setDropPosition(null);
     },
-    [stopAutoScroll, setDropPosition]
+    [setDropPosition]
   );
 
   const handleDrop = useCallback(
     (item: DragItem, result: DropResult) => {
-      stopAutoScroll();
-
       if (item.type === 'internal-track') {
         // Handle internal reordering
         const draggedTrackIndex = localTracks.findIndex(
@@ -129,7 +89,6 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
       setDropPosition(null);
     },
     [
-      stopAutoScroll,
       localTracks,
       dropPosition,
       handleInternalReorder,
@@ -140,10 +99,6 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
 
   const handleDragOver = useCallback(
     (item: DragItem, position: any) => {
-      if (position.clientY) {
-        checkAutoScroll(position.clientY);
-      }
-
       // Calculate drop position based on the drag position
       if (position.target && position.clientY) {
         const trackIndex = parseInt(
@@ -157,30 +112,32 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
         setDropPosition(newDropPosition);
       }
     },
-    [checkAutoScroll, calculateDropPosition, setDropPosition]
+    [calculateDropPosition, setDropPosition]
   );
 
   // Initialize useDraggable for container-level drag handling
   const containerDraggable = useDraggable({
     type: 'track-list-container',
-    onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
     onDrop: handleDrop,
     onDragOver: handleDragOver,
     scrollContainer: scrollContainerRef.current,
   });
 
-  // Track-specific drag handlers - moved outside of callback to avoid hooks rule violation
+  // Track-specific drag handlers - using useDraggable
   const trackDragOptions = useMemo(
     () => ({
       type: 'internal-track',
-      onDragStart: handleDragStart,
+      onDragStart: (item: DragItem) => {
+        // Optional handler - can be empty or used for debugging
+        console.log('Track drag started:', item);
+      },
       onDragEnd: handleDragEnd,
       onDrop: handleDrop,
       onDragOver: handleDragOver,
       scrollContainer: scrollContainerRef.current,
     }),
-    [handleDragStart, handleDragEnd, handleDrop, handleDragOver]
+    [handleDragEnd, handleDrop, handleDragOver]
   );
 
   // Calculate popularity quadrants for track labeling
@@ -224,11 +181,10 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
       }));
       const newTracks = [...localTracks, ...mixedTracks];
       if (onTrackOrderChange) {
-        captureScrollPosition();
         onTrackOrderChange(newTracks);
       }
     },
-    [localTracks, onTrackOrderChange, captureScrollPosition]
+    [localTracks, onTrackOrderChange]
   );
 
   const handleAddSpotifyTracks = useCallback(
@@ -240,104 +196,18 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
       }));
       const newTracks = [...localTracks, ...mixedTracks];
       if (onTrackOrderChange) {
-        captureScrollPosition();
         onTrackOrderChange(newTracks);
       }
     },
-    [localTracks, onTrackOrderChange, captureScrollPosition]
+    [localTracks, onTrackOrderChange]
   );
-
-  // External drag event handlers for modal integration
-  const handleExternalDragOver = useCallback(
-    (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { clientX, clientY } = customEvent.detail;
-      checkAutoScroll(clientY);
-
-      // Find which track element is being hovered over
-      const container = scrollContainerRef.current;
-      if (!container) return;
-
-      const trackElements = container.querySelectorAll('[data-track-index]');
-      let foundDropTarget = false;
-
-      for (let i = 0; i < trackElements.length; i++) {
-        const trackElement = trackElements[i] as HTMLElement;
-        const rect = trackElement.getBoundingClientRect();
-        const hoverIndex = parseInt(
-          trackElement.getAttribute('data-track-index') || '0'
-        );
-
-        if (
-          clientX >= rect.left &&
-          clientX <= rect.right &&
-          clientY >= rect.top &&
-          clientY <= rect.bottom
-        ) {
-          const newDropPosition = calculateDropPosition(
-            clientY,
-            trackElement,
-            hoverIndex
-          );
-          setDropPosition(newDropPosition);
-          foundDropTarget = true;
-          break;
-        }
-      }
-
-      if (!foundDropTarget) {
-        const containerRect = container.getBoundingClientRect();
-        if (
-          clientX >= containerRect.left &&
-          clientX <= containerRect.right &&
-          clientY >= containerRect.top &&
-          clientY <= containerRect.bottom
-        ) {
-          setDropPosition({ index: localTracks.length, isTopHalf: false });
-        }
-      }
-    },
-    [
-      checkAutoScroll,
-      localTracks.length,
-      calculateDropPosition,
-      setDropPosition,
-    ]
-  );
-
-  const handleExternalDrop = useCallback(
-    (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { draggedItem } = customEvent.detail;
-
-      if (draggedItem && dropPosition) {
-        handleExternalAdd(draggedItem.data, dropPosition.index);
-        setDropPosition(null);
-      }
-    },
-    [dropPosition, handleExternalAdd, setDropPosition]
-  );
-
-  // Set up external drag event listeners
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener('externalDragOver', handleExternalDragOver);
-    container.addEventListener('externalDrop', handleExternalDrop);
-
-    return () => {
-      container.removeEventListener('externalDragOver', handleExternalDragOver);
-      container.removeEventListener('externalDrop', handleExternalDrop);
-    };
-  }, [handleExternalDragOver, handleExternalDrop]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopAutoScroll();
+      // Cleanup handled by useDraggable internally
     };
-  }, [stopAutoScroll]);
+  }, []);
 
   return (
     <>
@@ -346,9 +216,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           ref={scrollContainerRef}
           data-preview-panel="true"
           className={`${styles.scrollContainer} ${
-            contextIsDragging || containerDraggable.isDragging
-              ? styles.dragging
-              : ''
+            containerDraggable.isDragging ? styles.dragging : ''
           }`}
           role="region"
           aria-label="Draggable Track List Container"
@@ -449,12 +317,10 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           {localTracks.length === 0 && (
             <div
               className={`${styles.emptyState} ${
-                contextIsDragging || dropPosition
-                  ? styles.dragging
-                  : styles.normal
+                dropPosition ? styles.dragging : styles.normal
               }`}
             >
-              {contextIsDragging || dropPosition
+              {dropPosition
                 ? '🎵 Drop track here to add it to your playlist'
                 : 'No tracks in preview yet. Generate a preview or drag tracks from the modal.'}
             </div>

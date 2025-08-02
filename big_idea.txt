@@ -1,0 +1,93 @@
+You are an expert React developer. Your task is to refactor the `App.js` component to eliminate the "God Component" anti-pattern and implement a centralized state management solution.
+
+You have access to the following files:
+- @.kiro/specs/spotify-playlist-mixer-refactor/design.md
+- @.kiro/specs/spotify-playlist-mixer-refactor/tasks.md
+- @package.json
+- @src/App.js
+- @src/index.js
+- @src/hooks/useAppState.ts
+- @src/hooks/useMixOptions.ts
+- @src/hooks/usePlaylistSelection.ts
+- @src/hooks/useRatioConfig.ts
+- @src/types/api.ts
+- @src/types/components.ts
+- @src/types/css-modules.d.ts
+- @src/types/hooks.ts
+- @src/types/index.ts
+- @src/types/mixer.ts
+- @src/types/spotify.ts
+- @src/components/PlaylistMixer.tsx
+- @src/components/PlaylistSelector.tsx
+- @src/components/RatioConfig.tsx
+- @src/components/AddUnselectedModal.tsx
+- @src/components/SpotifySearchModal.tsx
+
+Follow these steps:
+   **Formulate a plan**:
+    *   Based on the details below create a very detailed step by step plan with instructions so a moderately skill person with access to a Qwen Coder 2.5 32b can complete. The context window of the LLM is approximately 10k . Example Format (truncated):
+
+# Implementation Plan
+
+- [ ] 1. Set up project structure and core interfaces
+ - Create directory structure for models, services, repositories, and API components
+ - Define interfaces that establish system boundaries
+ - _Requirements: 1.1_
+
+- [ ] 2. Implement data models and validation
+- [ ] 2.1 Create core data model interfaces and types
+  - Write TypeScript interfaces for all data models
+  - Implement validation functions for data integrity
+  - _Requirements: 2.1, 3.3, 1.2_
+
+- [ ] 2.2 Implement User model with validation
+  - Write User class with validation methods
+  - Create unit tests for User model validation
+  - _Requirements: 1.2_
+
+- [ ] 2.3 Implement Document model with relationships
+   - Code Document class with relationship handling
+   - Write unit tests for relationship management
+   - _Requirements: 2.1, 3.3, 1.2_
+
+- [ ] 3. Create storage mechanism
+- [ ] 3.1 Implement database connection utilities
+   - Write connection management code
+   - Create error handling utilities for database operations
+   - _Requirements: 2.1, 3.3, 1.2_
+
+- [ ] 3.2 Implement repository pattern for data access
+  - Code base repository interface
+  - Implement concrete repositories with CRUD operations
+  - Write unit tests for repository operations
+  - _Requirements: 4.3_
+
+[Additional coding tasks continue...]
+
+
+
+1.  **Analyze Current State**:
+    *   Review `src/App.js` and the custom hooks it uses (`src/hooks/useAppState.ts`, `src/hooks/useMixOptions.ts`, `src/hooks/usePlaylistSelection.ts`, `src/hooks/useRatioConfig.ts`).
+    *   Identify all pieces of application state currently managed within `App.js` or these hooks that are shared across multiple components or represent global application concerns (e.g., authentication, selected playlists, mix options, UI state like errors/toasts).
+    *   Note instances of prop drilling where state or state-setting functions are passed down through many levels of components.
+
+2.  **Choose State Management Library**:
+    *   Based on the project's `package.json` and the `design.md` (which mentions "Redux Toolkit/Zustand"), select the most appropriate state management library. Justify your choice briefly (e.g., simplicity, existing patterns, performance). If neither is installed, assume you can install one.
+
+3.  **Define Global Store Structure**:
+    *   Based on your analysis, define a clear, logical structure for the global state. Group related state into domains (e.g., `auth`, `playlists`, `mixer`, `ui`). Provide TypeScript interfaces for the new store's state.
+	
+4.  **Implement Global Store**:
+    *   Create the global store using the chosen library.
+    *   Migrate the state and associated logic (reducers, actions, selectors) from `src/App.js` and the existing custom hooks into this new global store.
+    *   Refactor the existing custom hooks (`useAppState`, `useMixOptions`, `usePlaylistSelection`, `useRatioConfig`) to interact with the global store instead of managing their own local state. They should become custom hooks that provide convenient access to and manipulation of the global state.
+
+5.  **Refactor `App.js` and Child Components**:
+    *   Update `src/App.js` to use the global store provider (if required by the chosen library) and consume state using the new store's hooks/selectors.
+    *   Modify child components (e.g., `src/components/PlaylistSelector.tsx`, `src/components/RatioConfig.tsx`, `src/components/PlaylistMixer.tsx`, `src/components/AddUnselectedModal.tsx`, `src/components/SpotifySearchModal.tsx`) to directly access the global state they need, eliminating prop drilling.
+
+6.  **Update Type Definitions**:
+    *   Ensure all relevant TypeScript type definitions (`src/types/*.ts`) are updated to reflect the new state structure and how components interact with it.
+
+**Output Format**:
+Provide the complete code for all modified or new files. For each file, clearly indicate the file path.
