@@ -1,8 +1,40 @@
 import { renderHook, act } from '@testing-library/react';
 import { usePlaylistSelection } from '../usePlaylistSelection';
+import { SpotifyPlaylist } from '../../types/spotify';
 
-const mockPlaylist1 = { id: '1', name: 'Playlist 1' };
-const mockPlaylist2 = { id: '2', name: 'Playlist 2' };
+const mockPlaylist1: SpotifyPlaylist = {
+  id: '1',
+  name: 'Playlist 1',
+  description: null,
+  images: [],
+  tracks: { total: 0, href: '' },
+  owner: {
+    id: 'user1',
+    display_name: 'User 1',
+    external_urls: { spotify: '' },
+  },
+  public: true,
+  collaborative: false,
+  uri: 'spotify:playlist:1',
+  external_urls: { spotify: '' },
+};
+
+const mockPlaylist2: SpotifyPlaylist = {
+  id: '2',
+  name: 'Playlist 2',
+  description: null,
+  images: [],
+  tracks: { total: 0, href: '' },
+  owner: {
+    id: 'user1',
+    display_name: 'User 1',
+    external_urls: { spotify: '' },
+  },
+  public: true,
+  collaborative: false,
+  uri: 'spotify:playlist:2',
+  external_urls: { spotify: '' },
+};
 
 describe('usePlaylistSelection', () => {
   it('initializes with empty selection', () => {

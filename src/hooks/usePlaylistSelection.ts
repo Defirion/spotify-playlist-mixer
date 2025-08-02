@@ -1,13 +1,17 @@
 import { useState, useCallback } from 'react';
+import { SpotifyPlaylist } from '../types/spotify';
 
 /**
  * Custom hook for managing selected playlists state
  * Handles playlist selection, deselection, and clearing
  */
-export const usePlaylistSelection = (initialPlaylists = []) => {
-  const [selectedPlaylists, setSelectedPlaylists] = useState(initialPlaylists);
+export const usePlaylistSelection = (
+  initialPlaylists: SpotifyPlaylist[] = []
+) => {
+  const [selectedPlaylists, setSelectedPlaylists] =
+    useState<SpotifyPlaylist[]>(initialPlaylists);
 
-  const selectPlaylist = useCallback(playlist => {
+  const selectPlaylist = useCallback((playlist: SpotifyPlaylist) => {
     setSelectedPlaylists(prev => {
       // Check if playlist is already selected
       if (prev.find(p => p.id === playlist.id)) {
@@ -17,11 +21,11 @@ export const usePlaylistSelection = (initialPlaylists = []) => {
     });
   }, []);
 
-  const deselectPlaylist = useCallback(playlistId => {
+  const deselectPlaylist = useCallback((playlistId: string) => {
     setSelectedPlaylists(prev => prev.filter(p => p.id !== playlistId));
   }, []);
 
-  const togglePlaylistSelection = useCallback(playlist => {
+  const togglePlaylistSelection = useCallback((playlist: SpotifyPlaylist) => {
     setSelectedPlaylists(prev => {
       const isSelected = prev.find(p => p.id === playlist.id);
       if (isSelected) {
@@ -37,7 +41,7 @@ export const usePlaylistSelection = (initialPlaylists = []) => {
   }, []);
 
   const isPlaylistSelected = useCallback(
-    playlistId => {
+    (playlistId: string): boolean => {
       return selectedPlaylists.some(p => p.id === playlistId);
     },
     [selectedPlaylists]

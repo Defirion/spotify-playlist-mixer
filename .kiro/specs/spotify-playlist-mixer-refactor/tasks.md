@@ -453,7 +453,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useAppState to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.11.2 Migrate useMixOptions hook
+- [x] 15.11.2 Migrate useMixOptions hook
+
+
 
 
 
@@ -462,7 +464,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useMixOptions to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.3 Migrate usePlaylistSelection hook
+- [-] 15.11.3 Migrate usePlaylistSelection hook
+
+
+
   - Convert usePlaylistSelection.js to usePlaylistSelection.ts with playlist types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate usePlaylistSelection to TypeScript"`
