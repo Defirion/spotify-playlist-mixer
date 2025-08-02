@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useAppState } from '../useAppState';
+import { SpotifyPlaylist } from '../../types/spotify';
 
 describe('useAppState', () => {
   it('initializes with default state', () => {
@@ -39,10 +40,21 @@ describe('useAppState', () => {
   it('adds mixed playlist with generated ID and timestamp', () => {
     const { result } = renderHook(() => useAppState());
 
-    const mockPlaylist = {
+    const mockPlaylist: SpotifyPlaylist = {
       id: 'playlist-1',
       name: 'Test Playlist',
-      tracks: [],
+      description: null,
+      images: [],
+      tracks: { total: 0, href: '' },
+      owner: {
+        id: 'user-1',
+        display_name: 'Test User',
+        external_urls: { spotify: '' },
+      },
+      public: true,
+      collaborative: false,
+      uri: 'spotify:playlist:playlist-1',
+      external_urls: { spotify: '' },
     };
 
     act(() => {
@@ -61,8 +73,39 @@ describe('useAppState', () => {
   it('adds multiple mixed playlists in correct order', () => {
     const { result } = renderHook(() => useAppState());
 
-    const playlist1 = { id: '1', name: 'Playlist 1' };
-    const playlist2 = { id: '2', name: 'Playlist 2' };
+    const playlist1: SpotifyPlaylist = {
+      id: '1',
+      name: 'Playlist 1',
+      description: null,
+      images: [],
+      tracks: { total: 0, href: '' },
+      owner: {
+        id: 'user-1',
+        display_name: 'Test User',
+        external_urls: { spotify: '' },
+      },
+      public: true,
+      collaborative: false,
+      uri: 'spotify:playlist:1',
+      external_urls: { spotify: '' },
+    };
+
+    const playlist2: SpotifyPlaylist = {
+      id: '2',
+      name: 'Playlist 2',
+      description: null,
+      images: [],
+      tracks: { total: 0, href: '' },
+      owner: {
+        id: 'user-1',
+        display_name: 'Test User',
+        external_urls: { spotify: '' },
+      },
+      public: true,
+      collaborative: false,
+      uri: 'spotify:playlist:2',
+      external_urls: { spotify: '' },
+    };
 
     act(() => {
       result.current.addMixedPlaylist(playlist1);
@@ -81,8 +124,39 @@ describe('useAppState', () => {
   it('dismisses success toast by ID', () => {
     const { result } = renderHook(() => useAppState());
 
-    const playlist1 = { id: '1', name: 'Playlist 1' };
-    const playlist2 = { id: '2', name: 'Playlist 2' };
+    const playlist1: SpotifyPlaylist = {
+      id: '1',
+      name: 'Playlist 1',
+      description: null,
+      images: [],
+      tracks: { total: 0, href: '' },
+      owner: {
+        id: 'user-1',
+        display_name: 'Test User',
+        external_urls: { spotify: '' },
+      },
+      public: true,
+      collaborative: false,
+      uri: 'spotify:playlist:1',
+      external_urls: { spotify: '' },
+    };
+
+    const playlist2: SpotifyPlaylist = {
+      id: '2',
+      name: 'Playlist 2',
+      description: null,
+      images: [],
+      tracks: { total: 0, href: '' },
+      owner: {
+        id: 'user-1',
+        display_name: 'Test User',
+        external_urls: { spotify: '' },
+      },
+      public: true,
+      collaborative: false,
+      uri: 'spotify:playlist:2',
+      external_urls: { spotify: '' },
+    };
 
     act(() => {
       result.current.addMixedPlaylist(playlist1);

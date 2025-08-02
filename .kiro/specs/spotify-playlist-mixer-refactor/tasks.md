@@ -387,6 +387,7 @@
 
 
 
+
   - Convert TermsOfService.js to TermsOfService.tsx with proper types
   - Replace all inline styles with CSS modules (TermsOfService.module.css)
   - Update and verify all related unit and integration tests
@@ -395,6 +396,7 @@
 -
 
 - [x] 15.7 Migrate ToastError component
+
 
 
   - Convert ToastError.js to ToastError.tsx with error notification types
@@ -419,13 +421,17 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.9 Migrate ErrorBoundary component
+
+
   - Convert ErrorBoundary.js to ErrorBoundary.tsx with error boundary types
   - Replace all inline styles with CSS modules (ErrorBoundary.module.css)
   - Update and verify all related unit and integration tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate ErrorBoundary to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.10 Migrate withErrorBoundary component
+- [x] 15.10 Migrate withErrorBoundary component
+
+
 
 
 
@@ -436,7 +442,10 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 15.11 Migrate remaining hooks to TypeScript (atomic migrations)
-- [ ] 15.11.1 Migrate useAppState hook
+- [-] 15.11.1 Migrate useAppState hook
+
+
+
   - Convert useAppState.js to useAppState.ts with proper state types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useAppState to TypeScript"`
