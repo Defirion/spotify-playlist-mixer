@@ -519,7 +519,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useErrorHandler to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.11.8 Migrate useKeyboardNavigation hook
+- [x] 15.11.8 Migrate useKeyboardNavigation hook
+
+
 
 
 
@@ -528,7 +530,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useKeyboardNavigation to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.9 Migrate useRatioConfig hook
+- [-] 15.11.9 Migrate useRatioConfig hook
+
+
+
   - Convert useRatioConfig.js to useRatioConfig.ts with ratio configuration types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useRatioConfig to TypeScript"`
