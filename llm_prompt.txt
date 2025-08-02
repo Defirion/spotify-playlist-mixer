@@ -1,228 +1,26 @@
-You are an expert React developer with a strong understanding of React Testing Library best practices and ESLint rules.
-Your task is to analyze and correct two specific ESLint issues in the provided TypeScript test file: `src/components/ui/__tests__/ErrorBoundary.test.tsx`.
+You are a senior software engineer. Your task is to analyze a failing test suite for a React component and propose a fix.
 
-**Goal:** Produce the complete, corrected content of the file that addresses these issues while ensuring the code remains functionally correct and adheres to React Testing Library best practices.
+The project uses React, TypeScript, Jest, and React Testing Library.
 
----
+Here's the problem:
+A test file `src/components/ui/__tests__/withErrorBoundary.test.tsx` is failing. The failures indicate issues with rendering the wrapped component and the fallback UI, and incorrect prop passing to the internal ErrorBoundary component.
 
-**Issue 1: Unused variable warning for `waitFor`**
+Specifically, the errors are:
+1.  `TestingLibraryElementError: Unable to find an element with the text: Working Component.`
+    *   **Root Cause:** The `withErrorBoundary` HOC is currently defined to take `errorBoundaryProps` as a second argument to the HOC function, but the tests are passing `ErrorBoundary` related props directly to the component returned by the HOC. Consequently, the `WithErrorBoundaryComponent` is not correctly identifying and passing the `fallback` prop to the `ErrorBoundary`, and the `WrappedComponent` is not rendering as expected because the HOC's prop handling is misaligned with the test's prop passing.
+2.  `TestingLibraryElementError: Unable to find an element with the text: Fallback UI.`
+    *   **Root Cause:** Similar to the first issue, the `fallback` prop, which is intended for the `ErrorBoundary`, is being passed as a prop to the component returned by `withErrorBoundary`, but the HOC's current implementation does not correctly extract and forward this prop to the `ErrorBoundary` component.
+3.  `expect(MockErrorBoundary).toHaveBeenCalledWith(...)` mismatch, showing that the `children` prop passed to `MockErrorBoundary` contains unexpected props (like `fallback` and `onReset`) that should belong to the `ErrorBoundary` itself, not the wrapped component.
+    *   **Root Cause:** The `WithErrorBoundaryComponent` is currently spreading *all* received props (`props: P`) directly onto the `WrappedComponent` (`<WrappedComponent {...props} />`). This means that props intended for the `ErrorBoundary` (e.g., `fallback`, `onReset`) are incorrectly being passed down to the `WrappedComponent`, leading to them appearing as part of the `children` prop of `MockErrorBoundary` in the test's assertion.
 
-*   **ESLint Error:** `'waitFor' is defined but never used` (from `@typescript-eslint/no-unused-vars`)
-*   **Description:** This warning indicates that the `waitFor` function is imported from `@testing-library/react` but the linter believes it's not being used.
-*   **Action:**
-    1.  **Carefully examine the provided code.** You will find `waitFor` is used on line 101: `await waitFor(() => expect(screen.getByText('Test Child')).toBeInTheDocument());`.
-    2.  Since `waitFor` *is* used in an `await waitFor(...)` call, the ESLint warning is a false positive in this context. **You MUST keep `waitFor` in the import statement to ensure the test remains functional.** Your priority is functional correctness over blindly satisfying a potentially incorrect lint warning. **Under no circumstances should you remove any `await waitFor(...)` calls themselves.**
+Your task is to:
+1.  Provide a single, unified code change for `src/components/ui/withErrorBoundary.tsx` that addresses all identified issues. The `withErrorBoundary` HOC should be modified to accept `ErrorBoundary` specific props (like `fallback` and `onReset`) as direct props to the component it returns. These props should then be destructured and passed to the internal `ErrorBoundary` component, while all other props are correctly passed to the `WrappedComponent`.
+2.  The test file `src/components/ui/__tests__/withErrorBoundary.test.tsx` does not need changes, as its assertions are correct for the desired behavior after the `withErrorBoundary.tsx` fix.
 
----
+Do not provide any explanation or commit messages. Just provide the code changes in the following format:
 
-**Issue 2: Destructuring queries from `render` result**
-
-*   **ESLint Error:** `Avoid destructuring queries from \`render\` result, use \`screen.getByText\` instead` (from `testing-library/prefer-screen-queries`)
-*   **Description:** React Testing Library recommends accessing query functions (like `getByText`, `queryByText`, `findByText`, etc.) directly from the global `screen` object (e.g., `screen.getByText(...)`) rather than destructuring them from the `render` function's return value (e.g., `const { getByText } = render(...)`). This improves readability and makes tests more robust.
-*   **Action:**
-    1.  Ensure `import { screen } from '@testing-library/react';` is present at the top of the file. (It is already present in the provided content).
-    2.  **Iterate through every `render` call in the file.**
-        *   **For the `render` call on line 79:** `const { rerender } = render(...)`
-            *   This line is already correct as `rerender` is not a query function and is used later. No change is needed here.
-        *   **For the `render` call on line 106:** `const { getByText } = render(...)`
-            *   **Correction:** Remove `getByText` from the destructuring. Change the line to `render(...)`.
-            *   Then, change all subsequent usages of `getByText` (specifically on line 125: `const refreshButton = getByText('🔃 Refresh Page');`) to `screen.getByText(...)`. So, `const refreshButton = screen.getByText('🔃 Refresh Page');`.
-
----
-
-**Provided file content for `src/components/ui/__tests__/ErrorBoundary.test.tsx`:**
-
-```typescript
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ErrorBoundary from '../ErrorBoundary';
-
-// Mock console.error to prevent test logs from cluttering the output
-const originalConsoleError = console.error;
-beforeAll(() => {
-  console.error = jest.fn();
-});
-
-afterAll(() => {
-  console.error = originalConsoleError;
-});
-
-describe('ErrorBoundary', () => {
-  it('renders children when no error occurs', () => {
-    render(
-      <ErrorBoundary>
-        <div>Test Child</div>
-      </ErrorBoundary>
-    );
-    expect(screen.getByText('Test Child')).toBeInTheDocument();
-  });
-
-  it('shows fallback UI when an error occurs', () => {
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText('🚨 Something went wrong')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "The application encountered an unexpected error and couldn't continue."
-      )
-    ).toBeInTheDocument();
-    
-    // Check for buttons in fallback UI
-    expect(screen.getByText('🔄 Try Again')).toBeInTheDocument();
-    expect(screen.getByText('🔃 Refresh Page')).toBeInTheDocument();
-  });
-
-  it('handles retry functionality', async () => {
-    const ErrorThrower = ({ shouldThrow }: { shouldThrow: boolean }) => {
-      if (shouldThrow) {
-        throw new Error('Test Error');
-      }
-      return <div>Test Child</div>;
-    };
-
-    const { rerender } = render(
-      <ErrorBoundary key={true}>
-        <ErrorThrower shouldThrow={true} />
-      </ErrorBoundary>
-    );
-
-    // Verify error state is shown
-    expect(screen.getByText('🚨 Something went wrong')).toBeInTheDocument();
-
-    // Click "Try Again" button to reset the error
-    const tryAgainButton = screen.getByText('🔄 Try Again');
-    fireEvent.click(tryAgainButton);
-
-    // Rerender with shouldThrow=false to simulate recovery
-    rerender(
-      <ErrorBoundary key={false}>
-        <ErrorThrower shouldThrow={false} />
-      </ErrorBoundary>
-    );
-
-    // Should render children now (no more errors)
-    await waitFor(() => expect(screen.getByText('Test Child')).toBeInTheDocument());
-  });
-
-  it('handles reload functionality', () => {
-    const { getByText } = render(
-      <ErrorBoundary>
-        <div>Test Child</div>
-      </ErrorBoundary>
-    );
-
-    const reloadSpy = jest.spyOn(window, 'location', 'get');
-    // @ts-ignore
-    reloadSpy.mockReturnValue({ reload: jest.fn() });
-
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    const refreshButton = getByText('🔃 Refresh Page');
-    fireEvent.click(refreshButton);
-
-    expect(window.location.reload).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls onError prop when an error occurs', () => {
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-    const handleError = jest.fn();
-
-    render(
-      <ErrorBoundary onError={handleError}>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    expect(handleError).toHaveBeenCalledTimes(1);
-    expect(handleError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({ componentStack: expect.any(String) })
-    );
-  });
-
-  it('uses custom fallback when provided', () => {
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-    
-    const CustomFallback = ({ error, errorInfo, handleRetry }) => (
-      <div>
-        <h1>Custom Error Fallback</h1>
-        <p>{error?.message}</p>
-        <button onClick={handleRetry}>Custom Retry</button>
-      </div>
-    );
-
-    render(
-      <ErrorBoundary fallback={(error, errorInfo, handleRetry) => <CustomFallback error={error} errorInfo={errorInfo} handleRetry={handleRetry} />}>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText('Custom Error Fallback')).toBeInTheDocument();
-    expect(screen.getByText('Test Error')).toBeInTheDocument();
-    expect(screen.getByText('Custom Retry')).toBeInTheDocument();
-  });
-
-  it('renders developer details in development mode', () => {
-    const originalNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText('🔧 Developer Details (Development Mode)')).toBeInTheDocument();
-    expect(screen.getByText(/Error ID:/)).toBeInTheDocument();
-    const errorMessages = screen.getAllByText(/Error: Test Error/);
-    expect(errorMessages).toHaveLength(2);
-    expect(screen.getByText(/Component Stack:/)).toBeInTheDocument();
-    expect(screen.getByText(/Stack Trace:/)).toBeInTheDocument();
-
-    process.env.NODE_ENV = originalNodeEnv;
-  });
-
-  it('does not render developer details in production mode', () => {
-    const originalNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
-
-    const ThrowError = () => {
-      throw new Error('Test Error');
-    };
-
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    expect(screen.queryByText('🔧 Developer Details (Development Mode)')).not.toBeInTheDocument();
-    
-    process.env.NODE_ENV = originalNodeEnv;
-  });
-});
+```filepath
+// code changes
 ```
+
+If no changes are needed for a file, omit that file.
