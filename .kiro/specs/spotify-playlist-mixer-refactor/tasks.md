@@ -486,7 +486,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate usePlaylistTracks to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.11.5 Migrate useUserPlaylists hook
+- [x] 15.11.5 Migrate useUserPlaylists hook
+
+
 
 
 
@@ -495,7 +497,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useUserPlaylists to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.6 Migrate useApiErrorHandler hook
+- [-] 15.11.6 Migrate useApiErrorHandler hook
+
+
+
   - Convert useApiErrorHandler.js to useApiErrorHandler.ts with error handling types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useApiErrorHandler to TypeScript"`

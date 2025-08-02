@@ -399,6 +399,55 @@ export interface UseErrorHandlerReturn {
   captureError: (error: Error, errorInfo?: any) => void;
 }
 
+// API Error Handler hooks
+export interface UseApiErrorHandlerOptions {
+  onError?: (error: ApiError) => void;
+  enableLogging?: boolean;
+}
+
+export interface ErrorInfo {
+  title: string;
+  message: string;
+  suggestions: string[];
+  retryable: boolean;
+  type: string;
+  timestamp: string;
+}
+
+export interface UseApiErrorHandlerReturn {
+  // State
+  error: ApiError | null;
+  isRetrying: boolean;
+  hasError: boolean;
+
+  // Error information
+  getErrorInfo: () => ErrorInfo | null;
+  canRetry: () => boolean;
+  getRetryDelay: (attemptNumber?: number) => number;
+
+  // Actions
+  clearError: () => void;
+  handleError: (error: Error, context?: Record<string, any>) => ApiError;
+  retry: <T>(retryFn?: () => Promise<T>) => Promise<T | void>;
+
+  // API call wrappers
+  wrapApiCall: <T extends (...args: any[]) => Promise<any>>(
+    apiCall: T,
+    context?: Record<string, any>
+  ) => T;
+  wrapApiCallWithRetry: <T extends (...args: any[]) => Promise<any>>(
+    apiCall: T,
+    context?: Record<string, any>
+  ) => T;
+  withRetry: <T>(
+    apiCall: () => Promise<T>,
+    context?: Record<string, any>
+  ) => Promise<T>;
+
+  // Direct access to error handler (for advanced use cases)
+  errorHandler: any; // ApiErrorHandler type would need to be imported
+}
+
 export interface UseAsyncOptions<T> {
   immediate?: boolean;
   onSuccess?: (data: T) => void;

@@ -13,7 +13,7 @@ describe('useApiErrorHandler', () => {
 
   it('handles errors correctly', () => {
     const { result } = renderHook(() => useApiErrorHandler());
-    const testError = new Error('Test error');
+    const testError = new Error('Test error') as any;
     testError.response = { status: 500 };
 
     act(() => {
@@ -22,7 +22,7 @@ describe('useApiErrorHandler', () => {
 
     expect(result.current.error).toBeInstanceOf(ApiError);
     expect(result.current.hasError).toBe(true);
-    expect(result.current.error.type).toBe(ERROR_TYPES.SERVER_ERROR);
+    expect(result.current.error!.type).toBe(ERROR_TYPES.SERVER_ERROR);
   });
 
   it('clears errors correctly', () => {
@@ -57,7 +57,7 @@ describe('useApiErrorHandler', () => {
     expect(result.current.hasError).toBe(true);
 
     // Retry should clear error
-    let retryResult;
+    let retryResult: string | void;
     await act(async () => {
       retryResult = await result.current.retry(retryFn);
     });
@@ -72,7 +72,7 @@ describe('useApiErrorHandler', () => {
   it('handles retry with failing function', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
     const initialError = new Error('Initial error');
-    const retryError = new Error('Retry error');
+    const retryError = new Error('Retry error') as any;
     retryError.response = { status: 404 };
     const retryFn = jest.fn().mockRejectedValue(retryError);
 
@@ -92,7 +92,7 @@ describe('useApiErrorHandler', () => {
 
     expect(retryFn).toHaveBeenCalled();
     expect(result.current.error).toBeInstanceOf(ApiError);
-    expect(result.current.error.type).toBe(ERROR_TYPES.NOT_FOUND);
+    expect(result.current.error!.type).toBe(ERROR_TYPES.NOT_FOUND);
     expect(result.current.hasError).toBe(true);
     expect(result.current.isRetrying).toBe(false);
   });
@@ -133,7 +133,7 @@ describe('useApiErrorHandler', () => {
 
   it('wraps API calls with retry correctly', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
-    const networkError = new Error('Network Error');
+    const networkError = new Error('Network Error') as any;
     networkError.code = 'NETWORK_ERROR';
 
     const mockApiCall = jest
@@ -151,7 +151,7 @@ describe('useApiErrorHandler', () => {
 
   it('executes withRetry correctly', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
-    const networkError = new Error('Network Error');
+    const networkError = new Error('Network Error') as any;
     networkError.code = 'NETWORK_ERROR';
 
     const mockApiCall = jest
@@ -159,7 +159,7 @@ describe('useApiErrorHandler', () => {
       .mockRejectedValueOnce(networkError)
       .mockResolvedValue('success');
 
-    let callResult;
+    let callResult: string;
     await act(async () => {
       callResult = await result.current.withRetry(mockApiCall, {
         test: 'context',
@@ -167,13 +167,13 @@ describe('useApiErrorHandler', () => {
     });
 
     expect(mockApiCall).toHaveBeenCalledTimes(2);
-    expect(callResult).toBe('success');
+    expect(callResult!).toBe('success');
     expect(result.current.hasError).toBe(false);
   });
 
   it('provides error information correctly', () => {
     const { result } = renderHook(() => useApiErrorHandler());
-    const testError = new Error('Test error');
+    const testError = new Error('Test error') as any;
     testError.response = { status: 429 };
 
     act(() => {
@@ -214,10 +214,10 @@ describe('useApiErrorHandler', () => {
   it('sets isRetrying state correctly during retry', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
     const testError = new Error('Test error');
-    let resolveRetry;
+    let resolveRetry: (value: string) => void;
     const retryFn = jest.fn(
       () =>
-        new Promise(resolve => {
+        new Promise<string>(resolve => {
           resolveRetry = resolve;
         })
     );
@@ -228,7 +228,7 @@ describe('useApiErrorHandler', () => {
     });
 
     // Start retry (don't await immediately)
-    let retryPromise;
+    let retryPromise: Promise<string | void>;
     act(() => {
       retryPromise = result.current.retry(retryFn);
     });
@@ -237,11 +237,11 @@ describe('useApiErrorHandler', () => {
     expect(result.current.isRetrying).toBe(true);
 
     // Resolve the retry
-    resolveRetry('success');
+    resolveRetry!('success');
 
     // Wait for the retry to complete
     await act(async () => {
-      await retryPromise;
+      await retryPromise!;
     });
 
     // Should no longer be retrying
