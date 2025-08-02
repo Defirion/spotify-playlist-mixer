@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import usePlaylistTracks from '../usePlaylistTracks';
 import SpotifyService from '../../services/spotify';
+import type { SpotifyTrack } from '../../types';
 
 // Mock axios
 jest.mock('axios');
@@ -8,8 +9,12 @@ jest.mock('axios');
 // Mock the SpotifyService
 jest.mock('../../services/spotify');
 
+const MockedSpotifyService = SpotifyService as jest.MockedClass<
+  typeof SpotifyService
+>;
+
 describe('usePlaylistTracks', () => {
-  let mockSpotifyService;
+  let mockSpotifyService: jest.Mocked<SpotifyService>;
   const mockAccessToken = 'mock-access-token';
   const mockPlaylistId = 'playlist-123';
 
@@ -18,9 +23,9 @@ describe('usePlaylistTracks', () => {
 
     mockSpotifyService = {
       getPlaylistTracks: jest.fn(),
-    };
+    } as any;
 
-    SpotifyService.mockImplementation(() => mockSpotifyService);
+    MockedSpotifyService.mockImplementation(() => mockSpotifyService);
   });
 
   describe('Initialization', () => {
@@ -45,7 +50,7 @@ describe('usePlaylistTracks', () => {
     it('creates SpotifyService instance with access token', () => {
       renderHook(() => usePlaylistTracks(mockAccessToken, mockPlaylistId));
 
-      expect(SpotifyService).toHaveBeenCalledWith(mockAccessToken);
+      expect(MockedSpotifyService).toHaveBeenCalledWith(mockAccessToken);
     });
 
     it('handles missing access token gracefully', () => {
@@ -53,19 +58,73 @@ describe('usePlaylistTracks', () => {
         usePlaylistTracks(null, mockPlaylistId, { autoFetch: false })
       );
 
-      expect(SpotifyService).not.toHaveBeenCalled();
+      expect(MockedSpotifyService).not.toHaveBeenCalled();
       expect(result.current.error).toBe(null);
     });
   });
 
   describe('Auto-fetch functionality', () => {
-    const mockTracks = [
-      { id: '1', name: 'Track 1', artists: [{ name: 'Artist 1' }] },
-      { id: '2', name: 'Track 2', artists: [{ name: 'Artist 2' }] },
+    const mockTracks: SpotifyTrack[] = [
+      {
+        id: '1',
+        name: 'Track 1',
+        artists: [
+          {
+            id: 'artist1',
+            name: 'Artist 1',
+            uri: 'spotify:artist:artist1',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album1',
+          name: 'Album 1',
+          images: [],
+          release_date: '2023-01-01',
+          uri: 'spotify:album:album1',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 180000,
+        explicit: false,
+        popularity: 75,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:1',
+        external_urls: { spotify: '' },
+      },
+      {
+        id: '2',
+        name: 'Track 2',
+        artists: [
+          {
+            id: 'artist2',
+            name: 'Artist 2',
+            uri: 'spotify:artist:artist2',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album2',
+          name: 'Album 2',
+          images: [],
+          release_date: '2023-01-02',
+          uri: 'spotify:album:album2',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 200000,
+        explicit: false,
+        popularity: 80,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:2',
+        external_urls: { spotify: '' },
+      },
     ];
 
     it('fetches tracks automatically when playlistId is provided', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: mockTracks,
+      });
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId)
@@ -96,10 +155,13 @@ describe('usePlaylistTracks', () => {
     });
 
     it('clears tracks when playlistId is null', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: mockTracks,
+      });
 
       const { result, rerender } = renderHook(
-        ({ playlistId }) => usePlaylistTracks(mockAccessToken, playlistId),
+        ({ playlistId }: { playlistId: string | null }) =>
+          usePlaylistTracks(mockAccessToken, playlistId),
         { initialProps: { playlistId: mockPlaylistId } }
       );
 
@@ -115,24 +177,54 @@ describe('usePlaylistTracks', () => {
 
       await waitFor(() => {
         expect(result.current.tracks).toEqual([]);
-        expect(result.current.progress).toEqual({
-          loaded: 0,
-          total: 0,
-          percentage: 0,
-        });
+      });
+
+      expect(result.current.progress).toEqual({
+        loaded: 0,
+        total: 0,
+        percentage: 0,
       });
     });
 
     it('refetches when playlistId changes', async () => {
       const newPlaylistId = 'playlist-456';
-      const newTracks = [{ id: '3', name: 'Track 3' }];
+      const newTracks: SpotifyTrack[] = [
+        {
+          id: '3',
+          name: 'Track 3',
+          artists: [
+            {
+              id: 'artist3',
+              name: 'Artist 3',
+              uri: 'spotify:artist:artist3',
+              external_urls: { spotify: '' },
+            },
+          ],
+          album: {
+            id: 'album3',
+            name: 'Album 3',
+            images: [],
+            release_date: '2023-01-03',
+            uri: 'spotify:album:album3',
+            external_urls: { spotify: '' },
+          },
+          duration_ms: 220000,
+          explicit: false,
+          popularity: 85,
+          preview_url: null,
+          track_number: 1,
+          uri: 'spotify:track:3',
+          external_urls: { spotify: '' },
+        },
+      ];
 
       mockSpotifyService.getPlaylistTracks
-        .mockResolvedValueOnce(mockTracks)
-        .mockResolvedValueOnce(newTracks);
+        .mockResolvedValueOnce({ tracks: mockTracks })
+        .mockResolvedValueOnce({ tracks: newTracks });
 
       const { result, rerender } = renderHook(
-        ({ playlistId }) => usePlaylistTracks(mockAccessToken, playlistId),
+        ({ playlistId }: { playlistId: string }) =>
+          usePlaylistTracks(mockAccessToken, playlistId),
         { initialProps: { playlistId: mockPlaylistId } }
       );
 
@@ -147,6 +239,9 @@ describe('usePlaylistTracks', () => {
           newPlaylistId,
           expect.any(Object)
         );
+      });
+
+      await waitFor(() => {
         expect(result.current.tracks).toEqual(newTracks);
       });
     });
@@ -154,11 +249,13 @@ describe('usePlaylistTracks', () => {
 
   describe('Loading states', () => {
     it('sets loading state during fetch', async () => {
-      let resolveGetTracks;
+      let resolveGetTracks: (value: any) => void;
       const tracksPromise = new Promise(resolve => {
         resolveGetTracks = resolve;
       });
-      mockSpotifyService.getPlaylistTracks.mockReturnValue(tracksPromise);
+      mockSpotifyService.getPlaylistTracks.mockReturnValue(
+        tracksPromise as any
+      );
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId)
@@ -169,7 +266,7 @@ describe('usePlaylistTracks', () => {
       });
 
       act(() => {
-        resolveGetTracks([]);
+        resolveGetTracks({ tracks: [] });
       });
 
       await waitFor(() => {
@@ -201,12 +298,12 @@ describe('usePlaylistTracks', () => {
       const mockProgressData = { loaded: 50, total: 100, percentage: 50 };
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId, options) => {
+        (playlistId: string, options: any) => {
           // Simulate progress callback
           if (options.onProgress) {
             options.onProgress(mockProgressData);
           }
-          return Promise.resolve([]);
+          return Promise.resolve({ tracks: [] });
         }
       );
 
@@ -223,11 +320,11 @@ describe('usePlaylistTracks', () => {
       const mockProgressData = { loaded: 25, total: 100, percentage: 25 };
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId, options) => {
+        (playlistId: string, options: any) => {
           if (options.onProgress) {
             options.onProgress(mockProgressData);
           }
-          return Promise.resolve([]);
+          return Promise.resolve({ tracks: [] });
         }
       );
 
@@ -252,8 +349,9 @@ describe('usePlaylistTracks', () => {
 
       await waitFor(() => {
         expect(result.current.error).toBe(mockError);
-        expect(result.current.loading).toBe(false);
       });
+
+      expect(result.current.loading).toBe(false);
     });
 
     it('sets error when SpotifyService is not initialized', async () => {
@@ -262,7 +360,7 @@ describe('usePlaylistTracks', () => {
       );
 
       await act(async () => {
-        result.current.fetchTracks();
+        await result.current.fetchTracks();
       });
 
       expect(result.current.error).toEqual(
@@ -272,20 +370,74 @@ describe('usePlaylistTracks', () => {
   });
 
   describe('Manual operations', () => {
-    const mockTracks = [
-      { id: '1', name: 'Track 1' },
-      { id: '2', name: 'Track 2' },
+    const mockTracks: SpotifyTrack[] = [
+      {
+        id: '1',
+        name: 'Track 1',
+        artists: [
+          {
+            id: 'artist1',
+            name: 'Artist 1',
+            uri: 'spotify:artist:artist1',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album1',
+          name: 'Album 1',
+          images: [],
+          release_date: '2023-01-01',
+          uri: 'spotify:album:album1',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 180000,
+        explicit: false,
+        popularity: 75,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:1',
+        external_urls: { spotify: '' },
+      },
+      {
+        id: '2',
+        name: 'Track 2',
+        artists: [
+          {
+            id: 'artist2',
+            name: 'Artist 2',
+            uri: 'spotify:artist:artist2',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album2',
+          name: 'Album 2',
+          images: [],
+          release_date: '2023-01-02',
+          uri: 'spotify:album:album2',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 200000,
+        explicit: false,
+        popularity: 80,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:2',
+        external_urls: { spotify: '' },
+      },
     ];
 
     it('manually fetches tracks', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: mockTracks,
+      });
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId, { autoFetch: false })
       );
 
       await act(async () => {
-        result.current.fetchTracks();
+        await result.current.fetchTracks();
       });
 
       expect(mockSpotifyService.getPlaylistTracks).toHaveBeenCalledWith(
@@ -296,7 +448,9 @@ describe('usePlaylistTracks', () => {
     });
 
     it('refreshes tracks', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: mockTracks,
+      });
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId)
@@ -307,7 +461,7 @@ describe('usePlaylistTracks', () => {
       });
 
       await act(async () => {
-        result.current.refresh();
+        await result.current.refresh();
       });
 
       expect(mockSpotifyService.getPlaylistTracks).toHaveBeenCalledTimes(2);
@@ -316,7 +470,7 @@ describe('usePlaylistTracks', () => {
     it('retries after error', async () => {
       mockSpotifyService.getPlaylistTracks
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(mockTracks);
+        .mockResolvedValueOnce({ tracks: mockTracks });
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId)
@@ -327,7 +481,7 @@ describe('usePlaylistTracks', () => {
       });
 
       await act(async () => {
-        result.current.retry();
+        await result.current.retry();
       });
 
       expect(result.current.tracks).toEqual(mockTracks);
@@ -354,14 +508,97 @@ describe('usePlaylistTracks', () => {
   });
 
   describe('Utility methods', () => {
-    const mockTracks = [
-      { id: '1', name: 'Track 1', artist: 'Artist 1' },
-      { id: '2', name: 'Track 2', artist: 'Artist 2' },
-      { id: '3', name: 'Track 3', artist: 'Artist 1' },
+    const mockTracks: SpotifyTrack[] = [
+      {
+        id: '1',
+        name: 'Track 1',
+        artists: [
+          {
+            id: 'artist1',
+            name: 'Artist 1',
+            uri: 'spotify:artist:artist1',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album1',
+          name: 'Album 1',
+          images: [],
+          release_date: '2023-01-01',
+          uri: 'spotify:album:album1',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 180000,
+        explicit: false,
+        popularity: 75,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:1',
+        external_urls: { spotify: '' },
+        sourcePlaylist: 'playlist1',
+      },
+      {
+        id: '2',
+        name: 'Track 2',
+        artists: [
+          {
+            id: 'artist2',
+            name: 'Artist 2',
+            uri: 'spotify:artist:artist2',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album2',
+          name: 'Album 2',
+          images: [],
+          release_date: '2023-01-02',
+          uri: 'spotify:album:album2',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 200000,
+        explicit: false,
+        popularity: 80,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:2',
+        external_urls: { spotify: '' },
+        sourcePlaylist: 'playlist2',
+      },
+      {
+        id: '3',
+        name: 'Track 3',
+        artists: [
+          {
+            id: 'artist3',
+            name: 'Artist 3',
+            uri: 'spotify:artist:artist3',
+            external_urls: { spotify: '' },
+          },
+        ],
+        album: {
+          id: 'album3',
+          name: 'Album 3',
+          images: [],
+          release_date: '2023-01-03',
+          uri: 'spotify:album:album3',
+          external_urls: { spotify: '' },
+        },
+        duration_ms: 220000,
+        explicit: false,
+        popularity: 85,
+        preview_url: null,
+        track_number: 1,
+        uri: 'spotify:track:3',
+        external_urls: { spotify: '' },
+        sourcePlaylist: 'playlist1',
+      },
     ];
 
     beforeEach(async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue(mockTracks);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: mockTracks,
+      });
     });
 
     it('gets track by ID', async () => {
@@ -390,7 +627,7 @@ describe('usePlaylistTracks', () => {
       });
 
       const filteredTracks = result.current.filterTracks(
-        track => track.artist === 'Artist 1'
+        track => track.sourcePlaylist === 'playlist1'
       );
       expect(filteredTracks).toHaveLength(2);
       expect(filteredTracks[0].id).toBe('1');
@@ -406,17 +643,17 @@ describe('usePlaylistTracks', () => {
         expect(result.current.tracks).toEqual(mockTracks);
       });
 
-      const tracksWithArtist = result.current.getTracksWithProperty(
-        'artist',
-        'Artist 1'
+      const tracksWithSourcePlaylist = result.current.getTracksWithProperty(
+        'sourcePlaylist',
+        'playlist1'
       );
-      expect(tracksWithArtist).toHaveLength(2);
+      expect(tracksWithSourcePlaylist).toHaveLength(2);
     });
   });
 
   describe('Options', () => {
     it('passes market option to getPlaylistTracks', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue([]);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({ tracks: [] });
 
       renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId, { market: 'US' })
@@ -442,12 +679,40 @@ describe('usePlaylistTracks', () => {
 
       expect(result.current.isEmpty).toBe(true);
 
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue([
-        { id: '1', name: 'Track 1' },
-      ]);
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: [
+          {
+            id: '1',
+            name: 'Track 1',
+            artists: [
+              {
+                id: 'artist1',
+                name: 'Artist 1',
+                uri: 'spotify:artist:artist1',
+                external_urls: { spotify: '' },
+              },
+            ],
+            album: {
+              id: 'album1',
+              name: 'Album 1',
+              images: [],
+              release_date: '2023-01-01',
+              uri: 'spotify:album:album1',
+              external_urls: { spotify: '' },
+            },
+            duration_ms: 180000,
+            explicit: false,
+            popularity: 75,
+            preview_url: null,
+            track_number: 1,
+            uri: 'spotify:track:1',
+            external_urls: { spotify: '' },
+          },
+        ],
+      });
 
       await act(async () => {
-        result.current.fetchTracks();
+        await result.current.fetchTracks();
       });
 
       expect(result.current.isEmpty).toBe(false);
@@ -462,16 +727,46 @@ describe('usePlaylistTracks', () => {
       expect(result.current.isComplete).toBe(false);
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId, options) => {
+        (playlistId: string, options: any) => {
           if (options.onProgress) {
             options.onProgress({ loaded: 100, total: 100, percentage: 100 });
           }
-          return Promise.resolve([{ id: '1', name: 'Track 1' }]);
+          return Promise.resolve({
+            tracks: [
+              {
+                id: '1',
+                name: 'Track 1',
+                artists: [
+                  {
+                    id: 'artist1',
+                    name: 'Artist 1',
+                    uri: 'spotify:artist:artist1',
+                    external_urls: { spotify: '' },
+                  },
+                ],
+                album: {
+                  id: 'album1',
+                  name: 'Album 1',
+                  images: [],
+                  release_date: '2023-01-01',
+                  uri: 'spotify:album:album1',
+                  external_urls: { spotify: '' },
+                },
+                duration_ms: 180000,
+                explicit: false,
+                popularity: 75,
+                preview_url: null,
+                track_number: 1,
+                uri: 'spotify:track:1',
+                external_urls: { spotify: '' },
+              },
+            ],
+          });
         }
       );
 
       await act(async () => {
-        result.current.fetchTracks();
+        await result.current.fetchTracks();
       });
 
       expect(result.current.isComplete).toBe(true);
@@ -490,7 +785,7 @@ describe('usePlaylistTracks', () => {
       global.AbortController = jest.fn(() => ({
         signal: { aborted: false },
         abort: mockAbort,
-      }));
+      })) as any;
 
       unmount();
 

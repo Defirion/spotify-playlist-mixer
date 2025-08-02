@@ -464,7 +464,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useMixOptions to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.11.3 Migrate usePlaylistSelection hook
+- [x] 15.11.3 Migrate usePlaylistSelection hook
+
+
 
 
 
@@ -473,7 +475,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate usePlaylistSelection to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.4 Migrate usePlaylistTracks hook
+- [-] 15.11.4 Migrate usePlaylistTracks hook
+
+
+
   - Convert usePlaylistTracks.js to usePlaylistTracks.ts with track types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate usePlaylistTracks to TypeScript"`

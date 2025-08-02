@@ -1,34 +1,79 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import SpotifyService from '../services/spotify';
+import type { SpotifyTrack, GetPlaylistTracksOptions } from '../types';
+
+// Progress tracking interface
+interface ProgressData {
+  loaded: number;
+  total: number;
+  percentage: number;
+}
+
+// Hook options interface
+interface UsePlaylistTracksOptions
+  extends Omit<GetPlaylistTracksOptions, 'onProgress'> {
+  autoFetch?: boolean;
+  onProgress?: (progress: ProgressData) => void;
+}
+
+// Hook return interface
+interface UsePlaylistTracksReturn {
+  // State
+  tracks: SpotifyTrack[];
+  loading: boolean;
+  error: Error | null;
+  progress: ProgressData;
+
+  // Actions
+  fetchTracks: () => Promise<void>;
+  refresh: () => Promise<void>;
+  clear: () => void;
+  retry: () => Promise<void>;
+
+  // Utility methods
+  getTrackById: (trackId: string) => SpotifyTrack | undefined;
+  filterTracks: (filterFn: (track: SpotifyTrack) => boolean) => SpotifyTrack[];
+  getTracksWithProperty: <K extends keyof SpotifyTrack>(
+    property: K,
+    value: SpotifyTrack[K]
+  ) => SpotifyTrack[];
+
+  // Computed values
+  isEmpty: boolean;
+  hasData: boolean;
+  totalTracks: number;
+  isComplete: boolean;
+}
 
 /**
  * Custom hook for fetching playlist tracks
  * Provides automatic pagination, loading states, and error handling
  *
- * @param {string} accessToken - Spotify access token
- * @param {string} playlistId - Spotify playlist ID
- * @param {Object} options - Hook options
- * @param {string} options.market - Market code for track availability
- * @param {boolean} options.autoFetch - Whether to fetch automatically when playlistId changes (default: true)
- * @param {Function} options.onProgress - Progress callback function
- * @returns {Object} - Hook state and methods
+ * @param accessToken - Spotify access token
+ * @param playlistId - Spotify playlist ID
+ * @param options - Hook options
+ * @returns Hook state and methods
  */
-const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
+const usePlaylistTracks = (
+  accessToken: string | null,
+  playlistId: string | null,
+  options: UsePlaylistTracksOptions = {}
+): UsePlaylistTracksReturn => {
   const { market, autoFetch = true, onProgress } = options;
 
   // State
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [progress, setProgress] = useState({
+  const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [progress, setProgress] = useState<ProgressData>({
     loaded: 0,
     total: 0,
     percentage: 0,
   });
 
   // Refs
-  const spotifyServiceRef = useRef(null);
-  const abortControllerRef = useRef(null);
+  const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize Spotify service when access token changes
   useEffect(() => {
@@ -43,7 +88,7 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
    * Internal progress handler
    */
   const handleProgress = useCallback(
-    progressData => {
+    (progressData: ProgressData): void => {
       setProgress(progressData);
       if (onProgress && typeof onProgress === 'function') {
         onProgress(progressData);
@@ -55,7 +100,7 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
   /**
    * Fetch tracks for the current playlist
    */
-  const fetchTracks = useCallback(async () => {
+  const fetchTracks = useCallback(async (): Promise<void> => {
     if (!spotifyServiceRef.current) {
       setError(new Error('Spotify service not initialized'));
       return;
@@ -80,7 +125,7 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
       setError(null);
       setProgress({ loaded: 0, total: 0, percentage: 0 });
 
-      const playlistTracks = await spotifyServiceRef.current.getPlaylistTracks(
+      const result = await spotifyServiceRef.current.getPlaylistTracks(
         playlistId,
         {
           market,
@@ -93,6 +138,8 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
         return;
       }
 
+      // Handle both service response format and direct tracks array (for backward compatibility)
+      const playlistTracks = Array.isArray(result) ? result : result.tracks;
       setTracks(playlistTracks);
       setProgress({
         loaded: playlistTracks.length,
@@ -102,8 +149,10 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
     } catch (err) {
       // Don't set error if request was aborted
       if (!abortControllerRef.current?.signal.aborted) {
-        setError(err);
-        console.error('Error fetching playlist tracks:', err);
+        const error =
+          err instanceof Error ? err : new Error('Unknown error occurred');
+        setError(error);
+        console.error('Error fetching playlist tracks:', error);
       }
     } finally {
       setLoading(false);
@@ -137,14 +186,14 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
   /**
    * Manually refresh the tracks
    */
-  const refresh = useCallback(() => {
-    fetchTracks();
+  const refresh = useCallback(async (): Promise<void> => {
+    await fetchTracks();
   }, [fetchTracks]);
 
   /**
    * Clear tracks and reset state
    */
-  const clear = useCallback(() => {
+  const clear = useCallback((): void => {
     setTracks([]);
     setError(null);
     setProgress({ loaded: 0, total: 0, percentage: 0 });
@@ -158,15 +207,15 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
   /**
    * Retry the last fetch (useful for error recovery)
    */
-  const retry = useCallback(() => {
-    fetchTracks();
+  const retry = useCallback(async (): Promise<void> => {
+    await fetchTracks();
   }, [fetchTracks]);
 
   /**
    * Get track by ID
    */
   const getTrackById = useCallback(
-    trackId => {
+    (trackId: string): SpotifyTrack | undefined => {
       return tracks.find(track => track.id === trackId);
     },
     [tracks]
@@ -176,7 +225,7 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
    * Filter tracks by criteria
    */
   const filterTracks = useCallback(
-    filterFn => {
+    (filterFn: (track: SpotifyTrack) => boolean): SpotifyTrack[] => {
       return tracks.filter(filterFn);
     },
     [tracks]
@@ -186,7 +235,10 @@ const usePlaylistTracks = (accessToken, playlistId, options = {}) => {
    * Get tracks with specific properties
    */
   const getTracksWithProperty = useCallback(
-    (property, value) => {
+    <K extends keyof SpotifyTrack>(
+      property: K,
+      value: SpotifyTrack[K]
+    ): SpotifyTrack[] => {
       return tracks.filter(track => track[property] === value);
     },
     [tracks]
