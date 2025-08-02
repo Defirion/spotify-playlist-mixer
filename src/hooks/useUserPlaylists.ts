@@ -1,32 +1,91 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import SpotifyService from '../services/spotify';
+import { SpotifyPlaylist } from '../types/spotify';
+import { GetUserPlaylistsOptions } from '../types/api';
+
+/**
+ * Options for the useUserPlaylists hook
+ */
+export interface UseUserPlaylistsOptions extends GetUserPlaylistsOptions {
+  /** Whether to fetch automatically when hook mounts (default: true) */
+  autoFetch?: boolean;
+  /** Whether to fetch all playlists automatically (default: false) */
+  fetchAll?: boolean;
+  /** Number of playlists per page (default: 50) */
+  limit?: number;
+}
+
+/**
+ * Options for manual fetch operations
+ */
+export interface FetchPlaylistsOptions {
+  /** Whether to append results (for pagination) */
+  append?: boolean;
+  /** Whether to fetch all playlists */
+  all?: boolean;
+  /** Custom offset for pagination */
+  customOffset?: number;
+}
+
+/**
+ * Return type for the useUserPlaylists hook
+ */
+export interface UseUserPlaylistsReturn {
+  // State
+  playlists: SpotifyPlaylist[];
+  loading: boolean;
+  error: Error | null;
+  hasMore: boolean;
+  total: number;
+
+  // Actions
+  fetchPlaylists: (options?: FetchPlaylistsOptions) => Promise<void>;
+  loadMore: () => void;
+  refresh: () => void;
+  fetchAllPlaylists: () => void;
+  clear: () => void;
+  retry: () => void;
+
+  // Utility methods
+  getPlaylistById: (playlistId: string) => SpotifyPlaylist | undefined;
+  filterPlaylists: (
+    filterFn: (playlist: SpotifyPlaylist) => boolean
+  ) => SpotifyPlaylist[];
+  searchPlaylists: (query: string) => SpotifyPlaylist[];
+  getOwnedPlaylists: () => SpotifyPlaylist[];
+  getCollaborativePlaylists: () => SpotifyPlaylist[];
+  getPublicPlaylists: () => SpotifyPlaylist[];
+
+  // Computed values
+  isEmpty: boolean;
+  hasData: boolean;
+  totalPlaylists: number;
+  isInitialLoad: boolean;
+  isLoadingMore: boolean;
+}
 
 /**
  * Custom hook for fetching user playlists
  * Provides pagination, loading states, and error handling
- *
- * @param {string} accessToken - Spotify access token
- * @param {Object} options - Hook options
- * @param {boolean} options.autoFetch - Whether to fetch automatically when hook mounts (default: true)
- * @param {boolean} options.fetchAll - Whether to fetch all playlists automatically (default: false)
- * @param {number} options.limit - Number of playlists per page (default: 50)
- * @returns {Object} - Hook state and methods
  */
-const useUserPlaylists = (accessToken, options = {}) => {
+const useUserPlaylists = (
+  accessToken: string | null,
+  options: UseUserPlaylistsOptions = {}
+): UseUserPlaylistsReturn => {
   const { autoFetch = true, fetchAll = false, limit = 50 } = options;
 
   // State
-  const [playlists, setPlaylists] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
+  const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [total, setTotal] = useState<number>(0);
+  const [offset, setOffset] = useState<number>(0);
 
   // Refs
-  const spotifyServiceRef = useRef(null);
-  const abortControllerRef = useRef(null);
-  const hasAutoFetchedRef = useRef(false);
+  const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const hasAutoFetchedRef = useRef<boolean>(false);
 
   // Initialize Spotify service when access token changes
   useEffect(() => {
@@ -41,13 +100,9 @@ const useUserPlaylists = (accessToken, options = {}) => {
 
   /**
    * Fetch playlists
-   * @param {Object} fetchOptions - Fetch options
-   * @param {boolean} fetchOptions.append - Whether to append results (for pagination)
-   * @param {boolean} fetchOptions.all - Whether to fetch all playlists
-   * @param {number} fetchOptions.customOffset - Custom offset for pagination
    */
   const fetchPlaylists = useCallback(
-    async (fetchOptions = {}) => {
+    async (fetchOptions: FetchPlaylistsOptions = {}): Promise<void> => {
       const { append = false, all = fetchAll, customOffset } = fetchOptions;
 
       if (!spotifyServiceRef.current) {
@@ -90,12 +145,17 @@ const useUserPlaylists = (accessToken, options = {}) => {
         }
 
         if (append && !all) {
-          setPlaylists(prevPlaylists => [...prevPlaylists, ...result.items]);
-          setOffset(result.offset + result.items.length);
+          setPlaylists(prevPlaylists => [
+            ...prevPlaylists,
+            ...result.playlists,
+          ]);
+          setOffset(result.nextOffset || result.playlists.length);
         } else {
-          setPlaylists(result.items);
+          setPlaylists(result.playlists);
           setOffset(
-            all ? result.items.length : result.offset + result.items.length
+            all
+              ? result.playlists.length
+              : result.nextOffset || result.playlists.length
           );
         }
 
@@ -104,8 +164,10 @@ const useUserPlaylists = (accessToken, options = {}) => {
       } catch (err) {
         // Don't set error if request was aborted
         if (!abortControllerRef.current?.signal.aborted) {
-          setError(err);
-          console.error('Error fetching user playlists:', err);
+          const error =
+            err instanceof Error ? err : new Error('Unknown error occurred');
+          setError(error);
+          console.error('Error fetching user playlists:', error);
         }
       } finally {
         setLoading(false);
@@ -134,7 +196,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
   /**
    * Load more playlists (pagination)
    */
-  const loadMore = useCallback(() => {
+  const loadMore = useCallback((): void => {
     if (!loading && hasMore) {
       fetchPlaylists({ append: true });
     }
@@ -143,7 +205,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
   /**
    * Refresh playlists (reload from beginning)
    */
-  const refresh = useCallback(() => {
+  const refresh = useCallback((): void => {
     setOffset(0);
     fetchPlaylists({ append: false });
   }, [fetchPlaylists]);
@@ -151,14 +213,14 @@ const useUserPlaylists = (accessToken, options = {}) => {
   /**
    * Fetch all playlists at once
    */
-  const fetchAllPlaylists = useCallback(() => {
+  const fetchAllPlaylists = useCallback((): void => {
     fetchPlaylists({ all: true });
   }, [fetchPlaylists]);
 
   /**
    * Clear playlists and reset state
    */
-  const clear = useCallback(() => {
+  const clear = useCallback((): void => {
     setPlaylists([]);
     setError(null);
     setHasMore(false);
@@ -174,7 +236,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
   /**
    * Retry the last fetch (useful for error recovery)
    */
-  const retry = useCallback(() => {
+  const retry = useCallback((): void => {
     fetchPlaylists();
   }, [fetchPlaylists]);
 
@@ -182,7 +244,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
    * Get playlist by ID
    */
   const getPlaylistById = useCallback(
-    playlistId => {
+    (playlistId: string): SpotifyPlaylist | undefined => {
       return playlists.find(playlist => playlist.id === playlistId);
     },
     [playlists]
@@ -192,7 +254,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
    * Filter playlists by criteria
    */
   const filterPlaylists = useCallback(
-    filterFn => {
+    (filterFn: (playlist: SpotifyPlaylist) => boolean): SpotifyPlaylist[] => {
       return playlists.filter(filterFn);
     },
     [playlists]
@@ -202,7 +264,7 @@ const useUserPlaylists = (accessToken, options = {}) => {
    * Search playlists by name (client-side filtering)
    */
   const searchPlaylists = useCallback(
-    query => {
+    (query: string): SpotifyPlaylist[] => {
       if (!query || query.trim() === '') {
         return playlists;
       }
@@ -221,21 +283,21 @@ const useUserPlaylists = (accessToken, options = {}) => {
   /**
    * Get playlists owned by the current user
    */
-  const getOwnedPlaylists = useCallback(() => {
+  const getOwnedPlaylists = useCallback((): SpotifyPlaylist[] => {
     return playlists.filter(playlist => playlist.owner?.id);
   }, [playlists]);
 
   /**
    * Get collaborative playlists
    */
-  const getCollaborativePlaylists = useCallback(() => {
+  const getCollaborativePlaylists = useCallback((): SpotifyPlaylist[] => {
     return playlists.filter(playlist => playlist.collaborative);
   }, [playlists]);
 
   /**
    * Get public playlists
    */
-  const getPublicPlaylists = useCallback(() => {
+  const getPublicPlaylists = useCallback((): SpotifyPlaylist[] => {
     return playlists.filter(playlist => playlist.public);
   }, [playlists]);
 

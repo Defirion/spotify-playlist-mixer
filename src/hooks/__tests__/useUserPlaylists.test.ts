@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import useUserPlaylists from '../useUserPlaylists';
 import SpotifyService from '../../services/spotify';
+import { SpotifyPlaylist } from '../../types/spotify';
 
 // Mock axios
 jest.mock('axios');
@@ -8,8 +9,12 @@ jest.mock('axios');
 // Mock the SpotifyService
 jest.mock('../../services/spotify');
 
+const MockedSpotifyService = SpotifyService as jest.MockedClass<
+  typeof SpotifyService
+>;
+
 describe('useUserPlaylists', () => {
-  let mockSpotifyService;
+  let mockSpotifyService: jest.Mocked<SpotifyService>;
   const mockAccessToken = 'mock-access-token';
 
   beforeEach(() => {
@@ -17,9 +22,19 @@ describe('useUserPlaylists', () => {
 
     mockSpotifyService = {
       getUserPlaylists: jest.fn(),
+      setAccessToken: jest.fn(),
+      getAccessToken: jest.fn(),
+      getUserProfile: jest.fn(),
+      getPlaylistTracks: jest.fn(),
+      createPlaylist: jest.fn(),
+      addTracksToPlaylist: jest.fn(),
+      removeTracksFromPlaylist: jest.fn(),
+      searchTracks: jest.fn(),
+      getTrackAudioFeatures: jest.fn(),
+      getMultipleTrackAudioFeatures: jest.fn(),
     };
 
-    SpotifyService.mockImplementation(() => mockSpotifyService);
+    MockedSpotifyService.mockImplementation(() => mockSpotifyService);
   });
 
   describe('Initialization', () => {
@@ -41,7 +56,7 @@ describe('useUserPlaylists', () => {
     it('creates SpotifyService instance with access token', () => {
       renderHook(() => useUserPlaylists(mockAccessToken));
 
-      expect(SpotifyService).toHaveBeenCalledWith(mockAccessToken);
+      expect(MockedSpotifyService).toHaveBeenCalledWith(mockAccessToken);
     });
 
     it('handles missing access token gracefully', () => {
@@ -49,31 +64,52 @@ describe('useUserPlaylists', () => {
         useUserPlaylists(null, { autoFetch: false })
       );
 
-      expect(SpotifyService).not.toHaveBeenCalled();
+      expect(MockedSpotifyService).not.toHaveBeenCalled();
       expect(result.current.error).toBe(null);
     });
   });
 
   describe('Auto-fetch functionality', () => {
-    const mockPlaylists = [
+    const mockPlaylists: SpotifyPlaylist[] = [
       {
         id: '1',
         name: 'Playlist 1',
-        owner: { id: 'user1', display_name: 'User 1' },
+        description: null,
+        images: [],
+        tracks: { total: 10, href: '' },
+        owner: {
+          id: 'user1',
+          display_name: 'User 1',
+          external_urls: { spotify: '' },
+        },
+        public: true,
+        collaborative: false,
+        uri: 'spotify:playlist:1',
+        external_urls: { spotify: '' },
       },
       {
         id: '2',
         name: 'Playlist 2',
-        owner: { id: 'user2', display_name: 'User 2' },
+        description: null,
+        images: [],
+        tracks: { total: 20, href: '' },
+        owner: {
+          id: 'user2',
+          display_name: 'User 2',
+          external_urls: { spotify: '' },
+        },
+        public: false,
+        collaborative: true,
+        uri: 'spotify:playlist:2',
+        external_urls: { spotify: '' },
       },
     ];
 
     const mockPlaylistsResponse = {
-      items: mockPlaylists,
+      playlists: mockPlaylists,
       total: 100,
-      limit: 50,
-      offset: 0,
       hasMore: true,
+      nextOffset: 2,
     };
 
     it('fetches playlists automatically by default', async () => {
@@ -90,7 +126,10 @@ describe('useUserPlaylists', () => {
         });
       });
 
-      expect(result.current.playlists).toEqual(mockPlaylists);
+      await waitFor(() => {
+        expect(result.current.playlists).toEqual(mockPlaylists);
+      });
+
       expect(result.current.hasData).toBe(true);
       expect(result.current.totalPlaylists).toBe(2);
       expect(result.current.hasMore).toBe(true);
@@ -105,14 +144,12 @@ describe('useUserPlaylists', () => {
 
     it('fetches all playlists when fetchAll is true', async () => {
       const allPlaylistsResponse = {
-        items: mockPlaylists,
+        playlists: mockPlaylists,
         total: 2,
-        limit: 2,
-        offset: 0,
         hasMore: false,
+        nextOffset: 2,
       };
 
-      // Set up the mock before rendering the hook
       mockSpotifyService.getUserPlaylists.mockResolvedValue(
         allPlaylistsResponse
       );
@@ -137,7 +174,7 @@ describe('useUserPlaylists', () => {
 
   describe('Loading states', () => {
     it('sets loading state during fetch', async () => {
-      let resolveGetPlaylists;
+      let resolveGetPlaylists: (value: any) => void;
       const playlistsPromise = new Promise(resolve => {
         resolveGetPlaylists = resolve;
       });
@@ -150,7 +187,7 @@ describe('useUserPlaylists', () => {
       });
 
       act(() => {
-        resolveGetPlaylists({ items: [], total: 0, hasMore: false });
+        resolveGetPlaylists({ playlists: [], total: 0, hasMore: false });
       });
 
       await waitFor(() => {
@@ -159,7 +196,7 @@ describe('useUserPlaylists', () => {
     });
 
     it('calculates isInitialLoad correctly', async () => {
-      let resolveGetPlaylists;
+      let resolveGetPlaylists: (value: any) => void;
       const playlistsPromise = new Promise(resolve => {
         resolveGetPlaylists = resolve;
       });
@@ -169,12 +206,30 @@ describe('useUserPlaylists', () => {
 
       await waitFor(() => {
         expect(result.current.isInitialLoad).toBe(true);
-        expect(result.current.isLoadingMore).toBe(false);
       });
+
+      expect(result.current.isLoadingMore).toBe(false);
 
       act(() => {
         resolveGetPlaylists({
-          items: [{ id: '1', name: 'Playlist 1' }],
+          playlists: [
+            {
+              id: '1',
+              name: 'Playlist 1',
+              description: null,
+              images: [],
+              tracks: { total: 10, href: '' },
+              owner: {
+                id: 'user1',
+                display_name: 'User 1',
+                external_urls: { spotify: '' },
+              },
+              public: true,
+              collaborative: false,
+              uri: 'spotify:playlist:1',
+              external_urls: { spotify: '' },
+            },
+          ],
           total: 1,
           hasMore: false,
         });
@@ -188,23 +243,54 @@ describe('useUserPlaylists', () => {
 
   describe('Pagination', () => {
     const mockFirstPage = {
-      items: [{ id: '1', name: 'Playlist 1' }],
+      playlists: [
+        {
+          id: '1',
+          name: 'Playlist 1',
+          description: null,
+          images: [],
+          tracks: { total: 10, href: '' },
+          owner: {
+            id: 'user1',
+            display_name: 'User 1',
+            external_urls: { spotify: '' },
+          },
+          public: true,
+          collaborative: false,
+          uri: 'spotify:playlist:1',
+          external_urls: { spotify: '' },
+        },
+      ],
       total: 100,
-      limit: 50,
-      offset: 0,
       hasMore: true,
+      nextOffset: 1,
     };
 
     const mockSecondPage = {
-      items: [{ id: '2', name: 'Playlist 2' }],
+      playlists: [
+        {
+          id: '2',
+          name: 'Playlist 2',
+          description: null,
+          images: [],
+          tracks: { total: 20, href: '' },
+          owner: {
+            id: 'user2',
+            display_name: 'User 2',
+            external_urls: { spotify: '' },
+          },
+          public: false,
+          collaborative: true,
+          uri: 'spotify:playlist:2',
+          external_urls: { spotify: '' },
+        },
+      ],
       total: 100,
-      limit: 50,
-      offset: 1,
       hasMore: false,
+      nextOffset: 2,
     };
 
     it('loads more playlists', async () => {
-      // Set up the mock to return the first page, then the second page
       mockSpotifyService.getUserPlaylists
         .mockResolvedValueOnce(mockFirstPage)
         .mockResolvedValueOnce(mockSecondPage);
@@ -213,24 +299,29 @@ describe('useUserPlaylists', () => {
         useUserPlaylists(mockAccessToken, { limit: 50 })
       );
 
-      // Wait for the first page to load
       await waitFor(() => {
         expect(result.current.playlists).toHaveLength(1);
-        expect(result.current.hasMore).toBe(true);
-        expect(result.current.loading).toBe(false);
       });
 
-      // Load more playlists
+      await waitFor(() => {
+        expect(result.current.hasMore).toBe(true);
+      });
+
+      expect(result.current.loading).toBe(false);
+
       await act(async () => {
         result.current.loadMore();
       });
 
-      // Wait for the second page to load
       await waitFor(() => {
         expect(result.current.playlists).toHaveLength(2);
-        expect(result.current.hasMore).toBe(false);
-        expect(result.current.loading).toBe(false);
       });
+
+      await waitFor(() => {
+        expect(result.current.hasMore).toBe(false);
+      });
+
+      expect(result.current.loading).toBe(false);
 
       expect(mockSpotifyService.getUserPlaylists).toHaveBeenCalledTimes(2);
       expect(mockSpotifyService.getUserPlaylists).toHaveBeenNthCalledWith(1, {
@@ -244,9 +335,8 @@ describe('useUserPlaylists', () => {
     });
 
     it('does not load more when already loading', async () => {
-      let resolveGetPlaylists;
-      const playlistsPromise = new Promise(resolve => {
-        resolveGetPlaylists = resolve;
+      const playlistsPromise = new Promise(() => {
+        // Never resolve to keep loading state
       });
       mockSpotifyService.getUserPlaylists.mockReturnValue(playlistsPromise);
 
@@ -265,8 +355,26 @@ describe('useUserPlaylists', () => {
 
     it('does not load more when hasMore is false', async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        items: [{ id: '1', name: 'Playlist 1' }],
+        playlists: [
+          {
+            id: '1',
+            name: 'Playlist 1',
+            description: null,
+            images: [],
+            tracks: { total: 10, href: '' },
+            owner: {
+              id: 'user1',
+              display_name: 'User 1',
+              external_urls: { spotify: '' },
+            },
+            public: true,
+            collaborative: false,
+            uri: 'spotify:playlist:1',
+            external_urls: { spotify: '' },
+          },
+        ],
         hasMore: false,
+        total: 1,
       });
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
@@ -292,6 +400,9 @@ describe('useUserPlaylists', () => {
 
       await waitFor(() => {
         expect(result.current.error).toBe(mockError);
+      });
+
+      await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
     });
@@ -300,7 +411,7 @@ describe('useUserPlaylists', () => {
       const { result } = renderHook(() => useUserPlaylists(null));
 
       await act(async () => {
-        result.current.fetchPlaylists();
+        await result.current.fetchPlaylists();
       });
 
       expect(result.current.error).toEqual(
@@ -310,13 +421,43 @@ describe('useUserPlaylists', () => {
   });
 
   describe('Manual operations', () => {
-    const mockPlaylists = [
-      { id: '1', name: 'Playlist 1' },
-      { id: '2', name: 'Playlist 2' },
+    const mockPlaylists: SpotifyPlaylist[] = [
+      {
+        id: '1',
+        name: 'Playlist 1',
+        description: null,
+        images: [],
+        tracks: { total: 10, href: '' },
+        owner: {
+          id: 'user1',
+          display_name: 'User 1',
+          external_urls: { spotify: '' },
+        },
+        public: true,
+        collaborative: false,
+        uri: 'spotify:playlist:1',
+        external_urls: { spotify: '' },
+      },
+      {
+        id: '2',
+        name: 'Playlist 2',
+        description: null,
+        images: [],
+        tracks: { total: 20, href: '' },
+        owner: {
+          id: 'user2',
+          display_name: 'User 2',
+          external_urls: { spotify: '' },
+        },
+        public: false,
+        collaborative: true,
+        uri: 'spotify:playlist:2',
+        external_urls: { spotify: '' },
+      },
     ];
 
     const mockResponse = {
-      items: mockPlaylists,
+      playlists: mockPlaylists,
       total: 2,
       hasMore: false,
     };
@@ -329,7 +470,7 @@ describe('useUserPlaylists', () => {
       );
 
       await act(async () => {
-        result.current.fetchPlaylists();
+        await result.current.fetchPlaylists();
       });
 
       expect(mockSpotifyService.getUserPlaylists).toHaveBeenCalledWith({
@@ -386,7 +527,10 @@ describe('useUserPlaylists', () => {
         result.current.retry();
       });
 
-      expect(result.current.playlists).toEqual(mockPlaylists);
+      await waitFor(() => {
+        expect(result.current.playlists).toEqual(mockPlaylists);
+      });
+
       expect(result.current.error).toBe(null);
     });
 
@@ -407,36 +551,60 @@ describe('useUserPlaylists', () => {
   });
 
   describe('Utility methods', () => {
-    const mockPlaylists = [
+    const mockPlaylists: SpotifyPlaylist[] = [
       {
         id: '1',
         name: 'My Playlist',
         description: 'My favorite songs',
-        owner: { id: 'user1', display_name: 'User One' },
+        images: [],
+        tracks: { total: 10, href: '' },
+        owner: {
+          id: 'user1',
+          display_name: 'User One',
+          external_urls: { spotify: '' },
+        },
         collaborative: false,
         public: true,
+        uri: 'spotify:playlist:1',
+        external_urls: { spotify: '' },
       },
       {
         id: '2',
         name: 'Collaborative Mix',
         description: 'Shared playlist',
-        owner: { id: 'user2', display_name: 'User Two' },
+        images: [],
+        tracks: { total: 20, href: '' },
+        owner: {
+          id: 'user2',
+          display_name: 'User Two',
+          external_urls: { spotify: '' },
+        },
         collaborative: true,
         public: false,
+        uri: 'spotify:playlist:2',
+        external_urls: { spotify: '' },
       },
       {
         id: '3',
         name: 'Rock Classics',
         description: 'Classic rock hits',
-        owner: { id: 'user1', display_name: 'User One' },
+        images: [],
+        tracks: { total: 30, href: '' },
+        owner: {
+          id: 'user1',
+          display_name: 'User One',
+          external_urls: { spotify: '' },
+        },
         collaborative: false,
         public: true,
+        uri: 'spotify:playlist:3',
+        external_urls: { spotify: '' },
       },
     ];
 
     beforeEach(async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        items: mockPlaylists,
+        playlists: mockPlaylists,
         total: 3,
         hasMore: false,
       });
@@ -552,7 +720,7 @@ describe('useUserPlaylists', () => {
   describe('Options', () => {
     it('respects custom limit', async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        items: [],
+        playlists: [],
         total: 0,
         hasMore: false,
       });
@@ -577,12 +745,30 @@ describe('useUserPlaylists', () => {
       expect(result.current.isEmpty).toBe(true);
 
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        items: [{ id: '1', name: 'Playlist 1' }],
+        playlists: [
+          {
+            id: '1',
+            name: 'Playlist 1',
+            description: null,
+            images: [],
+            tracks: { total: 10, href: '' },
+            owner: {
+              id: 'user1',
+              display_name: 'User 1',
+              external_urls: { spotify: '' },
+            },
+            public: true,
+            collaborative: false,
+            uri: 'spotify:playlist:1',
+            external_urls: { spotify: '' },
+          },
+        ],
         hasMore: false,
+        total: 1,
       });
 
       await act(async () => {
-        result.current.fetchPlaylists();
+        await result.current.fetchPlaylists();
       });
 
       expect(result.current.isEmpty).toBe(false);
@@ -591,13 +777,30 @@ describe('useUserPlaylists', () => {
 
     it('calculates isLoadingMore correctly', async () => {
       const mockFirstPage = {
-        items: [{ id: '1', name: 'Playlist 1' }],
+        playlists: [
+          {
+            id: '1',
+            name: 'Playlist 1',
+            description: null,
+            images: [],
+            tracks: { total: 10, href: '' },
+            owner: {
+              id: 'user1',
+              display_name: 'User 1',
+              external_urls: { spotify: '' },
+            },
+            public: true,
+            collaborative: false,
+            uri: 'spotify:playlist:1',
+            external_urls: { spotify: '' },
+          },
+        ],
         hasMore: true,
+        total: 2,
       };
 
-      let resolveSecondPage;
-      const secondPagePromise = new Promise(resolve => {
-        resolveSecondPage = resolve;
+      const secondPagePromise = new Promise(() => {
+        // Never resolve to keep loading state
       });
 
       mockSpotifyService.getUserPlaylists
@@ -616,8 +819,9 @@ describe('useUserPlaylists', () => {
 
       await waitFor(() => {
         expect(result.current.isLoadingMore).toBe(true);
-        expect(result.current.isInitialLoad).toBe(false);
       });
+
+      expect(result.current.isInitialLoad).toBe(false);
     });
   });
 
@@ -631,7 +835,7 @@ describe('useUserPlaylists', () => {
       global.AbortController = jest.fn(() => ({
         signal: { aborted: false },
         abort: mockAbort,
-      }));
+      })) as any;
 
       unmount();
 
