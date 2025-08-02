@@ -442,7 +442,9 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [ ] 15.11 Migrate remaining hooks to TypeScript (atomic migrations)
-- [-] 15.11.1 Migrate useAppState hook
+- [x] 15.11.1 Migrate useAppState hook
+
+
 
 
 
@@ -451,7 +453,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useAppState to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.2 Migrate useMixOptions hook
+- [-] 15.11.2 Migrate useMixOptions hook
+
+
+
   - Convert useMixOptions.js to useMixOptions.ts with mix configuration types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useMixOptions to TypeScript"`
