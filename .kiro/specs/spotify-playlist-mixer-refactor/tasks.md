@@ -508,7 +508,9 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useApiErrorHandler to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.11.7 Migrate useErrorHandler hook
+- [x] 15.11.7 Migrate useErrorHandler hook
+
+
 
 
 
@@ -517,7 +519,10 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useErrorHandler to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [ ] 15.11.8 Migrate useKeyboardNavigation hook
+- [-] 15.11.8 Migrate useKeyboardNavigation hook
+
+
+
   - Convert useKeyboardNavigation.js to useKeyboardNavigation.ts with navigation types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useKeyboardNavigation to TypeScript"`

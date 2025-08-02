@@ -1,41 +1,42 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import type {
+  UseKeyboardNavigationOptions,
+  UseKeyboardNavigationReturn,
+  NavigationDirection,
+  AnnouncementPriority,
+} from '../types/hooks';
 
 /**
  * Custom hook for keyboard navigation and accessibility in drag-and-drop scenarios
- * @param {Object} options - Configuration options
- * @param {Array} options.items - Array of items to navigate through
- * @param {Function} options.onSelect - Called when an item is selected (spacebar)
- * @param {Function} options.onMove - Called when an item should be moved (arrow keys)
- * @param {Function} options.onDrop - Called when an item is dropped (spacebar again)
- * @param {string} options.orientation - Navigation orientation ('vertical' | 'horizontal')
- * @param {boolean} options.loop - Whether navigation should loop at boundaries
- * @param {Function} options.getItemId - Function to get unique ID from item
- * @param {Function} options.announceToScreenReader - Function to announce changes
- * @returns {Object} Navigation state and handlers
+ * Provides comprehensive keyboard navigation with screen reader support
+ *
+ * @template T - The type of items being navigated
+ * @param options - Configuration options for keyboard navigation
+ * @returns Navigation state and handlers
  */
-const useKeyboardNavigation = ({
+const useKeyboardNavigation = <T = any>({
   items = [],
   onSelect,
   onMove,
   onDrop,
   orientation = 'vertical',
   loop = false,
-  getItemId = (item, index) => item?.id || index,
+  getItemId = (item: T, index: number) => (item as any)?.id || index.toString(),
   announceToScreenReader,
-} = {}) => {
+}: UseKeyboardNavigationOptions<T> = {}): UseKeyboardNavigationReturn<T> => {
   // Navigation state
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedItem, setDraggedItem] = useState(null);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [draggedItem, setDraggedItem] = useState<T | null>(null);
 
   // Refs for managing focus and announcements
-  const announcementTimeoutRef = useRef(null);
-  const lastAnnouncementRef = useRef('');
+  const announcementTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAnnouncementRef = useRef<string>('');
 
   // Announce changes to screen readers with debouncing
   const announce = useCallback(
-    (message, priority = 'polite') => {
+    (message: string, priority: AnnouncementPriority = 'polite'): void => {
       if (
         !announceToScreenReader ||
         !message ||
@@ -60,7 +61,7 @@ const useKeyboardNavigation = ({
 
   // Move focus to a specific index
   const moveFocus = useCallback(
-    (newIndex, reason = 'navigation') => {
+    (newIndex: number, reason: string = 'navigation'): void => {
       if (items.length === 0) return;
 
       let targetIndex = newIndex;
@@ -77,7 +78,7 @@ const useKeyboardNavigation = ({
       // Announce the focused item
       if (items[targetIndex]) {
         const item = items[targetIndex];
-        const itemName = item.name || `Item ${targetIndex + 1}`;
+        const itemName = (item as any)?.name || `Item ${targetIndex + 1}`;
 
         let message = `${itemName}`;
 
@@ -97,7 +98,7 @@ const useKeyboardNavigation = ({
 
   // Handle item selection (spacebar)
   const handleSelect = useCallback(
-    (index = focusedIndex) => {
+    (index: number = focusedIndex): void => {
       if (index < 0 || index >= items.length) return;
 
       const item = items[index];
@@ -112,18 +113,19 @@ const useKeyboardNavigation = ({
           onSelect(item, index);
         }
 
-        const itemName = item.name || `Item ${index + 1}`;
+        const itemName = (item as any)?.name || `Item ${index + 1}`;
         announce(
           `${itemName} selected for moving. Use arrow keys to choose new position, spacebar to drop, or escape to cancel.`,
           'assertive'
         );
       } else {
         // Drop item
-        if (onDrop) {
+        if (onDrop && draggedItem) {
           onDrop(draggedItem, selectedIndex, index);
         }
 
-        const itemName = draggedItem?.name || `Item ${selectedIndex + 1}`;
+        const itemName =
+          (draggedItem as any)?.name || `Item ${selectedIndex + 1}`;
         const newPosition = index + 1;
 
         // Reset dragging state
@@ -148,8 +150,8 @@ const useKeyboardNavigation = ({
 
   // Handle item movement (arrow keys during drag)
   const handleMove = useCallback(
-    direction => {
-      if (!isDragging || selectedIndex < 0) return;
+    (direction: NavigationDirection): void => {
+      if (!isDragging || selectedIndex < 0 || !draggedItem) return;
 
       let newIndex = selectedIndex;
 
@@ -166,7 +168,8 @@ const useKeyboardNavigation = ({
         onMove(draggedItem, selectedIndex, newIndex);
         setSelectedIndex(newIndex);
 
-        const itemName = draggedItem?.name || `Item ${selectedIndex + 1}`;
+        const itemName =
+          (draggedItem as any)?.name || `Item ${selectedIndex + 1}`;
         announce(
           `${itemName} moved to position ${newIndex + 1} of ${items.length}.`
         );
@@ -184,9 +187,10 @@ const useKeyboardNavigation = ({
   );
 
   // Cancel dragging (escape key)
-  const cancelDrag = useCallback(() => {
+  const cancelDrag = useCallback((): void => {
     if (isDragging) {
-      const itemName = draggedItem?.name || `Item ${selectedIndex + 1}`;
+      const itemName =
+        (draggedItem as any)?.name || `Item ${selectedIndex + 1}`;
 
       setIsDragging(false);
       setSelectedIndex(-1);
@@ -198,8 +202,8 @@ const useKeyboardNavigation = ({
 
   // Main keyboard event handler
   const handleKeyDown = useCallback(
-    event => {
-      const { key, shiftKey, ctrlKey, metaKey } = event;
+    (event: React.KeyboardEvent): void => {
+      const { key, ctrlKey, metaKey } = event;
 
       // Ignore if modifier keys are pressed (except shift for some cases)
       if (ctrlKey || metaKey) return;
@@ -314,7 +318,7 @@ const useKeyboardNavigation = ({
 
   // Get ARIA attributes for an item
   const getItemAriaProps = useCallback(
-    index => {
+    (index: number) => {
       const isFocused = index === focusedIndex;
       const isSelected = index === selectedIndex && isDragging;
 
@@ -323,7 +327,7 @@ const useKeyboardNavigation = ({
         'aria-grabbed': isSelected,
         'aria-describedby': isDragging ? 'drag-instructions' : undefined,
         tabIndex: isFocused ? 0 : -1,
-        role: 'option',
+        role: 'option' as const,
       };
     },
     [focusedIndex, selectedIndex, isDragging]
@@ -332,7 +336,7 @@ const useKeyboardNavigation = ({
   // Get ARIA attributes for the container
   const getContainerAriaProps = useCallback(() => {
     return {
-      role: 'listbox',
+      role: 'listbox' as const,
       'aria-multiselectable': false,
       'aria-activedescendant':
         focusedIndex >= 0

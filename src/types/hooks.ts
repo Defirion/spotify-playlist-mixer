@@ -8,11 +8,6 @@ import {
   PlaylistMixResult,
   DragItem,
   DropResult,
-  VirtualItem,
-  VirtualRange,
-  VirtualizationOptions,
-  SearchOptions,
-  SearchResult,
   SearchState,
   PlaylistSelectionItem,
 } from './mixer';
@@ -292,30 +287,57 @@ export interface UseVirtualizationReturn {
   };
 }
 
-export interface UseKeyboardNavigationOptions {
-  items: any[];
-  onSelect?: (item: any, index: number) => void;
-  onMove?: (fromIndex: number, toIndex: number) => void;
-  orientation?: 'horizontal' | 'vertical';
-  wrap?: boolean;
-  disabled?: boolean;
+// Keyboard navigation types
+export type NavigationDirection = 'up' | 'down' | 'left' | 'right';
+export type NavigationOrientation = 'vertical' | 'horizontal';
+export type AnnouncementPriority = 'polite' | 'assertive';
+
+export interface UseKeyboardNavigationOptions<T = any> {
+  items?: T[];
+  onSelect?: (item: T, index: number) => void;
+  onMove?: (item: T, fromIndex: number, toIndex: number) => void;
+  onDrop?: (draggedItem: T, fromIndex: number, toIndex: number) => void;
+  orientation?: NavigationOrientation;
+  loop?: boolean;
+  getItemId?: (item: T, index: number) => string;
+  announceToScreenReader?: (
+    message: string,
+    priority?: AnnouncementPriority
+  ) => void;
 }
 
-export interface UseKeyboardNavigationReturn {
+export interface UseKeyboardNavigationReturn<T = any> {
+  // State
   focusedIndex: number;
-  setFocusedIndex: (index: number) => void;
-  keyboardProps: {
-    onKeyDown: (event: React.KeyboardEvent) => void;
-    tabIndex: number;
-    role: string;
-    'aria-activedescendant'?: string;
-  };
-  getItemProps: (index: number) => {
-    id: string;
-    role: string;
+  selectedIndex: number;
+  isDragging: boolean;
+  draggedItem: T | null;
+
+  // Event handlers
+  handleKeyDown: (event: React.KeyboardEvent) => void;
+
+  // Navigation functions
+  moveFocus: (newIndex: number, reason?: string) => void;
+  handleSelect: (index?: number) => void;
+  handleMove: (direction: NavigationDirection) => void;
+  cancelDrag: () => void;
+
+  // ARIA helpers
+  getItemAriaProps: (index: number) => {
     'aria-selected': boolean;
+    'aria-grabbed': boolean;
+    'aria-describedby': string | undefined;
     tabIndex: number;
+    role: string;
   };
+  getContainerAriaProps: () => {
+    role: string;
+    'aria-multiselectable': boolean;
+    'aria-activedescendant': string | undefined;
+  };
+
+  // Utility functions
+  announce: (message: string, priority?: AnnouncementPriority) => void;
 }
 
 // Utility hooks
