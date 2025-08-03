@@ -1,6 +1,5 @@
 // State management hooks
 export { useAppState } from './useAppState';
-export { useMixOptions } from './useMixOptions';
 export { usePlaylistSelection } from './usePlaylistSelection';
 export { useRatioConfig } from './useRatioConfig';
 

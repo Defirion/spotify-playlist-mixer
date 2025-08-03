@@ -24,8 +24,6 @@ import {
   useRatioConfig,
   useMixOptions,
   useUI,
-  usePlaylistOperations,
-  useMixingState,
 } from './store';
 
 // Types
@@ -35,21 +33,14 @@ import { PlaylistMixResult } from './types/mixer';
 import styles from './App.module.css';
 
 function MainApp() {
-  // Store hooks - clean separation of concerns
+  // Use individual selector hooks to avoid infinite re-renders
   const { accessToken, isAuthenticated, setAccessToken } = useAuth();
-  const { selectedPlaylists } = usePlaylistSelection();
+  const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
+    usePlaylistSelection();
+  const { setRatioConfigBulk } = useRatioConfig();
+  const { applyPresetOptions } = useMixOptions();
   const { error, mixedPlaylists, setError, dismissError, dismissSuccessToast } =
     useUI();
-  const { applyPresetOptions } = useMixOptions();
-
-  // Combined operations for complex interactions
-  const {
-    togglePlaylistSelection,
-    removeRatioConfig,
-    addPlaylistToRatioConfig,
-    setRatioConfigBulk,
-    clearAllPlaylists,
-  } = usePlaylistOperations();
 
   // Handle Spotify OAuth redirect
   useEffect(() => {
@@ -71,21 +62,12 @@ function MainApp() {
 
   // Simplified playlist selection handler
   const handlePlaylistSelection = (playlist: any) => {
-    const isSelected = selectedPlaylists.find(p => p.id === playlist.id);
-
-    if (isSelected) {
-      togglePlaylistSelection(playlist);
-      removeRatioConfig(playlist.id);
-    } else {
-      togglePlaylistSelection(playlist);
-      addPlaylistToRatioConfig(playlist.id);
-    }
+    togglePlaylistSelection(playlist);
   };
 
   // Simplified clear all handler
   const handleClearAllPlaylists = () => {
     clearAllPlaylists();
-    setRatioConfigBulk({});
   };
 
   // Simplified preset application handler
@@ -190,13 +172,17 @@ function RatioConfigContainer() {
 }
 
 function PlaylistMixerContainer() {
-  const mixingState = useMixingState();
+  const { accessToken } = useAuth();
+  const { selectedPlaylists } = usePlaylistSelection();
+  const { ratioConfig } = useRatioConfig();
+  const { mixOptions, updateMixOptions } = useMixOptions();
+  const { addMixedPlaylist, setError } = useUI();
 
   const handleMixedPlaylist = (result: PlaylistMixResult) => {
     // Convert PlaylistMixResult to SpotifyPlaylist format for the toast
     const playlistForToast = {
       id: `mixed-${Date.now()}`,
-      name: mixingState.mixOptions.playlistName,
+      name: mixOptions.playlistName,
       description: `Mixed playlist with ${result.tracks.length} tracks`,
       images: [],
       tracks: { total: result.tracks.length, href: '' },
@@ -210,17 +196,18 @@ function PlaylistMixerContainer() {
       uri: `spotify:playlist:mixed-${Date.now()}`,
       external_urls: { spotify: '' },
     };
-    mixingState.addMixedPlaylist(playlistForToast);
+    addMixedPlaylist(playlistForToast);
   };
 
   return (
     <PlaylistMixer
-      accessToken={mixingState.accessToken!}
-      selectedPlaylists={mixingState.selectedPlaylists}
-      ratioConfig={mixingState.ratioConfig}
-      mixOptions={mixingState.mixOptions}
+      accessToken={accessToken!}
+      selectedPlaylists={selectedPlaylists}
+      ratioConfig={ratioConfig}
+      mixOptions={mixOptions}
+      updateMixOptions={updateMixOptions}
       onMixedPlaylist={handleMixedPlaylist}
-      onError={mixingState.setError}
+      onError={setError}
     />
   );
 }

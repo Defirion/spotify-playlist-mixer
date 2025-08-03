@@ -35,25 +35,6 @@ jest.mock('../../hooks/useMixPreview', () => ({
   })),
 }));
 
-jest.mock('../../hooks/useMixOptions', () => ({
-  useMixOptions: jest.fn(() => ({
-    mixOptions: {
-      totalSongs: 100,
-      targetDuration: 240,
-      useTimeLimit: false,
-      useAllSongs: true,
-      playlistName: 'My Mixed Playlist',
-      shuffleWithinGroups: true,
-      popularityStrategy: 'mixed',
-      recencyBoost: true,
-      continueWhenPlaylistEmpty: false,
-    },
-    updateMixOptions: jest.fn(),
-    resetMixOptions: jest.fn(),
-    applyPresetOptions: jest.fn(),
-  })),
-}));
-
 // Mock the child components
 jest.mock('../features/mixer/PlaylistForm', () => {
   return function MockPlaylistForm({ mixOptions, onMixOptionsChange }: any) {
@@ -165,6 +146,7 @@ describe('PlaylistMixer', () => {
     selectedPlaylists: mockSelectedPlaylists,
     ratioConfig: mockRatioConfig,
     mixOptions: mockMixOptions,
+    updateMixOptions: jest.fn(),
     onMixedPlaylist: jest.fn(),
     onError: jest.fn(),
   };
@@ -198,12 +180,20 @@ describe('PlaylistMixer', () => {
   });
 
   it('updates mix options when form changes', () => {
-    render(<PlaylistMixer {...defaultProps} />);
+    const mockUpdateMixOptions = jest.fn();
+    render(
+      <PlaylistMixer
+        {...defaultProps}
+        updateMixOptions={mockUpdateMixOptions}
+      />
+    );
 
     const input = screen.getByTestId('playlist-name-input');
     fireEvent.change(input, { target: { value: 'New Playlist Name' } });
 
-    expect(input).toHaveValue('New Playlist Name');
+    expect(mockUpdateMixOptions).toHaveBeenCalledWith({
+      playlistName: 'New Playlist Name',
+    });
   });
 
   it('calls generate preview when button is clicked', () => {
@@ -277,7 +267,7 @@ describe('PlaylistMixer', () => {
     ).toBeInTheDocument();
   });
 
-  it('syncs local mix options with prop changes', () => {
+  it('displays updated mix options when props change', () => {
     const { rerender } = render(<PlaylistMixer {...defaultProps} />);
 
     const newMixOptions = {

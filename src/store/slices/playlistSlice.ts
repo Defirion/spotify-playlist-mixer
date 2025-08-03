@@ -73,16 +73,25 @@ export const createPlaylistSlice: StateCreator<
         p => p.id === playlist.id
       );
       if (existingIndex >= 0) {
+        // Remove playlist and its ratio config
+        const newRatioConfig = { ...state.ratioConfig };
+        delete newRatioConfig[playlist.id];
         return {
           ...state,
           selectedPlaylists: state.selectedPlaylists.filter(
             p => p.id !== playlist.id
           ),
+          ratioConfig: newRatioConfig,
         };
       } else {
+        // Add playlist and default ratio config
         return {
           ...state,
           selectedPlaylists: [...state.selectedPlaylists, playlist],
+          ratioConfig: {
+            ...state.ratioConfig,
+            [playlist.id]: { ...DEFAULT_RATIO_CONFIG },
+          },
         };
       }
     }),
@@ -91,6 +100,7 @@ export const createPlaylistSlice: StateCreator<
     set(state => ({
       ...state,
       selectedPlaylists: [],
+      ratioConfig: {},
     })),
 
   isPlaylistSelected: playlistId => {

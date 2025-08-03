@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
-import { useMixOptions } from '../hooks/useMixOptions';
 import { useMixWarnings } from '../hooks/useMixWarnings';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
@@ -20,6 +19,7 @@ interface PlaylistMixerProps {
   selectedPlaylists: SpotifyPlaylist[];
   ratioConfig: RatioConfig;
   mixOptions: MixOptions;
+  updateMixOptions: (updates: Partial<MixOptions>) => void;
   onMixedPlaylist?: (result: PlaylistMixResult) => void;
   onError?: (error: string) => void;
 }
@@ -28,16 +28,11 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   accessToken,
   selectedPlaylists,
   ratioConfig,
-  mixOptions: initialMixOptions,
+  mixOptions,
+  updateMixOptions,
   onMixedPlaylist,
   onError,
 }) => {
-  // Use the enhanced useMixOptions hook with sync enabled
-  const { mixOptions, updateMixOptions } = useMixOptions(
-    initialMixOptions,
-    true
-  );
-
   // Custom hooks
   const mixGeneration = useMixGeneration(accessToken, {
     onError,

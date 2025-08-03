@@ -4,6 +4,7 @@
  */
 
 import { useAppStore } from './index';
+import { shallow } from 'zustand/shallow';
 import { RatioConfig } from '../types/mixer';
 
 /**
@@ -15,16 +16,19 @@ export const useLegacyAppState = () => {
     'useLegacyAppState is deprecated. Use useAuth and useUI from store instead.'
   );
 
-  return useAppStore(state => ({
-    accessToken: state.accessToken,
-    error: state.error,
-    mixedPlaylists: state.mixedPlaylists,
-    setAccessToken: state.setAccessToken,
-    setError: state.setError,
-    dismissError: state.dismissError,
-    addMixedPlaylist: state.addMixedPlaylist,
-    dismissSuccessToast: state.dismissSuccessToast,
-  }));
+  return useAppStore(
+    state => ({
+      accessToken: state.accessToken,
+      error: state.error,
+      mixedPlaylists: state.mixedPlaylists,
+      setAccessToken: state.setAccessToken,
+      setError: state.setError,
+      dismissError: state.dismissError,
+      addMixedPlaylist: state.addMixedPlaylist,
+      dismissSuccessToast: state.dismissSuccessToast,
+    }),
+    shallow
+  );
 };
 
 /**
@@ -36,12 +40,15 @@ export const useLegacyMixOptions = () => {
     'useLegacyMixOptions is deprecated. Use useMixOptions from store instead.'
   );
 
-  return useAppStore(state => ({
-    mixOptions: state.mixOptions,
-    updateMixOptions: state.updateMixOptions,
-    resetMixOptions: state.resetMixOptions,
-    applyPresetOptions: state.applyPresetOptions,
-  }));
+  return useAppStore(
+    state => ({
+      mixOptions: state.mixOptions,
+      updateMixOptions: state.updateMixOptions,
+      resetMixOptions: state.resetMixOptions,
+      applyPresetOptions: state.applyPresetOptions,
+    }),
+    shallow
+  );
 };
 
 /**
@@ -53,14 +60,17 @@ export const useLegacyPlaylistSelection = () => {
     'useLegacyPlaylistSelection is deprecated. Use usePlaylistSelection from store instead.'
   );
 
-  return useAppStore(state => ({
-    selectedPlaylists: state.selectedPlaylists,
-    selectPlaylist: state.selectPlaylist,
-    deselectPlaylist: state.deselectPlaylist,
-    togglePlaylistSelection: state.togglePlaylistSelection,
-    clearAllPlaylists: state.clearAllPlaylists,
-    isPlaylistSelected: state.isPlaylistSelected,
-  }));
+  return useAppStore(
+    state => ({
+      selectedPlaylists: state.selectedPlaylists,
+      selectPlaylist: state.selectPlaylist,
+      deselectPlaylist: state.deselectPlaylist,
+      togglePlaylistSelection: state.togglePlaylistSelection,
+      clearAllPlaylists: state.clearAllPlaylists,
+      isPlaylistSelected: state.isPlaylistSelected,
+    }),
+    shallow
+  );
 };
 
 /**
@@ -72,15 +82,18 @@ export const useLegacyRatioConfig = () => {
     'useLegacyRatioConfig is deprecated. Use useRatioConfig from store instead.'
   );
 
-  return useAppStore(state => ({
-    ratioConfig: state.ratioConfig,
-    updateRatioConfig: state.updateRatioConfig,
-    removeRatioConfig: state.removeRatioConfig,
-    addPlaylistToRatioConfig: state.addPlaylistToRatioConfig,
-    setRatioConfigBulk: state.setRatioConfigBulk,
-    clearRatioConfig: state.clearRatioConfig,
-    getRatioConfig: state.getRatioConfig,
-  }));
+  return useAppStore(
+    state => ({
+      ratioConfig: state.ratioConfig,
+      updateRatioConfig: state.updateRatioConfig,
+      removeRatioConfig: state.removeRatioConfig,
+      addPlaylistToRatioConfig: state.addPlaylistToRatioConfig,
+      setRatioConfigBulk: state.setRatioConfigBulk,
+      clearRatioConfig: state.clearRatioConfig,
+      getRatioConfig: state.getRatioConfig,
+    }),
+    shallow
+  );
 };
 
 /**
