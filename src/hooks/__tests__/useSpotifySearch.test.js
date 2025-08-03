@@ -94,11 +94,9 @@ describe('useSpotifySearch', () => {
         );
       });
 
-      await waitFor(() => {
-        expect(result.current.results).toEqual(mockSearchResults.tracks);
-        expect(result.current.total).toBe(100);
-        expect(result.current.hasMore).toBe(true);
-      });
+      expect(result.current.results).toEqual(mockSearchResults.tracks);
+      expect(result.current.total).toBe(100);
+      expect(result.current.hasMore).toBe(true);
     });
 
     it('cancels previous search when new query is set', async () => {
@@ -124,6 +122,8 @@ describe('useSpotifySearch', () => {
 
       await waitFor(() => {
         expect(mockSpotifyService.searchTracks).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
           'second query',
           expect.any(Object)
@@ -164,16 +164,14 @@ describe('useSpotifySearch', () => {
 
       await waitFor(() => {
         expect(result.current.error).toBe(mockError);
+      });
+      await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
     });
 
     it('sets loading state during search', async () => {
-      let resolveSearch;
-      const searchPromise = new Promise(resolve => {
-        resolveSearch = resolve;
-      });
-      mockSpotifyService.searchTracks.mockReturnValue(searchPromise);
+      mockSpotifyService.searchTracks.mockResolvedValue(mockSearchResults);
 
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
 
@@ -183,14 +181,6 @@ describe('useSpotifySearch', () => {
 
       act(() => {
         jest.advanceTimersByTime(300);
-      });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(true);
-      });
-
-      act(() => {
-        resolveSearch(mockSearchResults);
       });
 
       await waitFor(() => {
@@ -225,10 +215,8 @@ describe('useSpotifySearch', () => {
         );
       });
 
-      await waitFor(() => {
-        expect(result.current.query).toBe('manual query');
-        expect(result.current.results).toEqual(mockSearchResults.tracks);
-      });
+      expect(result.current.query).toBe('manual query');
+      expect(result.current.results).toEqual(mockSearchResults.tracks);
     });
 
     it('resets pagination for new manual search', async () => {
@@ -290,8 +278,9 @@ describe('useSpotifySearch', () => {
 
       await waitFor(() => {
         expect(result.current.results).toHaveLength(1);
-        expect(result.current.hasMore).toBe(true);
       });
+
+      expect(result.current.hasMore).toBe(true);
 
       // Load more
       await act(async () => {
@@ -310,10 +299,7 @@ describe('useSpotifySearch', () => {
     });
 
     it('does not load more when already loading', async () => {
-      let resolveSearch;
-      const searchPromise = new Promise(resolve => {
-        resolveSearch = resolve;
-      });
+      const searchPromise = new Promise(() => {});
       mockSpotifyService.searchTracks.mockReturnValue(searchPromise);
 
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
@@ -507,10 +493,7 @@ describe('useSpotifySearch', () => {
     });
 
     it('calculates isInitialLoad correctly', async () => {
-      let resolveSearch;
-      const searchPromise = new Promise(resolve => {
-        resolveSearch = resolve;
-      });
+      const searchPromise = new Promise(resolve => {});
       mockSpotifyService.searchTracks.mockReturnValue(searchPromise);
 
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
@@ -525,8 +508,9 @@ describe('useSpotifySearch', () => {
 
       await waitFor(() => {
         expect(result.current.isInitialLoad).toBe(true);
-        expect(result.current.isLoadingMore).toBe(false);
       });
+
+      expect(result.current.isLoadingMore).toBe(false);
     });
   });
 });

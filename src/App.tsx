@@ -1,57 +1,58 @@
-import React, { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+
+// Components
 import SpotifyAuth from './components/SpotifyAuth';
 import PlaylistSelector from './components/PlaylistSelector';
 import RatioConfig from './components/RatioConfig';
 import PlaylistMixer from './components/PlaylistMixer';
 import PresetTemplates from './components/PresetTemplates';
-
 import ToastError from './components/ToastError';
 import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { DragProvider } from './components/DragContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
+// Context
+import { DragProvider } from './components/DragContext';
+
+// Store hooks
+import {
+  useAuth,
+  usePlaylistSelection,
+  useRatioConfig,
+  useMixOptions,
+  useUI,
+  usePlaylistOperations,
+  useMixingState,
+} from './store';
+
+// Types
+import { PlaylistMixResult } from './types/mixer';
+
+// Styles
 import styles from './App.module.css';
 
-// Custom hooks for state management
-import { useAppState } from './hooks/useAppState';
-import { useMixOptions } from './hooks/useMixOptions';
-import { usePlaylistSelection } from './hooks/usePlaylistSelection';
-import { useRatioConfig } from './hooks/useRatioConfig';
-
 function MainApp() {
-  // Drag context is available but not used directly in MainApp
+  // Store hooks - clean separation of concerns
+  const { accessToken, isAuthenticated, setAccessToken } = useAuth();
+  const { selectedPlaylists } = usePlaylistSelection();
+  const { error, mixedPlaylists, setError, dismissError, dismissSuccessToast } =
+    useUI();
+  const { applyPresetOptions } = useMixOptions();
 
-  // Use custom hooks for state management
+  // Combined operations for complex interactions
   const {
-    accessToken,
-    error,
-    mixedPlaylists,
-    setAccessToken,
-    setError,
-    dismissError,
-    addMixedPlaylist,
-    dismissSuccessToast,
-  } = useAppState();
-
-  const { mixOptions, applyPresetOptions } = useMixOptions();
-
-  const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
-    usePlaylistSelection();
-
-  const {
-    ratioConfig,
-    updateRatioConfig,
-    addPlaylistToRatioConfig,
+    togglePlaylistSelection,
     removeRatioConfig,
+    addPlaylistToRatioConfig,
     setRatioConfigBulk,
-  } = useRatioConfig();
+    clearAllPlaylists,
+  } = usePlaylistOperations();
 
+  // Handle Spotify OAuth redirect
   useEffect(() => {
-    // Check for access token in URL hash (after Spotify redirect)
     const hash = window.location.hash;
     if (hash) {
       const tokenParam = hash
@@ -68,45 +69,38 @@ function MainApp() {
     }
   }, [setAccessToken]);
 
-  // Drag end handling is now managed by useDraggable hook in individual components
+  // Simplified playlist selection handler
+  const handlePlaylistSelection = (playlist: any) => {
+    const isSelected = selectedPlaylists.find(p => p.id === playlist.id);
 
-  const handlePlaylistSelection = useCallback(
-    playlist => {
-      const isSelected = selectedPlaylists.find(p => p.id === playlist.id);
+    if (isSelected) {
+      togglePlaylistSelection(playlist);
+      removeRatioConfig(playlist.id);
+    } else {
+      togglePlaylistSelection(playlist);
+      addPlaylistToRatioConfig(playlist.id);
+    }
+  };
 
-      if (isSelected) {
-        // Remove playlist and its ratio config
-        togglePlaylistSelection(playlist);
-        removeRatioConfig(playlist.id);
-      } else {
-        // Add playlist and initialize ratio config
-        togglePlaylistSelection(playlist);
-        addPlaylistToRatioConfig(playlist.id);
-      }
-    },
-    [
-      selectedPlaylists,
-      togglePlaylistSelection,
-      removeRatioConfig,
-      addPlaylistToRatioConfig,
-    ]
-  );
-
-  const handleClearAllPlaylists = useCallback(() => {
+  // Simplified clear all handler
+  const handleClearAllPlaylists = () => {
     clearAllPlaylists();
     setRatioConfigBulk({});
-  }, [clearAllPlaylists, setRatioConfigBulk]);
+  };
 
-  const handleApplyPreset = useCallback(
-    ({ ratioConfig: newRatioConfig, strategy, settings, presetName }) => {
-      setRatioConfigBulk(newRatioConfig);
-      applyPresetOptions({ strategy, settings, presetName });
-      setError(null);
-    },
-    [setRatioConfigBulk, applyPresetOptions, setError]
-  );
+  // Simplified preset application handler
+  const handleApplyPreset = ({
+    ratioConfig: newRatioConfig,
+    strategy,
+    settings,
+    presetName,
+  }: any) => {
+    setRatioConfigBulk(newRatioConfig);
+    applyPresetOptions({ strategy, settings, presetName });
+    setError(null);
+  };
 
-  if (!accessToken) {
+  if (!isAuthenticated) {
     return (
       <ErrorBoundary>
         <div className="container">
@@ -157,38 +151,77 @@ function MainApp() {
 
         {selectedPlaylists.length > 0 && (
           <ErrorBoundary>
-            <RatioConfig
-              selectedPlaylists={selectedPlaylists}
-              ratioConfig={ratioConfig}
-              onRatioUpdate={updateRatioConfig}
-              onPlaylistRemove={playlistId => {
-                const playlist = selectedPlaylists.find(
-                  p => p.id === playlistId
-                );
-                if (playlist) {
-                  handlePlaylistSelection(playlist);
-                }
-              }}
-            />
+            <RatioConfigContainer />
           </ErrorBoundary>
         )}
 
         {selectedPlaylists.length > 1 && (
           <ErrorBoundary>
-            <PlaylistMixer
-              accessToken={accessToken}
-              selectedPlaylists={selectedPlaylists}
-              ratioConfig={ratioConfig}
-              mixOptions={mixOptions}
-              onMixedPlaylist={addMixedPlaylist}
-              onError={setError}
-            />
+            <PlaylistMixerContainer />
           </ErrorBoundary>
         )}
 
         <ScrollToBottom />
       </div>
     </ErrorBoundary>
+  );
+}
+
+// Separate container components to isolate store dependencies
+function RatioConfigContainer() {
+  const { selectedPlaylists, togglePlaylistSelection } = usePlaylistSelection();
+  const { ratioConfig, updateRatioConfig } = useRatioConfig();
+
+  const handlePlaylistRemove = (playlistId: string) => {
+    const playlist = selectedPlaylists.find(p => p.id === playlistId);
+    if (playlist) {
+      togglePlaylistSelection(playlist);
+    }
+  };
+
+  return (
+    <RatioConfig
+      selectedPlaylists={selectedPlaylists}
+      ratioConfig={ratioConfig}
+      onRatioUpdate={updateRatioConfig}
+      onPlaylistRemove={handlePlaylistRemove}
+    />
+  );
+}
+
+function PlaylistMixerContainer() {
+  const mixingState = useMixingState();
+
+  const handleMixedPlaylist = (result: PlaylistMixResult) => {
+    // Convert PlaylistMixResult to SpotifyPlaylist format for the toast
+    const playlistForToast = {
+      id: `mixed-${Date.now()}`,
+      name: mixingState.mixOptions.playlistName,
+      description: `Mixed playlist with ${result.tracks.length} tracks`,
+      images: [],
+      tracks: { total: result.tracks.length, href: '' },
+      owner: {
+        id: 'user',
+        display_name: 'You',
+        external_urls: { spotify: '' },
+      },
+      public: false,
+      collaborative: false,
+      uri: `spotify:playlist:mixed-${Date.now()}`,
+      external_urls: { spotify: '' },
+    };
+    mixingState.addMixedPlaylist(playlistForToast);
+  };
+
+  return (
+    <PlaylistMixer
+      accessToken={mixingState.accessToken!}
+      selectedPlaylists={mixingState.selectedPlaylists}
+      ratioConfig={mixingState.ratioConfig}
+      mixOptions={mixingState.mixOptions}
+      onMixedPlaylist={handleMixedPlaylist}
+      onError={mixingState.setError}
+    />
   );
 }
 

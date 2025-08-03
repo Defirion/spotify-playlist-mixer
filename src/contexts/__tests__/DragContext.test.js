@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { DragProvider, useDrag } from '../../components/DragContext';
 
 // Test component to interact with the drag context
@@ -55,11 +55,13 @@ const TestComponent = ({ onStateChange }) => {
 
 describe('DragContext', () => {
   let contextState;
-  let getByTestId;
 
   beforeEach(() => {
     contextState = null;
-    const result = render(
+  });
+
+  const renderDragContext = () => {
+    return render(
       <DragProvider>
         <TestComponent
           onStateChange={state => {
@@ -68,8 +70,7 @@ describe('DragContext', () => {
         />
       </DragProvider>
     );
-    getByTestId = result.getByTestId;
-  });
+  };
 
   afterEach(() => {
     // Clear any timers
@@ -77,93 +78,99 @@ describe('DragContext', () => {
   });
 
   test('initializes with correct default state', () => {
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-    expect(getByTestId('dragged-item').textContent).toBe('none');
+    renderDragContext();
+    expect(screen.getByTestId('is-dragging').textContent).toBe('false');
+    expect(screen.getByTestId('drag-type').textContent).toBe('none');
+    expect(screen.getByTestId('dragged-item').textContent).toBe('none');
   });
 
   test('startDrag sets correct state', () => {
+    renderDragContext();
     act(() => {
-      getByTestId('start-drag').click();
+      screen.getByTestId('start-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-    expect(getByTestId('drag-type').textContent).toBe('custom');
-    expect(getByTestId('dragged-item').textContent).toBe('item');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('true');
+    expect(screen.getByTestId('drag-type').textContent).toBe('custom');
+    expect(screen.getByTestId('dragged-item').textContent).toBe('item');
   });
 
   test('endDrag clears state immediately', () => {
+    renderDragContext();
     // Start drag
     act(() => {
-      getByTestId('start-drag').click();
+      screen.getByTestId('start-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('true');
 
     // End drag
     act(() => {
-      getByTestId('end-drag').click();
+      screen.getByTestId('end-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-    expect(getByTestId('dragged-item').textContent).toBe('none');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('false');
+    expect(screen.getByTestId('drag-type').textContent).toBe('none');
+    expect(screen.getByTestId('dragged-item').textContent).toBe('none');
   });
 
   test('cancelDrag immediately clears all state', () => {
+    renderDragContext();
     // Start drag
     act(() => {
-      getByTestId('start-drag').click();
+      screen.getByTestId('start-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('true');
 
     // Cancel drag
     act(() => {
-      getByTestId('cancel-drag').click();
+      screen.getByTestId('cancel-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
-    expect(getByTestId('dragged-item').textContent).toBe('none');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('false');
+    expect(screen.getByTestId('drag-type').textContent).toBe('none');
+    expect(screen.getByTestId('dragged-item').textContent).toBe('none');
   });
 
   test('notification methods work without errors', () => {
+    renderDragContext();
     // These methods are now simple logging functions for coordination
     act(() => {
-      getByTestId('html5-start').click();
+      screen.getByTestId('html5-start').click();
     });
 
     act(() => {
-      getByTestId('html5-end').click();
+      screen.getByTestId('html5-end').click();
     });
 
     // Should not affect state since they're just notification methods
-    expect(getByTestId('is-dragging').textContent).toBe('false');
-    expect(getByTestId('drag-type').textContent).toBe('none');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('false');
+    expect(screen.getByTestId('drag-type').textContent).toBe('none');
   });
 
   test('multiple rapid drag operations are handled correctly', () => {
+    renderDragContext();
     // Start first drag
     act(() => {
-      getByTestId('start-drag').click();
+      screen.getByTestId('start-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('true');
 
     // Start second drag (should replace first)
     act(() => {
       contextState.startDrag({ id: 'test2' }, 'html5');
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('true');
-    expect(getByTestId('drag-type').textContent).toBe('html5');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('true');
+    expect(screen.getByTestId('drag-type').textContent).toBe('html5');
 
     // Cancel should clear everything
     act(() => {
-      getByTestId('cancel-drag').click();
+      screen.getByTestId('cancel-drag').click();
     });
 
-    expect(getByTestId('is-dragging').textContent).toBe('false');
+    expect(screen.getByTestId('is-dragging').textContent).toBe('false');
   });
 });
