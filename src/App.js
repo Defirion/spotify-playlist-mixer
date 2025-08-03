@@ -68,21 +68,7 @@ function MainApp() {
     }
   }, [setAccessToken]);
 
-  useEffect(() => {
-    const handleDragEnd = e => {
-      // Only cancel drag for desktop dragend events, not touch events
-      // Touch events should be handled by the specific components
-      if (e.type === 'dragend' && isDragging) {
-        cancelDrag();
-      }
-    };
-
-    window.addEventListener('dragend', handleDragEnd);
-
-    return () => {
-      window.removeEventListener('dragend', handleDragEnd);
-    };
-  }, [isDragging, cancelDrag]);
+  // Drag end handling is now managed by useDraggable hook in individual components
 
   const handlePlaylistSelection = useCallback(
     playlist => {

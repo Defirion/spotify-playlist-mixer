@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const DragContext = createContext();
 
@@ -32,7 +32,7 @@ export const DragProvider = ({ children }) => {
     setDragType(null);
   };
 
-  // Simple notification methods for coordination with useDraggable hook
+  // Notification methods for useDraggable hook compatibility
   const notifyHTML5DragStart = () => {
     console.log('[DragContext] HTML5 drag started');
   };
@@ -49,69 +49,6 @@ export const DragProvider = ({ children }) => {
     console.log('[DragContext] Touch drag ended');
   };
 
-  // Handle body class for drag state and scroll position preservation
-  useEffect(() => {
-    if (isDragging) {
-      // Store current scroll position before applying fixed positioning
-      const scrollY = window.scrollY;
-      document.body.setAttribute('data-scroll-locked', scrollY.toString());
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
-      // Apply drag classes
-      document.body.classList.add('no-user-select');
-      document.body.classList.add('drag-active');
-    } else {
-      // Restore scroll position
-      if (document.body.hasAttribute('data-scroll-locked')) {
-        const scrollY = parseInt(
-          document.body.getAttribute('data-scroll-locked'),
-          10
-        );
-        // Reset all positioning styles immediately
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        document.body.removeAttribute('data-scroll-locked');
-
-        // Defer scroll restoration to allow DOM to settle and local scroll restoration to complete
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollY);
-        });
-      }
-
-      // Remove drag classes
-      document.body.classList.remove('no-user-select');
-      document.body.classList.remove('drag-active');
-    }
-
-    return () => {
-      // Cleanup on unmount
-      if (document.body.hasAttribute('data-scroll-locked')) {
-        const scrollY = parseInt(
-          document.body.getAttribute('data-scroll-locked'),
-          10
-        );
-        // Reset all positioning styles immediately
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        document.body.removeAttribute('data-scroll-locked');
-
-        // Defer scroll restoration to allow DOM to settle
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollY);
-        });
-      }
-      document.body.classList.remove('no-user-select');
-      document.body.classList.remove('drag-active');
-    };
-  }, [isDragging]);
-
   const contextValue = {
     // State
     isDragging,
@@ -123,7 +60,7 @@ export const DragProvider = ({ children }) => {
     endDrag,
     cancelDrag,
 
-    // Coordination methods (for backward compatibility)
+    // Notification methods (for useDraggable compatibility)
     notifyHTML5DragStart,
     notifyHTML5DragEnd,
     notifyTouchDragStart,

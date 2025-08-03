@@ -209,14 +209,6 @@ export interface UseDraggableReturn {
   isDragging: boolean;
   draggedItem: DragItem | null;
   dropPosition: any;
-  touchState: {
-    isLongPress: boolean;
-    isActive: boolean;
-  };
-  keyboardState: {
-    isDragging: boolean;
-    selectedIndex: number;
-  };
   startDrag: (item: any, dragType?: string) => void;
   endDrag: (reason?: 'success' | 'cancel') => void;
   checkAutoScroll: (clientY: number) => void;

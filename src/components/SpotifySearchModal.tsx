@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+  useRef,
+  useMemo,
+} from 'react';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
 import useSpotifySearch from '../hooks/useSpotifySearch';
 import useDraggable from '../hooks/useDraggable';
-import { useDrag } from './DragContext';
 import { handleTrackSelection } from '../utils/dragAndDrop';
 import { SpotifyTrack } from '../types';
 import styles from './SpotifySearchModal.module.css';
@@ -36,7 +42,18 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
       limit: 20,
     });
 
-    const { startDrag, endDrag, isDragging } = useDrag();
+    // Get scroll container for drag operations
+    const scrollContainer = useMemo(() => {
+      return document.querySelector(
+        '[data-preview-panel="true"]'
+      ) as HTMLElement | null;
+    }, []);
+
+    // Use the unified draggable hook
+    const { isDragging, startDrag, endDrag } = useDraggable({
+      type: 'search-track',
+      scrollContainer,
+    });
 
     // Ref for the track list container for drag operations
     const trackListContainerRef = useRef<HTMLDivElement>(null);
@@ -80,164 +97,6 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
       setSelectedTracksToAdd(new Set());
     }, [searchResults, selectedTracksToAdd, onAddTracks]);
 
-    // Enhanced drag handlers using useDraggable hook
-    const { dragHandleProps, touchState } = useDraggable({
-      type: 'search-track',
-      onDragStart: item => {
-        console.log('[SpotifySearchModal] Track drag start:', item.data?.name);
-      },
-      onDragEnd: (item, result) => {
-        console.log('[SpotifySearchModal] Track drag end:', result?.success);
-      },
-      scrollContainer: trackListContainerRef.current,
-      longPressDelay: 250,
-    });
-
-    // Track drag start handler
-    const handleTrackDragStart = useCallback(
-      (e: React.DragEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        console.log('[SpotifySearchModal] Track drag start:', track.name);
-
-        const trackWithSource = {
-          ...track,
-          sourcePlaylist: 'search',
-          sourcePlaylistName: 'Spotify Search',
-        };
-
-        // Determine drag type based on device capabilities
-        const dragType = 'ontouchstart' in window ? 'touch' : 'html5';
-
-        // Start drag in context
-        startDrag({ data: trackWithSource, type: 'search-track' }, dragType);
-
-        // Set data for the drag operation (for backward compatibility with HTML5)
-        if (e.dataTransfer) {
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData(
-            'application/json',
-            JSON.stringify({
-              type: 'search-track',
-              track: trackWithSource,
-            })
-          );
-        }
-      },
-      [startDrag]
-    );
-
-    // Touch event handlers using useDraggable
-    const handleTrackTouchStart = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        const trackWithSource = {
-          ...track,
-          sourcePlaylist: 'search',
-          sourcePlaylistName: 'Spotify Search',
-        };
-
-        // Use the useDraggable touch start handler
-        const syntheticEvent = {
-          ...e,
-          currentTarget: e.currentTarget,
-        };
-
-        // Set the data for the drag operation
-        const enhancedDragHandleProps = {
-          ...dragHandleProps,
-          onTouchStart: (touchEvent: React.TouchEvent<HTMLElement>) => {
-            // Store track data for drag operations
-            (touchEvent.currentTarget as any).__dragData = trackWithSource;
-            dragHandleProps.onTouchStart(touchEvent);
-          },
-        };
-
-        enhancedDragHandleProps.onTouchStart(syntheticEvent);
-      },
-      [dragHandleProps]
-    );
-
-    const handleTrackTouchMove = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        if (touchState.isActive) {
-          const trackWithSource = {
-            ...track,
-            sourcePlaylist: 'search',
-            sourcePlaylistName: 'Spotify Search',
-          };
-
-          // Dispatch custom drag over event for external listeners
-          const touch = e.touches[0];
-          const trackListContainer = document.querySelector(
-            '[data-preview-panel="true"]'
-          );
-          if (trackListContainer && touchState.isLongPress) {
-            const customEvent = new CustomEvent('externalDragOver', {
-              detail: {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                draggedItem: { data: trackWithSource, type: 'search-track' },
-              },
-            });
-            trackListContainer.dispatchEvent(customEvent);
-          }
-        }
-
-        dragHandleProps.onTouchMove(e);
-      },
-      [dragHandleProps, touchState]
-    );
-
-    const handleTrackTouchEnd = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        if (touchState.isLongPress) {
-          const touch = e.changedTouches[0];
-          const trackWithSource = {
-            ...track,
-            sourcePlaylist: 'search',
-            sourcePlaylistName: 'Spotify Search',
-          };
-
-          // Find the DraggableTrackList container and dispatch external drop event
-          const trackListContainer = document.querySelector(
-            '[data-preview-panel="true"]'
-          );
-          if (trackListContainer) {
-            const customEvent = new CustomEvent('externalDrop', {
-              detail: {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                draggedItem: { data: trackWithSource, type: 'search-track' },
-              },
-            });
-            trackListContainer.dispatchEvent(customEvent);
-          }
-        } else if (touchState.isActive) {
-          // If it was just a tap (no drag), handle track selection
-          const deltaY = Math.abs(
-            e.changedTouches[0].clientY - (e.currentTarget as any).__startY || 0
-          );
-          const deltaX = Math.abs(
-            e.changedTouches[0].clientX - (e.currentTarget as any).__startX || 0
-          );
-
-          // Only treat as tap if minimal movement
-          if (deltaY < 10 && deltaX < 10) {
-            handleTrackSelect(track);
-          }
-        }
-
-        dragHandleProps.onTouchEnd(e);
-      },
-      [dragHandleProps, touchState, handleTrackSelect]
-    );
-
-    // Clear search when modal closes
-    useEffect(() => {
-      if (!isOpen) {
-        clear();
-        setSelectedTracksToAdd(new Set());
-      }
-    }, [isOpen, clear]);
-
     // Handle keyboard events for search input
     const handleKeyPress = useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -263,7 +122,15 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
       []
     );
 
-    // Determine modal and backdrop styles based on drag state
+    // Clear search when modal closes
+    useEffect(() => {
+      if (!isOpen) {
+        clear();
+        setSelectedTracksToAdd(new Set());
+      }
+    }, [isOpen, clear]);
+
+    // Define modal and backdrop styles based on drag state
     const modalStyle = {
       opacity: isDragging ? 0 : 1,
       pointerEvents: isDragging ? ('none' as const) : ('auto' as const),
@@ -335,33 +202,11 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
             </div>
           ) : (
             <TrackList
-              tracks={searchResults.map(track => ({
-                ...track,
-                sourcePlaylist: 'search',
-                sourcePlaylistName: '🔍 Spotify Search',
-              }))}
-              onTrackDragStart={handleTrackDragStart}
-              onTrackTouchStart={handleTrackTouchStart}
-              onTrackTouchMove={handleTrackTouchMove}
-              onTrackTouchEnd={handleTrackTouchEnd}
-              onTrackSelect={handleTrackSelect}
+              tracks={searchResults}
               selectedTracks={selectedTracksToAdd}
+              onTrackSelect={handleTrackSelect}
               draggable={true}
-              selectable={true}
-              showCheckbox={true}
-              showAlbumArt={true}
-              showPopularity={true}
-              showDuration={true}
-              showSourcePlaylist={true}
-              virtualized={searchResults.length > 100}
-              containerHeight={400}
-              emptyMessage={
-                query
-                  ? 'No tracks found. Try a different search term.'
-                  : 'Enter a search term to find songs on Spotify'
-              }
-              onTrackDragEnd={() => endDrag('html5-end')}
-              className={styles.trackList}
+              showDragHandle={true}
             />
           )}
         </div>

@@ -128,10 +128,6 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   const trackDragOptions = useMemo(
     () => ({
       type: 'internal-track',
-      onDragStart: (item: DragItem) => {
-        // Optional handler - can be empty or used for debugging
-        console.log('Track drag started:', item);
-      },
       onDragEnd: handleDragEnd,
       onDrop: handleDrop,
       onDragOver: handleDragOver,
@@ -202,12 +198,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     [localTracks, onTrackOrderChange]
   );
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Cleanup handled by useDraggable internally
-    };
-  }, []);
+  // Cleanup is handled automatically by useDraggable hook
 
   return (
     <>
