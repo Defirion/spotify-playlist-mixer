@@ -50,8 +50,14 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
       ) as HTMLElement | null;
     }, []);
 
-    // Use the unified draggable hook
-    const { isDragging, startDrag, endDrag } = useDraggable({
+    // Use the unified draggable hook for modal-level drag handling
+    const { isDragging } = useDraggable({
+      type: 'modal-track',
+      scrollContainer,
+    });
+
+    // Create a single draggable instance for all tracks
+    const trackDraggable = useDraggable({
       type: 'modal-track',
       scrollContainer,
       onDragStart: item => {
@@ -135,105 +141,8 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
       setSelectedTracksToAdd(new Set());
     }, [filteredTracks, selectedTracksToAdd, onAddTracks]);
 
-    // Drag event handlers for TrackList
-    const handleTrackDragStart = useCallback(
-      (e: React.DragEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        console.log('[AddUnselectedModal] Track drag start:', track.name);
-
-        // Set data for the drag operation (for backward compatibility with HTML5)
-        if (e.dataTransfer) {
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData(
-            'application/json',
-            JSON.stringify({
-              type: 'modal-track',
-              track: track,
-            })
-          );
-        }
-
-        // Use the unified drag system
-        startDrag(track);
-      },
-      [startDrag]
-    );
-
-    const handleTrackDragEnd = useCallback(
-      (e: React.DragEvent<HTMLDivElement>) => {
-        endDrag('success');
-      },
-      [endDrag]
-    );
-
-    // Touch event handlers using the unified draggable hook
-    const handleTrackTouchStart = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        // The useDraggable hook handles touch events internally
-        // We just need to set the data for the drag operation
-        startDrag(track);
-      },
-      [startDrag]
-    );
-
-    const handleTrackTouchMove = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        // Touch move is handled by the useDraggable hook
-        if (isDragging) {
-          e.preventDefault();
-
-          const touch = e.touches[0];
-          // Dispatch external drag events for the preview panel
-          if (scrollContainer) {
-            const customEvent = new CustomEvent('externalDragOver', {
-              detail: {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                draggedItem: { data: track, type: 'modal-track' },
-              },
-            });
-            scrollContainer.dispatchEvent(customEvent);
-          }
-        }
-      },
-      [isDragging, scrollContainer]
-    );
-
-    const handleTrackTouchEnd = useCallback(
-      (e: React.TouchEvent<HTMLDivElement>, track: SpotifyTrack) => {
-        // Handle drop if dragging was active
-        if (isDragging) {
-          const touch = e.changedTouches[0];
-
-          // Dispatch external drop event for the preview panel
-          if (scrollContainer) {
-            const customEvent = new CustomEvent('externalDrop', {
-              detail: {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                draggedItem: { data: track, type: 'modal-track' },
-              },
-            });
-            scrollContainer.dispatchEvent(customEvent);
-          }
-        } else {
-          // If it was just a tap (no drag), handle track selection
-          const deltaY = Math.abs(
-            e.changedTouches[0].clientY - (e.target as any).startY || 0
-          );
-          const deltaX = Math.abs(
-            e.changedTouches[0].clientX - (e.target as any).startX || 0
-          );
-
-          // Only treat as tap if minimal movement
-          if (deltaY < 10 && deltaX < 10) {
-            handleTrackSelect(track);
-          }
-        }
-
-        endDrag('success');
-      },
-      [isDragging, scrollContainer, handleTrackSelect, endDrag]
-    );
+    // All drag handling is now managed by the useDraggable hook
+    // No need for manual drag event handlers
 
     // Reset selected tracks when modal opens/closes
     useEffect(() => {
@@ -361,10 +270,6 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
           ) : (
             <TrackList
               tracks={filteredTracks}
-              onTrackDragStart={handleTrackDragStart}
-              onTrackTouchStart={handleTrackTouchStart}
-              onTrackTouchMove={handleTrackTouchMove}
-              onTrackTouchEnd={handleTrackTouchEnd}
               onTrackSelect={handleTrackSelect}
               selectedTracks={selectedTracksToAdd}
               draggable={true}
@@ -381,7 +286,36 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
                   ? 'No tracks match your search'
                   : 'All tracks from your playlists are already included'
               }
-              onTrackDragEnd={handleTrackDragEnd}
+              // Pass drag handlers that use useDraggable
+              onTrackDragStart={(e, track) => {
+                // Set the track data for this drag operation
+                trackDraggable.startDrag(track);
+                if (trackDraggable.dragHandleProps.onDragStart) {
+                  trackDraggable.dragHandleProps.onDragStart(e);
+                }
+              }}
+              onTrackDragEnd={(e, track) => {
+                if (trackDraggable.dragHandleProps.onDragEnd) {
+                  trackDraggable.dragHandleProps.onDragEnd(e);
+                }
+              }}
+              onTrackTouchStart={(e, track) => {
+                // Set the track data for this drag operation
+                trackDraggable.startDrag(track);
+                if (trackDraggable.dragHandleProps.onTouchStart) {
+                  trackDraggable.dragHandleProps.onTouchStart(e);
+                }
+              }}
+              onTrackTouchMove={(e, track) => {
+                if (trackDraggable.dragHandleProps.onTouchMove) {
+                  trackDraggable.dragHandleProps.onTouchMove(e);
+                }
+              }}
+              onTrackTouchEnd={(e, track) => {
+                if (trackDraggable.dragHandleProps.onTouchEnd) {
+                  trackDraggable.dragHandleProps.onTouchEnd(e);
+                }
+              }}
               style={{
                 height: '400px',
                 overflowY: 'auto',

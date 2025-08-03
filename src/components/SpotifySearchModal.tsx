@@ -49,10 +49,26 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
       ) as HTMLElement | null;
     }, []);
 
-    // Use the unified draggable hook
+    // Use the unified draggable hook for modal-level drag handling
     const { isDragging } = useDraggable({
       type: 'search-track',
       scrollContainer,
+    });
+
+    // Create a single draggable instance for all tracks
+    const trackDraggable = useDraggable({
+      type: 'search-track',
+      scrollContainer,
+      onDragStart: item => {
+        console.log('[SpotifySearchModal] Track drag start:', item.data?.name);
+      },
+      onDragEnd: (item, result) => {
+        console.log(
+          '[SpotifySearchModal] Track drag end:',
+          item.data?.name,
+          result
+        );
+      },
     });
 
     // Ref for the track list container for drag operations
@@ -98,7 +114,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
     }, [searchResults, selectedTracksToAdd, onAddTracks]);
 
     // Handle keyboard events for search input
-    const handleKeyPress = useCallback(
+    const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
           handleSpotifySearch();
@@ -177,7 +193,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
               value={query}
               onChange={e => setQuery(e.target.value)}
               className={styles.searchInput}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               autoFocus
@@ -207,6 +223,36 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
               onTrackSelect={handleTrackSelect}
               draggable={true}
               showDragHandle={true}
+              // Pass drag handlers that use useDraggable
+              onTrackDragStart={(e, track) => {
+                // Set the track data for this drag operation
+                trackDraggable.startDrag(track);
+                if (trackDraggable.dragHandleProps.onDragStart) {
+                  trackDraggable.dragHandleProps.onDragStart(e);
+                }
+              }}
+              onTrackDragEnd={(e, track) => {
+                if (trackDraggable.dragHandleProps.onDragEnd) {
+                  trackDraggable.dragHandleProps.onDragEnd(e);
+                }
+              }}
+              onTrackTouchStart={(e, track) => {
+                // Set the track data for this drag operation
+                trackDraggable.startDrag(track);
+                if (trackDraggable.dragHandleProps.onTouchStart) {
+                  trackDraggable.dragHandleProps.onTouchStart(e);
+                }
+              }}
+              onTrackTouchMove={(e, track) => {
+                if (trackDraggable.dragHandleProps.onTouchMove) {
+                  trackDraggable.dragHandleProps.onTouchMove(e);
+                }
+              }}
+              onTrackTouchEnd={(e, track) => {
+                if (trackDraggable.dragHandleProps.onTouchEnd) {
+                  trackDraggable.dragHandleProps.onTouchEnd(e);
+                }
+              }}
             />
           )}
         </div>
