@@ -50,7 +50,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
     }, []);
 
     // Use the unified draggable hook
-    const { isDragging, startDrag, endDrag } = useDraggable({
+    const { isDragging } = useDraggable({
       type: 'search-track',
       scrollContainer,
     });

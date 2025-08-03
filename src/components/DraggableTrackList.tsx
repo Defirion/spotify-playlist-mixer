@@ -128,6 +128,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   const trackDragOptions = useMemo(
     () => ({
       type: 'internal-track',
+      onDragStart: () => {}, // Empty handler - drag start is handled by useDraggable
       onDragEnd: handleDragEnd,
       onDrop: handleDrop,
       onDragOver: handleDragOver,

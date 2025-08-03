@@ -11,7 +11,7 @@ import SuccessToast from './components/SuccessToast';
 import ScrollToBottom from './components/ScrollToBottom';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { DragProvider, useDrag } from './components/DragContext';
+import { DragProvider } from './components/DragContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
 import styles from './App.module.css';
@@ -23,7 +23,7 @@ import { usePlaylistSelection } from './hooks/usePlaylistSelection';
 import { useRatioConfig } from './hooks/useRatioConfig';
 
 function MainApp() {
-  const { isDragging, cancelDrag } = useDrag();
+  // Drag context is available but not used directly in MainApp
 
   // Use custom hooks for state management
   const {

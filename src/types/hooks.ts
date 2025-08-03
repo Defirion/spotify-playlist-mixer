@@ -209,6 +209,21 @@ export interface UseDraggableReturn {
   isDragging: boolean;
   draggedItem: DragItem | null;
   dropPosition: any;
+  touchState: {
+    isActive: boolean;
+    startY: number;
+    currentY: number;
+    startX: number;
+    currentX: number;
+    longPressTimer: NodeJS.Timeout | null;
+    isLongPress: boolean;
+    element: HTMLElement | null;
+  };
+  keyboardState: {
+    isActive: boolean;
+    selectedIndex: number;
+    isDragging: boolean;
+  };
   startDrag: (item: any, dragType?: string) => void;
   endDrag: (reason?: 'success' | 'cancel') => void;
   checkAutoScroll: (clientY: number) => void;

@@ -480,6 +480,7 @@ const useDraggable = ({
         element,
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       disabled,
       touchState.longPressTimer,
@@ -547,8 +548,6 @@ const useDraggable = ({
       touchState.startX,
       touchState.isLongPress,
       touchState.longPressTimer,
-      touchState.currentY,
-      touchState.currentX,
       checkAutoScroll,
       scrollContainer,
       data,
@@ -604,7 +603,9 @@ const useDraggable = ({
     },
     [
       disabled,
-      touchState,
+      touchState.isActive,
+      touchState.longPressTimer,
+      touchState.isLongPress,
       scrollContainer,
       data,
       type,
@@ -676,7 +677,6 @@ const useDraggable = ({
       disabled,
       keyboardState,
       data,
-      type,
       startDrag,
       onDrop,
       dropPosition,
