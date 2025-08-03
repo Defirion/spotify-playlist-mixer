@@ -17,8 +17,14 @@ export const createAuthSlice: StateCreator<
   AuthSlice
 > = set => ({
   // Initial state
-  accessToken: null,
-  isAuthenticated: false,
+  accessToken:
+    typeof window !== 'undefined'
+      ? localStorage.getItem('spotify_access_token')
+      : null,
+  isAuthenticated:
+    typeof window !== 'undefined'
+      ? !!localStorage.getItem('spotify_access_token')
+      : false,
 
   // Actions
   setAccessToken: token =>

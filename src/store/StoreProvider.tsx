@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAppStore } from './index';
+import { useAppStore, AppStore } from './index';
 
 interface StoreProviderProps {
   children: React.ReactNode;
@@ -11,12 +11,6 @@ interface StoreProviderProps {
  */
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   useEffect(() => {
-    // Initialize store with any persisted data
-    const persistedToken = localStorage.getItem('spotify_access_token');
-    if (persistedToken) {
-      useAppStore.getState().setAccessToken(persistedToken);
-    }
-
     // Set up store subscriptions for persistence
     const unsubscribe = useAppStore.subscribe(
       state => state.accessToken,

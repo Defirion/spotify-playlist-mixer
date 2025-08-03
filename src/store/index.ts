@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 
 // Import store slices
 import { createAuthSlice, AuthSlice } from './slices/authSlice';
@@ -29,31 +29,29 @@ export const useAppStore = create<AppStore>()(
 // Selector hooks for better performance and cleaner component code
 export const useAuth = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       accessToken: state.accessToken,
       isAuthenticated: state.isAuthenticated,
       setAccessToken: state.setAccessToken,
       clearAuth: state.clearAuth,
-    }),
-    shallow
+    }))
   );
 
 export const usePlaylistSelection = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       selectedPlaylists: state.selectedPlaylists,
       selectPlaylist: state.selectPlaylist,
       deselectPlaylist: state.deselectPlaylist,
       togglePlaylistSelection: state.togglePlaylistSelection,
       clearAllPlaylists: state.clearAllPlaylists,
       isPlaylistSelected: state.isPlaylistSelected,
-    }),
-    shallow
+    }))
   );
 
 export const useRatioConfig = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       ratioConfig: state.ratioConfig,
       updateRatioConfig: state.updateRatioConfig,
       removeRatioConfig: state.removeRatioConfig,
@@ -61,38 +59,35 @@ export const useRatioConfig = () =>
       setRatioConfigBulk: state.setRatioConfigBulk,
       clearRatioConfig: state.clearRatioConfig,
       getRatioConfig: state.getRatioConfig,
-    }),
-    shallow
+    }))
   );
 
 export const useMixOptions = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       mixOptions: state.mixOptions,
       updateMixOptions: state.updateMixOptions,
       resetMixOptions: state.resetMixOptions,
       applyPresetOptions: state.applyPresetOptions,
-    }),
-    shallow
+    }))
   );
 
 export const useUI = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       error: state.error,
       mixedPlaylists: state.mixedPlaylists,
       setError: state.setError,
       dismissError: state.dismissError,
       addMixedPlaylist: state.addMixedPlaylist,
       dismissSuccessToast: state.dismissSuccessToast,
-    }),
-    shallow
+    }))
   );
 
 // Combined selectors for complex operations
 export const usePlaylistOperations = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       selectedPlaylists: state.selectedPlaylists,
       ratioConfig: state.ratioConfig,
       togglePlaylistSelection: state.togglePlaylistSelection,
@@ -100,19 +95,17 @@ export const usePlaylistOperations = () =>
       addPlaylistToRatioConfig: state.addPlaylistToRatioConfig,
       setRatioConfigBulk: state.setRatioConfigBulk,
       clearAllPlaylists: state.clearAllPlaylists,
-    }),
-    shallow
+    }))
   );
 
 export const useMixingState = () =>
   useAppStore(
-    state => ({
+    useShallow((state: AppStore) => ({
       selectedPlaylists: state.selectedPlaylists,
       ratioConfig: state.ratioConfig,
       mixOptions: state.mixOptions,
       accessToken: state.accessToken,
       addMixedPlaylist: state.addMixedPlaylist,
       setError: state.setError,
-    }),
-    shallow
+    }))
   );

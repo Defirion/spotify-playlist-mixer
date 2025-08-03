@@ -30,10 +30,14 @@ export const createUISlice: StateCreator<
 
   // Actions
   setError: error =>
-    set(state => ({
-      ...state,
-      error,
-    })),
+    set(state =>
+      state.error === error
+        ? state
+        : {
+            ...state,
+            error,
+          }
+    ),
 
   dismissError: () =>
     set(state => ({

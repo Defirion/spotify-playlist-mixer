@@ -45,7 +45,8 @@ function MainApp() {
   // Handle Spotify OAuth redirect
   useEffect(() => {
     const hash = window.location.hash;
-    if (hash) {
+    if (hash && !isAuthenticated) {
+      // Only process if not already authenticated
       const tokenParam = hash
         .substring(1)
         .split('&')
@@ -54,11 +55,12 @@ function MainApp() {
         const token = tokenParam.split('=')[1];
         if (token) {
           setAccessToken(token);
+          // Clear the hash after processing to prevent re-triggering
           window.location.hash = '';
         }
       }
     }
-  }, [setAccessToken]);
+  }, [setAccessToken, isAuthenticated]); // Add isAuthenticated to dependency array
 
   // Simplified playlist selection handler
   const handlePlaylistSelection = (playlist: any) => {
@@ -79,7 +81,9 @@ function MainApp() {
   }: any) => {
     setRatioConfigBulk(newRatioConfig);
     applyPresetOptions({ strategy, settings, presetName });
-    setError(null);
+    if (error) {
+      setError(null);
+    }
   };
 
   if (!isAuthenticated) {
