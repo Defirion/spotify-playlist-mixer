@@ -18,6 +18,9 @@ export * from './hooks';
 // Utility types
 export * from './utils';
 
+// Drag and drop types
+export * from './dragAndDrop';
+
 // Re-export commonly used types for convenience
 export type {
   SpotifyTrack,
@@ -53,5 +56,25 @@ export type {
   UseDraggableReturn,
   UseVirtualizationReturn,
 } from './hooks';
+
+export type {
+  DragSourceType,
+  DraggedItem,
+  DraggedItemPayload,
+  DragState,
+  ScrollPositionState,
+  DragSlice,
+  DragOptions,
+  UseDraggableReturn as NewUseDraggableReturn,
+  DragHandleProps,
+  DropZoneProps,
+  TouchDragState,
+  AutoScrollOptions,
+  DragVisualFeedback,
+  DropPosition,
+  ModalCoordinationState,
+  ExtractTrackType,
+  CreateDragItem,
+} from './dragAndDrop';
 
 export type { ISpotifyService, ApiError, ApiErrorType } from './api';
