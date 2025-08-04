@@ -1,17 +1,37 @@
 import { renderHook, act } from '@testing-library/react';
-import { fireEvent } from '@testing-library/react';
 import useDraggable from '../useDraggable';
 
-// Mock the DragContext
-jest.mock('../../components/DragContext', () => ({
-  useDrag: () => ({
-    startDrag: jest.fn(),
-    endDrag: jest.fn(),
-    notifyHTML5DragStart: jest.fn(),
-    notifyHTML5DragEnd: jest.fn(),
-    notifyTouchDragStart: jest.fn(),
-    notifyTouchDragEnd: jest.fn(),
-  }),
+// Import the mocked functions
+import { useDragState } from '../drag/useDragState';
+import { useDragHandlers } from '../drag/useDragHandlers';
+import { useTouchDrag } from '../drag/useTouchDrag';
+import { useKeyboardDrag } from '../drag/useKeyboardDrag';
+import { useAutoScroll } from '../drag/useAutoScroll';
+import { useDragVisualFeedback } from '../drag/useDragVisualFeedback';
+
+// Mock all the modular drag hooks
+jest.mock('../drag/useDragState', () => ({
+  useDragState: jest.fn(),
+}));
+
+jest.mock('../drag/useDragHandlers', () => ({
+  useDragHandlers: jest.fn(),
+}));
+
+jest.mock('../drag/useTouchDrag', () => ({
+  useTouchDrag: jest.fn(),
+}));
+
+jest.mock('../drag/useKeyboardDrag', () => ({
+  useKeyboardDrag: jest.fn(),
+}));
+
+jest.mock('../drag/useAutoScroll', () => ({
+  useAutoScroll: jest.fn(),
+}));
+
+jest.mock('../drag/useDragVisualFeedback', () => ({
+  useDragVisualFeedback: jest.fn(),
 }));
 
 // Mock navigator.vibrate
@@ -21,9 +41,79 @@ Object.defineProperty(navigator, 'vibrate', {
 });
 
 describe('useDraggable', () => {
+  // Mock return values for all hooks
+  const mockDragState = {
+    isDragging: false,
+    draggedItem: null,
+    startDrag: jest.fn(),
+    endDrag: jest.fn(),
+    isCurrentlyDragged: jest.fn(),
+  };
+
+  const mockDragHandlers = {
+    createDragItem: jest.fn(),
+    handleHTML5DragStart: jest.fn(),
+    handleHTML5DragEnd: jest.fn(),
+    canDrag: jest.fn(),
+  };
+
+  const mockTouchDrag = {
+    handleTouchStart: jest.fn(),
+    handleTouchMove: jest.fn(),
+    handleTouchEnd: jest.fn(),
+    touchState: {
+      isActive: false,
+      isLongPress: false,
+      startY: 0,
+      currentY: 0,
+      startX: 0,
+      currentX: 0,
+      longPressTimer: null,
+      element: null,
+    },
+    cleanup: jest.fn(),
+  };
+
+  const mockKeyboardDrag = {
+    handleKeyDown: jest.fn(),
+    keyboardState: {
+      isActive: false,
+      selectedIndex: -1,
+      isDragging: false,
+    },
+  };
+
+  const mockAutoScroll = {
+    checkAutoScroll: jest.fn(),
+    stopAutoScroll: jest.fn(),
+  };
+
+  const mockVisualFeedback = {
+    dragClasses: {
+      'drag-active': false,
+      'currently-dragged': false,
+    },
+    dragStyles: {
+      opacity: 1,
+      transform: 'scale(1)',
+    },
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+
+    // Setup mock implementations
+    useDragState.mockReturnValue(mockDragState);
+    useDragHandlers.mockReturnValue(mockDragHandlers);
+    useTouchDrag.mockReturnValue(mockTouchDrag);
+    useKeyboardDrag.mockReturnValue(mockKeyboardDrag);
+    useAutoScroll.mockReturnValue(mockAutoScroll);
+    useDragVisualFeedback.mockReturnValue(mockVisualFeedback);
+
+    // Ensure functions return proper values by default
+    mockDragHandlers.canDrag.mockReturnValue(true);
+    mockDragState.isCurrentlyDragged.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -38,20 +128,66 @@ describe('useDraggable', () => {
     expect(result.current.dropPosition).toBe(null);
     expect(result.current.touchState.isLongPress).toBe(false);
     expect(result.current.keyboardState.isDragging).toBe(false);
+
+    // Verify that all modular hooks were called with correct default parameters
+    expect(useDragState).toHaveBeenCalled();
+    expect(useDragHandlers).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'internal-track',
+        disabled: false,
+      })
+    );
+    expect(useTouchDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: false,
+        longPressDelay: 250,
+      })
+    );
+    expect(useKeyboardDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: false,
+      })
+    );
+    expect(useAutoScroll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scrollThreshold: 80,
+      })
+    );
+    expect(useDragVisualFeedback).toHaveBeenCalled();
   });
 
   it('should provide drag handle props', () => {
     const { result } = renderHook(() => useDraggable());
 
-    expect(result.current.dragHandleProps).toHaveProperty('draggable', true);
-    expect(result.current.dragHandleProps).toHaveProperty('onDragStart');
-    expect(result.current.dragHandleProps).toHaveProperty('onDragEnd');
-    expect(result.current.dragHandleProps).toHaveProperty('onTouchStart');
-    expect(result.current.dragHandleProps).toHaveProperty('onTouchMove');
-    expect(result.current.dragHandleProps).toHaveProperty('onTouchEnd');
-    expect(result.current.dragHandleProps).toHaveProperty('onKeyDown');
-    expect(result.current.dragHandleProps).toHaveProperty('tabIndex', 0);
-    expect(result.current.dragHandleProps).toHaveProperty('role', 'button');
+    const dragHandleProps = result.current.dragHandleProps;
+
+    expect(dragHandleProps).toHaveProperty('draggable', true);
+    expect(dragHandleProps).toHaveProperty('onDragStart');
+    expect(dragHandleProps).toHaveProperty('onDragEnd');
+    expect(dragHandleProps).toHaveProperty(
+      'onTouchStart',
+      mockTouchDrag.handleTouchStart
+    );
+    expect(dragHandleProps).toHaveProperty(
+      'onTouchMove',
+      mockTouchDrag.handleTouchMove
+    );
+    expect(dragHandleProps).toHaveProperty(
+      'onTouchEnd',
+      mockTouchDrag.handleTouchEnd
+    );
+    expect(dragHandleProps).toHaveProperty(
+      'onKeyDown',
+      mockKeyboardDrag.handleKeyDown
+    );
+    expect(dragHandleProps).toHaveProperty('tabIndex', 0);
+    expect(dragHandleProps).toHaveProperty('role', 'button');
+    expect(dragHandleProps).toHaveProperty('aria-grabbed', false);
+    expect(dragHandleProps).toHaveProperty('className', '');
+    expect(dragHandleProps).toHaveProperty(
+      'style',
+      mockVisualFeedback.dragStyles
+    );
   });
 
   it('should provide drop zone props', () => {
@@ -63,70 +199,110 @@ describe('useDraggable', () => {
   });
 
   it('should handle disabled state', () => {
+    // Mock canDrag to return false when disabled
+    mockDragHandlers.canDrag.mockReturnValue(false);
+
     const { result } = renderHook(() => useDraggable({ disabled: true }));
 
     expect(result.current.dragHandleProps.draggable).toBe(false);
     expect(result.current.dragHandleProps.tabIndex).toBe(-1);
+
+    // Verify that disabled state was passed to modular hooks
+    expect(useDragHandlers).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: true,
+      })
+    );
+    expect(useTouchDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: true,
+      })
+    );
+    expect(useKeyboardDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: true,
+      })
+    );
   });
 
-  it('should start drag when startDrag is called', () => {
+  it('should integrate with drag state management', () => {
     const onDragStart = jest.fn();
-    const testData = { id: 'test' };
+    const testData = { track: { id: 'test' }, index: 0 };
+
+    // Mock drag state to simulate active drag
+    mockDragState.isDragging = true;
+    mockDragState.draggedItem = {
+      id: 'test-item',
+      type: 'internal-track',
+      payload: testData,
+    };
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, data: testData })
+      useDraggable({ onDragStart, data: testData, type: 'internal-track' })
     );
 
-    act(() => {
-      result.current.startDrag(testData);
-    });
-
     expect(result.current.isDragging).toBe(true);
-    expect(result.current.draggedItem).toEqual({
-      data: testData,
-      type: 'default',
-    });
-    expect(onDragStart).toHaveBeenCalledWith({
-      data: testData,
-      type: 'default',
-    });
-    expect(navigator.vibrate).toHaveBeenCalledWith(50);
+    expect(result.current.draggedItem).toEqual(mockDragState.draggedItem);
+
+    // Verify that callbacks are properly wired to modular hooks
+    expect(useDragHandlers).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onDragStart: expect.any(Function),
+        onDragEnd: expect.any(Function),
+      })
+    );
   });
 
-  it('should end drag when endDrag is called', () => {
+  it('should handle drag lifecycle through modular hooks', () => {
+    const onDragStart = jest.fn();
     const onDragEnd = jest.fn();
-    const testData = { id: 'test' };
+    const testData = { track: { id: 'test' }, index: 0 };
 
-    const { result } = renderHook(() =>
-      useDraggable({ onDragEnd, data: testData })
+    renderHook(() =>
+      useDraggable({
+        onDragStart,
+        onDragEnd,
+        data: testData,
+        type: 'internal-track',
+      })
     );
 
-    // Start drag first
+    // Simulate drag start through useDragHandlers callback
+    const dragHandlersCall = useDragHandlers.mock.calls[0][0];
+    const mockDragItem = {
+      id: 'test',
+      type: 'internal-track',
+      payload: testData,
+    };
+
     act(() => {
-      result.current.startDrag(testData);
+      dragHandlersCall.onDragStart(mockDragItem);
     });
 
-    expect(result.current.isDragging).toBe(true);
+    expect(mockDragState.startDrag).toHaveBeenCalledWith(mockDragItem);
+    expect(onDragStart).toHaveBeenCalledWith(mockDragItem);
 
-    // End drag
+    // Simulate drag end through useDragHandlers callback
     act(() => {
-      result.current.endDrag('success');
+      dragHandlersCall.onDragEnd(mockDragItem, true);
     });
 
-    expect(result.current.isDragging).toBe(false);
-    expect(result.current.draggedItem).toBe(null);
-    expect(onDragEnd).toHaveBeenCalledWith(
-      { data: testData, type: 'default' },
-      { reason: 'success', success: true }
-    );
+    expect(mockDragState.endDrag).toHaveBeenCalled();
+    expect(onDragEnd).toHaveBeenCalledWith(mockDragItem, true);
   });
 
-  it('should handle HTML5 drag start', () => {
-    const onDragStart = jest.fn();
-    const testData = { id: 'test' };
+  it('should handle HTML5 drag events', () => {
+    const testData = { track: { id: 'test' }, index: 0 };
+    const mockDragItem = {
+      id: 'test',
+      type: 'internal-track',
+      payload: testData,
+    };
+
+    mockDragHandlers.handleHTML5DragStart.mockReturnValue(mockDragItem);
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, data: testData, type: 'test-type' })
+      useDraggable({ data: testData, type: 'internal-track' })
     );
 
     const mockEvent = {
@@ -142,25 +318,30 @@ describe('useDraggable', () => {
       result.current.dragHandleProps.onDragStart(mockEvent);
     });
 
-    expect(mockEvent.dataTransfer.effectAllowed).toBe('move');
-    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith(
-      'text/html',
-      '<div>test</div>'
+    expect(mockDragHandlers.handleHTML5DragStart).toHaveBeenCalledWith(
+      mockEvent
     );
-    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith(
-      'application/json',
-      JSON.stringify({ type: 'test-type', data: testData })
+
+    // Test drag end
+    act(() => {
+      result.current.dragHandleProps.onDragEnd(mockEvent);
+    });
+
+    expect(mockDragHandlers.handleHTML5DragEnd).toHaveBeenCalledWith(
+      mockEvent,
+      mockDragState.draggedItem
     );
-    expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith({ data: testData, type: 'html5' });
   });
 
-  it('should handle touch start and long press', () => {
-    const onDragStart = jest.fn();
-    const testData = { id: 'test' };
+  it('should handle touch events through useTouchDrag', () => {
+    const testData = { track: { id: 'test' }, index: 0 };
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, data: testData, longPressDelay: 100 })
+      useDraggable({
+        data: testData,
+        longPressDelay: 100,
+        type: 'internal-track',
+      })
     );
 
     const mockTouchEvent = {
@@ -168,68 +349,60 @@ describe('useDraggable', () => {
       currentTarget: { id: 'test-element' },
     };
 
-    // Start touch
+    // Test that touch events are delegated to useTouchDrag
     act(() => {
       result.current.dragHandleProps.onTouchStart(mockTouchEvent);
     });
 
-    expect(result.current.touchState.isActive).toBe(true);
+    expect(mockTouchDrag.handleTouchStart).toHaveBeenCalledWith(mockTouchEvent);
 
-    // Fast forward time to trigger long press
     act(() => {
-      jest.advanceTimersByTime(100);
+      result.current.dragHandleProps.onTouchMove(mockTouchEvent);
     });
 
-    expect(result.current.touchState.isLongPress).toBe(true);
-    expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith({ data: testData, type: 'touch' });
-    expect(navigator.vibrate).toHaveBeenCalledWith(100);
+    expect(mockTouchDrag.handleTouchMove).toHaveBeenCalledWith(mockTouchEvent);
+
+    act(() => {
+      result.current.dragHandleProps.onTouchEnd(mockTouchEvent);
+    });
+
+    expect(mockTouchDrag.handleTouchEnd).toHaveBeenCalledWith(mockTouchEvent);
+
+    // Verify useTouchDrag was configured with correct parameters
+    expect(useTouchDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        longPressDelay: 100,
+        createDragItem: mockDragHandlers.createDragItem,
+      })
+    );
   });
 
-  it('should cancel long press on movement', () => {
-    const onDragStart = jest.fn();
-    const testData = { id: 'test' };
+  it('should return touch state from useTouchDrag', () => {
+    // Mock touch state to simulate active touch
+    mockTouchDrag.touchState = {
+      isActive: true,
+      isLongPress: true,
+      startY: 100,
+      currentY: 120,
+      startX: 50,
+      currentX: 70,
+      longPressTimer: null,
+      element: null,
+    };
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, data: testData, longPressDelay: 100 })
+      useDraggable({ type: 'internal-track' })
     );
 
-    const mockTouchStart = {
-      touches: [{ clientY: 100, clientX: 50 }],
-      currentTarget: { id: 'test-element' },
-    };
-
-    const mockTouchMove = {
-      touches: [{ clientY: 120, clientX: 70 }], // Moved more than 15px
-    };
-
-    // Start touch
-    act(() => {
-      result.current.dragHandleProps.onTouchStart(mockTouchStart);
-    });
-
-    // Move too much
-    act(() => {
-      result.current.dragHandleProps.onTouchMove(mockTouchMove);
-    });
-
-    // Fast forward time
-    act(() => {
-      jest.advanceTimersByTime(100);
-    });
-
-    expect(result.current.touchState.isLongPress).toBe(false);
-    expect(result.current.isDragging).toBe(false);
-    expect(onDragStart).not.toHaveBeenCalled();
+    expect(result.current.touchState).toEqual(mockTouchDrag.touchState);
   });
 
-  it('should handle keyboard navigation', () => {
-    const onDragStart = jest.fn();
-    const onDrop = jest.fn();
-    const testData = { id: 'test' };
+  it('should handle keyboard events through useKeyboardDrag', () => {
+    const onMove = jest.fn();
+    const testData = { track: { id: 'test' }, index: 0 };
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, onDrop, data: testData })
+      useDraggable({ onMove, data: testData, type: 'internal-track' })
     );
 
     const mockKeyEvent = {
@@ -238,98 +411,129 @@ describe('useDraggable', () => {
       target: { id: 'test-element' },
     };
 
-    // Start drag with spacebar
+    // Test that keyboard events are delegated to useKeyboardDrag
     act(() => {
       result.current.dragHandleProps.onKeyDown(mockKeyEvent);
     });
 
-    expect(mockKeyEvent.preventDefault).toHaveBeenCalled();
-    expect(result.current.keyboardState.isDragging).toBe(true);
-    expect(result.current.isDragging).toBe(true);
-    expect(onDragStart).toHaveBeenCalledWith({
-      data: testData,
-      type: 'keyboard',
-    });
+    expect(mockKeyboardDrag.handleKeyDown).toHaveBeenCalledWith(mockKeyEvent);
 
-    // End drag with spacebar again
-    act(() => {
-      result.current.dragHandleProps.onKeyDown(mockKeyEvent);
-    });
-
-    expect(onDrop).toHaveBeenCalled();
-    expect(result.current.isDragging).toBe(false);
+    // Verify useKeyboardDrag was configured with correct parameters
+    expect(useKeyboardDrag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createDragItem: mockDragHandlers.createDragItem,
+        onMove,
+      })
+    );
   });
 
-  it('should handle escape key to cancel drag', () => {
-    const onDragStart = jest.fn();
-    const onDragEnd = jest.fn();
-    const testData = { id: 'test' };
+  it('should return keyboard state from useKeyboardDrag', () => {
+    // Mock keyboard state to simulate active keyboard drag
+    mockKeyboardDrag.keyboardState = {
+      isActive: true,
+      selectedIndex: 2,
+      isDragging: true,
+    };
 
     const { result } = renderHook(() =>
-      useDraggable({ onDragStart, onDragEnd, data: testData })
+      useDraggable({ type: 'internal-track' })
     );
 
-    const mockSpaceEvent = {
-      key: ' ',
-      preventDefault: jest.fn(),
-      target: { id: 'test-element' },
-    };
-
-    // Start keyboard drag with spacebar
-    act(() => {
-      result.current.dragHandleProps.onKeyDown(mockSpaceEvent);
-    });
-
-    expect(result.current.isDragging).toBe(true);
-    expect(result.current.keyboardState.isDragging).toBe(true);
-
-    const mockEscapeEvent = {
-      key: 'Escape',
-      preventDefault: jest.fn(),
-    };
-
-    // Cancel with escape
-    act(() => {
-      result.current.dragHandleProps.onKeyDown(mockEscapeEvent);
-    });
-
-    expect(mockEscapeEvent.preventDefault).toHaveBeenCalled();
-    expect(result.current.isDragging).toBe(false);
-    expect(result.current.draggedItem).toBe(null);
-    expect(onDragEnd).toHaveBeenCalledWith(
-      { data: testData, type: 'keyboard' },
-      { reason: 'cancel', success: false }
+    expect(result.current.keyboardState).toEqual(
+      mockKeyboardDrag.keyboardState
     );
   });
 
-  it('should provide haptic feedback', () => {
-    const { result } = renderHook(() => useDraggable());
+  it('should handle drop zone events', () => {
+    mockDragState.isDragging = true;
 
-    act(() => {
-      result.current.provideHapticFeedback([100, 50, 100]);
-    });
+    const { result } = renderHook(() =>
+      useDraggable({ type: 'internal-track' })
+    );
 
-    expect(navigator.vibrate).toHaveBeenCalledWith([100, 50, 100]);
-  });
-
-  it('should cleanup timers on unmount', () => {
-    const { result, unmount } = renderHook(() => useDraggable());
-
-    const mockTouchEvent = {
-      touches: [{ clientY: 100, clientX: 50 }],
-      currentTarget: { id: 'test-element' },
+    const mockDragEvent = {
+      preventDefault: jest.fn(),
+      dataTransfer: { dropEffect: '' },
+      clientY: 100,
     };
 
-    // Start touch to create timer
+    // Test drag over
     act(() => {
-      result.current.dragHandleProps.onTouchStart(mockTouchEvent);
+      result.current.dropZoneProps.onDragOver(mockDragEvent);
     });
 
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    expect(mockDragEvent.preventDefault).toHaveBeenCalled();
+    expect(mockDragEvent.dataTransfer.dropEffect).toBe('move');
+    expect(mockAutoScroll.checkAutoScroll).toHaveBeenCalledWith(100);
 
-    // Unmount should clear timers
+    // Test drop
+    act(() => {
+      result.current.dropZoneProps.onDrop(mockDragEvent);
+    });
+
+    expect(mockAutoScroll.stopAutoScroll).toHaveBeenCalled();
+
+    // Test drag leave
+    act(() => {
+      result.current.dropZoneProps.onDragLeave();
+    });
+
+    // Should not throw any errors
+  });
+
+  it('should cleanup resources on unmount', () => {
+    const { unmount } = renderHook(() =>
+      useDraggable({ type: 'internal-track' })
+    );
+
+    // Unmount should trigger cleanup
     unmount();
 
-    expect(clearTimeoutSpy).toHaveBeenCalled();
+    expect(mockAutoScroll.stopAutoScroll).toHaveBeenCalled();
+    expect(mockTouchDrag.cleanup).toHaveBeenCalled();
+  });
+
+  it('should integrate visual feedback correctly', () => {
+    // Mock visual feedback with active drag classes
+    mockVisualFeedback.dragClasses = {
+      'drag-active': true,
+      'currently-dragged': false,
+    };
+    mockVisualFeedback.dragStyles = {
+      opacity: 0.8,
+      transform: 'scale(1.02)',
+    };
+
+    const { result } = renderHook(() =>
+      useDraggable({ type: 'internal-track' })
+    );
+
+    expect(result.current.dragHandleProps.className).toBe('drag-active');
+    expect(result.current.dragHandleProps.style).toEqual(
+      mockVisualFeedback.dragStyles
+    );
+
+    // Verify visual feedback hook was called with correct parameters
+    expect(useDragVisualFeedback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isDragging: mockDragState.isDragging,
+        draggedItem: mockDragState.draggedItem,
+      })
+    );
+  });
+
+  it('should provide backward compatibility functions', () => {
+    const { result } = renderHook(() =>
+      useDraggable({ type: 'internal-track' })
+    );
+
+    // These functions should exist for backward compatibility but be no-ops
+    expect(typeof result.current.startDrag).toBe('function');
+    expect(typeof result.current.endDrag).toBe('function');
+    expect(typeof result.current.provideHapticFeedback).toBe('function');
+
+    // These should be the actual functions from modular hooks
+    expect(result.current.checkAutoScroll).toBe(mockAutoScroll.checkAutoScroll);
+    expect(result.current.stopAutoScroll).toBe(mockAutoScroll.stopAutoScroll);
   });
 });
