@@ -7,8 +7,7 @@ import { createAuthSlice, AuthSlice } from './slices/authSlice';
 import { createPlaylistSlice, PlaylistSlice } from './slices/playlistSlice';
 import { createMixingSlice, MixingSlice } from './slices/mixingSlice';
 import { createUISlice, UISlice } from './slices/uiSlice';
-import { createDragSlice } from './slices/dragSlice';
-import { DragSlice } from '../types/dragAndDrop';
+import { createDragSlice, DragSlice } from './slices/dragSlice';
 
 // Combined store type
 export type AppStore = AuthSlice &

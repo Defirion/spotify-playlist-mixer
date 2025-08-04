@@ -25,7 +25,12 @@
   - Add proper TypeScript integration with existing store architecture
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 3. Integrate drag slice into main store
+- [x] 3. Integrate drag slice into main store
+
+
+
+
+
   - Update `src/store/index.ts` to include the new `DragSlice` in the combined store type
   - Add drag slice to store creation with proper devtools integration
   - Create selector hooks: `useDragState()` and `useScrollPosition()` with shallow comparison optimization

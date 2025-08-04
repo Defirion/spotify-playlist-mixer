@@ -1,12 +1,15 @@
 import { StateCreator } from 'zustand';
 import {
-  DragSlice,
+  DragSlice as DragSliceInterface,
   DraggedItem,
   DragSourceType,
 } from '../../types/dragAndDrop';
 
+// Re-export the interface for use in the main store
+export type DragSlice = DragSliceInterface;
+
 export const createDragSlice: StateCreator<
-  DragSlice,
+  any, // Will be properly typed as AppStore in the main store
   [['zustand/devtools', never], ['zustand/subscribeWithSelector', never]],
   [],
   DragSlice
