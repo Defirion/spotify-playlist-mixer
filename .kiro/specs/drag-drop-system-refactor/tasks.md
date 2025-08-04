@@ -86,7 +86,12 @@
   - Ensure no regression in keyboard navigation during refactor
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 4.5 Extract and modularize existing auto-scroll logic
+- [x] 4.5 Extract and modularize existing auto-scroll logic
+
+
+
+
+
   - Extract auto-scroll functionality from existing `useDraggable.ts` into `src/hooks/drag/useAutoScroll.ts`
   - Preserve existing dynamic scroll speed calculation and out-of-bounds scrolling
   - Maintain current requestAnimationFrame optimization and cleanup logic
