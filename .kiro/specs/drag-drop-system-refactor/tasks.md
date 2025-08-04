@@ -39,7 +39,12 @@
 
 - [ ] 4. Create modular drag hook architecture
 
-- [ ] 4.1 Implement core drag state hook
+- [x] 4.1 Implement core drag state hook
+
+
+
+
+
   - Create `src/hooks/drag/useDragState.ts` for store integration
   - Provide `isCurrentlyDragged` utility function for item-specific drag state
   - Ensure proper subscription management and performance optimization
