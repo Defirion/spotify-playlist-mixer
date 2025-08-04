@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDrag } from '../components/DragContext';
+import { useDragVisualFeedback } from './drag/useDragVisualFeedback';
 import {
   UseDraggableOptions,
   UseDraggableReturn,
@@ -51,6 +52,13 @@ const useDraggable = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [dropPosition, setDropPosition] = useState<any>(null);
+
+  // Visual feedback hook
+  const { dragClasses, dragStyles } = useDragVisualFeedback({
+    isDragging,
+    isCurrentlyDragged: false, // This will be determined by individual items
+    draggedItem,
+  });
 
   // Touch state
   const [touchState, setTouchState] = useState<TouchState>({
@@ -686,52 +694,6 @@ const useDraggable = ({
     ]
   );
 
-  // Scroll locking effect
-  useEffect(() => {
-    let scrollY = 0;
-
-    if (isDragging) {
-      // Store current scroll position and apply lock
-      scrollY = window.scrollY;
-
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
-      document.body.classList.add('no-user-select', 'drag-active');
-    } else {
-      // Restore scroll position and unlock
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-
-      document.body.classList.remove('no-user-select', 'drag-active');
-
-      // Use requestAnimationFrame to ensure DOM is settled before restoring scroll
-      window.requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-      });
-    }
-
-    return () => {
-      // Cleanup in case component unmounts while dragging
-      if (isDragging) {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-
-        document.body.classList.remove('no-user-select', 'drag-active');
-
-        window.requestAnimationFrame(() => {
-          window.scrollTo(0, scrollY);
-        });
-      }
-    };
-  }, [isDragging]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -755,6 +717,10 @@ const useDraggable = ({
     tabIndex: disabled ? -1 : 0,
     role: 'button',
     'aria-grabbed': isDragging,
+    className: Object.keys(dragClasses)
+      .filter(key => dragClasses[key])
+      .join(' '),
+    style: dragStyles,
   };
 
   const dropZoneProps = {

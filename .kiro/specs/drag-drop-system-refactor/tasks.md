@@ -98,7 +98,12 @@
   - Ensure no regression in existing auto-scroll behavior during refactor
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 4.6 Extract and modularize existing visual feedback logic
+- [x] 4.6 Extract and modularize existing visual feedback logic
+
+
+
+
+
   - Extract scroll locking and visual feedback from existing `useDraggable.ts` into `src/hooks/drag/useDragVisualFeedback.ts`
   - Preserve existing body scroll locking, CSS class management, and cleanup logic
   - Maintain current scroll position restoration with requestAnimationFrame
