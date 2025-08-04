@@ -50,7 +50,12 @@
   - Ensure proper subscription management and performance optimization
   - _Requirements: 5.1, 5.2, 7.1_
 
-- [ ] 4.2 Implement drag handlers hook
+- [x] 4.2 Implement drag handlers hook
+
+
+
+
+
   - Create `src/hooks/drag/useDragHandlers.ts` for HTML5 drag event management
   - Implement `createDragItem` function with proper payload creation for different drag types
   - Add `handleHTML5DragStart` and `handleHTML5DragEnd` with proper dataTransfer setup
