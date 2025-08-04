@@ -501,17 +501,7 @@ export interface PlaylistContextValue {
   clearSelection: () => void;
 }
 
-export interface DragContextValue {
-  dragState: {
-    isDragging: boolean;
-    draggedItem: DragItem | null;
-    dropTargets: string[];
-  };
-  startDrag: (item: DragItem) => void;
-  endDrag: () => void;
-  registerDropTarget: (id: string) => void;
-  unregisterDropTarget: (id: string) => void;
-}
+// DragContextValue removed - using Zustand drag slice instead
 
 // Event types
 export interface TrackEvent {

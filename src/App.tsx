@@ -15,7 +15,7 @@ import TermsOfService from './components/TermsOfService';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Context
-import { DragProvider } from './components/DragContext';
+// DragProvider removed - using Zustand drag slice instead
 
 // Store hooks
 import {
@@ -221,14 +221,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <DragProvider>
-                <MainApp />
-              </DragProvider>
-            }
-          />
+          <Route path="/" element={<MainApp />} />
           <Route
             path="/privacy"
             element={

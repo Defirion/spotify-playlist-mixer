@@ -61,12 +61,15 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
       type: 'modal-track',
       scrollContainer,
       onDragStart: item => {
-        console.log('[AddUnselectedModal] Track drag start:', item.data?.name);
+        console.log(
+          '[AddUnselectedModal] Track drag start:',
+          item?.payload?.track?.name
+        );
       },
       onDragEnd: (item, result) => {
         console.log(
           '[AddUnselectedModal] Track drag end:',
-          item.data?.name,
+          item?.payload?.track?.name,
           result
         );
       },

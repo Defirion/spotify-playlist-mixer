@@ -10,6 +10,7 @@ import SpotifySearchModal from './SpotifySearchModal';
 import TrackListItem from './TrackListItem';
 import useDraggable from '../hooks/useDraggable';
 import useTrackReordering from '../hooks/useTrackReordering';
+import { useDragState } from '../store';
 import {
   SpotifyTrack,
   SpotifyPlaylist,
@@ -48,6 +49,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   }, [tracks]);
 
   // Initialize custom hooks
+  const { isDragging } = useDragState();
   const {
     dropPosition,
     setDropPosition,
@@ -115,14 +117,23 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     [calculateDropPosition, setDropPosition]
   );
 
-  // Initialize useDraggable for container-level drag handling
-  const containerDraggable = useDraggable({
-    type: 'track-list-container',
-    onDragEnd: handleDragEnd,
-    onDrop: handleDrop,
-    onDragOver: handleDragOver,
-    scrollContainer: scrollContainerRef.current,
-  });
+  // Container is not draggable itself, just handles drops
+  // HTML drag event handlers for the container
+  const handleContainerDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    []
+  );
+
+  const handleContainerDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      // The actual drop handling is done by the individual track components
+    },
+    []
+  );
 
   // Track-specific drag handlers - using useDraggable
   const trackDragOptions = useMemo(
@@ -208,12 +219,13 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           ref={scrollContainerRef}
           data-preview-panel="true"
           className={`${styles.scrollContainer} ${
-            containerDraggable.isDragging ? styles.dragging : ''
+            isDragging ? styles.dragging : ''
           }`}
           role="region"
           aria-label="Draggable Track List Container"
           tabIndex={0}
-          {...containerDraggable.dropZoneProps}
+          onDragOver={handleContainerDragOver}
+          onDrop={handleContainerDrop}
         >
           {/* Header */}
           <div className={styles.header}>

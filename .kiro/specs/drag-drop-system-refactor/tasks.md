@@ -124,6 +124,10 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
 - [ ] 6. Remove legacy DragContext implementation
+
+
+
+
   - Delete `src/components/DragContext.js` file completely
   - Remove all imports and usage of `DragProvider` and `useDrag` from components
   - Update any remaining references to use the new Zustand-based system

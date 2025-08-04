@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SpotifySearchModal from '../SpotifySearchModal';
-import { DragProvider } from '../DragContext';
+// DragProvider removed - using Zustand drag slice instead
 import * as useSpotifySearchModule from '../../hooks/useSpotifySearch';
 import * as useDraggableModule from '../../hooks/useDraggable';
 import * as dragAndDropUtils from '../../utils/dragAndDrop';
@@ -79,9 +79,9 @@ const mockDragContext = {
   notifyTouchDragEnd: jest.fn(),
 };
 
-// Wrapper component with providers
+// Wrapper component - no longer needs DragProvider
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <DragProvider value={mockDragContext}>{children}</DragProvider>
+  <>{children}</>
 );
 
 describe('SpotifySearchModal', () => {
@@ -431,16 +431,11 @@ describe('SpotifySearchModal', () => {
       };
 
       // Mock the DragContext to provide the dragging state
-      jest.doMock('../DragContext', () => ({
-        useDrag: () => mockUseDragWithDragging,
-        DragProvider: ({ children }: { children: React.ReactNode }) => children,
-      }));
+      // DragContext mock no longer needed - using Zustand drag slice
 
       const TestWrapperWithDragging: React.FC<{
         children: React.ReactNode;
-      }> = ({ children }) => (
-        <DragProvider value={mockUseDragWithDragging}>{children}</DragProvider>
-      );
+      }> = ({ children }) => <>{children}</>;
 
       render(
         <TestWrapperWithDragging>

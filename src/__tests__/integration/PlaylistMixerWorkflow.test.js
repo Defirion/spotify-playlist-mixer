@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 // Import individual components for integration testing
 import Modal from '../../components/ui/Modal';
 import TrackList from '../../components/ui/TrackList';
-import { DragProvider } from '../../components/DragContext';
+// DragProvider removed - using Zustand drag slice instead
 
 // Mock data for testing
 const mockTracks = [
@@ -75,15 +75,13 @@ describe('Playlist Mixer Integration Tests', () => {
       const onTrackSelect = jest.fn();
 
       render(
-        <DragProvider>
-          <Modal isOpen={true} onClose={onClose} title="Select Tracks">
-            <TrackList
-              tracks={mockTracks}
-              onTrackSelect={onTrackSelect}
-              selectable={true}
-            />
-          </Modal>
-        </DragProvider>
+        <Modal isOpen={true} onClose={onClose} title="Select Tracks">
+          <TrackList
+            tracks={mockTracks}
+            onTrackSelect={onTrackSelect}
+            selectable={true}
+          />
+        </Modal>
       );
 
       // Verify modal is open with title
@@ -112,15 +110,13 @@ describe('Playlist Mixer Integration Tests', () => {
       const onTrackSelect = jest.fn();
 
       render(
-        <DragProvider>
-          <Modal isOpen={true} onClose={onClose} title="Select Tracks">
-            <TrackList
-              tracks={mockTracks}
-              onTrackSelect={onTrackSelect}
-              selectable={true}
-            />
-          </Modal>
-        </DragProvider>
+        <Modal isOpen={true} onClose={onClose} title="Select Tracks">
+          <TrackList
+            tracks={mockTracks}
+            onTrackSelect={onTrackSelect}
+            selectable={true}
+          />
+        </Modal>
       );
 
       // Test tab navigation - first tab goes to close button
@@ -146,15 +142,13 @@ describe('Playlist Mixer Integration Tests', () => {
       const selectedTracks = new Set([mockTracks[0].id]);
 
       render(
-        <DragProvider>
-          <TrackList
-            tracks={mockTracks}
-            onTrackSelect={onTrackSelect}
-            onTrackRemove={onTrackRemove}
-            selectable={true}
-            selectedTracks={selectedTracks}
-          />
-        </DragProvider>
+        <TrackList
+          tracks={mockTracks}
+          onTrackSelect={onTrackSelect}
+          onTrackRemove={onTrackRemove}
+          selectable={true}
+          selectedTracks={selectedTracks}
+        />
       );
 
       // Verify first track is selected
@@ -178,13 +172,11 @@ describe('Playlist Mixer Integration Tests', () => {
       const onTrackSelect = jest.fn();
 
       render(
-        <DragProvider>
-          <TrackList
-            tracks={mockTracks}
-            onTrackSelect={onTrackSelect}
-            draggable={true}
-          />
-        </DragProvider>
+        <TrackList
+          tracks={mockTracks}
+          onTrackSelect={onTrackSelect}
+          draggable={true}
+        />
       );
 
       const trackItems = screen.getAllByTestId('track-item');
@@ -232,33 +224,31 @@ describe('Playlist Mixer Integration Tests', () => {
         };
 
         return (
-          <DragProvider>
-            <div>
-              <button onClick={() => setIsModalOpen(true)}>
-                Open Track Selector
-              </button>
-              <div data-testid="selected-count">
-                Selected: {selectedTracks.size}
-              </div>
-
-              <Modal
-                isOpen={isModalOpen}
-                onClose={() => {
-                  setIsModalOpen(false);
-                  onClose();
-                }}
-                title="Select Tracks"
-              >
-                <TrackList
-                  tracks={mockTracks}
-                  onTrackSelect={handleTrackSelect}
-                  onTrackRemove={handleTrackRemove}
-                  selectable={true}
-                  selectedTracks={selectedTracks}
-                />
-              </Modal>
+          <div>
+            <button onClick={() => setIsModalOpen(true)}>
+              Open Track Selector
+            </button>
+            <div data-testid="selected-count">
+              Selected: {selectedTracks.size}
             </div>
-          </DragProvider>
+
+            <Modal
+              isOpen={isModalOpen}
+              onClose={() => {
+                setIsModalOpen(false);
+                onClose();
+              }}
+              title="Select Tracks"
+            >
+              <TrackList
+                tracks={mockTracks}
+                onTrackSelect={handleTrackSelect}
+                onTrackRemove={handleTrackRemove}
+                selectable={true}
+                selectedTracks={selectedTracks}
+              />
+            </Modal>
+          </div>
         );
       };
 
@@ -318,12 +308,10 @@ describe('Playlist Mixer Integration Tests', () => {
         }
 
         return (
-          <DragProvider>
-            <div>
-              <button onClick={handleError}>Simulate Error</button>
-              <TrackList tracks={tracks} />
-            </div>
-          </DragProvider>
+          <div>
+            <button onClick={handleError}>Simulate Error</button>
+            <TrackList tracks={tracks} />
+          </div>
         );
       };
 
@@ -356,14 +344,12 @@ describe('Playlist Mixer Integration Tests', () => {
       const onClose = jest.fn();
 
       render(
-        <DragProvider>
-          <div>
-            <button data-testid="trigger">Open Modal</button>
-            <Modal isOpen={true} onClose={onClose} title="Accessible Modal">
-              <TrackList tracks={mockTracks.slice(0, 2)} selectable={true} />
-            </Modal>
-          </div>
-        </DragProvider>
+        <div>
+          <button data-testid="trigger">Open Modal</button>
+          <Modal isOpen={true} onClose={onClose} title="Accessible Modal">
+            <TrackList tracks={mockTracks.slice(0, 2)} selectable={true} />
+          </Modal>
+        </div>
       );
 
       // Modal should be focused when opened
@@ -389,11 +375,9 @@ describe('Playlist Mixer Integration Tests', () => {
 
     it('provides proper ARIA relationships between components', () => {
       render(
-        <DragProvider>
-          <Modal isOpen={true} onClose={jest.fn()} title="Track Selection">
-            <TrackList tracks={mockTracks.slice(0, 2)} selectable={true} />
-          </Modal>
-        </DragProvider>
+        <Modal isOpen={true} onClose={jest.fn()} title="Track Selection">
+          <TrackList tracks={mockTracks.slice(0, 2)} selectable={true} />
+        </Modal>
       );
 
       // Modal has proper ARIA attributes
@@ -415,11 +399,9 @@ describe('Playlist Mixer Integration Tests', () => {
       const startTime = performance.now();
 
       render(
-        <DragProvider>
-          <Modal isOpen={true} onClose={jest.fn()} title="Performance Test">
-            <TrackList tracks={mockTracks} selectable={true} />
-          </Modal>
-        </DragProvider>
+        <Modal isOpen={true} onClose={jest.fn()} title="Performance Test">
+          <TrackList tracks={mockTracks} selectable={true} />
+        </Modal>
       );
 
       const endTime = performance.now();
@@ -450,9 +432,7 @@ describe('Playlist Mixer Integration Tests', () => {
       const startTime = performance.now();
 
       render(
-        <DragProvider>
-          <TrackList tracks={largeMockTracks} selectable={true} />
-        </DragProvider>
+        <TrackList tracks={largeMockTracks} selectable={true} />
       );
 
       const endTime = performance.now();
