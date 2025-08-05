@@ -10,18 +10,17 @@ interface TrackListItemProps {
   selectedPlaylists: SpotifyPlaylist[];
   formatDuration: (durationMs: number) => string;
   onRemove: (index: number) => void;
-  dropPosition: { index: number; isTopHalf: boolean } | null;
+  dropPosition: {
+    index: number;
+    isTopHalf: boolean;
+    isFirst: boolean;
+    isLast: boolean;
+    y: number;
+  } | null;
   getTrackQuadrant: (
     track: MixedTrack
   ) => 'topHits' | 'popular' | 'moderate' | 'deepCuts' | null;
-  dragOptions: {
-    type: string;
-    onDragStart: (item: any) => void;
-    onDragEnd: (item: any, result: any) => void;
-    onDrop: (item: any, result: any) => void;
-    onDragOver: (item: any, position: any) => void;
-    scrollContainer: HTMLElement | null;
-  };
+  scrollContainer: HTMLElement | null;
 }
 
 const TrackListItem: React.FC<TrackListItemProps> = ({
@@ -32,20 +31,41 @@ const TrackListItem: React.FC<TrackListItemProps> = ({
   onRemove,
   dropPosition,
   getTrackQuadrant,
-  dragOptions,
+  scrollContainer,
 }) => {
   const sourcePlaylist = selectedPlaylists.find(
     p => p.id === track.sourcePlaylist
   );
   const quadrant = getTrackQuadrant(track);
 
+  // Validate track data before initializing drag handlers
+  const isValidTrackData = track && track.id && typeof index === 'number';
+
+  // Use the new useDraggable hook with proper configuration
   const trackDragHandlers = useDraggable({
-    ...dragOptions,
-    data: track,
+    type: 'internal-track',
+    data: isValidTrackData ? { ...track, index } : undefined, // Only pass data if valid
+    disabled: !isValidTrackData, // Disable if track data is invalid
+    scrollContainer,
+    onDragStart: item => {
+      console.log('[TrackListItem] Drag started:', item);
+    },
+    onDragEnd: (item, success) => {
+      console.log('[TrackListItem] Drag ended:', item, success);
+    },
   });
 
-  const showDropLineAbove = dropPosition && dropPosition.index === index;
-  const showDropLineBelow = dropPosition && dropPosition.index === index + 1;
+  // Enhanced drop line logic with better positioning
+  const showDropLineAbove =
+    dropPosition && dropPosition.index === index && !dropPosition.isLast;
+  const showDropLineBelow =
+    dropPosition && dropPosition.index === index + 1 && !dropPosition.isFirst;
+
+  // Special handling for first and last positions
+  const isDropTarget =
+    dropPosition &&
+    ((dropPosition.index === index && dropPosition.isTopHalf) ||
+      (dropPosition.index === index + 1 && !dropPosition.isTopHalf));
 
   return (
     <div
@@ -53,7 +73,7 @@ const TrackListItem: React.FC<TrackListItemProps> = ({
       data-track-index={index}
       className={`${styles.trackItem} ${
         showDropLineAbove ? styles.trackItemDropAbove : ''
-      }`}
+      } ${isDropTarget ? styles.trackItemDropTarget : ''}`}
       {...trackDragHandlers.dragHandleProps}
     >
       <div className={styles.trackContent}>

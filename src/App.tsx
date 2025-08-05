@@ -26,6 +26,9 @@ import {
   useUI,
 } from './store';
 
+// Drag hooks
+import { useGlobalScrollLock } from './hooks/drag/useGlobalScrollLock';
+
 // Types
 import { PlaylistMixResult } from './types/mixer';
 
@@ -41,6 +44,9 @@ function MainApp() {
   const { applyPresetOptions } = useMixOptions();
   const { error, mixedPlaylists, setError, dismissError, dismissSuccessToast } =
     useUI();
+
+  // Initialize global scroll lock for drag operations
+  useGlobalScrollLock();
 
   // Handle Spotify OAuth redirect
   useEffect(() => {

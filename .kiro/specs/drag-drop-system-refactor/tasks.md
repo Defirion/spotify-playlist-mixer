@@ -123,7 +123,9 @@
   - Ensure backward compatibility with existing component interfaces
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 6. Remove legacy DragContext implementation
+- [x] 6. Remove legacy DragContext implementation
+
+
 
 
 
@@ -134,23 +136,38 @@
   - Clean up related test files and mocks
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 7. Refactor DraggableTrackList component for new architecture
+- [-] 7. Refactor DraggableTrackList component for new architecture
 
-- [ ] 7.1 Implement scroll position preservation
+
+
+- [x] 7.1 Implement scroll position preservation
+
+
+
   - Update `src/components/DraggableTrackList.tsx` to use `useScrollPosition` hook
   - Implement capture-and-restore pattern in `handleInternalReorder` and `handleExternalAdd`
   - Use `useLayoutEffect` for synchronous scroll position restoration after track list updates
   - Add proper error handling for missing scroll container references
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 7.2 Integrate new drag system
+- [x] 7.2 Integrate new drag system
+
+
+
+
+
   - Replace existing drag logic with new `useDraggable` hook
   - Implement proper drop handling for internal reordering and external track addition
   - Add drop position calculation and visual feedback during drag operations
   - Remove all legacy drag-related code and state management
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 7.3 Add comprehensive drop zone handling
+- [x] 7.3 Add comprehensive drop zone handling
+
+
+
+
+
   - Implement intelligent drop index calculation based on mouse/touch position
   - Add visual drop indicators and feedback during drag operations
   - Handle edge cases like dropping at list boundaries and empty lists

@@ -287,6 +287,18 @@
   animation: pulse 1s infinite;
   margin: 8px 16px;
   pointer-events: none;
+  position: relative;
+  z-index: 10;
+}
+
+.dropLineFirst {
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.dropLineLast {
+  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .dropLineBelow {
@@ -315,8 +327,37 @@
 }
 
 .emptyState.dragging {
-  border: 2px dashed var(--drag-green);
-  background-color: rgba(144, 169, 85, 0.1);
+  border: 2px dashed var(--moss-green);
+  background-color: rgba(144, 169, 85, 0.15);
+  animation: pulse 2s infinite;
+}
+
+.emptyStateDropFeedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropIcon {
+  font-size: 32px;
+  animation: bounce 1s infinite;
+}
+
+.dropText {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--moss-green);
+}
+
+.dropSubtext {
+  font-size: 12px;
+  opacity: 0.8;
+  max-width: 300px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .emptyState.normal {
@@ -391,10 +432,16 @@
   overflow: hidden !important;
 }
 
-/* Dynamic styling classes for drop indicators */
+/* Enhanced dynamic styling classes for drop indicators */
 .trackItemDropAbove {
   border-top: 3px solid var(--moss-green) !important;
   box-shadow: 0 -2px 8px rgba(144, 169, 85, 0.6) !important;
+}
+
+.trackItemDropTarget {
+  background-color: rgba(144, 169, 85, 0.1) !important;
+  transform: scale(1.01) !important;
+  transition: all 0.2s ease !important;
 }
 
 /* Source playlist styling */
@@ -435,5 +482,21 @@
 
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
   }
 }

@@ -431,9 +431,7 @@ describe('Playlist Mixer Integration Tests', () => {
 
       const startTime = performance.now();
 
-      render(
-        <TrackList tracks={largeMockTracks} selectable={true} />
-      );
+      render(<TrackList tracks={largeMockTracks} selectable={true} />);
 
       const endTime = performance.now();
       const renderTime = endTime - startTime;

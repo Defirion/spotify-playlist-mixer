@@ -9,6 +9,52 @@ import { useAutoScroll } from './drag/useAutoScroll';
 import { useDragVisualFeedback } from './drag/useDragVisualFeedback';
 
 /**
+ * Creates a fallback return object when the hook fails to initialize properly
+ */
+const createFallbackReturn = (): UseDraggableReturn => ({
+  dragHandleProps: {
+    draggable: false,
+    onDragStart: () => {},
+    onDragEnd: () => {},
+    onTouchStart: () => {},
+    onTouchMove: () => {},
+    onTouchEnd: () => {},
+    onKeyDown: () => {},
+    tabIndex: -1,
+    role: 'button',
+    'aria-grabbed': false,
+  },
+  dropZoneProps: {
+    onDragOver: () => {},
+    onDrop: () => {},
+    onDragLeave: () => {},
+  },
+  isDragging: false,
+  draggedItem: null,
+  dropPosition: null,
+  touchState: {
+    isActive: false,
+    startY: 0,
+    currentY: 0,
+    startX: 0,
+    currentX: 0,
+    longPressTimer: null,
+    isLongPress: false,
+    element: null,
+  },
+  keyboardState: {
+    isActive: false,
+    selectedIndex: -1,
+    isDragging: false,
+  },
+  startDrag: () => {},
+  endDrag: () => {},
+  checkAutoScroll: () => {},
+  stopAutoScroll: () => {},
+  provideHapticFeedback: () => {},
+});
+
+/**
  * Main orchestrator hook for drag-and-drop operations
  *
  * This hook integrates all modular drag hooks to provide a unified interface
@@ -35,36 +81,50 @@ const useDraggable = <T extends DragSourceType>({
   onMove,
 }: Partial<DragOptions<T>> = {}): UseDraggableReturn => {
   // Get drag state from centralized store
+  const dragStateResult = useDragState();
+
   const { isDragging, draggedItem, startDrag, endDrag, isCurrentlyDragged } =
-    useDragState();
+    dragStateResult || {
+      isDragging: false,
+      draggedItem: null,
+      startDrag: () => {},
+      endDrag: () => {},
+      isCurrentlyDragged: () => false,
+    };
 
-  const isThisItemDragged = isCurrentlyDragged(
-    (data as any)?.id || (data as any)?.track?.id || ''
-  );
+  const isThisItemDragged = isCurrentlyDragged
+    ? isCurrentlyDragged((data as any)?.id || (data as any)?.track?.id || '')
+    : false;
 
-  // Initialize modular hooks
+  // Initialize modular hooks - must be called unconditionally
+  const dragHandlersResult = useDragHandlers({
+    type,
+    data,
+    disabled,
+    onDragStart: item => {
+      startDrag(item);
+      onDragStart?.(item);
+    },
+    onDragEnd: (item, success) => {
+      endDrag();
+      onDragEnd?.(item, success);
+    },
+  });
+
   const { createDragItem, handleHTML5DragStart, handleHTML5DragEnd, canDrag } =
-    useDragHandlers({
-      type,
-      data,
-      disabled,
-      onDragStart: item => {
-        startDrag(item);
-        onDragStart?.(item);
-      },
-      onDragEnd: (item, success) => {
-        endDrag();
-        onDragEnd?.(item, success);
-      },
-    });
+    dragHandlersResult || {
+      createDragItem: () => ({
+        id: '',
+        type,
+        payload: {} as any,
+        timestamp: Date.now(),
+      }),
+      handleHTML5DragStart: () => null,
+      handleHTML5DragEnd: () => {},
+      canDrag: () => false,
+    };
 
-  const {
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    touchState,
-    cleanup: touchCleanup,
-  } = useTouchDrag({
+  const touchDragResult = useTouchDrag({
     disabled,
     longPressDelay,
     createDragItem,
@@ -82,7 +142,21 @@ const useDraggable = <T extends DragSourceType>({
     type,
   });
 
-  const { handleKeyDown, keyboardState } = useKeyboardDrag({
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    touchState,
+    cleanup: touchCleanup,
+  } = touchDragResult || {
+    handleTouchStart: () => {},
+    handleTouchMove: () => {},
+    handleTouchEnd: () => {},
+    touchState: { isActive: false },
+    cleanup: () => {},
+  };
+
+  const keyboardDragResult = useKeyboardDrag({
     disabled,
     createDragItem,
     isCurrentlyDragged: isThisItemDragged,
@@ -97,16 +171,31 @@ const useDraggable = <T extends DragSourceType>({
     onMove,
   });
 
-  const { checkAutoScroll, stopAutoScroll } = useAutoScroll({
+  const { handleKeyDown, keyboardState } = keyboardDragResult || {
+    handleKeyDown: () => {},
+    keyboardState: { isActive: false },
+  };
+
+  const autoScrollResult = useAutoScroll({
     scrollContainer,
     scrollThreshold,
   });
 
-  const { dragClasses, dragStyles } = useDragVisualFeedback({
+  const { checkAutoScroll, stopAutoScroll } = autoScrollResult || {
+    checkAutoScroll: () => {},
+    stopAutoScroll: () => {},
+  };
+
+  const visualFeedbackResult = useDragVisualFeedback({
     isDragging,
     isCurrentlyDragged: isThisItemDragged,
     draggedItem,
   });
+
+  const { dragClasses, dragStyles } = visualFeedbackResult || {
+    dragClasses: {},
+    dragStyles: {},
+  };
 
   // Update touch drag hook with auto-scroll function
   // Note: This is a bit of a hack to pass the checkAutoScroll function to useTouchDrag
@@ -117,16 +206,24 @@ const useDraggable = <T extends DragSourceType>({
   // HTML5 drag event handlers with store integration
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
-      const dragItem = handleHTML5DragStart(e);
-      // Store integration is handled in useDragHandlers
+      try {
+        const dragItem = handleHTML5DragStart(e);
+        // Store integration is handled in useDragHandlers
+      } catch (error) {
+        console.error('[useDraggable] Error in handleDragStart:', error);
+      }
     },
     [handleHTML5DragStart]
   );
 
   const handleDragEnd = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
-      handleHTML5DragEnd(e, draggedItem as any);
-      // Store integration is handled in useDragHandlers
+      try {
+        handleHTML5DragEnd(e, draggedItem as any);
+        // Store integration is handled in useDragHandlers
+      } catch (error) {
+        console.error('[useDraggable] Error in handleDragEnd:', error);
+      }
     },
     [handleHTML5DragEnd, draggedItem]
   );
@@ -134,38 +231,54 @@ const useDraggable = <T extends DragSourceType>({
   // Drop zone handlers
   const handleDragOver = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
-      if (disabled || !isDragging) return;
+      try {
+        if (disabled || !isDragging) return;
 
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
 
-      checkAutoScroll(e.clientY);
+        checkAutoScroll(e.clientY);
+      } catch (error) {
+        console.error('[useDraggable] Error in handleDragOver:', error);
+      }
     },
     [disabled, isDragging, checkAutoScroll]
   );
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
-      if (disabled) return;
+      try {
+        if (disabled) return;
 
-      e.preventDefault();
-      stopAutoScroll();
+        e.preventDefault();
+        stopAutoScroll();
 
-      // Drop handling is delegated to the component
-      // The component should handle the drop logic based on draggedItem from store
+        // Drop handling is delegated to the component
+        // The component should handle the drop logic based on draggedItem from store
+      } catch (error) {
+        console.error('[useDraggable] Error in handleDrop:', error);
+      }
     },
     [disabled, stopAutoScroll]
   );
 
   const handleDragLeave = useCallback(() => {
-    // Visual feedback cleanup can be handled here if needed
+    try {
+      // Visual feedback cleanup can be handled here if needed
+    } catch (error) {
+      console.error('[useDraggable] Error in handleDragLeave:', error);
+    }
   }, []);
 
   // Comprehensive cleanup on unmount
   useEffect(() => {
     return () => {
-      stopAutoScroll();
-      touchCleanup();
+      try {
+        stopAutoScroll();
+        touchCleanup();
+      } catch (error) {
+        console.error('[useDraggable] Error in cleanup:', error);
+      }
     };
   }, [stopAutoScroll, touchCleanup]);
 
@@ -181,10 +294,6 @@ const useDraggable = <T extends DragSourceType>({
     tabIndex: disabled ? -1 : 0,
     role: 'button',
     'aria-grabbed': isThisItemDragged,
-    className: Object.keys(dragClasses)
-      .filter(key => dragClasses[key as keyof typeof dragClasses])
-      .join(' '),
-    style: dragStyles,
   };
 
   const dropZoneProps = {

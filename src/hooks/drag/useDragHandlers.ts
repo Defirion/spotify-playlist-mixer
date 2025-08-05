@@ -111,18 +111,63 @@ export const useDragHandlers = <T extends DragSourceType>({
   const createDragPayload = useCallback(
     (itemData: any): DraggedItemPayload[T] => {
       try {
+        // Early validation - if itemData is empty or invalid, throw immediately
+        if (
+          !itemData ||
+          (typeof itemData === 'object' && Object.keys(itemData).length === 0)
+        ) {
+          throw new Error('No drag data provided');
+        }
+
         switch (type) {
           case 'internal-track': {
-            if (!itemData?.track) {
+            // Handle both formats: { track, index } and { ...track, index }
+            let track, index;
+
+            if (
+              itemData?.track &&
+              typeof itemData.track === 'object' &&
+              itemData.track.id
+            ) {
+              // Format: { track, index } - track is a nested object
+              track = itemData.track;
+              index = typeof itemData.index === 'number' ? itemData.index : 0;
+            } else if (itemData?.id) {
+              // Format: { ...track, index } - track properties are spread directly
+              track = itemData;
+              index = typeof itemData.index === 'number' ? itemData.index : 0;
+            } else {
               throw new Error('Internal track drag requires track data');
             }
 
+            // Additional validation to ensure track has required properties
+            if (!track || !track.id) {
+              console.error('[useDragHandlers] Track validation failed:', {
+                track,
+                trackKeys: track
+                  ? Object.keys(track)
+                  : 'track is null/undefined',
+                originalItemData: itemData,
+                itemDataKeys: itemData
+                  ? Object.keys(itemData)
+                  : 'itemData is null/undefined',
+              });
+              throw new Error('Track must have an id property');
+            }
+
             const payload = {
-              track: itemData.track,
-              index: typeof itemData.index === 'number' ? itemData.index : 0,
+              track,
+              index,
             };
 
             if (!isValidDragPayload(payload, type)) {
+              console.error('[useDragHandlers] Payload validation failed:', {
+                payload,
+                expectedTrackType: 'object',
+                actualTrackType: typeof payload.track,
+                expectedIndexType: 'number',
+                actualIndexType: typeof payload.index,
+              });
               throw new Error('Invalid internal-track payload structure');
             }
 
@@ -226,6 +271,7 @@ export const useDragHandlers = <T extends DragSourceType>({
 
   /**
    * Validates if current data can be used for dragging
+   * This performs lightweight validation without creating the full payload
    */
   const canDrag = useCallback((): boolean => {
     try {
@@ -237,9 +283,22 @@ export const useDragHandlers = <T extends DragSourceType>({
         return false;
       }
 
-      // Attempt to create drag payload to validate data structure
-      createDragPayload(data);
-      return true;
+      // Perform lightweight validation without creating the full payload
+      // This avoids the expensive payload creation during rendering
+      switch (type) {
+        case 'internal-track': {
+          // Check for basic track structure without full validation
+          const hasTrackData = data?.track?.id || data?.id;
+          return !!hasTrackData;
+        }
+        case 'modal-track':
+        case 'search-track': {
+          // Check for basic track structure
+          return !!data?.track?.id;
+        }
+        default:
+          return false;
+      }
     } catch (error) {
       console.debug('[useDragHandlers] Cannot drag - invalid data', {
         type,
@@ -248,7 +307,7 @@ export const useDragHandlers = <T extends DragSourceType>({
       });
       return false;
     }
-  }, [disabled, data, createDragPayload]);
+  }, [disabled, data, type]);
 
   /**
    * Gets the current drag item without creating a new one
