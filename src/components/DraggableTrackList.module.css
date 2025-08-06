@@ -444,6 +444,15 @@
   transition: all 0.2s ease !important;
 }
 
+.trackItemDragging {
+  /* Visual feedback for the item being dragged */
+  opacity: 0.5 !important;
+  transform: scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
 /* Source playlist styling */
 .sourcePlaylistSearch {
   color: var(--mindaro);

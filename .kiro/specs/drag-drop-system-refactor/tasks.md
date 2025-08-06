@@ -199,21 +199,89 @@
   - Test modal coordination across different drag source types
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 9. Update individual track components
+- [x] 9. Update individual track components
 
-- [ ] 9.1 Refactor TrackListItem component
+
+
+
+
+
+
+- [x] 9.1 Refactor TrackListItem component
+
+
   - Update track item components to use new `useDraggable` hook
   - Implement proper drag handle props and visual feedback
   - Add accessibility attributes and keyboard navigation support
   - Remove any legacy drag-related code and event handlers
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 9.2 Update modal track items
+- [x] 9.2 Update modal track items
+
+
   - Ensure track items in modals use appropriate drag types ('modal-track', 'search-track')
   - Implement proper payload creation with source identification
   - Add visual feedback for draggable items in modal contexts
   - Test cross-modal drag operations thoroughly
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 9.5. Eliminate modal UI duplication through abstraction
+
+
+
+
+
+
+- [x] 9.5.1 Create useModalDragInteraction hook
+
+
+  - Extract duplicated modal drag coordination logic from AddUnselectedModal and SpotifySearchModal
+  - Create `src/hooks/useModalDragInteraction.ts` that consumes useDragState and returns modalStyles and backdropStyles
+  - Remove duplicated shouldMuteModal, modalStyles, and backdropStyles memoization from both modal components
+  - Ensure hook handles proper opacity transitions and pointer-events management during drag operations
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
+
+- [x] 9.5.2 Create useTrackSelection hook
+
+
+  - Extract duplicated track selection state management from both modal components
+  - Create `src/hooks/useTrackSelection.ts` that manages selectedTracksToAdd Set state
+  - Provide handleTrackSelect, handleAddSelected, and clearSelection functions
+  - Accept available tracks list and onAddTracks callback as parameters
+  - Remove duplicated selection logic from AddUnselectedModal and SpotifySearchModal
+  - _Requirements: 7.1, 7.2, 7.3, 7.4_
+
+- [x] 9.5.3 Create useUnselectedTracks hook
+
+
+  - Extract data-fetching logic from AddUnselectedModal into dedicated hook
+  - Create `src/hooks/useUnselectedTracks.ts` following the pattern of useSpotifySearch
+  - Handle playlist track fetching, deduplication, and filtering logic
+  - Return loading state, tracks data, search functionality, and error handling
+  - Make AddUnselectedModal symmetrical with SpotifySearchModal in terms of data hook usage
+  - _Requirements: 7.1, 7.2, 7.3, 7.4_
+
+- [x] 9.5.4 Create generic TrackSourceModal component
+
+
+  - Create `src/components/TrackSourceModal.tsx` as a generic modal component
+  - Handle shared layout structure: header info, search input, track list, and footer
+  - Use the new hooks (useModalDragInteraction, useTrackSelection) for shared behavior
+  - Accept data source hook results, title, and search configuration as props
+  - Implement proper drag handlers with configurable drag types (modal-track vs search-track)
+  - Include footer with track count pluralization and action buttons
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 9.5.5 Refactor modal components to use generic TrackSourceModal
+
+
+  - Update AddUnselectedModal to become a thin wrapper around TrackSourceModal
+  - Update SpotifySearchModal to become a thin wrapper around TrackSourceModal
+  - Each modal should only be responsible for calling its data hook and passing results to TrackSourceModal
+  - Remove all duplicated UI logic, state management, and event handlers
+  - Ensure backward compatibility with existing component interfaces
+  - Test that both modals maintain their current functionality with significantly reduced code
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4_
 
 - [ ] 10. Implement comprehensive error handling and cleanup
 

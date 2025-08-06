@@ -41,19 +41,22 @@ const TrackListItem: React.FC<TrackListItemProps> = ({
   // Validate track data before initializing drag handlers
   const isValidTrackData = track && track.id && typeof index === 'number';
 
-  // Use the new useDraggable hook with proper configuration
-  const trackDragHandlers = useDraggable({
+  // Use the new useDraggable hook with proper configuration for internal track reordering
+  const { dragHandleProps, isDragging, draggedItem } = useDraggable({
     type: 'internal-track',
-    data: isValidTrackData ? { ...track, index } : undefined, // Only pass data if valid
-    disabled: !isValidTrackData, // Disable if track data is invalid
+    data: isValidTrackData ? { ...track, index } : undefined,
+    disabled: !isValidTrackData,
     scrollContainer,
     onDragStart: item => {
-      console.log('[TrackListItem] Drag started:', item);
+      console.log('[TrackListItem] Internal track drag started:', item);
     },
     onDragEnd: (item, success) => {
-      console.log('[TrackListItem] Drag ended:', item, success);
+      console.log('[TrackListItem] Internal track drag ended:', item, success);
     },
   });
+
+  // Check if this specific track is currently being dragged
+  const isCurrentlyDragged = isDragging && draggedItem?.id === track.id;
 
   // Enhanced drop line logic with better positioning
   const showDropLineAbove =
@@ -73,8 +76,12 @@ const TrackListItem: React.FC<TrackListItemProps> = ({
       data-track-index={index}
       className={`${styles.trackItem} ${
         showDropLineAbove ? styles.trackItemDropAbove : ''
-      } ${isDropTarget ? styles.trackItemDropTarget : ''}`}
-      {...trackDragHandlers.dragHandleProps}
+      } ${isDropTarget ? styles.trackItemDropTarget : ''} ${
+        isCurrentlyDragged ? styles.trackItemDragging : ''
+      }`}
+      {...dragHandleProps}
+      aria-label={`Track ${index + 1}: ${track.name} by ${track.artists?.[0]?.name || 'Unknown Artist'}. Press space to start dragging, arrow keys to move, escape to cancel.`}
+      aria-describedby={`track-${track.id}-details`}
     >
       <div className={styles.trackContent}>
         <div className={styles.dragHandle}>⋮⋮</div>
@@ -93,7 +100,7 @@ const TrackListItem: React.FC<TrackListItemProps> = ({
               }}
             />
           )}
-          <div className={styles.trackDetails}>
+          <div className={styles.trackDetails} id={`track-${track.id}-details`}>
             <div className={styles.trackName}>
               {index + 1}. {track.name}
             </div>
