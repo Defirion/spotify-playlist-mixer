@@ -68,6 +68,11 @@ export const announceToScreenReader = (
     initializeLiveRegion();
   }
 
+  if (!liveRegion) {
+    console.warn('Failed to initialize live region for accessibility');
+    return;
+  }
+
   const region = liveRegion[priority] || liveRegion.polite;
 
   // Clear the region first to ensure the message is announced

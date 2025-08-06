@@ -10,7 +10,7 @@ export const createDragImage = (
   backgroundColor: string,
   borderColor: string
 ): HTMLElement => {
-  const dragElement = element.cloneNode(true);
+  const dragElement = element.cloneNode(true) as HTMLElement;
   dragElement.style.width = '400px';
   dragElement.style.opacity = '0.8';
   dragElement.style.transform = 'rotate(2deg)';

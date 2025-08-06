@@ -493,7 +493,14 @@ class DragMemoryLeakDetector {
     monitoringIntervalMs: number;
     snapshotCount: number;
     warningCount: number;
-    thresholds: typeof this.thresholds;
+    thresholds: {
+      heapUsedMB: number;
+      heapTotalMB: number;
+      externalMB: number;
+      arrayBuffersMB: number;
+      rssGrowthMB: number;
+      consecutiveWarnings: number;
+    };
     latestSnapshot: MemoryUsageSnapshot | null;
   } {
     return {

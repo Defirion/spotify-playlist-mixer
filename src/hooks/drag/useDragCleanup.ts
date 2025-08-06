@@ -188,7 +188,11 @@ export const useDragCleanup = (componentName?: string) => {
    * Safe setTimeout that automatically registers for cleanup
    */
   const safeSetTimeout = useCallback(
-    (callback: () => void, delay: number, description?: string): number => {
+    (
+      callback: () => void,
+      delay: number,
+      description?: string
+    ): NodeJS.Timeout => {
       const timerId = setTimeout(() => {
         try {
           callback();
@@ -203,7 +207,7 @@ export const useDragCleanup = (componentName?: string) => {
         }
       }, delay);
 
-      registerTimer(timerId, description || 'safeSetTimeout');
+      registerTimer(timerId as any, description || 'safeSetTimeout');
       return timerId;
     },
     [registerTimer]
@@ -213,7 +217,11 @@ export const useDragCleanup = (componentName?: string) => {
    * Safe setInterval that automatically registers for cleanup
    */
   const safeSetInterval = useCallback(
-    (callback: () => void, delay: number, description?: string): number => {
+    (
+      callback: () => void,
+      delay: number,
+      description?: string
+    ): NodeJS.Timeout => {
       const intervalId = setInterval(() => {
         try {
           callback();
@@ -226,7 +234,7 @@ export const useDragCleanup = (componentName?: string) => {
         }
       }, delay);
 
-      registerInterval(intervalId, description || 'safeSetInterval');
+      registerInterval(intervalId as any, description || 'safeSetInterval');
       return intervalId;
     },
     [registerInterval]
