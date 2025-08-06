@@ -42,7 +42,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize drag state and scroll position hooks
-  const { isDragging, draggedItem } = useDragState();
+  const { isDragging, draggedItem, endDrag } = useDragState();
   const {
     scrollTop,
     captureScrollPosition,
@@ -399,6 +399,12 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
 
+      console.log('[DraggableTrackList] Drop event received:', {
+        draggedItem: draggedItem?.type,
+        clientY: e.clientY,
+        timestamp: Date.now(),
+      });
+
       if (!draggedItem) {
         console.warn('[DraggableTrackList] Drop event without draggedItem');
         setDropPosition(null);
@@ -425,8 +431,12 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           // Prevent dropping on the same position
           if (sourceIndex !== dropIndex && sourceIndex !== dropIndex - 1) {
             handleInternalReorder(sourceIndex, dropIndex);
+            // End drag after successful internal reorder
+            endDrag();
           } else {
             console.log('[DraggableTrackList] Ignoring drop at same position');
+            // End drag even if no reorder happened
+            endDrag();
           }
         } else if (
           isDragSourceType(draggedItem, 'modal-track') ||
@@ -440,6 +450,8 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
             console.error(
               '[DraggableTrackList] Invalid track data for external drop'
             );
+            // End drag on invalid data
+            endDrag();
             return;
           }
 
@@ -452,6 +464,8 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
               '[DraggableTrackList] Attempted to add duplicate track:',
               track.id
             );
+            // End drag even if duplicate
+            endDrag();
             // Could show user feedback here
             return;
           }
@@ -465,14 +479,20 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           };
 
           handleExternalAdd(mixedTrack, dropIndex);
+          // End drag after successful external add
+          endDrag();
         } else {
           console.warn(
             '[DraggableTrackList] Unknown drag source type:',
             draggedItem.type
           );
+          // End drag on unknown source type
+          endDrag();
         }
       } catch (error) {
         console.error('[DraggableTrackList] Error handling drop:', error);
+        // End drag on error
+        endDrag();
       } finally {
         // Always clear drop position after handling
         setDropPosition(null);
@@ -484,6 +504,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
       calculateDropPosition,
       handleInternalReorder,
       handleExternalAdd,
+      endDrag,
     ]
   );
 
@@ -491,6 +512,12 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   const handleContainerDragOver = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
+
+      console.log('[DraggableTrackList] Drag over detected:', {
+        draggedItem: draggedItem?.type,
+        clientY: e.clientY,
+        timestamp: Date.now(),
+      });
 
       if (!draggedItem) {
         setDropPosition(null);

@@ -91,7 +91,7 @@ The current drag-and-drop system in the Spotify Playlist Mixer suffers from crit
 
 1. WHEN a drag operation starts from outside a modal THEN the modal SHALL become visually muted with reduced opacity
 2. WHEN a drag operation starts from outside a modal THEN the modal SHALL become uninteractable with pointer-events disabled
-3. WHEN a drag operation starts from within a modal THEN other modals SHALL become muted but the source modal SHALL remain interactive
+3. WHEN a drag operation starts from within a modal THEN the modals SHALL become visually muted with reduced opacity and uninteractable so the drag can be completed on the preview panel behind the modal
 4. WHEN a drag operation ends THEN all modals SHALL return to their normal interactive state
 
 ### Requirement 9: Robust Event Handling and Cleanup

@@ -121,6 +121,18 @@
   transition: opacity 0.2s ease;
 }
 
+.modalMuted {
+  /* Visual muting when external drag operations are active */
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.modalMuted * {
+  /* Ensure all child elements are also non-interactive */
+  pointer-events: none;
+}
+
 .backdropDragging {
   pointer-events: none;
   opacity: 0;

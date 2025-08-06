@@ -11,6 +11,18 @@
   pointer-events: none;
 }
 
+.modal.modalMuted {
+  /* Visual muting when external drag operations are active */
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.modal.modalMuted * {
+  /* Ensure all child elements are also non-interactive */
+  pointer-events: none;
+}
+
 .backdrop {
   pointer-events: auto;
   opacity: 1;
@@ -65,15 +77,19 @@
 }
 
 .searchButton {
-  padding: 12px 20px;
+  padding: 12px 16px;
   border: none;
   border-radius: 8px;
   background-color: #1db954;
   color: white;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   transition: all 0.2s ease;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .searchButton:hover:not(:disabled) {

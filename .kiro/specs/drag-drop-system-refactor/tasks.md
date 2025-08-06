@@ -136,7 +136,7 @@
   - Clean up related test files and mocks
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [-] 7. Refactor DraggableTrackList component for new architecture
+- [x] 7. Refactor DraggableTrackList component for new architecture
 
 
 
@@ -174,16 +174,25 @@
   - Ensure proper cleanup of visual feedback after drop completion
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 8. Implement modal coordination system
+- [x] 8. Implement modal coordination system
 
-- [ ] 8.1 Update AddUnselectedModal for drag coordination
+
+
+
+
+
+- [x] 8.1 Update AddUnselectedModal for drag coordination
+
+
   - Modify `src/components/AddUnselectedModal.tsx` to use `useDragState` hook
   - Implement automatic visual muting when external drag operations are active
   - Add conditional styling with opacity reduction and pointer-events disabling
   - Ensure modal returns to normal state when drag operations complete
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 8.2 Update SpotifySearchModal for drag coordination
+- [x] 8.2 Update SpotifySearchModal for drag coordination
+
+
   - Modify `src/components/SpotifySearchModal.tsx` to use `useDragState` hook
   - Implement same visual coordination system as AddUnselectedModal
   - Add proper drag source identification to prevent self-muting

@@ -3,7 +3,8 @@ import { getSpotifyApi } from '../utils/spotify';
 import { handleTrackSelection } from '../utils/dragAndDrop';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
-import useDraggable from '../hooks/useDraggable';
+
+import { useDragState } from '../hooks/drag/useDragState';
 import { SpotifyTrack, SpotifyPlaylist } from '../types';
 import styles from './AddUnselectedModal.module.css';
 
@@ -43,37 +44,35 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
       new Set()
     );
 
-    // Get scroll container for drag operations
-    const scrollContainer = useMemo(() => {
-      return document.querySelector(
-        '[data-preview-panel="true"]'
-      ) as HTMLElement | null;
-    }, []);
+    // Use drag state hook for modal coordination
+    const { isDragging, draggedItem, startDrag, endDrag } = useDragState();
 
-    // Use the unified draggable hook for modal-level drag handling
-    const { isDragging } = useDraggable({
-      type: 'modal-track',
-      scrollContainer,
-    });
+    // Determine if this modal should be muted during drag operations
+    // According to Requirement 8.3: ALL modals should become muted during ANY drag operation
+    // so the drag can be completed on the preview panel behind the modal
+    const shouldMuteModal = useMemo(() => {
+      return isDragging && !!draggedItem;
+    }, [isDragging, draggedItem]);
 
-    // Create a single draggable instance for all tracks
-    const trackDraggable = useDraggable({
-      type: 'modal-track',
-      scrollContainer,
-      onDragStart: item => {
-        console.log(
-          '[AddUnselectedModal] Track drag start:',
-          item?.payload?.track?.name
-        );
-      },
-      onDragEnd: (item, result) => {
-        console.log(
-          '[AddUnselectedModal] Track drag end:',
-          item?.payload?.track?.name,
-          result
-        );
-      },
-    });
+    // Calculate modal styles based on drag state
+    const modalStyles = useMemo(
+      () => ({
+        opacity: shouldMuteModal ? 0 : 1,
+        pointerEvents: shouldMuteModal ? ('none' as const) : ('auto' as const),
+        zIndex: shouldMuteModal ? -1 : 1000, // Move modal behind everything during drag
+        transition: 'opacity 0.2s ease-in-out',
+      }),
+      [shouldMuteModal]
+    );
+
+    const backdropStyles = useMemo(
+      () => ({
+        pointerEvents: shouldMuteModal ? ('none' as const) : ('auto' as const),
+        opacity: shouldMuteModal ? 0 : 1,
+        transition: 'opacity 0.2s ease-in-out',
+      }),
+      [shouldMuteModal]
+    );
 
     // Enhanced onClose handler
     const handleModalClose = useCallback(() => {
@@ -226,17 +225,9 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
         onClose={handleModalClose}
         title="➕ Add Unselected Tracks"
         size="large"
-        className={isDragging ? styles.modalDragging : ''}
-        style={{
-          opacity: isDragging ? 0 : 1,
-          pointerEvents: isDragging ? 'none' : 'auto',
-          transition: 'opacity 0.2s ease',
-        }}
-        backdropStyle={{
-          pointerEvents: isDragging ? 'none' : 'auto',
-          opacity: isDragging ? 0 : 1,
-          transition: 'opacity 0.2s ease',
-        }}
+        className={`${shouldMuteModal ? styles.modalMuted : ''} ${isDragging ? styles.modalDragging : ''}`}
+        style={modalStyles}
+        backdropStyle={backdropStyles}
       >
         {/* Header Info */}
         <div className={styles.header}>
@@ -289,35 +280,50 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
                   ? 'No tracks match your search'
                   : 'All tracks from your playlists are already included'
               }
-              // Pass drag handlers that use useDraggable
+              // Drag handlers for modal-track type
               onTrackDragStart={(e, track) => {
-                // Set the track data for this drag operation
-                trackDraggable.startDrag(track);
-                if (trackDraggable.dragHandleProps.onDragStart) {
-                  trackDraggable.dragHandleProps.onDragStart(e);
-                }
+                // Create drag item with proper modal-track type
+                const dragItem = {
+                  id: track.id,
+                  type: 'modal-track' as const,
+                  payload: {
+                    track: track,
+                    source: 'AddUnselectedModal',
+                  },
+                  timestamp: Date.now(),
+                };
+
+                // Set drag data for HTML5 drag and drop first
+                e.dataTransfer.effectAllowed = 'copy'; // Use 'copy' for external tracks
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify(dragItem)
+                );
+
+                // Update global drag state after a small delay to ensure HTML5 drag has started
+                setTimeout(() => {
+                  startDrag(dragItem);
+                }, 0);
+
+                console.log('[AddUnselectedModal] Starting drag:', dragItem);
               }}
               onTrackDragEnd={(e, track) => {
-                if (trackDraggable.dragHandleProps.onDragEnd) {
-                  trackDraggable.dragHandleProps.onDragEnd(e);
-                }
-              }}
-              onTrackTouchStart={(e, track) => {
-                // Set the track data for this drag operation
-                trackDraggable.startDrag(track);
-                if (trackDraggable.dragHandleProps.onTouchStart) {
-                  trackDraggable.dragHandleProps.onTouchStart(e);
-                }
-              }}
-              onTrackTouchMove={(e, track) => {
-                if (trackDraggable.dragHandleProps.onTouchMove) {
-                  trackDraggable.dragHandleProps.onTouchMove(e);
-                }
-              }}
-              onTrackTouchEnd={(e, track) => {
-                if (trackDraggable.dragHandleProps.onTouchEnd) {
-                  trackDraggable.dragHandleProps.onTouchEnd(e);
-                }
+                console.log(
+                  '[AddUnselectedModal] Drag ended for track:',
+                  track.name
+                );
+                // Don't end the drag state immediately - let the drop zone handle it
+                // The drag state will be cleaned up by the DraggableTrackList drop handler
+                // or by a timeout if the drop fails
+                setTimeout(() => {
+                  // Only end drag if it's still active (no successful drop occurred)
+                  if (isDragging) {
+                    console.log(
+                      '[AddUnselectedModal] Cleaning up drag state after timeout'
+                    );
+                    endDrag();
+                  }
+                }, 100);
               }}
               style={{
                 height: '400px',
