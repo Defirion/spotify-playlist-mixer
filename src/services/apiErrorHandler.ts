@@ -3,6 +3,8 @@
  * Provides consistent error handling, user-friendly messages, and retry logic
  */
 
+import { AxiosError } from 'axios';
+
 /**
  * Error types for different categories of API errors
  */
@@ -16,12 +18,58 @@ export const ERROR_TYPES = {
   SERVER_ERROR: 'SERVER_ERROR',
   TIMEOUT: 'TIMEOUT',
   UNKNOWN: 'UNKNOWN',
-};
+} as const;
+
+export type ErrorType = (typeof ERROR_TYPES)[keyof typeof ERROR_TYPES];
+
+/**
+ * Retry configuration interface
+ */
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  exponential: boolean;
+}
+
+/**
+ * Error message interface
+ */
+interface ErrorMessage {
+  title: string;
+  message: string;
+  suggestions: string[];
+}
+
+/**
+ * Error context interface
+ */
+interface ErrorContext {
+  [key: string]: any;
+  attemptNumber?: number;
+}
+
+/**
+ * API call function type
+ */
+type ApiCallFunction<T = any> = (...args: any[]) => Promise<T>;
+
+/**
+ * Error handler function type
+ */
+type ErrorHandlerFunction = (error: ApiError) => void;
+
+/**
+ * API Error Handler options
+ */
+interface ApiErrorHandlerOptions {
+  onError?: ErrorHandlerFunction;
+  enableLogging?: boolean;
+}
 
 /**
  * Retry configuration for different error types
  */
-const RETRY_CONFIG = {
+const RETRY_CONFIG: Record<ErrorType, RetryConfig> = {
   [ERROR_TYPES.NETWORK]: { maxRetries: 3, baseDelay: 1000, exponential: true },
   [ERROR_TYPES.RATE_LIMIT]: {
     maxRetries: 3,
@@ -56,7 +104,7 @@ const RETRY_CONFIG = {
 /**
  * User-friendly error messages for different error types
  */
-const ERROR_MESSAGES = {
+const ERROR_MESSAGES: Record<ErrorType, ErrorMessage> = {
   [ERROR_TYPES.NETWORK]: {
     title: '🌐 Network Error',
     message: "Unable to connect to Spotify's servers.",
@@ -144,12 +192,27 @@ const ERROR_MESSAGES = {
  * Enhanced API Error class with additional metadata
  */
 export class ApiError extends Error {
-  constructor(type, originalError, context = {}) {
+  public readonly name = 'ApiError';
+  public readonly type: ErrorType;
+  public readonly title: string;
+  public readonly suggestions: string[];
+  public readonly originalError: Error | AxiosError;
+  public readonly context: ErrorContext;
+  public readonly timestamp: string;
+  public readonly retryable: boolean;
+  public readonly status?: number;
+  public readonly statusText?: string;
+  public readonly data?: any;
+
+  constructor(
+    type: ErrorType,
+    originalError: Error | AxiosError,
+    context: ErrorContext = {}
+  ) {
     const errorInfo =
       ERROR_MESSAGES[type] || ERROR_MESSAGES[ERROR_TYPES.UNKNOWN];
     super(errorInfo.message);
 
-    this.name = 'ApiError';
     this.type = type;
     this.title = errorInfo.title;
     this.suggestions = errorInfo.suggestions;
@@ -159,25 +222,32 @@ export class ApiError extends Error {
     this.retryable = RETRY_CONFIG[type].maxRetries > 0;
 
     // Preserve original error properties
-    if (originalError) {
-      this.status = originalError.response?.status || originalError.status;
-      this.statusText =
-        originalError.response?.statusText || originalError.statusText;
-      this.data = originalError.response?.data || originalError.data;
+    if (this.isAxiosError(originalError)) {
+      this.status = originalError.response?.status;
+      this.statusText = originalError.response?.statusText;
+      this.data = originalError.response?.data;
+    } else if ('status' in originalError) {
+      this.status = (originalError as any).status;
+      this.statusText = (originalError as any).statusText;
+      this.data = (originalError as any).data;
     }
+  }
+
+  private isAxiosError(error: Error | AxiosError): error is AxiosError {
+    return 'response' in error && 'config' in error;
   }
 
   /**
    * Get retry configuration for this error type
    */
-  getRetryConfig() {
+  getRetryConfig(): RetryConfig {
     return RETRY_CONFIG[this.type];
   }
 
   /**
    * Check if this error should be retried
    */
-  shouldRetry(attemptNumber = 0) {
+  shouldRetry(attemptNumber: number = 0): boolean {
     const config = this.getRetryConfig();
     return attemptNumber < config.maxRetries;
   }
@@ -185,7 +255,7 @@ export class ApiError extends Error {
   /**
    * Calculate delay for next retry attempt
    */
-  getRetryDelay(attemptNumber = 0) {
+  getRetryDelay(attemptNumber: number = 0): number {
     const config = this.getRetryConfig();
     if (!config.exponential) {
       return config.baseDelay;
@@ -199,7 +269,7 @@ export class ApiError extends Error {
   /**
    * Convert to a plain object for logging/serialization
    */
-  toJSON() {
+  toJSON(): Record<string, any> {
     return {
       name: this.name,
       type: this.type,
@@ -219,7 +289,10 @@ export class ApiError extends Error {
  * Centralized API Error Handler Service
  */
 export class ApiErrorHandler {
-  constructor(options = {}) {
+  private onError: ErrorHandlerFunction;
+  private enableLogging: boolean;
+
+  constructor(options: ApiErrorHandlerOptions = {}) {
     this.onError = options.onError || this.defaultErrorHandler;
     this.enableLogging = options.enableLogging !== false;
   }
@@ -227,32 +300,38 @@ export class ApiErrorHandler {
   /**
    * Default error handler that logs errors
    */
-  defaultErrorHandler(error) {
+  private defaultErrorHandler = (error: ApiError): void => {
     if (this.enableLogging) {
       console.error('API Error:', error.toJSON());
     }
-  }
+  };
 
   /**
    * Classify an error based on its properties
    */
-  classifyError(error, context = {}) {
+  classifyError(
+    error: Error | AxiosError,
+    context: ErrorContext = {}
+  ): ApiError {
     // Network/connection errors
     if (
-      !error.response &&
-      (error.code === 'NETWORK_ERROR' ||
+      !('response' in error) &&
+      (('code' in error && error.code === 'NETWORK_ERROR') ||
         error.message.includes('Network Error'))
     ) {
       return new ApiError(ERROR_TYPES.NETWORK, error, context);
     }
 
     // Timeout errors
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+    if (
+      ('code' in error && error.code === 'ECONNABORTED') ||
+      error.message.includes('timeout')
+    ) {
       return new ApiError(ERROR_TYPES.TIMEOUT, error, context);
     }
 
     // HTTP status-based classification
-    if (error.response) {
+    if ('response' in error && error.response) {
       const status = error.response.status;
 
       switch (status) {
@@ -282,7 +361,7 @@ export class ApiErrorHandler {
   /**
    * Handle an error with automatic classification and user notification
    */
-  handleError(error, context = {}) {
+  handleError(error: Error | AxiosError, context: ErrorContext = {}): ApiError {
     const apiError = this.classifyError(error, context);
     this.onError(apiError);
     return apiError;
@@ -291,14 +370,17 @@ export class ApiErrorHandler {
   /**
    * Retry wrapper with intelligent retry logic
    */
-  async withRetry(apiCall, context = {}) {
+  async withRetry<T>(
+    apiCall: ApiCallFunction<T>,
+    context: ErrorContext = {}
+  ): Promise<T> {
     let attemptNumber = 0;
 
     while (true) {
       try {
         return await apiCall();
       } catch (error) {
-        const apiError = this.classifyError(error, {
+        const apiError = this.classifyError(error as Error | AxiosError, {
           ...context,
           attemptNumber,
         });
@@ -326,12 +408,15 @@ export class ApiErrorHandler {
   /**
    * Create a wrapper function that automatically handles errors
    */
-  wrapApiCall(apiCall, context = {}) {
-    return async (...args) => {
+  wrapApiCall<T>(
+    apiCall: ApiCallFunction<T>,
+    context: ErrorContext = {}
+  ): ApiCallFunction<T> {
+    return async (...args: any[]): Promise<T> => {
       try {
         return await apiCall(...args);
       } catch (error) {
-        const apiError = this.handleError(error, context);
+        const apiError = this.handleError(error as Error | AxiosError, context);
         throw apiError;
       }
     };
@@ -340,8 +425,11 @@ export class ApiErrorHandler {
   /**
    * Create a wrapper function with retry logic
    */
-  wrapApiCallWithRetry(apiCall, context = {}) {
-    return async (...args) => {
+  wrapApiCallWithRetry<T>(
+    apiCall: ApiCallFunction<T>,
+    context: ErrorContext = {}
+  ): ApiCallFunction<T> {
+    return async (...args: any[]): Promise<T> => {
       return this.withRetry(() => apiCall(...args), context);
     };
   }
@@ -355,13 +443,19 @@ export const defaultApiErrorHandler = new ApiErrorHandler();
 /**
  * Convenience function for handling errors
  */
-export const handleApiError = (error, context = {}) => {
+export const handleApiError = (
+  error: Error | AxiosError,
+  context: ErrorContext = {}
+): ApiError => {
   return defaultApiErrorHandler.handleError(error, context);
 };
 
 /**
  * Convenience function for retry logic
  */
-export const withRetry = (apiCall, context = {}) => {
+export const withRetry = <T>(
+  apiCall: ApiCallFunction<T>,
+  context: ErrorContext = {}
+): Promise<T> => {
   return defaultApiErrorHandler.withRetry(apiCall, context);
 };

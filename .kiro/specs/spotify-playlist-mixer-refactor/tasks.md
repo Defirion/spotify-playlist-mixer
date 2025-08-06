@@ -553,7 +553,7 @@
   - Update imports in all files that reference these modules
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [-] 15.13.2 Convert utility files to TypeScript
+- [x] 15.13.2 Convert utility files to TypeScript
   - Convert `src/utils/accessibility.js` to `src/utils/accessibility.ts` with accessibility types
   - Convert `src/utils/dragAndDrop.js` to `src/utils/dragAndDrop.ts` with drag utility types
   - Convert `src/utils/playlistMixer.js` to `src/utils/playlistMixer.ts` with mixer algorithm types
@@ -561,7 +561,7 @@
   - Update imports in all files that reference these utilities
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 15.13.3 Convert service files to TypeScript
+- [-] 15.13.3 Convert service files to TypeScript
   - Convert `src/services/apiErrorHandler.js` to `src/services/apiErrorHandler.ts` with error handling types
   - Update imports in all files that reference this service
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
