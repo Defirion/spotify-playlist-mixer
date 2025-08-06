@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-const ScrollToBottom = () => {
+const ScrollToBottom: React.FC = () => {
   const [showArrow, setShowArrow] = useState(false);
 
   useEffect(() => {
-    const checkScrollPosition = () => {
+    const checkScrollPosition = (): void => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       const scrollTop =
@@ -39,7 +39,7 @@ const ScrollToBottom = () => {
     };
   }, []);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (): void => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: 'smooth',

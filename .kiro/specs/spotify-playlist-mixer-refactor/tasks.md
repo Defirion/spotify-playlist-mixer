@@ -561,12 +561,12 @@
   - Update imports in all files that reference these utilities
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [-] 15.13.3 Convert service files to TypeScript
+- [x] 15.13.3 Convert service files to TypeScript
   - Convert `src/services/apiErrorHandler.js` to `src/services/apiErrorHandler.ts` with error handling types
   - Update imports in all files that reference this service
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 15.13.4 Convert remaining component files to TypeScript
+- [-] 15.13.4 Convert remaining component files to TypeScript
   - Convert `src/components/ScrollToBottom.js` to `src/components/ScrollToBottom.tsx` with scroll component types
   - Convert `src/components/PrivacyPolicy.js` to `src/components/PrivacyPolicy.tsx` with policy component types
   - Update imports in all files that reference these components
