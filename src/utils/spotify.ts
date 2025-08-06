@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
-export const getSpotifyApi = accessToken => {
+export const getSpotifyApi = (accessToken: string): AxiosInstance => {
   return axios.create({
     baseURL: SPOTIFY_API_BASE,
     headers: {

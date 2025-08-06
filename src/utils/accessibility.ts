@@ -2,13 +2,21 @@
  * Accessibility utilities for screen reader announcements and ARIA management
  */
 
+import { SpotifyTrack } from '../types/spotify';
+
+// Live region interface
+interface LiveRegion {
+  polite: HTMLElement;
+  assertive: HTMLElement;
+}
+
 // Create a live region for screen reader announcements
-let liveRegion = null;
+let liveRegion: LiveRegion | null = null;
 
 /**
  * Initialize the live region for screen reader announcements
  */
-const initializeLiveRegion = () => {
+const initializeLiveRegion = (): void => {
   if (liveRegion || typeof document === 'undefined') {
     return;
   }
@@ -46,10 +54,11 @@ const initializeLiveRegion = () => {
 
 /**
  * Announce a message to screen readers
- * @param {string} message - The message to announce
- * @param {string} priority - 'polite' or 'assertive'
  */
-export const announceToScreenReader = (message, priority = 'polite') => {
+export const announceToScreenReader = (
+  message: string,
+  priority: 'polite' | 'assertive' = 'polite'
+): void => {
   if (!message || typeof document === 'undefined') {
     return;
   }
@@ -72,20 +81,14 @@ export const announceToScreenReader = (message, priority = 'polite') => {
 
 /**
  * Generate ARIA label for drag-and-drop items
- * @param {Object} track - The track object
- * @param {number} index - The item index
- * @param {number} total - Total number of items
- * @param {boolean} isDragging - Whether the item is being dragged
- * @param {boolean} isSelected - Whether the item is selected for dragging
- * @returns {string} ARIA label
  */
 export const generateTrackAriaLabel = (
-  track,
-  index,
-  total,
-  isDragging = false,
-  isSelected = false
-) => {
+  track: SpotifyTrack,
+  index: number,
+  total: number,
+  isDragging: boolean = false,
+  isSelected: boolean = false
+): string => {
   const trackName = track.name || 'Unknown track';
   const artistName = track.artists?.[0]?.name || 'Unknown artist';
   const position = `${index + 1} of ${total}`;
@@ -106,20 +109,17 @@ export const generateTrackAriaLabel = (
 
 /**
  * Generate ARIA description for drag-and-drop instructions
- * @returns {string} Instructions text
  */
-export const getDragDropInstructions = () => {
+export const getDragDropInstructions = (): string => {
   return 'To reorder tracks: press spacebar to select a track, use arrow keys to move it to a new position, then press spacebar again to drop it. Press escape to cancel.';
 };
 
 /**
  * Create hidden instructions element for screen readers
- * @param {string} instructions - The instructions text
- * @returns {HTMLElement} The instructions element
  */
 export const createInstructionsElement = (
-  instructions = getDragDropInstructions()
-) => {
+  instructions: string = getDragDropInstructions()
+): HTMLElement => {
   const element = document.createElement('div');
   element.id = 'drag-instructions';
   element.textContent = instructions;
@@ -138,11 +138,11 @@ export const createInstructionsElement = (
 export const focusManagement = {
   /**
    * Get all focusable elements within a container
-   * @param {HTMLElement} container - The container element
-   * @returns {NodeList} List of focusable elements
    */
-  getFocusableElements: container => {
-    if (!container) return [];
+  getFocusableElements: (
+    container: HTMLElement | null
+  ): NodeListOf<Element> => {
+    if (!container) return document.querySelectorAll('');
 
     return container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [role="button"], [role="option"]'
@@ -151,17 +151,17 @@ export const focusManagement = {
 
   /**
    * Trap focus within a container (for modals)
-   * @param {KeyboardEvent} event - The keyboard event
-   * @param {HTMLElement} container - The container element
    */
-  trapFocus: (event, container) => {
+  trapFocus: (event: KeyboardEvent, container: HTMLElement): void => {
     if (event.key !== 'Tab') return;
 
     const focusableElements = focusManagement.getFocusableElements(container);
     if (focusableElements.length === 0) return;
 
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const firstElement = focusableElements[0] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     if (event.shiftKey) {
       // Shift + Tab
@@ -180,16 +180,19 @@ export const focusManagement = {
 
   /**
    * Move focus to the next/previous focusable element
-   * @param {HTMLElement} container - The container element
-   * @param {number} direction - 1 for next, -1 for previous
    */
-  moveFocusInContainer: (container, direction = 1) => {
+  moveFocusInContainer: (
+    container: HTMLElement,
+    direction: number = 1
+  ): void => {
     const focusableElements = Array.from(
       focusManagement.getFocusableElements(container)
-    );
+    ) as HTMLElement[];
     if (focusableElements.length === 0) return;
 
-    const currentIndex = focusableElements.indexOf(document.activeElement);
+    const currentIndex = focusableElements.indexOf(
+      document.activeElement as HTMLElement
+    );
     let nextIndex = currentIndex + direction;
 
     if (nextIndex < 0) {
@@ -204,9 +207,8 @@ export const focusManagement = {
 
 /**
  * Check if user prefers reduced motion
- * @returns {boolean} True if user prefers reduced motion
  */
-export const prefersReducedMotion = () => {
+export const prefersReducedMotion = (): boolean => {
   if (typeof window === 'undefined') return false;
 
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -214,9 +216,8 @@ export const prefersReducedMotion = () => {
 
 /**
  * Check if user is using a screen reader
- * @returns {boolean} True if screen reader is likely being used
  */
-export const isUsingScreenReader = () => {
+export const isUsingScreenReader = (): boolean => {
   if (typeof window === 'undefined') return false;
 
   // Check for common screen reader indicators
@@ -231,7 +232,7 @@ export const isUsingScreenReader = () => {
 /**
  * Initialize accessibility features
  */
-export const initializeAccessibility = () => {
+export const initializeAccessibility = (): void => {
   initializeLiveRegion();
 
   // Add drag-drop instructions to the page

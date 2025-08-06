@@ -546,14 +546,14 @@
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [-] 15.13 Convert remaining JavaScript files to TypeScript
-- [-] 15.13.1 Convert entry point and configuration files
+- [x] 15.13.1 Convert entry point and configuration files
   - Convert `src/index.js` to `src/index.ts` with proper React root types
   - Convert `src/config.js` to `src/config.ts` with Spotify configuration types
   - Convert `src/setupTests.js` to `src/setupTests.ts` with Jest setup types
   - Update imports in all files that reference these modules
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 15.13.2 Convert utility files to TypeScript
+- [-] 15.13.2 Convert utility files to TypeScript
   - Convert `src/utils/accessibility.js` to `src/utils/accessibility.ts` with accessibility types
   - Convert `src/utils/dragAndDrop.js` to `src/utils/dragAndDrop.ts` with drag utility types
   - Convert `src/utils/playlistMixer.js` to `src/utils/playlistMixer.ts` with mixer algorithm types
