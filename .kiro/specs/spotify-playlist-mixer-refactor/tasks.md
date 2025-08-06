@@ -545,7 +545,7 @@
   - **Commit changes**: `git add . && git commit -m "refactor: migrate DragContext to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
-- [-] 15.13 Convert remaining JavaScript files to TypeScript
+- [ ] 15.13 Convert remaining JavaScript files to TypeScript
 - [x] 15.13.1 Convert entry point and configuration files
   - Convert `src/index.js` to `src/index.ts` with proper React root types
   - Convert `src/config.js` to `src/config.ts` with Spotify configuration types
@@ -566,7 +566,7 @@
   - Update imports in all files that reference this service
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [-] 15.13.4 Convert remaining component files to TypeScript
+- [x] 15.13.4 Convert remaining component files to TypeScript
   - Convert `src/components/ScrollToBottom.js` to `src/components/ScrollToBottom.tsx` with scroll component types
   - Convert `src/components/PrivacyPolicy.js` to `src/components/PrivacyPolicy.tsx` with policy component types
   - Update imports in all files that reference these components

@@ -7,10 +7,12 @@ import { useTouchDrag } from './drag/useTouchDrag';
 import { useKeyboardDrag } from './drag/useKeyboardDrag';
 import { useAutoScroll } from './drag/useAutoScroll';
 import { useDragVisualFeedback } from './drag/useDragVisualFeedback';
+import { useDragCleanup } from './drag/useDragCleanup';
 
 /**
  * Creates a fallback return object when the hook fails to initialize properly
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createFallbackReturn = (): UseDraggableReturn => ({
   dragHandleProps: {
     draggable: false,
@@ -80,6 +82,9 @@ const useDraggable = <T extends DragSourceType>({
   onDragEnd,
   onMove,
 }: Partial<DragOptions<T>> = {}): UseDraggableReturn => {
+  // Initialize cleanup system for this component
+  const cleanup = useDragCleanup(`useDraggable-${type}`);
+
   // Get drag state from centralized store
   const dragStateResult = useDragState();
 
@@ -192,6 +197,7 @@ const useDraggable = <T extends DragSourceType>({
     draggedItem,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { dragClasses, dragStyles } = visualFeedbackResult || {
     dragClasses: {},
     dragStyles: {},
@@ -207,6 +213,7 @@ const useDraggable = <T extends DragSourceType>({
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const dragItem = handleHTML5DragStart(e);
         // Store integration is handled in useDragHandlers
       } catch (error) {
@@ -270,17 +277,24 @@ const useDraggable = <T extends DragSourceType>({
     }
   }, []);
 
-  // Comprehensive cleanup on unmount
+  // Register cleanup callbacks for drag-specific resources
   useEffect(() => {
-    return () => {
+    const unregisterCleanup = cleanup.addCleanupCallback(() => {
       try {
         stopAutoScroll();
         touchCleanup();
+
+        // Cancel any active drag operation
+        if (isDragging) {
+          endDrag();
+        }
       } catch (error) {
-        console.error('[useDraggable] Error in cleanup:', error);
+        console.error('[useDraggable] Error in drag cleanup:', error);
       }
-    };
-  }, [stopAutoScroll, touchCleanup]);
+    });
+
+    return unregisterCleanup;
+  }, [cleanup, stopAutoScroll, touchCleanup, isDragging, endDrag]);
 
   // Create unified event handler props with proper prop spreading
   const dragHandleProps = {
