@@ -1,18 +1,17 @@
-// Internal types and interfaces for the playlist mixer modules
+// Internal types and interfaces for the mixer modules
 
 import { SpotifyTrack } from '../../types/spotify';
-import { PopularityStrategy } from '../../types/mixer';
 
-// Extended track interface with popularity data
-export interface TrackWithPopularity extends SpotifyTrack {
+// Popularity data interface
+export interface PopularityData {
   adjustedPopularity: number;
   basePopularity: number;
   recencyBonus: number;
   releaseYear: number | string;
 }
 
-// Popularity data calculation result
-export interface PopularityData {
+// Extended track interface with popularity data
+export interface TrackWithPopularity extends SpotifyTrack {
   adjustedPopularity: number;
   basePopularity: number;
   recencyBonus: number;
@@ -42,32 +41,21 @@ export interface MixedTrack extends SpotifyTrack {
   sourcePlaylist: string;
 }
 
-// Mixing context for orchestration
-export interface MixingContext {
-  playlistTracks: PlaylistTracks;
-  ratioConfig: any; // Will use RatioConfig from mixer types
-  options: any; // Will use MixOptions from mixer types
-  popularityPools: PopularityPools;
-  totalWeight: number;
-  estimatedTotalSongs: number;
+// Debug information interface
+export interface DebugInfo {
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  data?: any;
 }
 
-// Mixing state tracking
-export interface MixingState {
-  mixedTracks: MixedTrack[];
-  playlistCounts: { [key: string]: number };
-  playlistDurations: { [key: string]: number };
-  playlistExhausted: { [key: string]: boolean };
-  attempts: number;
-}
+// Popularity strategy types
+export type PopularityStrategy =
+  | 'mixed'
+  | 'front-loaded'
+  | 'mid-peak'
+  | 'crescendo';
 
-// Quadrant options for creation
-export interface QuadrantOptions {
-  recencyBoost: boolean;
-  shuffleWithinGroups: boolean;
-}
-
-// Strategy interface for mixing strategies
+// Mixing strategy interface for strategy pattern
 export interface MixingStrategy {
   name: PopularityStrategy;
   getTracksForPosition(
@@ -84,51 +72,8 @@ export interface StrategyManager {
   getAllStrategies(): MixingStrategy[];
 }
 
-// Popularity calculator interface
-export interface PopularityCalculator {
-  calculateAdjustedPopularity(
-    track: SpotifyTrack,
-    recencyBoost: boolean
-  ): PopularityData;
-
-  calculateRecencyBonus(releaseDate: Date): number;
-
-  sortTracksByPopularity(tracks: TrackWithPopularity[]): TrackWithPopularity[];
-}
-
-// Quadrant manager interface
-export interface QuadrantManager {
-  createPopularityQuadrants(
-    tracks: SpotifyTrack[],
-    recencyBoost: boolean
-  ): PopularityQuadrants;
-
-  createPopularityPools(
-    playlistTracks: PlaylistTracks,
-    options: QuadrantOptions
-  ): PopularityPools;
-}
-
-// Track shuffler interface
-export interface TrackShuffler {
-  shuffleArray<T>(array: T[]): T[];
-  shuffleQuadrants(quadrants: PopularityQuadrants): PopularityQuadrants;
-  shuffleWithinGroups(popularityPools: PopularityPools): PopularityPools;
-}
-
-// Mixer utilities interface
-export interface MixerUtils {
-  safeObjectKeys(obj: any): string[];
-  calculateTotalDuration(tracks: SpotifyTrack[]): number;
-  validateTrack(track: SpotifyTrack): boolean;
-  cleanPlaylistTracks(playlistTracks: PlaylistTracks): PlaylistTracks;
-}
-
-// Main mixer orchestrator interface
-export interface MixerOrchestrator {
-  mixPlaylists(
-    playlistTracks: PlaylistTracks,
-    ratioConfig: any, // Will use RatioConfig from mixer types
-    options: any // Will use MixOptions from mixer types
-  ): MixedTrack[];
+// Options for quadrant creation
+export interface QuadrantOptions {
+  recencyBoost: boolean;
+  shuffleWithinGroups: boolean;
 }

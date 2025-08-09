@@ -1,27 +1,18 @@
-// Main export barrel for the playlist mixer modules
+// Main export barrel for mixer modules
 
-// Export the main mixing function
-export { mixPlaylists } from './playlistMixer';
+// Export types
+export * from './types';
 
-// Export types that might be needed by consumers
-export type {
-  TrackWithPopularity,
-  PopularityData,
-  PopularityQuadrants,
-  PlaylistTracks,
-  PopularityPools,
-  MixedTrack,
-  MixingContext,
-  MixingState,
-  QuadrantOptions,
-  MixingStrategy,
-  StrategyManager,
-  PopularityCalculator,
-  QuadrantManager,
-  TrackShuffler,
-  MixerUtils,
-  MixerOrchestrator,
-} from './types';
+// Export utility functions
+export * from './mixerUtils';
 
-// Re-export relevant types from the main mixer types for convenience
-export type { PopularityStrategy } from '../../types/mixer';
+// Export shuffling functions
+export * from './trackShuffler';
+
+// Export popularity calculation functions
+export * from './popularityCalculator';
+
+// Export popularity quadrants functions
+export * from './popularityQuadrants';
+// export * from './mixingStrategies';
+// export * from './playlistMixer';
