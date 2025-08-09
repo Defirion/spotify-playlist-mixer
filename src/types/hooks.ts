@@ -585,7 +585,10 @@ export interface UseMixGenerationReturn {
     ratioConfig: RatioConfig,
     mixOptions: MixOptions
   ) => Promise<any[]>;
-  createPlaylist: (playlistName: string, tracks: any[]) => Promise<any>;
+  createPlaylist: (
+    playlistName: string,
+    tracks: any[]
+  ) => Promise<SpotifyPlaylist>;
   reset: () => void;
 }
 

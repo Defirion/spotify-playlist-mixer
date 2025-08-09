@@ -18,6 +18,8 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 // DragProvider removed - using Zustand drag slice instead
 
 // Store hooks
+// Types
+import { SpotifyPlaylist } from './types/spotify';
 import {
   useAuth,
   usePlaylistSelection,
@@ -188,25 +190,10 @@ function PlaylistMixerContainer() {
   const { mixOptions, updateMixOptions } = useMixOptions();
   const { addMixedPlaylist, setError } = useUI();
 
-  const handleMixedPlaylist = (result: PlaylistMixResult) => {
-    // Convert PlaylistMixResult to SpotifyPlaylist format for the toast
-    const playlistForToast = {
-      id: `mixed-${Date.now()}`,
-      name: mixOptions.playlistName,
-      description: `Mixed playlist with ${result.tracks.length} tracks`,
-      images: [],
-      tracks: { total: result.tracks.length, href: '' },
-      owner: {
-        id: 'user',
-        display_name: 'You',
-        external_urls: { spotify: '' },
-      },
-      public: false,
-      collaborative: false,
-      uri: `spotify:playlist:mixed-${Date.now()}`,
-      external_urls: { spotify: '' },
-    };
-    addMixedPlaylist(playlistForToast);
+  const handleMixedPlaylist = (result: SpotifyPlaylist) => {
+    // The result already contains the correct playlist data from Spotify API
+    // Just pass it directly to the toast system
+    addMixedPlaylist(result);
   };
 
   return (

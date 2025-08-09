@@ -187,16 +187,27 @@
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.3;
-  max-height: 2.8em;
+  white-space: nowrap;
 }
 
 .trackName.mobile {
   font-size: 13px;
-  max-height: 2.6em;
+}
+
+/* Multi-line track name for larger screens */
+@media (min-width: 768px) {
+  .trackName {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+    max-height: 2.8em;
+  }
+
+  .trackName.mobile {
+    max-height: 2.6em;
+  }
 }
 
 .trackMeta {
@@ -232,7 +243,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 200px;
+    max-width: 180px;
   }
 }
 

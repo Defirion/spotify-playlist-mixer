@@ -32,7 +32,7 @@ interface UseTouchDragOptions<T extends DragSourceType> {
  */
 export const useTouchDrag = <T extends DragSourceType>({
   disabled = false,
-  longPressDelay = 250,
+  longPressDelay = 400, // Increased from 250ms to 400ms for more reliable touch detection
   movementThreshold = 15,
   createDragItem,
   onDragStart,
@@ -55,6 +55,9 @@ export const useTouchDrag = <T extends DragSourceType>({
   });
 
   const dragItemRef = useRef<DraggedItem<T> | null>(null);
+  const dragStartedRef = useRef<boolean>(false); // Track if drag has been initiated to prevent double starts
+  const touchStartTimeRef = useRef<number>(0); // Track touch start time for debugging
+  const lastTouchStartRef = useRef<number>(0); // Debounce rapid touch starts
 
   // Provide haptic feedback for touch interactions
   const provideHapticFeedback = useCallback((pattern: number | number[]) => {
@@ -67,17 +70,45 @@ export const useTouchDrag = <T extends DragSourceType>({
     (e: React.TouchEvent<HTMLElement>) => {
       if (disabled) return;
 
+      const startTime = Date.now();
+
+      // Debounce rapid touch starts (prevent double taps within 100ms)
+      if (startTime - lastTouchStartRef.current < 100) {
+        console.debug('[useTouchDrag] Ignoring rapid touch start', {
+          timeSinceLastTouch: startTime - lastTouchStartRef.current,
+          timestamp: startTime,
+        });
+        return;
+      }
+
+      lastTouchStartRef.current = startTime;
+
+      // Prevent default touch behavior to avoid scrolling
+      e.preventDefault();
+
       const touch = e.touches[0];
       const element = e.currentTarget as HTMLElement;
+
+      // Reset drag state to prevent double starts
+      dragStartedRef.current = false;
+      touchStartTimeRef.current = startTime;
 
       // Clear any existing timer to prevent memory leaks
       if (touchState.longPressTimer) {
         clearTimeout(touchState.longPressTimer);
       }
 
-      // Set up long press detection
+      // Set up long press detection with improved timing
       const longPressTimer = setTimeout(() => {
         setTouchState(prev => {
+          // Double-check that we haven't already started a drag
+          if (dragStartedRef.current) {
+            console.warn(
+              '[useTouchDrag] Long press triggered but drag already started, ignoring'
+            );
+            return prev;
+          }
+
           // Check if touch is still active and hasn't moved too much
           const deltaY = Math.abs(prev.currentY - prev.startY);
           const deltaX = Math.abs(prev.currentX - prev.startX);
@@ -87,18 +118,57 @@ export const useTouchDrag = <T extends DragSourceType>({
             deltaY < movementThreshold &&
             deltaX < movementThreshold
           ) {
-            // Create and store drag item
-            const dragItem = createDragItem();
-            dragItemRef.current = dragItem;
+            try {
+              // Mark drag as started to prevent double starts
+              dragStartedRef.current = true;
 
-            // Call callbacks immediately
-            onDragStart?.(dragItem);
-            provideHapticFeedback(100);
+              // Create and store drag item
+              const dragItem = createDragItem();
+              dragItemRef.current = dragItem;
 
-            return {
-              ...prev,
-              isLongPress: true,
-            };
+              console.log(
+                '[useTouchDrag] Long press successful, starting drag',
+                {
+                  dragItem,
+                  touchDuration: Date.now() - touchStartTimeRef.current,
+                  movement: { deltaX, deltaY },
+                  timestamp: Date.now(),
+                }
+              );
+
+              // Call callbacks with error handling
+              try {
+                onDragStart?.(dragItem);
+              } catch (error) {
+                console.error(
+                  '[useTouchDrag] Error in onDragStart callback:',
+                  error
+                );
+              }
+
+              provideHapticFeedback(100);
+
+              return {
+                ...prev,
+                isLongPress: true,
+              };
+            } catch (error) {
+              console.error(
+                '[useTouchDrag] Error during long press drag start:',
+                error
+              );
+              dragStartedRef.current = false;
+              return prev;
+            }
+          } else {
+            console.debug(
+              '[useTouchDrag] Long press cancelled due to movement or inactive touch',
+              {
+                isActive: prev.isActive,
+                movement: { deltaX, deltaY },
+                threshold: movementThreshold,
+              }
+            );
           }
 
           return prev;
@@ -145,9 +215,19 @@ export const useTouchDrag = <T extends DragSourceType>({
       // Cancel long press if user moves too much before it triggers
       if (
         !touchState.isLongPress &&
+        !dragStartedRef.current &&
         (deltaY > movementThreshold || deltaX > movementThreshold)
       ) {
         if (touchState.longPressTimer) {
+          console.debug(
+            '[useTouchDrag] Cancelling long press due to movement',
+            {
+              movement: { deltaX, deltaY },
+              threshold: movementThreshold,
+              touchDuration: Date.now() - touchStartTimeRef.current,
+            }
+          );
+
           clearTimeout(touchState.longPressTimer);
           setTouchState(prev => ({
             ...prev,
@@ -158,28 +238,43 @@ export const useTouchDrag = <T extends DragSourceType>({
       }
 
       // Handle dragging if long press is active
-      if (touchState.isLongPress) {
+      if (touchState.isLongPress && dragStartedRef.current) {
         // Prevent scrolling during drag
         if (e.cancelable) {
           e.preventDefault();
         }
 
         // Check auto-scroll if function is provided
-        checkAutoScroll?.(touch.clientY);
+        try {
+          checkAutoScroll?.(touch.clientY);
+        } catch (error) {
+          console.error('[useTouchDrag] Error in checkAutoScroll:', error);
+        }
 
         // Notify about drag movement
-        onDragMove?.(touch.clientX, touch.clientY);
+        try {
+          onDragMove?.(touch.clientX, touch.clientY);
+        } catch (error) {
+          console.error('[useTouchDrag] Error in onDragMove:', error);
+        }
 
         // Dispatch custom drag over event for external listeners (preserving existing behavior)
         if (scrollContainer && data && type) {
-          const customEvent = new CustomEvent('externalDragOver', {
-            detail: {
-              clientX: touch.clientX,
-              clientY: touch.clientY,
-              draggedItem: { data, type },
-            },
-          });
-          scrollContainer.dispatchEvent(customEvent);
+          try {
+            const customEvent = new CustomEvent('externalDragOver', {
+              detail: {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                draggedItem: { data, type },
+              },
+            });
+            scrollContainer.dispatchEvent(customEvent);
+          } catch (error) {
+            console.error(
+              '[useTouchDrag] Error dispatching externalDragOver event:',
+              error
+            );
+          }
         }
       }
     },
@@ -203,13 +298,23 @@ export const useTouchDrag = <T extends DragSourceType>({
     (e: React.TouchEvent<HTMLElement>) => {
       if (disabled || !touchState.isActive) return;
 
+      const touchDuration = Date.now() - touchStartTimeRef.current;
+      const wasLongPress = touchState.isLongPress && dragStartedRef.current;
+
+      console.log('[useTouchDrag] Touch end', {
+        wasLongPress,
+        touchDuration,
+        dragStarted: dragStartedRef.current,
+        timestamp: Date.now(),
+      });
+
       // Clear long press timer to prevent memory leaks
       if (touchState.longPressTimer) {
         clearTimeout(touchState.longPressTimer);
       }
 
-      // Handle drop if long press was active
-      if (touchState.isLongPress) {
+      // Handle drop if long press was active and drag was started
+      if (wasLongPress) {
         const touch = e.changedTouches[0];
 
         // Capture drag item before any state changes
@@ -217,26 +322,53 @@ export const useTouchDrag = <T extends DragSourceType>({
 
         // Dispatch custom drop event (preserving existing behavior)
         if (scrollContainer && data && type) {
-          const customEvent = new CustomEvent('externalDrop', {
-            detail: {
-              clientX: touch.clientX,
-              clientY: touch.clientY,
-              draggedItem: { data, type },
-            },
-          });
-          scrollContainer.dispatchEvent(customEvent);
+          try {
+            const customEvent = new CustomEvent('externalDrop', {
+              detail: {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                draggedItem: { data, type },
+              },
+            });
+            scrollContainer.dispatchEvent(customEvent);
+          } catch (error) {
+            console.error(
+              '[useTouchDrag] Error dispatching externalDrop event:',
+              error
+            );
+          }
         }
 
         // Provide success haptic feedback
         provideHapticFeedback([30, 50, 30]);
 
-        // Notify drag end with success
-        setTimeout(() => {
+        // Notify drag end with success - use immediate execution instead of setTimeout
+        // to prevent timing issues with component unmounting
+        try {
           onDragEnd?.(currentDragItem, true);
-        }, 0);
+        } catch (error) {
+          console.error('[useTouchDrag] Error in onDragEnd callback:', error);
+        }
+      } else if (dragStartedRef.current) {
+        // Drag was started but long press wasn't active (edge case)
+        console.warn(
+          '[useTouchDrag] Drag was started but long press not active, ending with failure'
+        );
+        try {
+          onDragEnd?.(dragItemRef.current, false);
+        } catch (error) {
+          console.error(
+            '[useTouchDrag] Error in onDragEnd callback (failure case):',
+            error
+          );
+        }
       }
 
-      // Reset touch state and clear drag item ref
+      // Reset all state immediately to prevent race conditions
+      dragStartedRef.current = false;
+      touchStartTimeRef.current = 0;
+      lastTouchStartRef.current = 0;
+
       setTouchState({
         isActive: false,
         startY: 0,
@@ -248,10 +380,10 @@ export const useTouchDrag = <T extends DragSourceType>({
         element: null,
       });
 
-      // Clear drag item ref after a delay to ensure callbacks have executed
+      // Clear drag item ref after a small delay to ensure callbacks have executed
       setTimeout(() => {
         dragItemRef.current = null;
-      }, 10);
+      }, 50); // Increased from 10ms to 50ms for better reliability
     },
     [
       disabled,
@@ -268,11 +400,34 @@ export const useTouchDrag = <T extends DragSourceType>({
 
   // Cleanup function for component unmount
   const cleanup = useCallback(() => {
+    console.log('[useTouchDrag] Cleanup triggered', {
+      wasActive: touchState.isActive,
+      wasLongPress: touchState.isLongPress,
+      dragStarted: dragStartedRef.current,
+      timestamp: Date.now(),
+    });
+
     if (touchState.longPressTimer) {
       clearTimeout(touchState.longPressTimer);
     }
 
-    // Reset state
+    // If drag was active, notify about cancellation
+    if (dragStartedRef.current && dragItemRef.current) {
+      try {
+        onDragEnd?.(dragItemRef.current, false);
+      } catch (error) {
+        console.error(
+          '[useTouchDrag] Error in onDragEnd during cleanup:',
+          error
+        );
+      }
+    }
+
+    // Reset all state
+    dragStartedRef.current = false;
+    touchStartTimeRef.current = 0;
+    lastTouchStartRef.current = 0;
+
     setTouchState({
       isActive: false,
       startY: 0,
@@ -285,7 +440,12 @@ export const useTouchDrag = <T extends DragSourceType>({
     });
 
     dragItemRef.current = null;
-  }, [touchState.longPressTimer]);
+  }, [
+    touchState.longPressTimer,
+    touchState.isActive,
+    touchState.isLongPress,
+    onDragEnd,
+  ]);
 
   return {
     touchState,

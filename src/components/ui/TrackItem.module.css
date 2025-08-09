@@ -82,12 +82,20 @@
   color: var(--mindaro);
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.3;
-  max-height: 2.8em;
+  white-space: nowrap;
   margin-bottom: 2px;
+}
+
+/* Multi-line track name for larger screens */
+@media (min-width: 768px) {
+  .trackName {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+    max-height: 2.8em;
+  }
 }
 
 /* Artist and additional info */

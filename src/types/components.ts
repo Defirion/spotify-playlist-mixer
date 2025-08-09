@@ -432,7 +432,7 @@ export interface PlaylistMixerProps extends BaseComponentProps {
   selectedPlaylists: SpotifyPlaylist[];
   ratioConfig: RatioConfig;
   mixOptions: MixOptions;
-  onMixedPlaylist?: (result: PlaylistMixResult) => void;
+  onMixedPlaylist?: (result: SpotifyPlaylist) => void;
   onError?: (error: Error) => void;
 }
 

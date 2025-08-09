@@ -134,11 +134,27 @@ const useDraggable = <T extends DragSourceType>({
     longPressDelay,
     createDragItem,
     onDragStart: item => {
+      // Check if already dragging to prevent double starts
+      if (isDragging) {
+        console.warn(
+          '[useDraggable] Attempted to start touch drag while already dragging',
+          {
+            currentItem: draggedItem,
+            newItem: item,
+            timestamp: Date.now(),
+          }
+        );
+        return;
+      }
+
       startDrag(item);
       onDragStart?.(item);
     },
     onDragEnd: (item, success) => {
-      endDrag();
+      // Only end drag if we're actually dragging
+      if (isDragging) {
+        endDrag();
+      }
       onDragEnd?.(item, success);
     },
     checkAutoScroll: undefined, // Will be set below
@@ -166,11 +182,27 @@ const useDraggable = <T extends DragSourceType>({
     createDragItem,
     isCurrentlyDragged: isThisItemDragged,
     onDragStart: item => {
+      // Check if already dragging to prevent double starts
+      if (isDragging) {
+        console.warn(
+          '[useDraggable] Attempted to start keyboard drag while already dragging',
+          {
+            currentItem: draggedItem,
+            newItem: item,
+            timestamp: Date.now(),
+          }
+        );
+        return;
+      }
+
       startDrag(item);
       onDragStart?.(item);
     },
     onDragEnd: (item, success) => {
-      endDrag();
+      // Only end drag if we're actually dragging
+      if (isDragging) {
+        endDrag();
+      }
       onDragEnd?.(item, success);
     },
     onMove,

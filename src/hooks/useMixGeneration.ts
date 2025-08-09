@@ -29,7 +29,10 @@ interface UseMixGenerationReturn {
     ratioConfig: RatioConfig,
     mixOptions: MixOptions
   ) => Promise<MixedTrack[]>;
-  createPlaylist: (playlistName: string, tracks: MixedTrack[]) => Promise<any>;
+  createPlaylist: (
+    playlistName: string,
+    tracks: MixedTrack[]
+  ) => Promise<SpotifyPlaylist>;
   reset: () => void;
 }
 
@@ -268,7 +271,7 @@ export const useMixGeneration = (
 
         return {
           ...newPlaylist,
-          tracks: { total: trackUris.length },
+          tracks: { total: trackUris.length, href: '' },
           duration: durationMinutes,
         };
       } catch (err) {

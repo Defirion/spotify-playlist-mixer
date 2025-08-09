@@ -20,7 +20,7 @@ interface PlaylistMixerProps {
   ratioConfig: RatioConfig;
   mixOptions: MixOptions;
   updateMixOptions: (updates: Partial<MixOptions>) => void;
-  onMixedPlaylist?: (result: PlaylistMixResult) => void;
+  onMixedPlaylist?: (result: SpotifyPlaylist) => void;
   onError?: (error: string) => void;
 }
 

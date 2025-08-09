@@ -81,6 +81,8 @@
   font-size: 14px;
   line-height: 1.4;
   color: var(--mindaro);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .toastDetails {

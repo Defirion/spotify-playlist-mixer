@@ -494,12 +494,13 @@ class DragMemoryLeakDetector {
     snapshotCount: number;
     warningCount: number;
     thresholds: {
-      heapUsedMB: number;
-      heapTotalMB: number;
-      externalMB: number;
-      arrayBuffersMB: number;
-      rssGrowthMB: number;
-      consecutiveWarnings: number;
+      maxTotalResources: number;
+      maxResourceAge: number;
+      maxDragDuration: number;
+      resourceGrowthRate: number;
+      maxEventListeners: number;
+      maxTimers: number;
+      maxAnimationFrames: number;
     };
     latestSnapshot: MemoryUsageSnapshot | null;
   } {
