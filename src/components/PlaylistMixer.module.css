@@ -112,6 +112,52 @@
   color: var(--mindaro);
 }
 
+.strategyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.strategyOption {
+  padding: 16px;
+  border: 1px solid var(--fern-green);
+  background: var(--hunter-green);
+  color: var(--mindaro);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.strategyOption:hover {
+  background: var(--fern-green);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.strategyOption.active {
+  background: var(--fern-green);
+  border-color: var(--moss-green);
+  color: var(--mindaro);
+  box-shadow: 0 0 0 2px rgba(144, 169, 85, 0.3);
+}
+
+.strategyTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--mindaro);
+}
+
+.strategyDescription {
+  font-size: 12px;
+  color: rgba(236, 243, 158, 0.7);
+  line-height: 1.3;
+}
+
 .warningBox {
   background: rgba(255, 193, 7, 0.1);
   border: 1px solid rgba(255, 193, 7, 0.3);
@@ -134,6 +180,49 @@
   font-size: 13px;
   color: var(--mindaro);
   line-height: 1.4;
+}
+
+.warningOption {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mindaro);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--fern-green);
+  border-radius: 3px;
+  background: var(--hunter-green);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox:checked {
+  background: var(--fern-green);
+  border-color: var(--moss-green);
+}
+
+.checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--mindaro);
+  font-size: 10px;
+  font-weight: bold;
 }
 
 .previewSection {
@@ -323,6 +412,10 @@
   .playlistBreakdown {
     grid-template-columns: 1fr;
   }
+
+  .strategyGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 480px) {
@@ -338,5 +431,9 @@
   .previewStats {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .strategyGrid {
+    grid-template-columns: 1fr;
   }
 }

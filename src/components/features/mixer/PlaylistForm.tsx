@@ -196,8 +196,101 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
               : ', but mixing will continue with remaining playlists'}
             .
           </div>
+          <div className={styles.warningOption}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={mixOptions.continueWhenPlaylistEmpty}
+                onChange={e =>
+                  onMixOptionsChange({
+                    continueWhenPlaylistEmpty: e.target.checked,
+                  })
+                }
+                className={styles.checkbox}
+              />
+              Continue mixing until all songs are used up
+            </label>
+          </div>
         </div>
       )}
+
+      {/* Strategy Selection */}
+      <div className={styles.inputGroup}>
+        <label className={styles.label}>
+          How should we arrange popular songs?
+        </label>
+        <div className={styles.strategyGrid}>
+          <button
+            type="button"
+            className={`${styles.strategyOption} ${
+              mixOptions.popularityStrategy === 'mixed' ? styles.active : ''
+            }`}
+            onClick={() =>
+              onMixOptionsChange({
+                popularityStrategy: 'mixed',
+              })
+            }
+          >
+            <div className={styles.strategyTitle}>🎲 Mixed</div>
+            <div className={styles.strategyDescription}>
+              Popular and deep cuts evenly distributed throughout
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.strategyOption} ${
+              mixOptions.popularityStrategy === 'front-loaded'
+                ? styles.active
+                : ''
+            }`}
+            onClick={() =>
+              onMixOptionsChange({
+                popularityStrategy: 'front-loaded',
+              })
+            }
+          >
+            <div className={styles.strategyTitle}>🚀 Front-Loaded</div>
+            <div className={styles.strategyDescription}>
+              Start with hits, gradually transition to deep cuts
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.strategyOption} ${
+              mixOptions.popularityStrategy === 'mid-peak' ? styles.active : ''
+            }`}
+            onClick={() =>
+              onMixOptionsChange({
+                popularityStrategy: 'mid-peak',
+              })
+            }
+          >
+            <div className={styles.strategyTitle}>⛰️ Mid-Peak</div>
+            <div className={styles.strategyDescription}>
+              Build to popular songs in the middle, bookend with variety
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.strategyOption} ${
+              mixOptions.popularityStrategy === 'crescendo' ? styles.active : ''
+            }`}
+            onClick={() =>
+              onMixOptionsChange({
+                popularityStrategy: 'crescendo',
+              })
+            }
+          >
+            <div className={styles.strategyTitle}>📈 Crescendo</div>
+            <div className={styles.strategyDescription}>
+              Start with deep cuts, build up to the biggest hits
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

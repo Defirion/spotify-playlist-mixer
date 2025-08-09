@@ -2,7 +2,11 @@
 
 import { SpotifyTrack, SpotifyPlaylist, SpotifyUserProfile } from './spotify';
 
-export type PopularityStrategy = 'mixed' | 'popular' | 'balanced';
+export type PopularityStrategy =
+  | 'mixed'
+  | 'front-loaded'
+  | 'mid-peak'
+  | 'crescendo';
 export type WeightType = 'frequency' | 'time';
 
 export interface MixOptions {
