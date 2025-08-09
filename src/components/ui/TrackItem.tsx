@@ -173,10 +173,12 @@ const TrackItem = memo(
                   <span>•</span>
                   <span
                     className={styles.popularityBadge}
-                    style={{
-                      background: popularityStyle.background,
-                      color: popularityStyle.color,
-                    }}
+                    style={
+                      {
+                        '--badge-bg': popularityStyle.background,
+                        '--badge-color': popularityStyle.color,
+                      } as React.CSSProperties
+                    }
                   >
                     {popularityStyle.text}
                   </span>

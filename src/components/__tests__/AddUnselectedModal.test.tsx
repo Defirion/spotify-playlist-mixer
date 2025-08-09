@@ -65,7 +65,7 @@ jest.mock('../ui/TrackList', () => ({
     return (
       <div
         data-testid="track-list"
-        style={{ height: containerHeight, overflowY: 'auto' }}
+        className="track-list-container"
         {...domProps}
       >
         {tracks && tracks.length > 0 ? (

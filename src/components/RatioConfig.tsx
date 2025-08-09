@@ -230,10 +230,7 @@ const RatioConfig = memo<RatioConfigProps>(
                     </div>
                     <div className={styles.sliderWrapper}>
                       <span className={styles.sliderMinMax}>1</span>
-                      <div
-                        className={styles.dualRangeSlider}
-                        style={{ flex: 1 }}
-                      >
+                      <div className={styles.dualRangeSlider}>
                         <input
                           type="range"
                           min="1"
@@ -291,7 +288,6 @@ const RatioConfig = memo<RatioConfigProps>(
                           )
                         }
                         className={styles.ratioConfigSlider}
-                        style={{ flex: 1 }}
                       />
                       <span className={styles.sliderMinMax}>High</span>
                     </div>

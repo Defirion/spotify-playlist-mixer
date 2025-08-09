@@ -242,10 +242,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                   }
                 }, 100);
               }}
-              style={{
-                height: '400px',
-                overflowY: 'auto',
-              }}
+              className={styles.trackList}
             />
           )}
         </div>

@@ -172,7 +172,14 @@ const TrackList = memo<TrackListProps>(
                       onTrackTouchEnd(e, track, actualIndex)
                   : undefined
               }
-              style={virtualized ? { height: itemHeight } : undefined}
+              className={virtualized ? styles.virtualizedItem : undefined}
+              style={
+                virtualized
+                  ? ({
+                      '--item-height': `${itemHeight}px`,
+                    } as React.CSSProperties)
+                  : undefined
+              }
             />
           </div>
         );
@@ -222,10 +229,12 @@ const TrackList = memo<TrackListProps>(
       return (
         <div
           className={`${styles.empty} ${className}`}
-          style={{
-            height: containerHeight,
-            ...style,
-          }}
+          style={
+            {
+              '--container-height': `${containerHeight}px`,
+              ...style,
+            } as React.CSSProperties
+          }
           {...otherProps}
         >
           {emptyMessage}
@@ -239,11 +248,13 @@ const TrackList = memo<TrackListProps>(
         data-testid="track-list"
         {...(virtualized ? containerProps : {})}
         {...otherProps}
-        style={{
-          height: virtualized ? containerHeight : 'auto',
-          ...style,
-          ...(virtualized ? containerProps.style : {}),
-        }}
+        style={
+          {
+            '--container-height': virtualized ? `${containerHeight}px` : 'auto',
+            ...style,
+            ...(virtualized ? containerProps.style : {}),
+          } as React.CSSProperties
+        }
       >
         {virtualized && (
           // Spacer for virtualization

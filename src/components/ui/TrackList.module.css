@@ -1,6 +1,7 @@
 /* Track list container */
 .trackList {
   position: relative;
+  height: var(--container-height, auto);
 }
 
 .trackList.virtualized {
@@ -13,9 +14,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--mindaro);
+  color: var(--color-text-secondary);
   opacity: 0.7;
   text-align: center;
+  height: var(--container-height, 200px);
 }
 
 /* Non-virtualized list container */
@@ -26,4 +28,9 @@
 /* Virtualized spacer */
 .spacer {
   position: relative;
+}
+
+/* Virtualized item */
+.virtualizedItem {
+  height: var(--item-height, auto);
 }

@@ -4,13 +4,14 @@
   -webkit-appearance: none !important;
   appearance: none !important;
   height: 6px !important;
-  background: var(--hunter-green) !important;
-  border-radius: 3px !important;
+  background: var(--color-secondary) !important;
+  border-radius: var(--border-radius-sm) !important;
   outline: none !important;
   cursor: pointer !important;
-  border: 1px solid var(--fern-green) !important;
+  border: 1px solid var(--color-border) !important;
   padding: 12px 1px !important;
   margin: 0 !important;
+  flex: 1;
 }
 
 .ratioConfigSlider::-webkit-slider-thumb {
@@ -51,6 +52,7 @@
   height: 30px !important;
   display: flex !important;
   align-items: center !important;
+  flex: 1;
 }
 
 .dualRangeSlider::before {
@@ -216,11 +218,11 @@
 }
 
 .balanceMethodContainer {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
 }
 
 .balanceMethodLabel {
@@ -243,7 +245,7 @@
 }
 
 .playlistContainer {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface);
   padding: 16px;
   border-radius: 8px;
   position: relative;
@@ -252,7 +254,7 @@
 .exampleMixContainer {
   margin-top: 20px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface);
   border-radius: 8px;
 }
 
