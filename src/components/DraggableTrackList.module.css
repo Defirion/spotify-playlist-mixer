@@ -20,6 +20,36 @@
   background: var(--hunter-green) !important;
 }
 
+/* Touch drag visual feedback */
+:global(.touch-drag-active) {
+  opacity: 0.8 !important;
+  transform: scale(1.05) !important;
+  z-index: 1000 !important;
+  pointer-events: none !important;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
+  border: 3px solid var(--moss-green) !important;
+  border-radius: 8px !important;
+  background: rgba(144, 169, 85, 0.1) !important;
+}
+
+/* Additional visual feedback for dragging state */
+:global(.drag-active) {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+:global(.no-user-select) {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
 .header {
   padding: 12px 16px;
   border-bottom: 1px solid var(--fern-green);
@@ -462,6 +492,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   z-index: 1000 !important;
   position: relative !important;
+}
+
+.dropLineBelow {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--moss-green);
+  box-shadow: 0 2px 8px rgba(144, 169, 85, 0.6);
+  z-index: 10;
+  border-radius: 2px;
 }
 
 /* Source playlist styling */

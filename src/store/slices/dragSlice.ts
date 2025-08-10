@@ -26,8 +26,33 @@ export const createDragSlice: StateCreator<
   startDrag: <T extends DragSourceType>(item: DraggedItem<T>) => {
     const currentState = get();
 
-    // Prevent concurrent drags
+    // Allow HTML5 drag to coordinate with touch drag for the same item
     if (currentState.isDragging) {
+      // Check if this is the same item (coordination between touch and HTML5 drag)
+      if (
+        currentState.draggedItem?.id === item.id &&
+        currentState.draggedItem?.type === item.type
+      ) {
+        console.log(
+          '[DragSlice] Coordinating HTML5 drag with existing touch drag',
+          {
+            existingItem: currentState.draggedItem,
+            newItem: item,
+            timestamp: Date.now(),
+          }
+        );
+        // Update the drag item but don't change the dragging state
+        set(
+          {
+            draggedItem: item, // Update with potentially newer data
+          },
+          false,
+          'drag/coordinateDrag'
+        );
+        return;
+      }
+
+      // Different item - prevent concurrent drags
       console.warn(
         '[DragSlice] Attempted to start drag while already dragging',
         {
@@ -101,7 +126,7 @@ export const createDragSlice: StateCreator<
     const currentState = get();
 
     if (!currentState.isDragging) {
-      console.warn('[DragSlice] Attempted to cancel drag when not dragging', {
+      console.debug('[DragSlice] Attempted to cancel drag when not dragging', {
         timestamp: Date.now(),
       });
       return;

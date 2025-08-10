@@ -190,12 +190,13 @@ export interface UseDraggableOptions {
 
 export interface UseDraggableReturn {
   dragHandleProps: {
+    ref?: (el: HTMLElement | null) => void;
     draggable: boolean;
     onDragStart: (event: React.DragEvent<HTMLElement>) => void;
     onDragEnd: (event: React.DragEvent<HTMLElement>) => void;
-    onTouchStart: (event: React.TouchEvent<HTMLElement>) => void;
-    onTouchMove: (event: React.TouchEvent<HTMLElement>) => void;
-    onTouchEnd: (event: React.TouchEvent<HTMLElement>) => void;
+    onTouchStart?: (event: React.TouchEvent<HTMLElement>) => void;
+    onTouchMove?: (event: React.TouchEvent<HTMLElement>) => void;
+    onTouchEnd?: (event: React.TouchEvent<HTMLElement>) => void;
     onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
     tabIndex: number;
     role: string;

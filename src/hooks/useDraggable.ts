@@ -75,7 +75,7 @@ const useDraggable = <T extends DragSourceType>({
   type = 'internal-track' as T,
   data,
   disabled = false,
-  longPressDelay = 250,
+  longPressDelay = 300,
   scrollThreshold = 80,
   scrollContainer,
   onDragStart,
@@ -101,18 +101,27 @@ const useDraggable = <T extends DragSourceType>({
     ? isCurrentlyDragged((data as any)?.id || (data as any)?.track?.id || '')
     : false;
 
+  // Ref for the draggable element to attach native event listeners
+  const elementRef = useRef<HTMLElement | null>(null);
+
   // Initialize modular hooks - must be called unconditionally
   const dragHandlersResult = useDragHandlers({
     type,
     data,
     disabled,
     onDragStart: item => {
-      startDrag(item);
-      onDragStart?.(item);
+      // Defer the state update to avoid render phase updates
+      setTimeout(() => {
+        startDrag(item);
+        onDragStart?.(item);
+      }, 0);
     },
     onDragEnd: (item, success) => {
-      endDrag();
-      onDragEnd?.(item, success);
+      // Defer the state update to avoid render phase updates
+      setTimeout(() => {
+        endDrag();
+        onDragEnd?.(item, success);
+      }, 0);
     },
   });
 
@@ -134,10 +143,13 @@ const useDraggable = <T extends DragSourceType>({
     longPressDelay,
     createDragItem,
     onDragStart: item => {
-      // Check if already dragging to prevent double starts
-      if (isDragging) {
+      // Check if already dragging the same item (coordination scenario)
+      const itemId = (data as any)?.id || (data as any)?.track?.id || '';
+      const isSameItem = isDragging && draggedItem?.id === itemId;
+
+      if (isDragging && !isSameItem) {
         console.warn(
-          '[useDraggable] Attempted to start touch drag while already dragging',
+          '[useDraggable] Attempted to start touch drag while already dragging different item',
           {
             currentItem: draggedItem,
             newItem: item,
@@ -147,8 +159,11 @@ const useDraggable = <T extends DragSourceType>({
         return;
       }
 
-      startDrag(item);
-      onDragStart?.(item);
+      // Defer the state update to avoid render phase updates
+      setTimeout(() => {
+        startDrag(item);
+        onDragStart?.(item);
+      }, 0);
     },
     onDragEnd: (item, success) => {
       // Only end drag if we're actually dragging
@@ -195,8 +210,11 @@ const useDraggable = <T extends DragSourceType>({
         return;
       }
 
-      startDrag(item);
-      onDragStart?.(item);
+      // Defer the state update to avoid render phase updates
+      setTimeout(() => {
+        startDrag(item);
+        onDragStart?.(item);
+      }, 0);
     },
     onDragEnd: (item, success) => {
       // Only end drag if we're actually dragging
@@ -245,14 +263,37 @@ const useDraggable = <T extends DragSourceType>({
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // Check if touch drag is already active for this item
+        const itemId = (data as any)?.id || (data as any)?.track?.id || '';
+        const isTouchDragActive = isDragging && draggedItem?.id === itemId;
+
+        if (isTouchDragActive) {
+          console.log(
+            '[useDraggable] HTML5 drag starting for item already in touch drag - coordinating',
+            {
+              itemId,
+              touchDragItem: draggedItem,
+              timestamp: Date.now(),
+            }
+          );
+          // Allow HTML5 drag to proceed for animation, but don't create new drag item
+          // The touch drag has already initiated the drag state
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData(
+            'application/json',
+            JSON.stringify(draggedItem)
+          );
+          return;
+        }
+
+        // Normal HTML5 drag start
         const dragItem = handleHTML5DragStart(e);
         // Store integration is handled in useDragHandlers
       } catch (error) {
         console.error('[useDraggable] Error in handleDragStart:', error);
       }
     },
-    [handleHTML5DragStart]
+    [handleHTML5DragStart, isDragging, draggedItem, data]
   );
 
   const handleDragEnd = useCallback(
@@ -309,6 +350,88 @@ const useDraggable = <T extends DragSourceType>({
     }
   }, []);
 
+  // Set up native touch event listeners with non-passive options
+  // Use refs to avoid recreating handlers and prevent constant re-adding of listeners
+  const touchHandlersRef = useRef({
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  });
+
+  // Update handler refs when dependencies change
+  useEffect(() => {
+    touchHandlersRef.current = {
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd,
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
+  // Set up event listeners only once when element changes or disabled state changes
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element || disabled) return;
+
+    // Stable event handlers that use refs to get current handlers
+    const nativeTouchStart = (e: TouchEvent) => {
+      const syntheticEvent = {
+        ...e,
+        currentTarget: e.currentTarget,
+        touches: Array.from(e.touches),
+        changedTouches: Array.from(e.changedTouches),
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+        cancelable: e.cancelable,
+      } as any;
+      touchHandlersRef.current.handleTouchStart(syntheticEvent);
+    };
+
+    const nativeTouchMove = (e: TouchEvent) => {
+      const syntheticEvent = {
+        ...e,
+        currentTarget: e.currentTarget,
+        touches: Array.from(e.touches),
+        changedTouches: Array.from(e.changedTouches),
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+        cancelable: e.cancelable,
+      } as any;
+      touchHandlersRef.current.handleTouchMove(syntheticEvent);
+    };
+
+    const nativeTouchEnd = (e: TouchEvent) => {
+      const syntheticEvent = {
+        ...e,
+        currentTarget: e.currentTarget,
+        touches: Array.from(e.touches),
+        changedTouches: Array.from(e.changedTouches),
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+        cancelable: e.cancelable,
+      } as any;
+      touchHandlersRef.current.handleTouchEnd(syntheticEvent);
+    };
+
+    // Add non-passive event listeners (only log once to reduce spam)
+    console.log('[useDraggable] Setting up native touch event listeners');
+
+    element.addEventListener('touchstart', nativeTouchStart, {
+      passive: false,
+    });
+    element.addEventListener('touchmove', nativeTouchMove, {
+      passive: false,
+    });
+    element.addEventListener('touchend', nativeTouchEnd, {
+      passive: false,
+    });
+
+    return () => {
+      element.removeEventListener('touchstart', nativeTouchStart);
+      element.removeEventListener('touchmove', nativeTouchMove);
+      element.removeEventListener('touchend', nativeTouchEnd);
+    };
+  }, [disabled]); // Only depend on disabled state, not the handler functions
+
   // Register cleanup callbacks for drag-specific resources
   useEffect(() => {
     const unregisterCleanup = cleanup.addCleanupCallback(() => {
@@ -330,12 +453,16 @@ const useDraggable = <T extends DragSourceType>({
 
   // Create unified event handler props with proper prop spreading
   const dragHandleProps = {
+    ref: (el: HTMLElement | null) => {
+      elementRef.current = el;
+    },
     draggable: !disabled && canDrag(),
     onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
-    onTouchStart: handleTouchStart,
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
+    // Remove React synthetic touch events since we use native ones
+    // onTouchStart: handleTouchStart,
+    // onTouchMove: handleTouchMove,
+    // onTouchEnd: handleTouchEnd,
     onKeyDown: handleKeyDown,
     tabIndex: disabled ? -1 : 0,
     role: 'button',

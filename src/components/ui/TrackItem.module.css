@@ -9,6 +9,7 @@
   transition: background-color 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
+  gap: 8px;
 }
 
 .trackItem.selected {
@@ -25,13 +26,13 @@
 
 /* Drag handle */
 .dragHandle {
-  margin-right: 8px;
   color: var(--mindaro);
   opacity: 0.5;
   cursor: grab;
   font-size: 16px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 /* Checkbox */
@@ -40,7 +41,6 @@
   height: 20px;
   border: 2px solid var(--moss-green);
   border-radius: 4px;
-  margin-right: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,7 +65,6 @@
   height: 40px;
   border-radius: 4px;
   object-fit: cover;
-  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -73,17 +72,7 @@
 .trackInfo {
   flex: 1;
   min-width: 0;
-}
-
-/* Track name */
-.trackName {
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--mindaro);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 2px;
 }
 
 /* Multi-line track name for larger screens */
@@ -129,13 +118,12 @@
   font-size: 11px;
   opacity: 0.6;
   color: var(--mindaro);
-  margin-left: 12px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Custom actions container */
 .actions {
-  margin-left: 12px;
   display: flex;
   gap: 4px;
   flex-shrink: 0;
@@ -150,12 +138,139 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  margin-left: 8px;
   font-size: 16px;
   transition: opacity 0.2s;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .removeButton:hover {
   opacity: 1;
+}
+/* Improved text truncation for better mobile alignment */
+.trackName {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--mindaro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  /* Use CSS calc to ensure proper space calculation */
+  max-width: calc(100% - 0px);
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .trackItem {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .albumArt {
+    width: 32px;
+    height: 32px;
+  }
+
+  .duration {
+    font-size: 10px;
+    min-width: 32px; /* Ensure consistent width */
+  }
+
+  .removeButton {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    min-width: 20px; /* Prevent shrinking */
+  }
+
+  /* Ensure track info gets maximum available space */
+  .trackInfo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+
+/* Very small screens - hide duration to give more space to track info */
+@media (max-width: 360px) {
+  .duration {
+    display: none;
+  }
+
+  .trackItem {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .removeButton {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    min-width: 18px;
+  }
+} /* C
+ontainer query support for better responsive behavior */
+@container (max-width: 400px) {
+  .trackItem {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .duration {
+    display: none;
+  }
+
+  .albumArt {
+    width: 28px;
+    height: 28px;
+  }
+
+  .removeButton {
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+    min-width: 16px;
+  }
+}
+
+/* Ensure proper text truncation on all screen sizes */
+.trackName,
+.artistInfo {
+  /* Force text to respect container boundaries */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Additional mobile-specific improvements */
+@media (max-width: 320px) {
+  .trackItem {
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .albumArt {
+    width: 24px;
+    height: 24px;
+  }
+
+  .trackName {
+    font-size: 13px;
+  }
+
+  .artistInfo {
+    font-size: 11px;
+  }
+
+  .removeButton {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    min-width: 16px;
+  }
 }

@@ -16,6 +16,10 @@ import {
   MixedTrack,
   isDragSourceType,
 } from '../types';
+import { useScrollDebugger } from '../hooks/useScrollDebugger';
+import { useDropPosition } from '../hooks/useDropPosition';
+import { useCustomTouchEvents } from '../hooks/useCustomTouchEvents';
+import { useTrackOperations } from '../hooks/useTrackOperations';
 import styles from './DraggableTrackList.module.css';
 
 interface DraggableTrackListProps {
@@ -28,6 +32,16 @@ interface DraggableTrackListProps {
 
 type QuadrantType = 'topHits' | 'popular' | 'moderate' | 'deepCuts';
 
+/**
+ * DraggableTrackList Component
+ *
+ * A comprehensive drag-and-drop track list component that supports:
+ * - Internal track reordering via drag and drop
+ * - External track addition from modals
+ * - Scroll position preservation during operations
+ * - Cross-platform compatibility (mouse, touch, keyboard)
+ * - Visual feedback during drag operations
+ */
 const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   tracks,
   selectedPlaylists,
@@ -43,414 +57,146 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
 
   // Initialize drag state and scroll position hooks
   const { isDragging, draggedItem, endDrag } = useDragState();
+  const { restoreScrollPosition, clearScrollPosition } = useScrollPosition();
+
+  // Initialize extracted hooks
+  const { handleScrollEvent } = useScrollDebugger({
+    containerRef: scrollContainerRef,
+    tracks: localTracks,
+  });
+
+  const { dropPosition, updateDropPosition, clearDropPosition } =
+    useDropPosition({
+      tracksLength: localTracks.length,
+    });
+
   const {
-    scrollTop,
-    captureScrollPosition,
-    restoreScrollPosition,
-    clearScrollPosition,
-  } = useScrollPosition();
+    handleInternalReorder,
+    handleExternalAdd,
+    handleTrackRemove,
+    handleAddUnselectedTracks,
+    handleAddSpotifyTracks,
+  } = useTrackOperations({
+    tracks: localTracks,
+    onTrackOrderChange,
+    scrollContainerRef,
+  });
 
   // Sync localTracks with tracks prop
   useEffect(() => {
-    const currentScrollTop = scrollContainerRef.current?.scrollTop || 0;
-    console.log(
-      '[DraggableTrackList] Tracks prop changed, syncing localTracks',
-      {
-        newTracksLength: tracks?.length || 0,
-        currentScrollTop,
-        scrollTopInStore: scrollTop,
-        timestamp: Date.now(),
-      }
-    );
-
     setLocalTracks(tracks || []);
     // Clear any captured scroll position when tracks change from external source
     // This prevents inappropriate scroll restoration when a new playlist is generated
     clearScrollPosition();
-  }, [tracks, clearScrollPosition, scrollTop]);
-
-  // Enhanced drop position state for comprehensive visual feedback
-  const [dropPosition, setDropPosition] = useState<{
-    index: number;
-    isTopHalf: boolean;
-    isFirst: boolean;
-    isLast: boolean;
-    y: number;
-  } | null>(null);
+  }, [tracks, clearScrollPosition]);
 
   // Restore scroll position after track list updates using useLayoutEffect for synchronous execution
-  // Only restore if there's actually a captured scroll position
   useLayoutEffect(() => {
-    const currentScrollTop = scrollContainerRef.current?.scrollTop || 0;
-    console.log('[DraggableTrackList] useLayoutEffect triggered', {
-      localTracksLength: localTracks.length,
-      scrollTopInStore: scrollTop,
-      currentScrollTop,
-      shouldRestore: scrollContainerRef.current && scrollTop !== null,
-      timestamp: Date.now(),
-    });
-
-    if (scrollContainerRef.current && scrollTop !== null) {
-      console.log('[DraggableTrackList] About to restore scroll position', {
-        targetScrollTop: scrollTop,
-        currentScrollTop,
-        timestamp: Date.now(),
-      });
-      try {
-        restoreScrollPosition(scrollContainerRef.current);
-      } catch (error) {
-        console.error(
-          '[DraggableTrackList] Error restoring scroll position:',
-          error
-        );
-      }
-    }
-  }, [localTracks, scrollTop, restoreScrollPosition]);
-
-  // Monitor scroll container ref changes and track scroll position changes
-  const lastScrollTopRef = useRef<number>(0);
-
-  useEffect(() => {
     if (scrollContainerRef.current) {
-      const currentScrollTop = scrollContainerRef.current.scrollTop;
-
-      // Check if scroll position changed unexpectedly
-      if (currentScrollTop !== lastScrollTopRef.current) {
-        console.log('[DraggableTrackList] Scroll position changed', {
-          previousScrollTop: lastScrollTopRef.current,
-          currentScrollTop,
-          difference: currentScrollTop - lastScrollTopRef.current,
-          containerHeight: scrollContainerRef.current.clientHeight,
-          scrollHeight: scrollContainerRef.current.scrollHeight,
-          timestamp: Date.now(),
-        });
-        lastScrollTopRef.current = currentScrollTop;
-      }
+      restoreScrollPosition(scrollContainerRef.current);
     }
-  });
+  }, [localTracks, restoreScrollPosition]);
 
-  // Add a mutation observer to detect DOM changes that might cause scroll jumps
-  useEffect(() => {
-    if (!scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    let initialScrollTop = container.scrollTop;
-
-    const observer = new MutationObserver(() => {
-      const newScrollTop = container.scrollTop;
-      if (newScrollTop !== initialScrollTop) {
-        console.log('[DraggableTrackList] DOM mutation caused scroll change', {
-          initialScrollTop,
-          newScrollTop,
-          difference: newScrollTop - initialScrollTop,
-          timestamp: Date.now(),
-        });
-        initialScrollTop = newScrollTop;
+  // Initialize custom touch events hook
+  useCustomTouchEvents({
+    containerRef: scrollContainerRef,
+    onTouchDragOver: ({ clientY }) => {
+      if (scrollContainerRef.current) {
+        updateDropPosition(clientY, scrollContainerRef.current);
       }
-    });
-
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
-
-    return () => observer.disconnect();
-  }, [localTracks]);
-
-  // Monitor page-level scroll changes that might be causing the viewport jump
-  useEffect(() => {
-    let initialPageScrollY = window.scrollY;
-
-    const handlePageScroll = () => {
-      const newPageScrollY = window.scrollY;
-      if (Math.abs(newPageScrollY - initialPageScrollY) > 10) {
-        const stackTrace = new Error().stack;
-        console.log('[DraggableTrackList] Page scroll detected', {
-          initialPageScrollY,
-          newPageScrollY,
-          difference: newPageScrollY - initialPageScrollY,
-          stackTrace: stackTrace?.split('\n').slice(0, 8).join('\n'),
-          timestamp: Date.now(),
-        });
-        initialPageScrollY = newPageScrollY;
+    },
+    onTouchDrop: ({ clientY, draggedItem }) => {
+      if (!draggedItem || !scrollContainerRef.current) {
+        clearDropPosition();
+        return;
       }
-    };
 
-    window.addEventListener('scroll', handlePageScroll);
-
-    // Also check for programmatic page scroll changes
-    const checkPageScroll = () => {
-      const currentPageScrollY = window.scrollY;
-      if (Math.abs(currentPageScrollY - initialPageScrollY) > 10) {
-        const stackTrace = new Error().stack;
-        console.log('[DraggableTrackList] Programmatic page scroll detected', {
-          initialPageScrollY,
-          currentPageScrollY,
-          difference: currentPageScrollY - initialPageScrollY,
-          stackTrace: stackTrace?.split('\n').slice(0, 8).join('\n'),
-          timestamp: Date.now(),
-        });
-        initialPageScrollY = currentPageScrollY;
-      }
-    };
-
-    const interval = setInterval(checkPageScroll, 100);
-
-    return () => {
-      window.removeEventListener('scroll', handlePageScroll);
-      clearInterval(interval);
-    };
-  }, [localTracks]);
-
-  // Monitor focus changes that might cause scroll jumps
-  useEffect(() => {
-    const handleFocusChange = (e: FocusEvent) => {
-      if (e.target && e.target !== document.body) {
-        console.log('[DraggableTrackList] Focus change detected', {
-          targetElement: (e.target as Element).tagName,
-          targetId: (e.target as Element).id,
-          targetClass: (e.target as Element).className,
-          pageScrollY: window.scrollY,
-          timestamp: Date.now(),
-        });
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusChange);
-    document.addEventListener('focusout', handleFocusChange);
-
-    return () => {
-      document.removeEventListener('focusin', handleFocusChange);
-      document.removeEventListener('focusout', handleFocusChange);
-    };
-  }, [localTracks]);
-
-  // Scroll position capture function with error handling
-  const handleScrollPositionCapture = useCallback(() => {
-    if (scrollContainerRef.current) {
-      const currentScrollTop = scrollContainerRef.current.scrollTop;
-      console.log('[DraggableTrackList] Capturing scroll position', {
-        currentScrollTop,
-        containerHeight: scrollContainerRef.current.clientHeight,
-        scrollHeight: scrollContainerRef.current.scrollHeight,
-        timestamp: Date.now(),
-      });
       try {
-        captureScrollPosition(scrollContainerRef.current);
-      } catch (error) {
-        console.error(
-          '[DraggableTrackList] Error capturing scroll position:',
-          error
+        const calculatedDropPosition = updateDropPosition(
+          clientY,
+          scrollContainerRef.current
         );
-      }
-    } else {
-      console.warn(
-        '[DraggableTrackList] Cannot capture scroll position: scroll container ref is null'
-      );
-    }
-  }, [captureScrollPosition]);
 
-  // Track reordering and management functions
-  const handleInternalReorder = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      if (fromIndex === toIndex || !onTrackOrderChange) return;
-
-      // Capture scroll position before reordering
-      handleScrollPositionCapture();
-
-      const newTracks = [...localTracks];
-      const draggedTrack = newTracks[fromIndex];
-
-      // Remove the dragged track from its original position
-      newTracks.splice(fromIndex, 1);
-
-      // Calculate the correct insertion index after removal
-      let insertIndex = toIndex;
-      if (fromIndex < toIndex) {
-        insertIndex = toIndex - 1;
-      }
-
-      // Insert the track at the new position
-      newTracks.splice(insertIndex, 0, draggedTrack);
-
-      onTrackOrderChange(newTracks);
-    },
-    [localTracks, onTrackOrderChange, handleScrollPositionCapture]
-  );
-
-  const handleExternalAdd = useCallback(
-    (track: MixedTrack, insertIndex?: number) => {
-      if (!onTrackOrderChange) return;
-
-      // Capture scroll position before adding external track
-      handleScrollPositionCapture();
-
-      const newTracks = [...localTracks];
-      const finalInsertIndex = insertIndex ?? localTracks.length;
-
-      newTracks.splice(finalInsertIndex, 0, track);
-      onTrackOrderChange(newTracks);
-    },
-    [localTracks, onTrackOrderChange, handleScrollPositionCapture]
-  );
-
-  const handleTrackRemove = useCallback(
-    (index: number) => {
-      if (!onTrackOrderChange) return;
-
-      // Capture scroll position before removing track
-      handleScrollPositionCapture();
-
-      const newTracks = [...localTracks];
-      newTracks.splice(index, 1);
-      onTrackOrderChange(newTracks);
-    },
-    [localTracks, onTrackOrderChange, handleScrollPositionCapture]
-  );
-
-  // Enhanced drop position calculation with intelligent positioning
-  const calculateDropPosition = useCallback(
-    (clientY: number, containerElement: HTMLElement) => {
-      const trackElements = Array.from(
-        containerElement.querySelectorAll('[data-track-index]')
-      ) as HTMLElement[];
-
-      // Handle empty list case
-      if (trackElements.length === 0) {
-        return {
-          index: 0,
-          isTopHalf: true,
-          isFirst: true,
-          isLast: true,
-          y: clientY,
-        };
-      }
-
-      // Find the closest track element
-      let closestElement: HTMLElement | null = null;
-      let closestDistance = Infinity;
-      let closestIndex = 0;
-
-      for (const element of trackElements) {
-        const rect = element.getBoundingClientRect();
-        const elementCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(clientY - elementCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestElement = element;
-          closestIndex = parseInt(
-            element.getAttribute('data-track-index') || '0'
+        if (!calculatedDropPosition) {
+          console.warn(
+            '[DraggableTrackList] Could not calculate drop position'
           );
+          clearDropPosition();
+          return;
         }
+
+        // Handle different drag source types
+        if (isDragSourceType(draggedItem, 'internal-track')) {
+          const sourceIndex = draggedItem.payload.index;
+          if (typeof sourceIndex === 'number') {
+            handleInternalReorder(sourceIndex, calculatedDropPosition.index);
+          }
+        } else if (
+          isDragSourceType(draggedItem, 'modal-track') ||
+          isDragSourceType(draggedItem, 'search-track')
+        ) {
+          const track = draggedItem.payload.track;
+          if (track && track.id) {
+            // Convert SpotifyTrack to MixedTrack with proper source attribution
+            const mixedTrack: MixedTrack = {
+              ...track,
+              sourcePlaylist: isDragSourceType(draggedItem, 'modal-track')
+                ? draggedItem.payload.source
+                : 'search',
+            };
+            handleExternalAdd(mixedTrack, calculatedDropPosition.index);
+          }
+        }
+      } catch (error) {
+        console.error('[DraggableTrackList] Error handling touch drop:', error);
+      } finally {
+        clearDropPosition();
       }
-
-      if (!closestElement) {
-        // Fallback to end of list
-        return {
-          index: localTracks.length,
-          isTopHalf: false,
-          isFirst: false,
-          isLast: true,
-          y: clientY,
-        };
-      }
-
-      const rect = closestElement.getBoundingClientRect();
-      const midpoint = rect.top + rect.height / 2;
-      const isTopHalf = clientY < midpoint;
-
-      // Calculate insertion index
-      let insertIndex = isTopHalf ? closestIndex : closestIndex + 1;
-
-      // Handle boundary cases
-      const isFirst = insertIndex === 0;
-      const isLast = insertIndex >= localTracks.length;
-
-      // Clamp index to valid range
-      insertIndex = Math.max(0, Math.min(insertIndex, localTracks.length));
-
-      return {
-        index: insertIndex,
-        isTopHalf,
-        isFirst,
-        isLast,
-        y: clientY,
-      };
     },
-    [localTracks.length]
-  );
+  });
 
   // Clear drop position when drag ends with proper cleanup
   useEffect(() => {
     if (!isDragging) {
-      // Use setTimeout to ensure drop events complete before clearing visual feedback
       const cleanup = setTimeout(() => {
-        setDropPosition(null);
+        clearDropPosition();
       }, 100);
-
       return () => clearTimeout(cleanup);
     }
-  }, [isDragging]);
+  }, [isDragging, clearDropPosition]);
 
   // Enhanced drop handler with comprehensive edge case handling
   const handleContainerDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
 
-      console.log('[DraggableTrackList] Drop event received:', {
-        draggedItem: draggedItem?.type,
-        clientY: e.clientY,
-        timestamp: Date.now(),
-      });
-
       if (!draggedItem) {
-        console.warn('[DraggableTrackList] Drop event without draggedItem');
-        setDropPosition(null);
+        clearDropPosition();
         return;
       }
 
       try {
-        // Use the enhanced drop position calculation
-        const dropPos = calculateDropPosition(e.clientY, e.currentTarget);
-        const dropIndex = dropPos.index;
-
-        console.log('[DraggableTrackList] Drop calculated:', {
-          dropIndex,
-          isFirst: dropPos.isFirst,
-          isLast: dropPos.isLast,
-          draggedItemType: draggedItem.type,
-        });
+        // Use the drop position utility
+        const calculatedDropPosition = updateDropPosition(
+          e.clientY,
+          e.currentTarget
+        );
+        const dropIndex = calculatedDropPosition?.index || 0;
 
         // Handle different drag source types with proper validation
         if (isDragSourceType(draggedItem, 'internal-track')) {
-          // Handle internal reordering with boundary checks
           const sourceIndex = draggedItem.payload.index;
-
-          // Prevent dropping on the same position
           if (sourceIndex !== dropIndex && sourceIndex !== dropIndex - 1) {
             handleInternalReorder(sourceIndex, dropIndex);
-            // End drag after successful internal reorder
-            endDrag();
-          } else {
-            console.log('[DraggableTrackList] Ignoring drop at same position');
-            // End drag even if no reorder happened
-            endDrag();
           }
+          endDrag();
         } else if (
           isDragSourceType(draggedItem, 'modal-track') ||
           isDragSourceType(draggedItem, 'search-track')
         ) {
-          // Handle external track addition with validation
           const track = draggedItem.payload.track;
 
-          // Validate track data
           if (!track || !track.id) {
-            console.error(
-              '[DraggableTrackList] Invalid track data for external drop'
-            );
-            // End drag on invalid data
             endDrag();
             return;
           }
@@ -460,13 +206,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
             existingTrack => existingTrack.id === track.id
           );
           if (isDuplicate) {
-            console.warn(
-              '[DraggableTrackList] Attempted to add duplicate track:',
-              track.id
-            );
-            // End drag even if duplicate
             endDrag();
-            // Could show user feedback here
             return;
           }
 
@@ -479,29 +219,22 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           };
 
           handleExternalAdd(mixedTrack, dropIndex);
-          // End drag after successful external add
           endDrag();
         } else {
-          console.warn(
-            '[DraggableTrackList] Unknown drag source type:',
-            draggedItem.type
-          );
-          // End drag on unknown source type
           endDrag();
         }
       } catch (error) {
         console.error('[DraggableTrackList] Error handling drop:', error);
-        // End drag on error
         endDrag();
       } finally {
-        // Always clear drop position after handling
-        setDropPosition(null);
+        clearDropPosition();
       }
     },
     [
       draggedItem,
       localTracks,
-      calculateDropPosition,
+      updateDropPosition,
+      clearDropPosition,
       handleInternalReorder,
       handleExternalAdd,
       endDrag,
@@ -513,14 +246,8 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
 
-      console.log('[DraggableTrackList] Drag over detected:', {
-        draggedItem: draggedItem?.type,
-        clientY: e.clientY,
-        timestamp: Date.now(),
-      });
-
       if (!draggedItem) {
-        setDropPosition(null);
+        clearDropPosition();
         return;
       }
 
@@ -531,33 +258,9 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
         e.dataTransfer.dropEffect = 'copy';
       }
 
-      try {
-        // Calculate drop position with enhanced logic
-        const newDropPosition = calculateDropPosition(
-          e.clientY,
-          e.currentTarget
-        );
-
-        // Only update if position actually changed to reduce re-renders
-        setDropPosition(prevPosition => {
-          if (
-            !prevPosition ||
-            prevPosition.index !== newDropPosition.index ||
-            prevPosition.isTopHalf !== newDropPosition.isTopHalf
-          ) {
-            return newDropPosition;
-          }
-          return prevPosition;
-        });
-      } catch (error) {
-        console.error(
-          '[DraggableTrackList] Error calculating drop position:',
-          error
-        );
-        setDropPosition(null);
-      }
+      updateDropPosition(e.clientY, e.currentTarget);
     },
-    [draggedItem, calculateDropPosition]
+    [draggedItem, updateDropPosition, clearDropPosition]
   );
 
   // Handle drag leave to clean up visual feedback when leaving the container
@@ -565,10 +268,10 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     (e: React.DragEvent<HTMLDivElement>) => {
       // Only clear if we're actually leaving the container (not just moving to a child)
       if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-        setDropPosition(null);
+        clearDropPosition();
       }
     },
-    []
+    [clearDropPosition]
   );
 
   // Calculate popularity quadrants for track labeling
@@ -602,45 +305,6 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     [sortedByPop, qSize]
   );
 
-  // Modal handlers with scroll position preservation
-  const handleAddUnselectedTracks = useCallback(
-    (tracksToAdd: SpotifyTrack[]) => {
-      // Capture scroll position before adding tracks
-      handleScrollPositionCapture();
-
-      // Convert SpotifyTrack to MixedTrack by ensuring sourcePlaylist is set
-      const mixedTracks: MixedTrack[] = tracksToAdd.map(track => ({
-        ...track,
-        sourcePlaylist: track.sourcePlaylist || 'unknown',
-      }));
-      const newTracks = [...localTracks, ...mixedTracks];
-      if (onTrackOrderChange) {
-        onTrackOrderChange(newTracks);
-      }
-    },
-    [localTracks, onTrackOrderChange, handleScrollPositionCapture]
-  );
-
-  const handleAddSpotifyTracks = useCallback(
-    (tracksToAdd: SpotifyTrack[]) => {
-      // Capture scroll position before adding tracks
-      handleScrollPositionCapture();
-
-      // Convert SpotifyTrack to MixedTrack by ensuring sourcePlaylist is set
-      const mixedTracks: MixedTrack[] = tracksToAdd.map(track => ({
-        ...track,
-        sourcePlaylist: track.sourcePlaylist || 'search',
-      }));
-      const newTracks = [...localTracks, ...mixedTracks];
-      if (onTrackOrderChange) {
-        onTrackOrderChange(newTracks);
-      }
-    },
-    [localTracks, onTrackOrderChange, handleScrollPositionCapture]
-  );
-
-  // Cleanup is handled automatically by useDraggable hook
-
   return (
     <>
       <div className={styles.container}>
@@ -656,17 +320,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}
-          onScroll={e => {
-            const target = e.target as HTMLElement;
-            const stackTrace = new Error().stack;
-            console.log('[DraggableTrackList] Scroll event detected', {
-              scrollTop: target.scrollTop,
-              previousScrollTop: lastScrollTopRef.current,
-              stackTrace: stackTrace?.split('\n').slice(0, 5).join('\n'),
-              timestamp: Date.now(),
-            });
-            lastScrollTopRef.current = target.scrollTop;
-          }}
+          onScroll={handleScrollEvent}
         >
           {/* Header */}
           <div className={styles.header}>
