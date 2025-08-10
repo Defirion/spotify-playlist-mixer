@@ -5,13 +5,7 @@ import { useMixWarnings } from '../hooks/useMixWarnings';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
 import MixControls from './features/mixer/MixControls';
-import {
-  SpotifyPlaylist,
-  MixOptions,
-  RatioConfig,
-  PlaylistMixResult,
-  MixedTrack,
-} from '../types';
+import { SpotifyPlaylist, MixOptions, RatioConfig, MixedTrack } from '../types';
 import styles from './PlaylistMixer.module.css';
 
 interface PlaylistMixerProps {

@@ -4,9 +4,6 @@ import {
   SpotifyTrack,
   SpotifyPlaylist,
   SpotifyUserProfile,
-  SpotifySearchResponse,
-  SpotifyPlaylistTracksResponse,
-  SpotifyUserPlaylistsResponse,
   SpotifyCreatePlaylistRequest,
   SpotifyCreatePlaylistResponse,
   SpotifyAddTracksRequest,
@@ -14,7 +11,6 @@ import {
   SpotifyRemoveTracksRequest,
   SpotifyRemoveTracksResponse,
   SpotifyAudioFeatures,
-  SpotifyApiError,
 } from './spotify';
 
 import { SearchOptions, SearchResult } from './mixer';

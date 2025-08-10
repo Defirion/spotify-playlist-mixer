@@ -4,7 +4,6 @@ import {
   getTrackQuadrant,
   getPopularityStyle,
 } from '../../utils/dragAndDrop';
-import useDraggable from '../../hooks/useDraggable';
 import { TrackItemProps } from '../../types';
 import styles from './TrackItem.module.css';
 

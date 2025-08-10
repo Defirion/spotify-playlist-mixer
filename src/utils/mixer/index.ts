@@ -14,5 +14,15 @@ export * from './popularityCalculator';
 
 // Export popularity quadrants functions
 export * from './popularityQuadrants';
-// export * from './mixingStrategies';
-// export * from './playlistMixer';
+
+// Export mixing strategies
+export * from './mixingStrategies';
+
+// Export main playlist mixer orchestrator
+export * from './playlistMixer';
+
+// Export mixing calculations
+export * from './mixingCalculations';
+
+// Main export - the primary function consumers will use
+export { mixPlaylists } from './playlistMixer';

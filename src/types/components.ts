@@ -6,7 +6,6 @@ import { SpotifyTrack, SpotifyPlaylist, SpotifyUserProfile } from './spotify';
 import {
   MixOptions,
   RatioConfig,
-  PlaylistMixResult,
   DragItem,
   DropResult,
   VirtualizationOptions,

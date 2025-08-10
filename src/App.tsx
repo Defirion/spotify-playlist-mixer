@@ -31,9 +31,6 @@ import {
 // Drag hooks
 import { useGlobalScrollLock } from './hooks/drag/useGlobalScrollLock';
 
-// Types
-import { PlaylistMixResult } from './types/mixer';
-
 // Styles
 import styles from './App.module.css';
 

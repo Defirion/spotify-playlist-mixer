@@ -4,36 +4,34 @@ import '@testing-library/jest-dom';
 import PlaylistMixer from '../PlaylistMixer';
 import { SpotifyPlaylist, MixOptions, RatioConfig } from '../../types';
 
-// Mock the hooks
+// Import the mocked hooks
+import { useMixGeneration } from '../../hooks/useMixGeneration';
+import { useMixPreview } from '../../hooks/useMixPreview';
+import { useMixWarnings } from '../../hooks/useMixWarnings';
+
+// Mock the hooks with proper Jest hoisting
 jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(() => ({
-    state: {
-      loading: false,
-      error: null,
-      mixedTracks: [],
-      exhaustedPlaylists: [],
-      stoppedEarly: false,
-    },
-    generateMix: jest.fn(),
-    createPlaylist: jest.fn(),
-    reset: jest.fn(),
-  })),
+  useMixGeneration: jest.fn(),
 }));
 
 jest.mock('../../hooks/useMixPreview', () => ({
-  useMixPreview: jest.fn(() => ({
-    state: {
-      preview: null,
-      loading: false,
-      error: null,
-      customTrackOrder: null,
-    },
-    generatePreview: jest.fn(),
-    updateTrackOrder: jest.fn(),
-    clearPreview: jest.fn(),
-    getPreviewTracks: jest.fn(() => []),
-  })),
+  useMixPreview: jest.fn(),
 }));
+
+jest.mock('../../hooks/useMixWarnings', () => ({
+  useMixWarnings: jest.fn(),
+}));
+
+// Cast to jest mocks for TypeScript
+const mockUseMixGeneration = useMixGeneration as jest.MockedFunction<
+  typeof useMixGeneration
+>;
+const mockUseMixPreview = useMixPreview as jest.MockedFunction<
+  typeof useMixPreview
+>;
+const mockUseMixWarnings = useMixWarnings as jest.MockedFunction<
+  typeof useMixWarnings
+>;
 
 // Mock the child components
 jest.mock('../features/mixer/PlaylistForm', () => {
@@ -153,6 +151,38 @@ describe('PlaylistMixer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set up default mock return values
+    mockUseMixGeneration.mockReturnValue({
+      state: {
+        loading: false,
+        error: null,
+        mixedTracks: [],
+        exhaustedPlaylists: [],
+        stoppedEarly: false,
+      },
+      generateMix: jest.fn(),
+      createPlaylist: jest.fn(),
+      reset: jest.fn(),
+    });
+
+    mockUseMixPreview.mockReturnValue({
+      state: {
+        preview: null,
+        loading: false,
+        error: null,
+        customTrackOrder: null,
+      },
+      generatePreview: jest.fn(),
+      updateTrackOrder: jest.fn(),
+      clearPreview: jest.fn(),
+      getPreviewTracks: jest.fn(() => []),
+    });
+
+    mockUseMixWarnings.mockReturnValue({
+      exceedsLimit: null,
+      ratioImbalance: null,
+    });
   });
 
   it('renders the component with title and subtitle', () => {
@@ -197,9 +227,8 @@ describe('PlaylistMixer', () => {
   });
 
   it('calls generate preview when button is clicked', () => {
-    const { useMixPreview } = require('../../hooks/useMixPreview');
     const mockGeneratePreview = jest.fn();
-    useMixPreview.mockReturnValue({
+    mockUseMixPreview.mockReturnValue({
       state: {
         preview: null,
         loading: false,
@@ -228,13 +257,12 @@ describe('PlaylistMixer', () => {
   });
 
   it('calls create playlist when button is clicked', async () => {
-    const { useMixGeneration } = require('../../hooks/useMixGeneration');
     const mockCreatePlaylist = jest
       .fn()
       .mockResolvedValue({ id: 'new-playlist' });
     const mockGenerateMix = jest.fn().mockResolvedValue([]);
 
-    useMixGeneration.mockReturnValue({
+    mockUseMixGeneration.mockReturnValue({
       state: {
         loading: false,
         error: null,

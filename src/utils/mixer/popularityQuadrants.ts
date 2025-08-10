@@ -13,7 +13,7 @@ import {
   calculateAdjustedPopularity,
   sortTracksByPopularity,
 } from './popularityCalculator';
-import { shuffleQuadrants, conditionalShuffleQuadrants } from './trackShuffler';
+import { conditionalShuffleQuadrants } from './trackShuffler';
 import { safeObjectKeys, logDebugInfo } from './mixerUtils';
 
 /**

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { mixPlaylists } from '../utils/playlistMixer';
+import { mixPlaylists } from '../utils/mixer';
 import SpotifyService from '../services/spotify';
 import {
   SpotifyPlaylist,
