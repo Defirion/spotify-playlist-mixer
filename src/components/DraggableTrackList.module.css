@@ -142,14 +142,15 @@
 
 .trackItem {
   border-bottom: 1px solid rgba(79, 119, 45, 0.3);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   cursor: grab;
   transition: all 0.2s ease;
   user-select: none;
   position: relative;
   padding: 8px 16px;
+  gap: 8px;
 }
 
 .trackItem:last-child {
@@ -164,16 +165,17 @@
 .trackContent {
   display: flex;
   align-items: center;
-  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dragHandle {
-  margin-right: 12px;
   font-size: 16px;
   opacity: 0.5;
   cursor: grab;
   padding: 0;
   transition: all 0.2s ease;
+  justify-self: start;
 }
 
 .dragHandle.mobile {
@@ -208,8 +210,9 @@
 }
 
 .trackDetails {
-  flex: 1;
   min-width: 0;
+  overflow: hidden;
+  width: 100%;
 }
 
 .trackName {
@@ -250,6 +253,8 @@
   align-items: center;
   gap: 4px;
   margin-top: 2px;
+  min-width: 0;
+  width: 100%;
 }
 
 .trackMeta.mobile {
@@ -261,11 +266,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 150px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* First span (artist name) should be more flexible */
+.trackMeta span:first-child {
+  max-width: 120px;
+  flex-shrink: 1;
+}
+
+/* Other spans should not shrink as much */
+.trackMeta span:not(:first-child) {
+  flex-shrink: 0;
 }
 
 /* Mobile text truncation */
 @media (max-width: 480px) {
   .trackMeta span {
+    max-width: 60px;
+  }
+
+  .trackMeta span:first-child {
     max-width: 80px;
   }
 
@@ -273,7 +295,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 180px;
+  }
+
+  .trackItem {
+    gap: 6px;
+    padding: 6px 12px;
   }
 }
 
@@ -288,6 +314,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-self: end;
 }
 
 .duration {
@@ -309,6 +336,8 @@
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
+  justify-self: end;
+  flex-shrink: 0;
 }
 
 .removeButton:hover {

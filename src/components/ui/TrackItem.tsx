@@ -52,6 +52,49 @@ const TrackItem = memo(
         [showPopularity, track.popularity, quadrant]
       );
 
+      // Calculate grid template based on visible elements
+      const gridTemplate = useMemo(() => {
+        const columns = [];
+
+        // Drag handle or checkbox (first column)
+        if (showDragHandle || showCheckbox) {
+          columns.push('auto');
+        }
+
+        // Album art (second column)
+        if (showAlbumArt && track.album?.images?.[0]?.url) {
+          columns.push('auto');
+        }
+
+        // Track info (always present, takes remaining space)
+        // Use a fixed fraction to prevent expansion
+        columns.push('1fr');
+
+        // Duration (fourth column)
+        if (showDuration && track.duration_ms) {
+          columns.push('40px'); // Fixed width for duration
+        }
+
+        // Actions or remove button (last columns)
+        if (actions) {
+          columns.push('auto');
+        }
+        if (onRemove) {
+          columns.push('32px'); // Fixed width for remove button
+        }
+
+        return columns.join(' ');
+      }, [
+        showDragHandle,
+        showCheckbox,
+        showAlbumArt,
+        track.album?.images,
+        showDuration,
+        track.duration_ms,
+        actions,
+        onRemove,
+      ]);
+
       // Memoize CSS classes generation
       const trackItemClasses = useMemo(
         () =>
@@ -109,7 +152,10 @@ const TrackItem = memo(
               handleClick(e as any);
             }
           }}
-          style={style}
+          style={{
+            ...style,
+            gridTemplateColumns: gridTemplate,
+          }}
           data-testid="track-item"
           role="listitem"
           tabIndex={0}
@@ -154,7 +200,9 @@ const TrackItem = memo(
 
             {/* Artist and Additional Info */}
             <div className={styles.artistInfo}>
-              <span>{track.artists?.[0]?.name || 'Unknown Artist'}</span>
+              <span className={styles.artistName}>
+                {track.artists?.[0]?.name || 'Unknown Artist'}
+              </span>
 
               {/* Source Playlist */}
               {showSourcePlaylist && track.sourcePlaylistName && (

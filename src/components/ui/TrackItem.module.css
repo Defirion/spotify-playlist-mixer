@@ -1,6 +1,7 @@
 /* Track item container */
 .trackItem {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
   padding: 12px;
   background-color: transparent;
@@ -10,6 +11,7 @@
   user-select: none;
   -webkit-user-select: none;
   gap: 8px;
+  width: 100%;
 }
 
 .trackItem.selected {
@@ -32,7 +34,7 @@
   font-size: 16px;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  justify-self: start;
 }
 
 /* Checkbox */
@@ -46,7 +48,7 @@
   justify-content: center;
   background-color: transparent;
   transition: all 0.2s;
-  flex-shrink: 0;
+  justify-self: start;
 }
 
 .checkbox.selected {
@@ -65,14 +67,31 @@
   height: 40px;
   border-radius: 4px;
   object-fit: cover;
-  flex-shrink: 0;
+  justify-self: start;
 }
 
 /* Track info container */
 .trackInfo {
-  flex: 1;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
+  width: 100%;
+  contain: layout style;
+  /* Ensure this grid item can shrink properly */
+  width: 100%;
+}
+
+/* Track name */
+.trackName {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--mindaro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Multi-line track name for larger screens */
@@ -92,16 +111,51 @@
   font-size: 12px;
   opacity: 0.7;
   color: var(--mindaro);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: nowrap; /* Prevent flex items from wrapping */
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0; /* Allow the container to shrink */
+  overflow: hidden; /* Fallback for container overflow */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/*
+  Target the artist name span specifically for truncation.
+  This is crucial for flexbox items which do not shrink below their
+  minimum content size by default.
+*/
+.artistInfo > span:first-child {
+  flex-shrink: 1; /* Allow this item to shrink */
+  min-width: 0; /* Allow this item to shrink below its content size */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Artist name - can be truncated */
+.artistName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 150px; /* Prevent extremely long artist names from taking too much space */
+}
+
+/* Other spans in artist info should not shrink (except artist name and source playlist) */
+.artistInfo > span:not(.artistName):not(.sourcePlaylist) {
+  flex-shrink: 0;
 }
 
 .sourcePlaylist {
   color: var(--moss-green);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 120px; /* Limit playlist name width */
 }
 
 .popularityBadge {
@@ -118,15 +172,17 @@
   font-size: 11px;
   opacity: 0.6;
   color: var(--mindaro);
-  flex-shrink: 0;
   white-space: nowrap;
+  justify-self: end;
+  text-align: right;
+  min-width: 32px;
 }
 
 /* Custom actions container */
 .actions {
   display: flex;
   gap: 4px;
-  flex-shrink: 0;
+  justify-self: end;
 }
 
 /* Remove button */
@@ -140,28 +196,28 @@
   border-radius: 4px;
   font-size: 16px;
   transition: opacity 0.2s;
-  flex-shrink: 0;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: end;
+  align-self: center;
 }
 
 .removeButton:hover {
   opacity: 1;
 }
-/* Improved text truncation for better mobile alignment */
-.trackName {
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--mindaro);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 2px;
-  /* Use CSS calc to ensure proper space calculation */
-  max-width: calc(100% - 0px);
+
+/* Medium screen optimizations */
+@media (max-width: 640px) {
+  .artistName {
+    max-width: 120px;
+  }
+
+  .sourcePlaylist {
+    max-width: 100px;
+  }
 }
 
 /* Mobile optimizations */
@@ -178,21 +234,13 @@
 
   .duration {
     font-size: 10px;
-    min-width: 32px; /* Ensure consistent width */
+    min-width: 28px;
   }
 
   .removeButton {
     width: 20px;
     height: 20px;
     font-size: 14px;
-    min-width: 20px; /* Prevent shrinking */
-  }
-
-  /* Ensure track info gets maximum available space */
-  .trackInfo {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
   }
 }
 
@@ -211,40 +259,7 @@
     width: 18px;
     height: 18px;
     font-size: 12px;
-    min-width: 18px;
   }
-} /* C
-ontainer query support for better responsive behavior */
-@container (max-width: 400px) {
-  .trackItem {
-    gap: 4px;
-    padding: 6px;
-  }
-
-  .duration {
-    display: none;
-  }
-
-  .albumArt {
-    width: 28px;
-    height: 28px;
-  }
-
-  .removeButton {
-    width: 16px;
-    height: 16px;
-    font-size: 12px;
-    min-width: 16px;
-  }
-}
-
-/* Ensure proper text truncation on all screen sizes */
-.trackName,
-.artistInfo {
-  /* Force text to respect container boundaries */
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
 }
 
 /* Additional mobile-specific improvements */
@@ -267,10 +282,17 @@ ontainer query support for better responsive behavior */
     font-size: 11px;
   }
 
+  .artistName {
+    max-width: 100px; /* Smaller max width on very small screens */
+  }
+
+  .sourcePlaylist {
+    max-width: 80px; /* Even smaller for playlist names on tiny screens */
+  }
+
   .removeButton {
     width: 16px;
     height: 16px;
     font-size: 10px;
-    min-width: 16px;
   }
 }
