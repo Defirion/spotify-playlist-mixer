@@ -204,7 +204,13 @@ This pattern prevents the common failure modes of incomplete implementations, br
 2. If approaching limit, split functionality
 3. Use `wc -l filename` to verify
 
-### Gate 5: Function Size Check
+### Gate 5: Pre-commit Quality Check
+1. Run `npm run lint:fix` to auto-fix issues
+2. Run `npm run lint` - zero errors allowed (warnings are acceptable)
+3. Run `npm run format:check` - must pass
+4. Pre-commit hooks must pass (test with `git add . && git commit --dry-run`)
+
+### Gate 6: Function Size Check
 1. No function over 35 lines (target: 25-30)
 2. If over 35 lines, split or simplify
 3. Event handlers get slight leeway for related event handling

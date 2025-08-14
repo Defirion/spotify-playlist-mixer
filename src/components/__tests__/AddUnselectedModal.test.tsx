@@ -9,7 +9,16 @@ import * as dragAndDropUtils from '../../utils/dragAndDrop';
 
 // Mock dependencies
 jest.mock('../../utils/spotify');
-jest.mock('../../utils/dragAndDrop');
+jest.mock('../../utils/dragAndDrop', () => ({
+  formatDuration: jest.fn(
+    ms =>
+      `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
+        .toString()
+        .padStart(2, '0')}`
+  ),
+  getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
+  getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
+}));
 jest.mock('../ui/Modal', () => ({
   __esModule: true,
   default: ({
@@ -101,7 +110,7 @@ jest.mock('../ui/TrackList', () => ({
 const mockStartDrag = jest.fn();
 const mockEndDrag = jest.fn();
 
-jest.mock('../../hooks/useDraggable', () => ({
+jest.mock('../../legacy-drag-system/hooks/useDraggable.legacy', () => ({
   __esModule: true,
   default: () => ({
     isDragging: false,

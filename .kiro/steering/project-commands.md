@@ -94,12 +94,13 @@ npm test -- --watchAll=false
 ```
 **Expected**: All tests pass
 
-### **Gate 4: Code Quality**
+### **Gate 4: Code Quality (Pre-commit Ready)**
 ```bash
-npm run lint
-npm run format:check
+npm run lint:fix                # Auto-fix what can be fixed
+npm run lint                    # Check remaining issues
+npm run format:check            # Check formatting
 ```
-**Expected**: No linting or formatting errors
+**Expected**: No linting or formatting errors (pre-commit hooks will pass)
 
 ## Common Mistakes to Avoid
 
@@ -154,13 +155,64 @@ find /c /v "" filename.ts
 - **ESLint Configuration**: Extends react-app and prettier configs
 - **Husky**: Manages pre-commit hooks automatically
 
+## Pre-commit Hook Management
+
+### **During dnd-kit Migration (Tasks 0-17)**
+
+The project uses Husky + lint-staged for pre-commit hooks. During the drag system migration, some test files may have ESLint errors that block commits.
+
+### **Pre-commit Error Resolution Strategy:**
+
+```bash
+# 1. Check what's failing
+npm run lint
+
+# 2. Try auto-fix first
+npm run lint:fix
+
+# 3. If auto-fix doesn't work, manually fix the specific errors
+# Focus on these common issues during migration:
+# - Unused variables in test files
+# - Missing imports in legacy test files
+# - Undefined components in skipped tests
+```
+
+### **Common Migration-Related ESLint Errors:**
+
+1. **Unused Variables in Tests** (`@typescript-eslint/no-unused-vars`)
+   - Remove unused imports/variables from test files
+   - Or add `// eslint-disable-next-line @typescript-eslint/no-unused-vars` above the line
+
+2. **Undefined Components** (`react/jsx-no-undef`)
+   - Usually in skipped drag tests that reference moved components
+   - Either import from legacy path or skip the entire test file
+
+3. **Restricted Globals** (`no-restricted-globals`)
+   - Usually `screen` usage in test files
+   - Import `screen` from `@testing-library/react`
+
+### **Emergency Pre-commit Bypass (Use Sparingly):**
+```bash
+# Only use if you need to commit during migration and can't fix ESLint errors immediately
+git commit --no-verify -m "WIP: dnd-kit migration task X"
+```
+
+### **Preferred Approach:**
+```bash
+# Always try to fix ESLint errors before committing
+npm run lint:fix
+git add .
+git commit -m "Complete dnd-kit migration task X"
+```
+
 ## Quick Reference Card
 
 ```bash
-# The Big 4 Commands You'll Use Most:
+# The Big 5 Commands You'll Use Most:
 npm test -- --watchAll=false    # Run tests
 npm run build                   # Build project
 npm run lint                    # Check code quality
+npm run lint:fix                # Fix linting issues
 npx tsc --noEmit               # Check TypeScript
 ```
 

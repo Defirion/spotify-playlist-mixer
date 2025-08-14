@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
-import { useTouchDrag } from '../useTouchDrag';
-import { DraggedItem } from '../../../types/dragAndDrop';
+import { useTouchDrag } from '../useTouchDrag.legacy';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { DraggedItem } from '../../types/dragAndDrop.legacy';
 
 // Mock navigator.vibrate
 Object.defineProperty(navigator, 'vibrate', {

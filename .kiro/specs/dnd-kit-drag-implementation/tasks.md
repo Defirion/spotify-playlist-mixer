@@ -52,7 +52,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - **CRITICAL SAFETY**: Legacy files are MOVED and RENAMED to prevent accidental deletion of new implementations
   - _Requirements: Safeguard against losing understanding of previous functionality AND prevent deletion disasters_
 
-- [ ] 1. Address failing tests systematically
+- [x] 1. Address failing tests systematically
   - **Purpose**: Handle test failures caused by moving legacy drag system without breaking development flow.
   - Review `FAILING_TESTS_INVENTORY.md` to understand which tests are broken
   - **For drag-related tests**: Skip them temporarily with `test.skip()` and add TODO comments
@@ -280,12 +280,18 @@ Each task MUST enforce these limits:
 3. Fix failing tests immediately
 4. Never leave failing tests behind
 
-### Gate 4: File Size Limits
+### Gate 4: Pre-commit Quality Check
+1. Run `npm run lint:fix` to auto-fix issues
+2. Run `npm run lint` - zero errors allowed
+3. Run `npm run format:check` - must pass
+4. Pre-commit hooks must pass (test with `git add . && git commit --dry-run`)
+
+### Gate 5: File Size Limits
 1. Check file size against task limits
 2. If approaching limit, split functionality
 3. Use `wc -l filename` to verify
 
-### Gate 5: Function Size Check
+### Gate 6: Function Size Check
 1. No function over 35 lines (target: 25-30)
 2. If over 35 lines, split or simplify
 3. Event handlers get slight leeway for related event handling

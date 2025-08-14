@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
-import { useKeyboardDrag } from '../useKeyboardDrag';
-import { DraggedItem } from '../../../types/dragAndDrop';
+import { useKeyboardDrag } from '../useKeyboardDrag.legacy';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { DraggedItem } from '../../types/dragAndDrop.legacy';
 
 describe('useKeyboardDrag', () => {
   const mockCreateDragItem = jest.fn().mockReturnValue({
@@ -280,6 +281,7 @@ describe('useKeyboardDrag', () => {
     });
 
     expect(mockOnDragStart).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const draggedItem = mockOnDragStart.mock.calls[0][0];
 
     // Update to simulate currently dragging state

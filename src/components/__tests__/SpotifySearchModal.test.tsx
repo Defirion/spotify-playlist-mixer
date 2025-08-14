@@ -9,8 +9,23 @@ import * as dragAndDropUtils from '../../utils/dragAndDrop';
 
 // Mock the hooks and utilities
 jest.mock('../../hooks/useSpotifySearch');
-jest.mock('../../hooks/useDraggable');
-jest.mock('../../utils/dragAndDrop');
+jest.mock('../../legacy-drag-system/hooks/useDraggable.legacy', () => ({
+  useDraggable: jest.fn(() => ({
+    isDragging: false,
+    dragHandlers: {},
+    canDrag: false,
+  })),
+}));
+jest.mock('../../utils/dragAndDrop', () => ({
+  formatDuration: jest.fn(
+    ms =>
+      `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
+        .toString()
+        .padStart(2, '0')}`
+  ),
+  getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
+  getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
+}));
 
 const mockUseSpotifySearch =
   useSpotifySearchModule.default as jest.MockedFunction<
@@ -425,6 +440,7 @@ describe('SpotifySearchModal', () => {
 
     it('applies dragging styles when isDragging is true', () => {
       // Mock the useDrag hook to return isDragging: true
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const mockUseDragWithDragging = {
         ...mockDragContext,
         isDragging: true,

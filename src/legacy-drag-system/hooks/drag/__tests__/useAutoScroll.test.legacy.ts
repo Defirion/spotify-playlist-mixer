@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useAutoScroll } from '../useAutoScroll';
+import { useAutoScroll } from '../useAutoScroll.legacy';
 
 // Mock requestAnimationFrame and cancelAnimationFrame
 const mockRequestAnimationFrame = jest.fn(cb => {

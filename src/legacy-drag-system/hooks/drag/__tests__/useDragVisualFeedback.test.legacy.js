@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useDragVisualFeedback } from '../useDragVisualFeedback';
+import { useDragVisualFeedback } from '../useDragVisualFeedback.legacy';
 
 // Mock window.scrollTo since it's not implemented in JSDOM
 Object.defineProperty(window, 'scrollTo', {
