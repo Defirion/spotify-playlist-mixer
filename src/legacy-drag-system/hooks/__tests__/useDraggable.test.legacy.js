@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
-import useDraggable from '../useDraggable';
+import useDraggable from '../useDraggable.legacy';
 
 // Import the mocked functions
-import { useDragState } from '../drag/useDragState';
-import { useDragHandlers } from '../drag/useDragHandlers';
-import { useTouchDrag } from '../drag/useTouchDrag';
-import { useKeyboardDrag } from '../drag/useKeyboardDrag';
-import { useAutoScroll } from '../drag/useAutoScroll';
-import { useDragVisualFeedback } from '../drag/useDragVisualFeedback';
+import { useDragState } from '../drag/useDragState.legacy';
+import { useDragHandlers } from '../drag/useDragHandlers.legacy';
+import { useTouchDrag } from '../drag/useTouchDrag.legacy';
+import { useKeyboardDrag } from '../drag/useKeyboardDrag.legacy';
+import { useAutoScroll } from '../drag/useAutoScroll.legacy';
+import { useDragVisualFeedback } from '../drag/useDragVisualFeedback.legacy';
 
 // Mock all the modular drag hooks
 jest.mock('../drag/useDragState', () => ({

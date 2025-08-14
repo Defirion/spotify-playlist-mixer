@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import { useDragHandlers } from '../useDragHandlers';
-import { DragSourceType } from '../../../types/dragAndDrop';
+import { useDragHandlers } from '../useDragHandlers.legacy';
+import { DragSourceType } from '../../../types/dragAndDrop.legacy';
 
 // Mock console methods to avoid noise in tests
 beforeAll(() => {

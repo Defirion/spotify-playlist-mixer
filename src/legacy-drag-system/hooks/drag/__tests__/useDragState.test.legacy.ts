@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import { useDragState } from '../useDragState';
-import { DraggedItem } from '../../../types/dragAndDrop';
+import { useDragState } from '../useDragState.legacy';
+import { DraggedItem } from '../../../types/dragAndDrop.legacy';
 
 // Import the mocked function
 import { useDragState as mockUseDragState } from '../../../store';

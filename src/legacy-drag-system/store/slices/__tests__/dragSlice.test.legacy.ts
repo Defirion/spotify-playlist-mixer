@@ -1,6 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
-import { useAppStore, useDragState, useScrollPosition } from '../../index';
-import { DraggedItem } from '../../../types/dragAndDrop';
+import {
+  useAppStore,
+  useDragState,
+  useScrollPosition,
+} from '../../index.legacy';
+import { DraggedItem } from '../../../types/dragAndDrop.legacy';
 
 // Mock console methods to avoid noise in tests
 const originalConsole = console;

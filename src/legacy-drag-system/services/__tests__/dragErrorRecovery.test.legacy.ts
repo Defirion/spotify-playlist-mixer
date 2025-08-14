@@ -2,7 +2,7 @@ import {
   DragErrorRecoveryService,
   DragErrorType,
   dragErrorRecoveryService,
-} from '../dragErrorRecovery';
+} from '../dragErrorRecovery.legacy';
 
 // Mock console methods
 const originalConsoleError = console.error;
