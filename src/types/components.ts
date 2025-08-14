@@ -6,15 +6,11 @@ import { SpotifyTrack, SpotifyPlaylist, SpotifyUserProfile } from './spotify';
 import {
   MixOptions,
   RatioConfig,
-  DragItem,
-  DropResult,
   VirtualizationOptions,
   TrackSelectHandler,
   TrackRemoveHandler,
   PlaylistSelectHandler,
-  DragStartHandler,
-  DragEndHandler,
-  DropHandler,
+  // Drag-related imports removed - will be replaced with dnd-kit types
 } from './mixer';
 
 // Base component props
@@ -68,7 +64,7 @@ export interface TrackItemProps extends BaseComponentProps {
   track: SpotifyTrack;
   onSelect?: TrackSelectHandler;
   onRemove?: TrackRemoveHandler;
-  draggable?: boolean;
+  // draggable prop removed - will be handled by dnd-kit wrapper
   selected?: boolean;
   actions?: React.ReactNode;
   showPopularity?: boolean;
@@ -79,7 +75,7 @@ export interface TrackItemProps extends BaseComponentProps {
   index?: number;
   compact?: boolean;
   showCheckbox?: boolean;
-  showDragHandle?: boolean;
+  // showDragHandle removed - will be handled by dnd-kit wrapper
   showAlbumArt?: boolean;
   showSourcePlaylist?: boolean;
   style?: React.CSSProperties;
@@ -88,8 +84,7 @@ export interface TrackItemProps extends BaseComponentProps {
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp?: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
+  // drag event handlers removed - will be handled by dnd-kit wrapper
   onTouchStart?: (e: React.TouchEvent<HTMLDivElement>) => void;
   onTouchMove?: (e: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd?: (e: React.TouchEvent<HTMLDivElement>) => void;
@@ -102,7 +97,7 @@ export interface TrackListProps extends BaseComponentProps {
   onTrackRemove?: TrackRemoveHandler;
   onTrackReorder?: (fromIndex: number, toIndex: number) => void;
   virtualized?: boolean;
-  draggable?: boolean;
+  // draggable prop removed - will be handled by dnd-kit wrapper
   selectable?: boolean;
   multiSelect?: boolean;
   selectedTracks?: Set<string>;
@@ -121,7 +116,7 @@ export interface TrackListProps extends BaseComponentProps {
   containerHeight?: number;
   overscan?: number;
   showCheckbox?: boolean;
-  showDragHandle?: boolean;
+  // showDragHandle removed - will be handled by dnd-kit wrapper
   showPopularity?: boolean;
   showDuration?: boolean;
   showAlbumArt?: boolean;
@@ -151,16 +146,7 @@ export interface TrackListProps extends BaseComponentProps {
     track: SpotifyTrack,
     index: number
   ) => void;
-  onTrackDragStart?: (
-    e: React.DragEvent<HTMLDivElement>,
-    track: SpotifyTrack,
-    index: number
-  ) => void;
-  onTrackDragEnd?: (
-    e: React.DragEvent<HTMLDivElement>,
-    track: SpotifyTrack,
-    index: number
-  ) => void;
+  // drag event handlers removed - will be handled by dnd-kit wrapper
   onTrackTouchStart?: (
     e: React.TouchEvent<HTMLDivElement>,
     track: SpotifyTrack,
@@ -362,31 +348,7 @@ export interface RadioProps extends FormFieldProps {
   name: string;
 }
 
-// Drag and Drop component types
-export interface DraggableProps extends BaseComponentProps {
-  dragId: string;
-  dragType: string;
-  dragData: any;
-  onDragStart?: DragStartHandler;
-  onDragEnd?: DragEndHandler;
-  disabled?: boolean;
-  preview?: React.ReactNode;
-}
-
-export interface DroppableProps extends BaseComponentProps {
-  dropId: string;
-  acceptTypes: string[];
-  onDrop?: DropHandler;
-  onDragOver?: (item: DragItem) => void;
-  onDragEnter?: (item: DragItem) => void;
-  onDragLeave?: (item: DragItem) => void;
-  disabled?: boolean;
-}
-
-export interface DragPreviewProps {
-  item: DragItem;
-  style?: React.CSSProperties;
-}
+// Drag and Drop component types removed - will be replaced with dnd-kit types
 
 // Virtualization component types
 export interface VirtualListProps<T> extends BaseComponentProps {
@@ -514,12 +476,7 @@ export interface PlaylistEvent {
   source?: string;
 }
 
-export interface DragEvent {
-  item: DragItem;
-  result?: DropResult;
-  source?: string;
-  target?: string;
-}
+// DragEvent interface removed - will be replaced with dnd-kit types
 
 export interface SearchEvent {
   query: string;

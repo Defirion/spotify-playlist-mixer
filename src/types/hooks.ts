@@ -6,8 +6,7 @@ import {
   MixOptions,
   RatioConfig,
   PlaylistMixResult,
-  DragItem,
-  DropResult,
+  // Drag-related imports removed
   SearchState,
   PlaylistSelectionItem,
 } from './mixer';
@@ -174,84 +173,11 @@ export interface UseAppStateReturn {
 }
 
 // UI hooks
-export interface UseDraggableOptions {
-  type?: string;
-  data?: any;
-  onDragStart?: (item: DragItem) => void;
-  onDragEnd?: (item: DragItem, result: DropResult | null) => void;
-  onDrop?: (item: DragItem, result: DropResult) => void;
-  onDragOver?: (item: DragItem, position: any) => void;
-  disabled?: boolean;
-  longPressDelay?: number;
-  scrollThreshold?: number;
-  scrollContainer?: HTMLElement | null;
-  preview?: HTMLElement | null;
-}
+// UseDraggableOptions removed - will be replaced with dnd-kit types
 
-export interface UseDraggableReturn {
-  dragHandleProps: {
-    ref?: (el: HTMLElement | null) => void;
-    draggable: boolean;
-    onDragStart: (event: React.DragEvent<HTMLElement>) => void;
-    onDragEnd: (event: React.DragEvent<HTMLElement>) => void;
-    onTouchStart?: (event: React.TouchEvent<HTMLElement>) => void;
-    onTouchMove?: (event: React.TouchEvent<HTMLElement>) => void;
-    onTouchEnd?: (event: React.TouchEvent<HTMLElement>) => void;
-    onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
-    tabIndex: number;
-    role: string;
-    'aria-grabbed': boolean;
-  };
-  dropZoneProps: {
-    onDragOver: (event: React.DragEvent<HTMLElement>) => void;
-    onDrop: (event: React.DragEvent<HTMLElement>) => void;
-    onDragLeave: (event: React.DragEvent<HTMLElement>) => void;
-  };
-  isDragging: boolean;
-  draggedItem: DragItem | null;
-  dropPosition: any;
-  touchState: {
-    isActive: boolean;
-    startY: number;
-    currentY: number;
-    startX: number;
-    currentX: number;
-    longPressTimer: NodeJS.Timeout | null;
-    isLongPress: boolean;
-    element: HTMLElement | null;
-  };
-  keyboardState: {
-    isActive: boolean;
-    selectedIndex: number;
-    isDragging: boolean;
-  };
-  startDrag: (item: any, dragType?: string) => void;
-  endDrag: (reason?: 'success' | 'cancel') => void;
-  checkAutoScroll: (clientY: number) => void;
-  stopAutoScroll: () => void;
-  provideHapticFeedback: (pattern: number | number[]) => void;
-}
+// UseDraggableReturn removed - will be replaced with dnd-kit types
 
-export interface UseDroppableOptions {
-  acceptTypes: string[];
-  onDrop?: (item: DragItem, result: DropResult) => void;
-  onDragOver?: (item: DragItem) => void;
-  onDragEnter?: (item: DragItem) => void;
-  onDragLeave?: (item: DragItem) => void;
-  disabled?: boolean;
-}
-
-export interface UseDroppableReturn {
-  dropZoneProps: {
-    onDragOver: (event: React.DragEvent) => void;
-    onDragEnter: (event: React.DragEvent) => void;
-    onDragLeave: (event: React.DragEvent) => void;
-    onDrop: (event: React.DragEvent) => void;
-  };
-  isOver: boolean;
-  canDrop: boolean;
-  draggedItem: DragItem | null;
-}
+// UseDroppableOptions and UseDroppableReturn removed - will be replaced with dnd-kit types
 
 export interface UseVirtualizationReturn {
   visibleItems: any[];

@@ -3,7 +3,7 @@ import {
   formatDuration,
   getTrackQuadrant,
   getPopularityStyle,
-} from '../../utils/dragAndDrop';
+} from '../../utils/trackUtils';
 import { TrackItemProps } from '../../types';
 import styles from './TrackItem.module.css';
 
@@ -14,12 +14,12 @@ const TrackItem = memo(
         track,
         onSelect,
         onRemove,
-        draggable = false,
+        // draggable prop removed
         selected = false,
         actions,
         className = '',
         showCheckbox = false,
-        showDragHandle = false,
+        // showDragHandle prop removed
         showPopularity = true,
         showDuration = true,
         showAlbumArt = true,
@@ -30,9 +30,7 @@ const TrackItem = memo(
         onMouseLeave,
         onMouseDown,
         onMouseUp,
-        // Drag event handlers
-        onDragStart,
-        onDragEnd,
+        // Drag event handlers removed
         // Touch event handlers
         onTouchStart,
         onTouchMove,
@@ -56,8 +54,8 @@ const TrackItem = memo(
       const gridTemplate = useMemo(() => {
         const columns = [];
 
-        // Drag handle or checkbox (first column)
-        if (showDragHandle || showCheckbox) {
+        // Checkbox (first column)
+        if (showCheckbox) {
           columns.push('auto');
         }
 
@@ -85,7 +83,6 @@ const TrackItem = memo(
 
         return columns.join(' ');
       }, [
-        showDragHandle,
         showCheckbox,
         showAlbumArt,
         track.album?.images,
@@ -98,15 +95,10 @@ const TrackItem = memo(
       // Memoize CSS classes generation
       const trackItemClasses = useMemo(
         () =>
-          [
-            styles.trackItem,
-            selected && styles.selected,
-            draggable && styles.draggable,
-            className,
-          ]
+          [styles.trackItem, selected && styles.selected, className]
             .filter(Boolean)
             .join(' '),
-        [selected, draggable, className]
+        [selected, className]
       );
 
       // Stabilize event handlers with useCallback
@@ -135,14 +127,13 @@ const TrackItem = memo(
         <div
           ref={ref}
           className={trackItemClasses}
-          draggable={draggable}
+          // draggable attribute removed
           onClick={handleClick}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
+          // drag event handlers removed
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -161,12 +152,7 @@ const TrackItem = memo(
           tabIndex={0}
           {...otherProps}
         >
-          {/* Drag Handle */}
-          {showDragHandle && (
-            <div className={styles.dragHandle} aria-label="Drag handle">
-              ⋮⋮
-            </div>
-          )}
+          {/* Drag Handle removed */}
 
           {/* Checkbox */}
           {showCheckbox && (

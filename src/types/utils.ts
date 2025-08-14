@@ -141,7 +141,7 @@ export type MouseEventHandler = (event: React.MouseEvent) => void;
 
 export type TouchEventHandler = (event: React.TouchEvent) => void;
 
-export type DragEventHandler = (event: React.DragEvent) => void;
+// DragEventHandler removed - will be replaced with dnd-kit types
 
 export type FocusEventHandler = (event: React.FocusEvent) => void;
 

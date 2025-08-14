@@ -4,19 +4,12 @@ import userEvent from '@testing-library/user-event';
 import SpotifySearchModal from '../SpotifySearchModal';
 // DragProvider removed - using Zustand drag slice instead
 import * as useSpotifySearchModule from '../../hooks/useSpotifySearch';
-import * as useDraggableModule from '../../hooks/useDraggable';
-import * as dragAndDropUtils from '../../utils/dragAndDrop';
+// Drag-related imports removed
 
 // Mock the hooks and utilities
 jest.mock('../../hooks/useSpotifySearch');
-jest.mock('../../legacy-drag-system/hooks/useDraggable.legacy', () => ({
-  useDraggable: jest.fn(() => ({
-    isDragging: false,
-    dragHandlers: {},
-    canDrag: false,
-  })),
-}));
-jest.mock('../../utils/dragAndDrop', () => ({
+// Drag-related mocks removed
+jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
@@ -31,13 +24,7 @@ const mockUseSpotifySearch =
   useSpotifySearchModule.default as jest.MockedFunction<
     typeof useSpotifySearchModule.default
   >;
-const mockUseDraggable = useDraggableModule.default as jest.MockedFunction<
-  typeof useDraggableModule.default
->;
-const mockHandleTrackSelection =
-  dragAndDropUtils.handleTrackSelection as jest.MockedFunction<
-    typeof dragAndDropUtils.handleTrackSelection
-  >;
+// Drag-related mock variables removed
 
 // Mock data
 const mockTracks = [
@@ -79,20 +66,7 @@ const mockTracks = [
   },
 ];
 
-// Mock drag context
-const mockDragContext = {
-  startDrag: jest.fn(),
-  endDrag: jest.fn(),
-  isDragging: false,
-  draggedItem: null,
-  dropTargets: [],
-  registerDropTarget: jest.fn(),
-  unregisterDropTarget: jest.fn(),
-  notifyHTML5DragStart: jest.fn(),
-  notifyHTML5DragEnd: jest.fn(),
-  notifyTouchDragStart: jest.fn(),
-  notifyTouchDragEnd: jest.fn(),
-};
+// Drag context mock removed
 
 // Wrapper component - no longer needs DragProvider
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -124,47 +98,12 @@ describe('SpotifySearchModal', () => {
     isLoadingMore: false,
   };
 
-  const mockDraggableReturn = {
-    dragHandleProps: {
-      draggable: true,
-      onDragStart: jest.fn(),
-      onDragEnd: jest.fn(),
-      onTouchStart: jest.fn(),
-      onTouchMove: jest.fn(),
-      onTouchEnd: jest.fn(),
-      onKeyDown: jest.fn(),
-      tabIndex: 0,
-      role: 'button',
-      'aria-grabbed': false,
-    },
-    dropZoneProps: {
-      onDragOver: jest.fn(),
-      onDrop: jest.fn(),
-      onDragLeave: jest.fn(),
-    },
-    isDragging: false,
-    draggedItem: null,
-    dropPosition: null,
-    touchState: {
-      isLongPress: false,
-      isActive: false,
-    },
-    keyboardState: {
-      isDragging: false,
-      selectedIndex: -1,
-    },
-    startDrag: jest.fn(),
-    endDrag: jest.fn(),
-    checkAutoScroll: jest.fn(),
-    stopAutoScroll: jest.fn(),
-    provideHapticFeedback: jest.fn(),
-  };
+  // Drag-related mock return removed
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSpotifySearch.mockReturnValue(mockSearchHookReturn);
-    mockUseDraggable.mockReturnValue(mockDraggableReturn);
-    mockHandleTrackSelection.mockImplementation(() => {});
+    // Drag-related mocks removed
   });
 
   describe('Rendering', () => {
@@ -402,68 +341,7 @@ describe('SpotifySearchModal', () => {
     });
   });
 
-  describe('Drag and Drop Integration', () => {
-    beforeEach(() => {
-      mockUseSpotifySearch.mockReturnValue({
-        ...mockSearchHookReturn,
-        results: mockTracks,
-      });
-    });
-
-    it('initializes useDraggable hook with correct options', () => {
-      render(
-        <TestWrapper>
-          <SpotifySearchModal {...defaultProps} />
-        </TestWrapper>
-      );
-
-      expect(mockUseDraggable).toHaveBeenCalledWith({
-        type: 'search-track',
-        onDragStart: expect.any(Function),
-        onDragEnd: expect.any(Function),
-        scrollContainer: null, // Initially null, gets set by ref
-        longPressDelay: 250,
-      });
-    });
-
-    it('handles drag start correctly', () => {
-      render(
-        <TestWrapper>
-          <SpotifySearchModal {...defaultProps} />
-        </TestWrapper>
-      );
-
-      // This would be called by TrackList
-      // We can test the handler function directly if needed
-      expect(mockUseDraggable).toHaveBeenCalled();
-    });
-
-    it('applies dragging styles when isDragging is true', () => {
-      // Mock the useDrag hook to return isDragging: true
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const mockUseDragWithDragging = {
-        ...mockDragContext,
-        isDragging: true,
-      };
-
-      // Mock the DragContext to provide the dragging state
-      // DragContext mock no longer needed - using Zustand drag slice
-
-      const TestWrapperWithDragging: React.FC<{
-        children: React.ReactNode;
-      }> = ({ children }) => <>{children}</>;
-
-      render(
-        <TestWrapperWithDragging>
-          <SpotifySearchModal {...defaultProps} />
-        </TestWrapperWithDragging>
-      );
-
-      const modal = screen.getByRole('dialog');
-      // Check if the modal has the dragging class or the appropriate style
-      expect(modal.className).toContain('modal');
-    });
-  });
+  // Drag and Drop Integration tests removed - will be replaced with dnd-kit tests
 
   describe('Modal Behavior', () => {
     it('calls onClose when close button is clicked', async () => {

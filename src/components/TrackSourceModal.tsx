@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, memo } from 'react';
 import Modal from './ui/Modal';
 import TrackList from './ui/TrackList';
-import { useModalDragInteraction } from '../hooks/useModalDragInteraction';
 import { useTrackSelection } from '../hooks/useTrackSelection';
-import { useDragState } from '../hooks/drag/useDragState';
+// Drag-related imports removed
 import { SpotifyTrack } from '../types';
 import styles from './TrackSourceModal.module.css';
 
@@ -67,9 +66,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
     emptyMessage = 'No tracks available',
     showLoadingIndicator = false,
   }) => {
-    // Use shared hooks
-    const { shouldMuteModal, modalStyles, backdropStyles, isDragging } =
-      useModalDragInteraction();
+    // Drag interaction hooks removed
     const {
       selectedTracksToAdd,
       handleTrackSelect,
@@ -79,7 +76,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
       availableTracks: tracks,
       onAddTracks,
     });
-    const { startDrag, endDrag } = useDragState();
+    // Drag state hooks removed
 
     // Enhanced onClose handler
     const handleModalClose = useCallback(() => {
@@ -141,9 +138,8 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
         onClose={handleModalClose}
         title={title}
         size="large"
-        className={`${styles.modal} ${shouldMuteModal ? styles.modalMuted : ''} ${isDragging ? styles.dragging : ''} ${className}`}
-        style={modalStyles}
-        backdropStyle={backdropStyles}
+        className={`${styles.modal} ${className}`}
+        // Drag-related styling removed
       >
         {/* Header Info */}
         <div className={styles.header}>
@@ -193,8 +189,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
               tracks={tracks}
               selectedTracks={selectedTracksToAdd}
               onTrackSelect={handleTrackSelect}
-              draggable={true}
-              showDragHandle={dragType === 'search-track'}
+              // drag props removed
               showCheckbox={true}
               showAlbumArt={true}
               showPopularity={true}
@@ -203,45 +198,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
               virtualized={tracks.length > 100}
               containerHeight={400}
               emptyMessage={emptyMessage}
-              // Drag handlers with configurable drag type
-              onTrackDragStart={(e, track) => {
-                // Create drag item with proper type
-                const dragItem = {
-                  id: track.id,
-                  type: dragType,
-                  payload: createDragPayload(track),
-                  timestamp: Date.now(),
-                };
-
-                // Set drag data for HTML5 drag and drop first
-                e.dataTransfer.effectAllowed = 'copy'; // Use 'copy' for external tracks
-                e.dataTransfer.setData(
-                  'application/json',
-                  JSON.stringify(dragItem)
-                );
-
-                // Update global drag state after a small delay to ensure HTML5 drag has started
-                setTimeout(() => {
-                  startDrag(dragItem);
-                }, 0);
-
-                console.log(`[${title}] Starting drag:`, dragItem);
-              }}
-              onTrackDragEnd={(e, track) => {
-                console.log(`[${title}] Drag ended for track:`, track.name);
-                // Don't end the drag state immediately - let the drop zone handle it
-                // The drag state will be cleaned up by the DraggableTrackList drop handler
-                // or by a timeout if the drop fails
-                setTimeout(() => {
-                  // Only end drag if it's still active (no successful drop occurred)
-                  if (isDragging) {
-                    console.log(
-                      `[${title}] Cleaning up drag state after timeout`
-                    );
-                    endDrag();
-                  }
-                }, 100);
-              }}
+              // Drag handlers removed
               className={styles.trackList}
             />
           )}

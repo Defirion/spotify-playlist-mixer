@@ -37,7 +37,7 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 // Mock utility functions
-jest.mock('../../utils/dragAndDrop', () => ({
+jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)

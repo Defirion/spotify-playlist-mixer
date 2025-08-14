@@ -28,8 +28,7 @@ import {
   useUI,
 } from './store';
 
-// Drag hooks
-import { useGlobalScrollLock } from './hooks/drag/useGlobalScrollLock';
+// Drag hooks removed
 
 // Styles
 import styles from './App.module.css';
@@ -44,8 +43,7 @@ function MainApp() {
   const { error, mixedPlaylists, setError, dismissError, dismissSuccessToast } =
     useUI();
 
-  // Initialize global scroll lock for drag operations
-  useGlobalScrollLock();
+  // Global scroll lock removed - will be handled by dnd-kit
 
   // Handle Spotify OAuth redirect
   useEffect(() => {

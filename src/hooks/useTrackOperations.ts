@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useScrollPosition } from '../store';
+// useScrollPosition import removed - scroll position hooks removed with drag system
 import { MixedTrack, SpotifyTrack } from '../types';
 
 interface UseTrackOperationsOptions {
@@ -16,7 +16,7 @@ export const useTrackOperations = ({
   onTrackOrderChange,
   scrollContainerRef,
 }: UseTrackOperationsOptions) => {
-  const { captureScrollPosition } = useScrollPosition();
+  // Scroll position capture removed
 
   // Centralized scroll position capture with error handling
   const handleScrollPositionCapture = useCallback(() => {
@@ -29,7 +29,7 @@ export const useTrackOperations = ({
         timestamp: Date.now(),
       });
       try {
-        captureScrollPosition(scrollContainerRef.current);
+        // Scroll position capture removed
       } catch (error) {
         console.error(
           '[TrackOperations] Error capturing scroll position:',
@@ -41,7 +41,7 @@ export const useTrackOperations = ({
         '[TrackOperations] Cannot capture scroll position: scroll container ref is null'
       );
     }
-  }, [captureScrollPosition, scrollContainerRef]);
+  }, [scrollContainerRef]);
 
   const handleInternalReorder = useCallback(
     (fromIndex: number, toIndex: number) => {

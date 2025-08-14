@@ -76,30 +76,7 @@ export interface PlaylistMixerState {
   error: string | null;
 }
 
-// Drag and drop types
-export interface DragItem {
-  id?: string;
-  type: string;
-  data: any;
-  sourceIndex?: number;
-  sourceContainer?: string;
-}
-
-export interface DropResult {
-  targetIndex?: number;
-  targetContainer?: string;
-  dropEffect?: 'move' | 'copy';
-  success?: boolean;
-  reason?: string;
-  position?: any;
-}
-
-export interface DragState {
-  isDragging: boolean;
-  draggedItem: DragItem | null;
-  dragPreview: HTMLElement | null;
-  dropTargets: string[];
-}
+// Drag and drop types removed - will be replaced with dnd-kit types
 
 // Virtualization types
 export interface VirtualItem {
@@ -168,7 +145,7 @@ export interface TrackListProps {
   onTrackSelect?: (track: SpotifyTrack) => void;
   onTrackRemove?: (track: SpotifyTrack) => void;
   virtualized?: boolean;
-  draggable?: boolean;
+  // draggable prop removed - will be handled by dnd-kit wrapper
   selectable?: boolean;
   renderTrackActions?: (track: SpotifyTrack) => React.ReactNode;
   className?: string;
@@ -227,22 +204,7 @@ export interface UseUserPlaylistsReturn {
   refresh: () => Promise<void>;
 }
 
-export interface UseDraggableReturn {
-  dragHandleProps: {
-    draggable: boolean;
-    onDragStart: (event: React.DragEvent) => void;
-    onDragEnd: (event: React.DragEvent) => void;
-  };
-  dropZoneProps: {
-    onDragOver: (event: React.DragEvent) => void;
-    onDragEnter: (event: React.DragEvent) => void;
-    onDragLeave: (event: React.DragEvent) => void;
-    onDrop: (event: React.DragEvent) => void;
-  };
-  isDragging: boolean;
-  draggedItem: DragItem | null;
-  previewElement: HTMLElement | null;
-}
+// UseDraggableReturn removed - will be replaced with dnd-kit types
 
 export interface UseVirtualizationReturn {
   virtualItems: VirtualItem[];
@@ -336,10 +298,5 @@ export interface PresetApplyData {
 export type TrackSelectHandler = (track: SpotifyTrack) => void;
 export type TrackRemoveHandler = (track: SpotifyTrack) => void;
 export type PlaylistSelectHandler = (playlist: SpotifyPlaylist) => void;
-export type DragStartHandler = (item: DragItem) => void;
-export type DragEndHandler = (
-  item: DragItem,
-  result: DropResult | null
-) => void;
-export type DropHandler = (item: DragItem, result: DropResult) => void;
+// Drag handler types removed - will be replaced with dnd-kit types
 export type PresetApplyHandler = (data: PresetApplyData) => void;

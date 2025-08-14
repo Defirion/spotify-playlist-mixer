@@ -1,10 +1,10 @@
 import { useEffect, useCallback } from 'react';
-import { DraggedItem } from '../types/dragAndDrop';
+// DraggedItem import removed - will be replaced with dnd-kit types
 
 interface CustomTouchEventDetail {
   clientX: number;
   clientY: number;
-  draggedItem: DraggedItem | null;
+  draggedItem: any; // Temporary type - will be replaced with dnd-kit types
 }
 
 interface UseCustomTouchEventsOptions {
@@ -31,7 +31,7 @@ export const useCustomTouchEvents = ({
 }: UseCustomTouchEventsOptions) => {
   const handleTouchDragOver = useCallback(
     (e: CustomEvent<CustomTouchEventDetail>) => {
-      const { clientX, clientY, draggedItem } = e.detail;
+      const { clientY, draggedItem } = e.detail;
 
       console.log('[CustomTouchEvents] Touch drag over:', {
         clientY,
@@ -47,7 +47,7 @@ export const useCustomTouchEvents = ({
 
   const handleTouchDrop = useCallback(
     (e: CustomEvent<CustomTouchEventDetail>) => {
-      const { clientX, clientY, draggedItem } = e.detail;
+      const { clientY, draggedItem } = e.detail;
 
       console.log('[CustomTouchEvents] Touch drop event received:', {
         clientY,

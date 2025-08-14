@@ -10,7 +10,7 @@ const TrackList = memo<TrackListProps>(
     onTrackSelect,
     onTrackRemove,
     virtualized = false,
-    draggable = false,
+    // draggable prop removed
     selectable = false,
     selectedTracks = new Set(),
     renderTrackActions,
@@ -20,7 +20,7 @@ const TrackList = memo<TrackListProps>(
     containerHeight = 400, // Default container height for virtualization
     overscan = 5, // Number of items to render outside visible area
     showCheckbox = false,
-    showDragHandle = false,
+    // showDragHandle prop removed
     showPopularity = true,
     showDuration = true,
     showAlbumArt = true,
@@ -32,8 +32,7 @@ const TrackList = memo<TrackListProps>(
     onTrackMouseLeave,
     onTrackMouseDown,
     onTrackMouseUp,
-    onTrackDragStart,
-    onTrackDragEnd,
+    // drag event handlers removed
     onTrackTouchStart,
     onTrackTouchMove,
     onTrackTouchEnd,
@@ -103,11 +102,11 @@ const TrackList = memo<TrackListProps>(
               track={track}
               onSelect={selectable ? handleTrackSelect : undefined}
               onRemove={onTrackRemove ? handleTrackRemove : undefined}
-              draggable={draggable}
+              // draggable prop removed
               selected={isSelected}
               actions={customActions}
               showCheckbox={showCheckbox}
-              showDragHandle={showDragHandle}
+              // showDragHandle prop removed
               showPopularity={showPopularity}
               showDuration={showDuration}
               showAlbumArt={showAlbumArt}
@@ -142,18 +141,7 @@ const TrackList = memo<TrackListProps>(
                       onTrackMouseUp(e, track, actualIndex)
                   : undefined
               }
-              onDragStart={
-                onTrackDragStart
-                  ? (e: React.DragEvent<HTMLDivElement>) =>
-                      onTrackDragStart(e, track, actualIndex)
-                  : undefined
-              }
-              onDragEnd={
-                onTrackDragEnd
-                  ? (e: React.DragEvent<HTMLDivElement>) =>
-                      onTrackDragEnd(e, track, actualIndex)
-                  : undefined
-              }
+              // drag event handlers removed
               onTouchStart={
                 onTrackTouchStart
                   ? (e: React.TouchEvent<HTMLDivElement>) =>
@@ -194,9 +182,9 @@ const TrackList = memo<TrackListProps>(
         handleTrackSelect,
         onTrackRemove,
         handleTrackRemove,
-        draggable,
+        // draggable removed
         showCheckbox,
-        showDragHandle,
+        // showDragHandle removed
         showPopularity,
         showDuration,
         showAlbumArt,
@@ -206,8 +194,7 @@ const TrackList = memo<TrackListProps>(
         onTrackMouseLeave,
         onTrackMouseDown,
         onTrackMouseUp,
-        onTrackDragStart,
-        onTrackDragEnd,
+        // drag event handlers removed
         onTrackTouchStart,
         onTrackTouchMove,
         onTrackTouchEnd,

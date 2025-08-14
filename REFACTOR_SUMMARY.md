@@ -211,7 +211,7 @@ const unsubscribe = useAppStore.subscribe(
 
 This refactoring provides a solid foundation for the remaining tasks:
 
-1. **Task 16.2**: Complete useDraggable hook integration (can now use centralized state)
+1. **Task 16.2**: Legacy drag system removed - ready for dnd-kit implementation
 2. **Task 16.3**: Apply error boundaries (can leverage centralized error state)
 3. **Task 16.4**: Establish consistent design system (state management foundation ready)
 4. **Task 16.5**: Update TypeScript configuration (store is fully typed)

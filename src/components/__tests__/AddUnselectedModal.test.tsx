@@ -9,7 +9,7 @@ import * as dragAndDropUtils from '../../utils/dragAndDrop';
 
 // Mock dependencies
 jest.mock('../../utils/spotify');
-jest.mock('../../utils/dragAndDrop', () => ({
+jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)

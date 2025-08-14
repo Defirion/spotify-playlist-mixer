@@ -7,14 +7,10 @@ import { createAuthSlice, AuthSlice } from './slices/authSlice';
 import { createPlaylistSlice, PlaylistSlice } from './slices/playlistSlice';
 import { createMixingSlice, MixingSlice } from './slices/mixingSlice';
 import { createUISlice, UISlice } from './slices/uiSlice';
-import { createDragSlice, DragSlice } from './slices/dragSlice';
+// Drag slice removed - will be replaced with dnd-kit implementation
 
 // Combined store type
-export type AppStore = AuthSlice &
-  PlaylistSlice &
-  MixingSlice &
-  UISlice &
-  DragSlice;
+export type AppStore = AuthSlice & PlaylistSlice & MixingSlice & UISlice;
 
 // Create the main store with all slices
 export const useAppStore = create<AppStore>()(
@@ -24,7 +20,6 @@ export const useAppStore = create<AppStore>()(
       ...createPlaylistSlice(...args),
       ...createMixingSlice(...args),
       ...createUISlice(...args),
-      ...createDragSlice(...args),
     })),
     {
       name: 'spotify-playlist-mixer-store',
@@ -116,25 +111,4 @@ export const useMixingState = () =>
     }))
   );
 
-// Drag state selector hooks
-export const useDragState = () =>
-  useAppStore(
-    useShallow((state: AppStore) => ({
-      isDragging: state.isDragging,
-      draggedItem: state.draggedItem,
-      dragStartTime: state.dragStartTime,
-      startDrag: state.startDrag,
-      endDrag: state.endDrag,
-      cancelDrag: state.cancelDrag,
-    }))
-  );
-
-export const useScrollPosition = () =>
-  useAppStore(
-    useShallow((state: AppStore) => ({
-      scrollTop: state.scrollTop,
-      captureScrollPosition: state.captureScrollPosition,
-      restoreScrollPosition: state.restoreScrollPosition,
-      clearScrollPosition: state.clearScrollPosition,
-    }))
-  );
+// Drag state hooks removed - will be replaced with dnd-kit implementation

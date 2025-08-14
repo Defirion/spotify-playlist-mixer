@@ -58,7 +58,7 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 
 **Full playlist preview with studio-grade controls:**
 
-- **Drag & Drop Reordering**: Precise track positioning with visual drop indicators
+- **Track Reordering**: Precise track positioning (drag & drop functionality being upgraded to dnd-kit)
 - **Album Artwork Display**: 40x40px covers for easy track identification
 - **Real-Time Statistics**: Live updates as you modify tracks
 - **Track Removal**: One-click removal with red X buttons
@@ -208,7 +208,7 @@ Result: Epic finale with everyone singing along!
 
 ### **Professional Controls**
 
-- **Drag & Drop**: Precise track reordering
+- **Track Reordering**: Precise track positioning (drag & drop being upgraded to dnd-kit)
 - **Bulk Operations**: Multi-track selection and management
 - **Preview System**: Full playlist preview before creation
 - **Export Options**: Save configurations for future use

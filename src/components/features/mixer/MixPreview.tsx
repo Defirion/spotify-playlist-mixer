@@ -1,5 +1,5 @@
 import React from 'react';
-import DraggableTrackList from '../../DraggableTrackList';
+// DraggableTrackList import removed - will be replaced with dnd-kit implementation
 import { MixedTrack } from '../../../types';
 import styles from '../../PlaylistMixer.module.css';
 
@@ -86,17 +86,8 @@ const MixPreview: React.FC<MixPreviewProps> = ({
 
         {/* Track list */}
         <div className={styles.trackListContainer}>
-          <DraggableTrackList
-            tracks={tracks}
-            selectedPlaylists={selectedPlaylists}
-            onTrackOrderChange={onTrackOrderChange}
-            formatDuration={(ms: number) => {
-              const minutes = Math.floor(ms / 60000);
-              const seconds = Math.floor((ms % 60000) / 1000);
-              return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }}
-            accessToken={accessToken}
-          />
+          {/* DraggableTrackList temporarily removed - will be replaced with dnd-kit implementation */}
+          <div>Track list will be restored with dnd-kit</div>
         </div>
       </div>
     </div>

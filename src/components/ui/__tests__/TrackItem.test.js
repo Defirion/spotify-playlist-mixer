@@ -5,7 +5,7 @@ import TrackItem from '../TrackItem';
 import { mockTracks } from '../../../mocks/fixtures';
 
 // Mock the utility functions
-jest.mock('../../../utils/dragAndDrop', () => ({
+jest.mock('../../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
@@ -402,10 +402,10 @@ describe('TrackItem', () => {
 
       // Check that the popularity style functions were called
       expect(
-        require('../../../utils/dragAndDrop').getTrackQuadrant
+        require('../../../utils/trackUtils').getTrackQuadrant
       ).toHaveBeenCalledWith(trackWithPopularity);
       expect(
-        require('../../../utils/dragAndDrop').getPopularityStyle
+        require('../../../utils/trackUtils').getPopularityStyle
       ).toHaveBeenCalled();
     });
 

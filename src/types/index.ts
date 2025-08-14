@@ -18,8 +18,7 @@ export * from './hooks';
 // Utility types
 export * from './utils';
 
-// Drag and drop types
-export * from './dragAndDrop';
+// Drag and drop types removed - will be replaced with dnd-kit types
 
 // Re-export commonly used types for convenience
 export type {
@@ -35,11 +34,10 @@ export type {
   MixOptions,
   RatioConfig,
   PlaylistMixResult,
-  DragItem,
-  DropResult,
   TrackSelectHandler,
   TrackRemoveHandler,
   PlaylistSelectHandler,
+  // Drag-related types removed - will be replaced with dnd-kit types
 } from './mixer';
 
 export type {
@@ -53,28 +51,10 @@ export type {
   UseSpotifySearchReturn,
   UsePlaylistTracksReturn,
   UseUserPlaylistsReturn,
-  UseDraggableReturn,
+  // UseDraggableReturn removed
   UseVirtualizationReturn,
 } from './hooks';
 
-export type {
-  DragSourceType,
-  DraggedItem,
-  DraggedItemPayload,
-  DragState,
-  ScrollPositionState,
-  DragSlice,
-  DragOptions,
-  UseDraggableReturn as NewUseDraggableReturn,
-  DragHandleProps,
-  DropZoneProps,
-  TouchDragState,
-  AutoScrollOptions,
-  DragVisualFeedback,
-  DropPosition,
-  ModalCoordinationState,
-  ExtractTrackType,
-  CreateDragItem,
-} from './dragAndDrop';
+// Drag-related type exports removed - will be replaced with dnd-kit types
 
 export type { ISpotifyService, ApiError, ApiErrorType } from './api';
