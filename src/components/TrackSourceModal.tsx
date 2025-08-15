@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, memo } from 'react';
+import React, { useCallback, useEffect, memo, useState, useRef } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -7,8 +7,14 @@ import Modal from './ui/Modal';
 import TrackItem from './ui/TrackItem';
 import SortableWrapper from './SortableWrapper';
 import { useTrackSelection } from '../hooks/useTrackSelection';
+import { generateTrackInstanceId } from '../utils/trackUtils';
 import { SpotifyTrack } from '../types';
 import styles from './TrackSourceModal.module.css';
+
+// Track with instance ID for drag operations
+interface TrackWithInstanceId extends SpotifyTrack {
+  instanceId: string;
+}
 
 interface TrackSourceModalProps {
   // Modal props
@@ -64,13 +70,18 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
     emptyMessage = 'No tracks available',
     showLoadingIndicator = false,
   }) => {
+    // State for tracks with regenerated instance IDs
+    const [tracksWithInstanceIds, setTracksWithInstanceIds] = useState<
+      TrackWithInstanceId[]
+    >([]);
+
     const {
       selectedTracksToAdd,
       handleTrackSelect,
       handleAddSelected,
       clearSelection,
     } = useTrackSelection({
-      availableTracks: tracks,
+      availableTracks: tracksWithInstanceIds,
       onAddTracks,
     });
 
@@ -105,6 +116,67 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
       []
     );
 
+    // Initialize tracks with instance IDs when tracks change
+    useEffect(() => {
+      const tracksWithIds: TrackWithInstanceId[] = tracks.map(track => ({
+        ...track,
+        instanceId: generateTrackInstanceId(),
+      }));
+      setTracksWithInstanceIds(tracksWithIds);
+    }, [tracks]);
+
+    // Use ref to store the event handler to ensure proper cleanup
+    const eventHandlerRef = useRef<EventListener | null>(null);
+
+    // Listen for successful drag operations and regenerate instance IDs
+    useEffect(() => {
+      const handleTrackDragged = (event: CustomEvent) => {
+        // Only process if modal is open
+        if (!isOpen) return;
+
+        const { trackId } = event.detail;
+
+        // Find the track that was dragged and regenerate its instance ID
+        setTracksWithInstanceIds(prevTracks =>
+          prevTracks.map(track =>
+            track.id === trackId
+              ? { ...track, instanceId: generateTrackInstanceId() }
+              : track
+          )
+        );
+
+        console.log('Regenerated instance ID for dragged track:', trackId);
+      };
+
+      // Remove any existing listener first
+      if (eventHandlerRef.current) {
+        window.removeEventListener(
+          'trackDraggedToPreview',
+          eventHandlerRef.current
+        );
+      }
+
+      // Add new listener only if modal is open
+      if (isOpen) {
+        eventHandlerRef.current = handleTrackDragged as EventListener;
+        window.addEventListener(
+          'trackDraggedToPreview',
+          eventHandlerRef.current
+        );
+      }
+
+      // Cleanup function
+      return () => {
+        if (eventHandlerRef.current) {
+          window.removeEventListener(
+            'trackDraggedToPreview',
+            eventHandlerRef.current
+          );
+          eventHandlerRef.current = null;
+        }
+      };
+    }, [isOpen]);
+
     // Clear selection when modal closes
     useEffect(() => {
       if (!isOpen) {
@@ -119,7 +191,8 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
         'Loading...'
       ) : (
         <>
-          {tracks.length} tracks {showLoadingIndicator && loading && 'found'}
+          {tracksWithInstanceIds.length} tracks{' '}
+          {showLoadingIndicator && loading && 'found'}
           {showLoadingIndicator && loading && (
             <span className={styles.loadingIndicator}> • Searching...</span>
           )}{' '}
@@ -178,20 +251,20 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
             <div className={styles.errorState}>
               Error loading tracks. Please try again.
             </div>
-          ) : tracks.length === 0 ? (
+          ) : tracksWithInstanceIds.length === 0 ? (
             <div className={styles.empty} data-testid="empty-message">
               {emptyMessage}
             </div>
           ) : (
             <SortableContext
-              items={tracks.map(t => t.id)}
+              items={tracksWithInstanceIds.map(t => t.instanceId || t.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className={styles.trackList} data-testid="track-list">
-                {tracks.map(track => (
+                {tracksWithInstanceIds.map(track => (
                   <SortableWrapper
-                    key={track.id}
-                    id={track.id}
+                    key={track.instanceId || track.id}
+                    id={track.instanceId || track.id}
                     data={{ track, context: 'modal' }}
                   >
                     <TrackItem

@@ -8,6 +8,7 @@ import SortableWrapper from '../../SortableWrapper';
 import TrackItem from '../../ui/TrackItem';
 import SpotifySearchModal from '../../SpotifySearchModal';
 import AddUnselectedModal from '../../AddUnselectedModal';
+import { getTrackDragId } from '../../../utils/trackUtils';
 import styles from '../../PlaylistMixer.module.css';
 
 interface PlaylistStats {
@@ -47,14 +48,15 @@ const DroppableTrackList: React.FC<{ tracks: MixedTrack[] }> = ({ tracks }) => {
         </div>
       )}
       <SortableContext
-        items={tracks.map(t => t.id)}
+        items={tracks.map(t => getTrackDragId(t))}
         strategy={verticalListSortingStrategy}
       >
         {tracks.map(track => {
+          const dragId = getTrackDragId(track);
           return (
             <SortableWrapper
-              key={track.id}
-              id={track.id}
+              key={dragId}
+              id={dragId}
               data={{ context: 'preview' }}
             >
               <TrackItem track={track} />

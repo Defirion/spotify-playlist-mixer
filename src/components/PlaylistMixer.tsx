@@ -152,25 +152,43 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
           console.log('Adding track to end');
           mixPreview.updateTrackOrder(updatedTracks);
         }
+
+        // Notify that a track was successfully added via drag
+        // This will trigger regeneration of instance IDs in modals
+        // Use the original track ID, not the instance ID
+        window.dispatchEvent(
+          new CustomEvent('trackDraggedToPreview', {
+            detail: { trackId: trackData.id },
+          })
+        );
+
         return;
       }
 
       // Handle reordering within preview
-      const activeInPreview = previewTracks.find(t => t.id === active.id);
-      const overInPreview = previewTracks.find(t => t.id === over.id);
+      const activeInPreview = previewTracks.find(
+        t => getTrackDragId(t) === active.id
+      );
+      const overInPreview = previewTracks.find(
+        t => getTrackDragId(t) === over.id
+      );
 
       console.log('Reorder debug:', {
         activeId: active.id,
         overId: over.id,
         activeInPreview: !!activeInPreview,
         overInPreview: !!overInPreview,
-        previewTrackIds: previewTracks.map(t => t.id),
+        previewTrackDragIds: previewTracks.map(t => getTrackDragId(t)),
         activeContext: active.data.current?.context,
       });
 
       if (activeInPreview && overInPreview) {
-        const oldIndex = previewTracks.findIndex(t => t.id === active.id);
-        const newIndex = previewTracks.findIndex(t => t.id === over.id);
+        const oldIndex = previewTracks.findIndex(
+          t => getTrackDragId(t) === active.id
+        );
+        const newIndex = previewTracks.findIndex(
+          t => getTrackDragId(t) === over.id
+        );
 
         if (oldIndex !== newIndex) {
           const reorderedTracks = arrayMove(previewTracks, oldIndex, newIndex);
