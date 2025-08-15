@@ -164,30 +164,43 @@ Task 1 execution - Clean removal of legacy drag system
    - Should be draggable when wrapped
 
 3. **MixPreview** (`src/components/features/mixer/MixPreview.tsx`)
-   - Currently shows placeholder text
+   - Currently shows placeholder text: "Track list will be restored with dnd-kit"
    - Needs DraggableTrackList replacement with dnd-kit
    - Should allow reordering mixed tracks
 
 ### Secondary Components (Medium Priority)
 4. **TrackSourceModal** (`src/components/TrackSourceModal.tsx`)
    - Modal for adding tracks from search/playlists
-   - Needs drag-to-add functionality
-   - Should work with external drag sources
+   - Drag props removed, now shows "select tracks" instead of "drag to playlist"
+   - Should work with dnd-kit drag sources when restored
 
 5. **SpotifySearchModal** (`src/components/SpotifySearchModal.tsx`)
    - Search results should be draggable
+   - Drag props removed
    - Needs integration with dnd-kit drag sources
 
+6. **AddUnselectedModal** (`src/components/AddUnselectedModal.tsx`)
+   - Modal for adding unselected tracks
+   - Drag props removed
+   - Should work with dnd-kit drag sources when restored
+
 ### Store Integration Points
-6. **Zustand Store** (`src/store/index.ts`)
+7. **Zustand Store** (`src/store/index.ts`)
    - Needs reorderTracks action
    - Should use arrayMove from @dnd-kit/sortable
    - Must handle track reordering state
 
 ### Required dnd-kit Components to Create
-1. **SortableWrapper** - Wraps individual tracks
+1. **SortableWrapper** - ✅ CREATED (30 lines, tests pass)
 2. **DraggableTrackList** - Container for sortable track lists
 3. **TrackList** - Presentation component (already exists, needs integration)
+
+### Cleaned Up Successfully
+- All drag-related comments and code removed from components
+- All drag-related test cases removed or commented out
+- All drag-related CSS styles removed
+- All drag-related props and interfaces removed
+- All drag-related imports cleaned up
 
 ## Next Steps
 

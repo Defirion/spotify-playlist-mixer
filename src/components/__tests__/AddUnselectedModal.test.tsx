@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import AddUnselectedModal from '../AddUnselectedModal';
 import { SpotifyTrack, SpotifyPlaylist } from '../../types';
 import * as spotifyUtils from '../../utils/spotify';
-import * as dragAndDropUtils from '../../utils/dragAndDrop';
+// dragAndDrop utils import removed - will be replaced with dnd-kit
 
 // Mock dependencies
 jest.mock('../../utils/spotify');
@@ -50,7 +50,7 @@ jest.mock('../ui/TrackList', () => ({
     tracks,
     onTrackSelect,
     selectedTracks,
-    onTrackDragStart,
+    // onTrackDragStart removed
     onTrackTouchStart,
     emptyMessage,
     containerHeight,
@@ -88,11 +88,10 @@ jest.mock('../ui/TrackList', () => ({
                   onTrackSelect?.(track);
                 }
               }}
-              onDragStart={e => onTrackDragStart?.(e, track)}
               onTouchStart={e => onTrackTouchStart?.(e, track)}
               role="button"
               tabIndex={0}
-              draggable
+              // drag handlers removed
             >
               {track.name} - {track.artists[0]?.name}
               {selectedTracks?.has(track.id) && (
@@ -107,17 +106,7 @@ jest.mock('../ui/TrackList', () => ({
     );
   },
 }));
-const mockStartDrag = jest.fn();
-const mockEndDrag = jest.fn();
-
-jest.mock('../../legacy-drag-system/hooks/useDraggable.legacy', () => ({
-  __esModule: true,
-  default: () => ({
-    isDragging: false,
-    startDrag: mockStartDrag,
-    endDrag: mockEndDrag,
-  }),
-}));
+// Legacy drag mocks removed - will be replaced with dnd-kit mocks
 
 // Mock data
 const mockTracks: SpotifyTrack[] = [
@@ -191,21 +180,7 @@ describe('AddUnselectedModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (spotifyUtils.getSpotifyApi as any).mockReturnValue(mockSpotifyApi);
-    (dragAndDropUtils.handleTrackSelection as any).mockImplementation(
-      (
-        track: SpotifyTrack,
-        selectedTracks: Set<string>,
-        setSelectedTracks: Function
-      ) => {
-        const newSet = new Set(selectedTracks);
-        if (newSet.has(track.id)) {
-          newSet.delete(track.id);
-        } else {
-          newSet.add(track.id);
-        }
-        setSelectedTracks(newSet);
-      }
-    );
+    // Legacy drag utils mock removed
 
     // Mock API response for playlist tracks
     mockApiGet.mockResolvedValue({
@@ -309,15 +284,7 @@ describe('AddUnselectedModal', () => {
 
     await user.click(screen.getByTestId('track-item-track1'));
 
-    expect(dragAndDropUtils.handleTrackSelection).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ...mockTracks[0],
-        sourcePlaylist: 'playlist1',
-        sourcePlaylistName: 'Test Playlist 1',
-      }),
-      expect.any(Set),
-      expect.any(Function)
-    );
+    // Legacy drag utils expectation removed
   });
 
   it('updates selected tracks count in footer', async () => {
@@ -438,35 +405,7 @@ describe('AddUnselectedModal', () => {
     expect(screen.getByTestId('track-item-track2')).toBeInTheDocument();
   });
 
-  it('handles drag start events', async () => {
-    render(<AddUnselectedModal {...defaultProps} />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('track-list')).toBeInTheDocument();
-    });
-
-    const trackItem = screen.getByTestId('track-item-track1');
-    fireEvent.dragStart(trackItem);
-
-    // Verify drag start was handled (implementation details may vary)
-    expect(trackItem).toBeInTheDocument();
-  });
-
-  it('handles touch events for mobile drag', async () => {
-    render(<AddUnselectedModal {...defaultProps} />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('track-list')).toBeInTheDocument();
-    });
-
-    const trackItem = screen.getByTestId('track-item-track1');
-    fireEvent.touchStart(trackItem, {
-      touches: [{ clientX: 100, clientY: 100 }],
-    });
-
-    // Verify touch start was handled
-    expect(trackItem).toBeInTheDocument();
-  });
+  // Drag test cases removed - will be replaced with dnd-kit tests
 
   it('displays empty message when no tracks match search', async () => {
     const user = userEvent.setup();

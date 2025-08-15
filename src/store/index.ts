@@ -7,10 +7,15 @@ import { createAuthSlice, AuthSlice } from './slices/authSlice';
 import { createPlaylistSlice, PlaylistSlice } from './slices/playlistSlice';
 import { createMixingSlice, MixingSlice } from './slices/mixingSlice';
 import { createUISlice, UISlice } from './slices/uiSlice';
+import { createTrackSlice, TrackSlice } from './slices/trackSlice';
 // Drag slice removed - will be replaced with dnd-kit implementation
 
 // Combined store type
-export type AppStore = AuthSlice & PlaylistSlice & MixingSlice & UISlice;
+export type AppStore = AuthSlice &
+  PlaylistSlice &
+  MixingSlice &
+  UISlice &
+  TrackSlice;
 
 // Create the main store with all slices
 export const useAppStore = create<AppStore>()(
@@ -20,6 +25,7 @@ export const useAppStore = create<AppStore>()(
       ...createPlaylistSlice(...args),
       ...createMixingSlice(...args),
       ...createUISlice(...args),
+      ...createTrackSlice(...args),
     })),
     {
       name: 'spotify-playlist-mixer-store',
@@ -108,6 +114,16 @@ export const useMixingState = () =>
       accessToken: state.accessToken,
       addMixedPlaylist: state.addMixedPlaylist,
       setError: state.setError,
+    }))
+  );
+
+export const useTracks = () =>
+  useAppStore(
+    useShallow((state: AppStore) => ({
+      tracks: state.tracks,
+      setTracks: state.setTracks,
+      reorderTracks: state.reorderTracks,
+      clearTracks: state.clearTracks,
     }))
   );
 

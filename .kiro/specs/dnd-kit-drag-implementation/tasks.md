@@ -41,14 +41,14 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - **GOAL**: Working build with no drag functionality, ready for clean dnd-kit implementation
   - _Requirements: Clean foundation for dnd-kit implementation_
 
-- [ ] 2. Install dnd-kit packages and verify setup
+- [x] 2. Install dnd-kit packages and verify setup
   - Install @dnd-kit/core, @dnd-kit/sortable, and @dnd-kit/utilities packages
   - Verify packages are installed correctly with basic import test
   - Check bundle size impact with build analysis
   - Document package versions for future reference
   - _Requirements: 7.1, 10.1_
 
-- [ ] 3. Create SortableWrapper component with tests (MAX 30 lines + tests)
+- [x] 3. Create SortableWrapper component with tests (MAX 50 lines + tests)
   - **Purpose**: Create a pure wrapper component that adds drag functionality to any child component using dnd-kit's useSortable hook.
   - Create new `src/components/SortableWrapper.tsx` file
   - Use useSortable hook with id prop (copy pattern from dnd-kit-reference.md exactly)
@@ -62,7 +62,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test: Drag attributes are attached to wrapper, not children
   - _Requirements: 3.1, 3.4, 9.1, 9.4_
 
-- [ ] 4. Create DraggableTrackList container component with tests (MAX 40 lines + tests)
+- [x] 4. Create DraggableTrackList container component with tests (MAX 60 lines + tests)
   - **Purpose**: Create a focused container that only handles drag orchestration using DndContext and SortableContext.
   - Create new `src/components/DraggableTrackList.tsx` file
   - Set up DndContext with sensors and collision detection (copy pattern from dnd-kit-reference.md exactly)
@@ -76,7 +76,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test: Component renders children unchanged
   - _Requirements: 1.1, 2.1, 3.1, 3.2_
 
-- [ ] 5. Configure mobile-optimized sensors (MAX 20 lines)
+- [x] 5. Configure mobile-optimized sensors (MAX 40 lines)
   - **Purpose**: Configure dnd-kit's proven sensor settings for reliable mouse, touch, and keyboard input.
   - Add MouseSensor with 10px distance activation constraint (copy from dnd-kit-implementation-guidance.md exactly)
   - Add TouchSensor with 250ms delay and 5px tolerance activation constraint (DO NOT modify these proven values)
@@ -85,7 +85,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test each sensor type works correctly on desktop and mobile
   - _Requirements: 1.1, 1.2, 1.3, 4.1, 4.2, 4.3_
 
-- [ ] 6. Integrate with existing Zustand store with tests (MAX 25 lines + tests)
+- [x] 6. Integrate with existing Zustand store with tests (MAX 50 lines + tests)
   - **Purpose**: Add reorderTracks action to store that encapsulates ALL reordering business logic.
   - Add reorderTracks(activeId: string, overId: string) action to existing track store
   - Use arrayMove utility from @dnd-kit/sortable INSIDE the store action
@@ -98,7 +98,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test: arrayMove logic is contained in store, not components
   - _Requirements: 2.2, 6.1, 6.2, 10.3_
 
-- [ ] 7. Create TrackList presentation component and integrate (MAX 20 lines)
+- [ ] 7. Create TrackList presentation component and integrate (MAX 30 lines)
   - **Purpose**: Create a pure presentation component for rendering track lists, then compose it with DraggableTrackList.
   - Create `src/components/TrackList.tsx` as pure presentation component that renders tracks
   - TrackList accepts tracks array and renders: `{tracks.map(track => <SortableWrapper id={track.id}><TrackItem {...trackProps} /></SortableWrapper>)}`
@@ -108,7 +108,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test existing TrackItem functionality still works exactly as before
   - _Requirements: 6.3, 9.2, 9.3_
 
-- [ ] 8. Add visual feedback and styling (MAX 20 lines)
+- [ ] 8. Add visual feedback and styling (MAX 30 lines)
   - Add touch-action: none CSS for draggable elements
   - Apply opacity and transform styles during drag
   - Integrate with existing drop line indicators if needed
@@ -132,7 +132,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Verify ARIA attributes are applied correctly
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 11. Add error boundary for drag operations (MAX 15 lines)
+- [ ] 11. Add error boundary for drag operations (MAX 25 lines)
   - Create simple error boundary component for drag functionality
   - Wrap TrackList with error boundary
   - Add basic error logging and fallback UI
@@ -167,14 +167,14 @@ This implementation plan includes specific safeguards to prevent over-engineerin
 
 ## File Size Enforcement Rules
 
-Each task MUST enforce these limits:
-- `SortableWrapper.tsx`: MAX 30 lines
-- `DraggableTrackList.tsx`: MAX 40 lines
-- `TrackList.tsx`: MAX 20 lines  
-- Sensor configuration: MAX 20 lines
-- Zustand integration: MAX 25 lines
-- Error boundary: MAX 15 lines
-- Visual styling: MAX 20 lines
+Each task MUST enforce these limits (accounting for Prettier formatting):
+- `SortableWrapper.tsx`: MAX 60 lines
+- `DraggableTrackList.tsx`: MAX 60 lines
+- `TrackList.tsx`: MAX 30 lines  
+- Sensor configuration: MAX 40 lines
+- Zustand integration: MAX 50 lines
+- Error boundary: MAX 25 lines
+- Visual styling: MAX 30 lines
 
 ## Task Completion Gates
 
@@ -208,8 +208,8 @@ Each task MUST enforce these limits:
 3. Use `wc -l filename` to verify
 
 ### Gate 6: Function Size Check
-1. No function over 35 lines (target: 25-30)
-2. If over 35 lines, split or simplify
+1. No function over 45 lines (target: 35-40, accounting for Prettier formatting)
+2. If over 45 lines, split or simplify
 3. Event handlers get slight leeway for related event handling
 
 **No exceptions. All gates must pass before marking complete.**

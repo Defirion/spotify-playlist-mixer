@@ -16,7 +16,6 @@ function SortableWrapper({ id, children }: SortableWrapperProps) {
     transition,
     isDragging,
   } = useSortable({ id });
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

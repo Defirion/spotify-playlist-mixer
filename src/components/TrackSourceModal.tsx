@@ -26,9 +26,7 @@ interface TrackSourceModalProps {
   showSearchButton?: boolean;
   onManualSearch?: () => void;
 
-  // Drag props
-  dragType: 'modal-track' | 'search-track';
-  createDragPayload: (track: SpotifyTrack) => any;
+  // Drag props removed - will be replaced with dnd-kit
 
   // Display props
   headerInfo?: string;
@@ -57,9 +55,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
     showSearchButton = false,
     onManualSearch,
 
-    // Drag props
-    dragType,
-    createDragPayload,
+    // Drag props removed
 
     // Display props
     headerInfo,
@@ -127,8 +123,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
           {showLoadingIndicator && loading && (
             <span className={styles.loadingIndicator}> • Searching...</span>
           )}{' '}
-          • <strong>Click to select</strong> or{' '}
-          <strong>drag to playlist</strong>
+          • <strong>Click to select</strong> or <strong>select tracks</strong>
         </>
       ));
 
@@ -159,7 +154,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                 onKeyDown={handleKeyDown}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
-                autoFocus={dragType === 'search-track'}
+                autoFocus={false}
               />
               {showLoadingIndicator && loading && (
                 <div className={styles.inputLoadingIndicator}>⏳</div>
@@ -194,7 +189,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
               showAlbumArt={true}
               showPopularity={true}
               showDuration={true}
-              showSourcePlaylist={dragType === 'modal-track'}
+              showSourcePlaylist={true}
               virtualized={tracks.length > 100}
               containerHeight={400}
               emptyMessage={emptyMessage}

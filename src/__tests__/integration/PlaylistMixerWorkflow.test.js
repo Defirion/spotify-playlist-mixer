@@ -168,30 +168,7 @@ describe('Playlist Mixer Integration Tests', () => {
       expect(removeButtons.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('supports drag and drop interactions between tracks', async () => {
-      const onTrackSelect = jest.fn();
-
-      render(
-        <TrackList
-          tracks={mockTracks}
-          onTrackSelect={onTrackSelect}
-          draggable={true}
-        />
-      );
-
-      const trackItems = screen.getAllByTestId('track-item');
-
-      // Verify tracks are draggable
-      expect(trackItems[0]).toHaveAttribute('draggable', 'true');
-      expect(trackItems[1]).toHaveAttribute('draggable', 'true');
-
-      // Test drag start event
-      const dragStartEvent = new Event('dragstart', { bubbles: true });
-      trackItems[0].dispatchEvent(dragStartEvent);
-
-      // Verify drag started
-      expect(trackItems[0]).toHaveAttribute('draggable', 'true');
-    });
+    // Drag test case removed - will be replaced with dnd-kit tests
   });
 
   describe('Complex User Workflows', () => {

@@ -64,12 +64,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
         showSearchButton={true}
         onManualSearch={search}
         showLoadingIndicator={true}
-        // Drag props
-        dragType="search-track"
-        createDragPayload={track => ({
-          track: track,
-          query: query,
-        })}
+        // Drag props removed - will be replaced with dnd-kit
         // Display props
         emptyMessage="No tracks found. Try a different search term."
       />

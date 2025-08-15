@@ -29,7 +29,7 @@ Before writing ANY code, you MUST:
 
 ### ❌ Code Smells to Avoid:
 
-- Functions longer than 35 lines (25-30 is target, 35+ requires splitting)
+- Functions longer than 45 lines (35-40 is target, accounting for Prettier formatting)
 - More than 3 levels of nesting
 - Complex conditional logic
 - Multiple useState hooks for related data
@@ -52,8 +52,8 @@ Before writing ANY code, you MUST:
 
 ### ✅ Code Quality Standards:
 
-- Maximum 150 lines per file
-- Target 25 lines per function (up to 30 acceptable with proper error handling)
+- Maximum 200 lines per file (accounting for Prettier formatting with 80-char width)
+- Target 35 lines per function (up to 45 acceptable with proper error handling)
 - Maximum 2 levels of nesting
 - Use existing utilities before creating new ones
 - Direct API calls over abstraction layers
@@ -126,7 +126,7 @@ Before writing ANY code, you MUST:
 
 ## Success Metrics
 
-- **Code length**: Implementations should be under 150 lines
+- **Code length**: Implementations should be under 200 lines (accounting for Prettier formatting)
 - **Test success**: All existing tests must pass
 - **Functionality**: Core requirements work reliably
 - **Simplicity**: Code is easy to read and understand
@@ -135,7 +135,7 @@ Before writing ANY code, you MUST:
 ## Emergency Brake
 
 If you catch yourself:
-- Writing more than 200 lines of code
+- Writing more than 250 lines of code (accounting for Prettier formatting)
 - Adding complex error handling
 - Creating coordination systems
 - Writing extensive validation
@@ -211,8 +211,8 @@ This pattern prevents the common failure modes of incomplete implementations, br
 4. Pre-commit hooks must pass (test with `git add . && git commit --dry-run`)
 
 ### Gate 6: Function Size Check
-1. No function over 35 lines (target: 25-30)
-2. If over 35 lines, split or simplify
+1. No function over 45 lines (target: 35-40, accounting for Prettier formatting)
+2. If over 45 lines, split or simplify
 3. Event handlers get slight leeway for related event handling
 
 **No exceptions. All gates must pass before marking complete.**

@@ -44,12 +44,7 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         searchPlaceholder="Search tracks, artists, or albums..."
-        // Drag props
-        dragType="modal-track"
-        createDragPayload={track => ({
-          track: track,
-          source: 'AddUnselectedModal',
-        })}
+        // Drag props removed - will be replaced with dnd-kit
         // Display props
         emptyMessage={
           searchQuery

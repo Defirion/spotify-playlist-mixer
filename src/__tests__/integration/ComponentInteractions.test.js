@@ -136,36 +136,7 @@ describe('Component Integration Tests', () => {
       expect(onTrackRemove).toHaveBeenCalledWith(mockTracks[0]);
     });
 
-    it('supports drag and drop interactions between tracks', async () => {
-      const user = userEvent.setup();
-      const onTrackSelect = jest.fn();
-
-      render(
-        <TrackList
-          tracks={mockTracks}
-          onTrackSelect={onTrackSelect}
-          draggable={true}
-        />
-      );
-
-      const trackItems = screen.getAllByTestId('track-item');
-
-      // Verify tracks are draggable
-      expect(trackItems[0]).toHaveAttribute('draggable', 'true');
-      expect(trackItems[1]).toHaveAttribute('draggable', 'true');
-
-      // Test drag start event
-      const onDragStart = jest.fn();
-      trackItems[0].addEventListener('dragstart', onDragStart);
-
-      await user.pointer([
-        { target: trackItems[0], keys: '[MouseLeft>]' },
-        { coords: { x: 100, y: 100 } },
-      ]);
-
-      // Test drag end
-      await user.pointer([{ target: trackItems[1] }, { keys: '[/MouseLeft]' }]);
-    });
+    // Drag test case removed - will be replaced with dnd-kit tests
   });
 
   describe('Complex User Workflows', () => {

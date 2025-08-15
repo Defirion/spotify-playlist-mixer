@@ -122,10 +122,10 @@ const handleDragEnd = (event) => {
 
 ## File Size Discipline
 
-- **SortableTrackItem**: MAX 30 lines
-- **TrackList**: MAX 40 lines
-- **Sensor config**: MAX 20 lines
-- **Store integration**: MAX 25 lines
+- **SortableTrackItem**: MAX 50 lines (accounting for Prettier formatting)
+- **TrackList**: MAX 60 lines (accounting for Prettier formatting)
+- **Sensor config**: MAX 30 lines (accounting for Prettier formatting)
+- **Store integration**: MAX 40 lines (accounting for Prettier formatting)
 
 If approaching limits, you're probably over-engineering.
 

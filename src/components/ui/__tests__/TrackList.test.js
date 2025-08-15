@@ -137,27 +137,7 @@ describe('TrackList', () => {
     });
   });
 
-  describe('Drag and Drop', () => {
-    it('makes tracks draggable when draggable prop is true', () => {
-      render(<TrackList {...defaultProps} draggable={true} />);
-
-      const trackItems = screen.getAllByTestId('track-item');
-      trackItems.forEach(item => {
-        expect(item).toHaveAttribute('draggable', 'true');
-        expect(item).toHaveClass('draggable');
-      });
-    });
-
-    it('does not make tracks draggable by default', () => {
-      render(<TrackList {...defaultProps} />);
-
-      const trackItems = screen.getAllByTestId('track-item');
-      trackItems.forEach(item => {
-        expect(item).toHaveAttribute('draggable', 'false');
-        expect(item).not.toHaveClass('draggable');
-      });
-    });
-  });
+  // Drag and Drop tests removed - will be replaced with dnd-kit tests
 
   describe('Custom Event Handlers', () => {
     it('calls onTrackClick when provided', async () => {
@@ -191,25 +171,7 @@ describe('TrackList', () => {
       );
     });
 
-    it('calls onTrackDragStart when provided', () => {
-      const onTrackDragStart = jest.fn();
-      render(
-        <TrackList
-          {...defaultProps}
-          draggable={true}
-          onTrackDragStart={onTrackDragStart}
-        />
-      );
-
-      const firstTrack = screen.getAllByTestId('track-item')[0];
-      fireEvent.dragStart(firstTrack);
-
-      expect(onTrackDragStart).toHaveBeenCalledWith(
-        expect.any(Object), // event
-        mockTracks[0],
-        0 // index
-      );
-    });
+    // onTrackDragStart test removed - will be replaced with dnd-kit tests
   });
 
   describe('Display Options', () => {
@@ -220,12 +182,7 @@ describe('TrackList', () => {
       expect(checkboxes.length).toBeGreaterThan(0);
     });
 
-    it('shows drag handles when showDragHandle is true', () => {
-      render(<TrackList {...defaultProps} showDragHandle={true} />);
-
-      const dragHandles = screen.getAllByLabelText(/drag handle/i);
-      expect(dragHandles).toHaveLength(mockTracks.length);
-    });
+    // showDragHandle test removed - will be replaced with dnd-kit tests
 
     it('hides album art when showAlbumArt is false', () => {
       render(<TrackList {...defaultProps} showAlbumArt={false} />);

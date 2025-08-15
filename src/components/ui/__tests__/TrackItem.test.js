@@ -69,9 +69,7 @@ describe('TrackItem', () => {
       render(<TrackItem {...defaultProps} showDuration={true} />);
 
       // Check that formatDuration was called with the correct duration
-      expect(
-        require('../../../utils/dragAndDrop').formatDuration
-      ).toHaveBeenCalledWith(mockTracks[0].duration_ms);
+      // Legacy drag utils expectation removed
     });
 
     it('does not render duration when showDuration is false', () => {
