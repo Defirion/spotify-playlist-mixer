@@ -65,4 +65,16 @@ describe('SortableWrapper', () => {
       );
     }).not.toThrow();
   });
+
+  it('should apply data-dragging attribute based on isDragging state', () => {
+    renderWithDndContext(
+      <SortableWrapper id="test-id">
+        <div>Test</div>
+      </SortableWrapper>
+    );
+
+    const wrapper = screen.getByTestId('sortable-wrapper');
+    // When not dragging, data-dragging should be false
+    expect(wrapper).toHaveAttribute('data-dragging', 'false');
+  });
 });

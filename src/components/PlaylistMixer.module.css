@@ -261,6 +261,12 @@
   gap: 4px;
 }
 
+.previewActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .previewContent {
   background: var(--dark-green);
   border-radius: 8px;

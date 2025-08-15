@@ -85,14 +85,6 @@ describe('TrackItem', () => {
       expect(trackItem).toHaveClass('selected');
     });
 
-    it('applies draggable class when draggable is true', () => {
-      render(<TrackItem {...defaultProps} draggable={true} />);
-
-      const trackItem = screen.getByTestId('track-item');
-      expect(trackItem).toHaveClass('draggable');
-      expect(trackItem).toHaveAttribute('draggable', 'true');
-    });
-
     it('applies custom className', () => {
       render(<TrackItem {...defaultProps} className="custom-track" />);
 
@@ -136,23 +128,6 @@ describe('TrackItem', () => {
       const trackItem = screen.getByTestId('track-item');
       expect(trackItem).toBeInTheDocument();
       expect(trackItem).not.toHaveClass('selected');
-    });
-  });
-
-  describe('Drag Handle', () => {
-    it('shows drag handle when showDragHandle is true', () => {
-      render(<TrackItem {...defaultProps} showDragHandle={true} />);
-
-      const dragHandle = screen.getByLabelText('Drag handle');
-      expect(dragHandle).toBeInTheDocument();
-      expect(dragHandle).toHaveTextContent('⋮⋮');
-    });
-
-    it('does not show drag handle when showDragHandle is false', () => {
-      render(<TrackItem {...defaultProps} showDragHandle={false} />);
-
-      const dragHandle = screen.queryByLabelText('Drag handle');
-      expect(dragHandle).not.toBeInTheDocument();
     });
   });
 
@@ -289,36 +264,6 @@ describe('TrackItem', () => {
       fireEvent.mouseLeave(trackItem);
 
       expect(onMouseLeave).toHaveBeenCalled();
-    });
-  });
-
-  describe('Drag Events', () => {
-    it('calls onDragStart when provided', () => {
-      const onDragStart = jest.fn();
-      render(
-        <TrackItem
-          {...defaultProps}
-          draggable={true}
-          onDragStart={onDragStart}
-        />
-      );
-
-      const trackItem = screen.getByTestId('track-item');
-      fireEvent.dragStart(trackItem);
-
-      expect(onDragStart).toHaveBeenCalled();
-    });
-
-    it('calls onDragEnd when provided', () => {
-      const onDragEnd = jest.fn();
-      render(
-        <TrackItem {...defaultProps} draggable={true} onDragEnd={onDragEnd} />
-      );
-
-      const trackItem = screen.getByTestId('track-item');
-      fireEvent.dragEnd(trackItem);
-
-      expect(onDragEnd).toHaveBeenCalled();
     });
   });
 

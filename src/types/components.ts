@@ -57,6 +57,7 @@ export interface ModalProps extends BaseComponentProps {
   maxHeight?: string;
   style?: React.CSSProperties;
   backdropStyle?: React.CSSProperties;
+  dragging?: boolean;
 }
 
 // TrackItem component types

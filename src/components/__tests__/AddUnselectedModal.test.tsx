@@ -239,9 +239,7 @@ describe('AddUnselectedModal', () => {
   it('displays loading state while fetching tracks', () => {
     render(<AddUnselectedModal {...defaultProps} />);
 
-    expect(
-      screen.getByText('Loading unselected tracks...')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('displays tracks after loading', async () => {

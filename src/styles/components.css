@@ -551,6 +551,38 @@ input[type='range']:active::-moz-range-thumb {
   box-shadow: var(--shadow-lg);
 }
 
+/* === DRAG AND DROP COMPONENTS === */
+.sortable-wrapper {
+  touch-action: none; /* Essential for mobile touch */
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
+  cursor: grab;
+}
+
+.sortable-wrapper:active {
+  cursor: grabbing;
+}
+
+.sortable-wrapper[data-dragging='true'] {
+  z-index: 1000;
+  opacity: 0.8;
+}
+
+/* Drop line indicator */
+.drop-line {
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 1px;
+  margin: 2px 0;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.drop-line.active {
+  opacity: 1;
+}
+
 /* === ANIMATIONS === */
 @keyframes slideIn {
   from {

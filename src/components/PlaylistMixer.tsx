@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { DndContext } from '@dnd-kit/core';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
 import { useMixWarnings } from '../hooks/useMixWarnings';
+import { useDragSensors } from '../hooks/useDragSensors';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
 import MixControls from './features/mixer/MixControls';
@@ -27,6 +29,8 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   onMixedPlaylist,
   onError,
 }) => {
+  const sensors = useDragSensors();
+
   // Custom hooks
   const mixGeneration = useMixGeneration(accessToken, {
     onError,
@@ -79,6 +83,40 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   const handlePreviewOrderChange = useCallback(
     (reorderedTracks: MixedTrack[]) => {
       mixPreview.updateTrackOrder(reorderedTracks);
+    },
+    [mixPreview]
+  );
+
+  // Handle drag operations (both reordering and adding)
+  const handleDragEnd = useCallback(
+    (event: any) => {
+      const { active, over } = event;
+
+      if (!over) return;
+
+      // Check if this is a reorder operation within the preview
+      const previewTracks = mixPreview.getPreviewTracks();
+      const activeTrackInPreview = previewTracks.find(t => t.id === active.id);
+      const overTrackInPreview = previewTracks.find(t => t.id === over.id);
+
+      if (activeTrackInPreview && overTrackInPreview) {
+        // This is a reorder within preview
+        const oldIndex = previewTracks.findIndex(
+          track => track.id === active.id
+        );
+        const newIndex = previewTracks.findIndex(track => track.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          const newTracks = [...previewTracks];
+          const [movedTrack] = newTracks.splice(oldIndex, 1);
+          newTracks.splice(newIndex, 0, movedTrack);
+          mixPreview.updateTrackOrder(newTracks);
+        }
+      } else if (over.id === 'preview-drop-zone') {
+        // This is adding a track from modal to preview
+        // The track data would need to be passed somehow
+        console.log('Track dropped on preview:', active.id);
+      }
     },
     [mixPreview]
   );

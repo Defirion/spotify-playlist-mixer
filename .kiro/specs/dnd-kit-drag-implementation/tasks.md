@@ -98,7 +98,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test: arrayMove logic is contained in store, not components
   - _Requirements: 2.2, 6.1, 6.2, 10.3_
 
-- [ ] 7. Create TrackList presentation component and integrate (MAX 30 lines)
+- [x] 7. Create TrackList presentation component and integrate (MAX 30 lines)
   - **Purpose**: Create a pure presentation component for rendering track lists, then compose it with DraggableTrackList.
   - Create `src/components/TrackList.tsx` as pure presentation component that renders tracks
   - TrackList accepts tracks array and renders: `{tracks.map(track => <SortableWrapper id={track.id}><TrackItem {...trackProps} /></SortableWrapper>)}`
@@ -108,7 +108,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test existing TrackItem functionality still works exactly as before
   - _Requirements: 6.3, 9.2, 9.3_
 
-- [ ] 8. Add visual feedback and styling (MAX 30 lines)
+- [x] 8. Add visual feedback and styling (MAX 30 lines)
   - Add touch-action: none CSS for draggable elements
   - Apply opacity and transform styles during drag
   - Integrate with existing drop line indicators if needed
@@ -116,7 +116,29 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Ensure smooth transitions and animations
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 9. Test mobile touch functionality
+- [x] 9. Integrate drag functionality into MixPreview component (MAX 40 lines)
+  - **Purpose**: Restore drag functionality to the MixPreview component where users reorder tracks WITHIN their mix preview.
+  - Replace the placeholder `<div>Track list will be restored with dnd-kit</div>` in MixPreview.tsx
+  - Import and use the TrackListContainer component (DraggableTrackList + TrackList)
+  - Connect onReorder prop to the existing onTrackOrderChange prop
+  - Pass MixedTrack[] to the drag system (map to track IDs for drag, preserve full objects for display)
+  - Ensure existing track display and styling remains unchanged
+  - Test that track reordering within preview updates the mix correctly
+  - **Note**: This is for reordering tracks WITHIN the preview panel, not for adding new tracks
+  - _Requirements: 6.3, 9.2, 9.3_
+
+- [x] 10. Make tracks draggable sources in TrackSourceModal component (MAX 30 lines)
+  - **Purpose**: Make tracks in TrackSourceModal draggable sources that can be dragged TO the preview panel for adding tracks. This enables drag-to-add functionality in SpotifySearchModal and AddUnselectedModal since they use TrackSourceModal internally.
+  - Wrap track items with SortableWrapper to make them draggable sources
+  - Add DndContext to modal to enable drag operations from modal to external drop targets
+  - Ensure existing track selection functionality (checkboxes) remains unchanged
+  - Test that tracks can be dragged from modal to preview panel alongside selection checkboxes
+  - Verify modal scrolling doesn't interfere with drag operations
+  - Test that SpotifySearchModal and AddUnselectedModal inherit drag-to-add functionality automatically
+  - **Note**: This is for dragging FROM modal TO preview panel (adding tracks), not for reordering within modal
+  - _Requirements: 6.3, 9.2, 9.3_
+
+- [ ] 11. Test mobile touch functionality
   - Test touch drag on actual iOS device (Safari)
   - Test touch drag on actual Android device (Chrome)
   - Verify 250ms delay feels responsive
@@ -124,7 +146,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test in different mobile browsers
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 10. Test keyboard accessibility
+- [ ] 12. Test keyboard accessibility
   - Test keyboard navigation with Tab key
   - Test drag initiation with Space/Enter keys
   - Test movement with arrow keys
@@ -132,7 +154,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Verify ARIA attributes are applied correctly
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 11. Add error boundary for drag operations (MAX 25 lines)
+- [ ] 13. Add error boundary for drag operations (MAX 25 lines)
   - Create simple error boundary component for drag functionality
   - Wrap TrackList with error boundary
   - Add basic error logging and fallback UI
@@ -140,7 +162,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Ensure graceful degradation when drag fails
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 12. Performance testing and optimization
+- [ ] 14. Performance testing and optimization
   - Test with large track lists (100+ items)
   - Measure bundle size impact
   - Profile memory usage during drag operations
@@ -148,7 +170,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Optimize if any performance issues found
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 13. Integration testing with existing features
+- [ ] 15. Integration testing with existing features
   - Test drag works with existing modal functionality
   - Test drag works with existing search/filter features
   - Test drag works with existing playlist operations
@@ -156,7 +178,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test edge cases like rapid interactions
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 14. Final verification and documentation
+- [ ] 16. Final verification and documentation
   - Run complete test suite one final time
   - Test drag functionality on multiple devices and browsers
   - Create simple README for the new dnd-kit drag system architecture

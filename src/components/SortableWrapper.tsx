@@ -30,6 +30,7 @@ function SortableWrapper({ id, children }: SortableWrapperProps) {
       {...listeners}
       className="sortable-wrapper"
       data-testid="sortable-wrapper"
+      data-dragging={isDragging}
     >
       {children}
     </div>

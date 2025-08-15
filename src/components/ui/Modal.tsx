@@ -15,6 +15,7 @@ const Modal = memo<ModalProps>(
     closeOnEscape = true,
     style = {},
     backdropStyle = {},
+    dragging = false,
   }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const previousActiveElement = useRef<Element | null>(null);
@@ -101,7 +102,16 @@ const Modal = memo<ModalProps>(
     );
 
     // Generate CSS classes
-    const modalClasses = [styles.modal, styles[size], className]
+    const modalClasses = [
+      styles.modal,
+      styles[size],
+      dragging && styles.dragging,
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const backdropClasses = [styles.backdrop, dragging && styles.dragging]
       .filter(Boolean)
       .join(' ');
 
@@ -111,7 +121,7 @@ const Modal = memo<ModalProps>(
       <>
         {/* Backdrop */}
         <div
-          className={styles.backdrop}
+          className={backdropClasses}
           onClick={handleBackdropClick}
           aria-hidden="true"
           style={backdropStyle ? { ...backdropStyle } : undefined}

@@ -4,6 +4,22 @@
 
 This design document outlines the implementation of a reliable drag-and-drop system using dnd-kit to replace the current complex custom implementation. The design leverages dnd-kit's battle-tested mobile touch handling, built-in accessibility, and simple API to eliminate the coordination complexity, timing issues, and mobile failures present in the current system. The solution will be implemented in under 100 lines of code compared to the current 1000+ line implementation.
 
+## Drag Operation Types
+
+The system supports two distinct types of drag operations:
+
+### 1. Drag-to-Add (FROM modals TO preview panel)
+- **Source**: TrackSourceModal, SpotifySearchModal, AddUnselectedModal
+- **Target**: MixPreview component
+- **Purpose**: Add new tracks to the mix by dragging from selection modals
+- **Implementation**: Tracks in modals are wrapped with SortableWrapper to make them draggable sources
+
+### 2. Drag-to-Reorder (WITHIN preview panel)
+- **Source**: Tracks already in MixPreview
+- **Target**: Different positions within the same MixPreview
+- **Purpose**: Reorder existing tracks within the mix
+- **Implementation**: TrackListContainer with DraggableTrackList for internal reordering
+
 ## Architecture
 
 ### Core Components

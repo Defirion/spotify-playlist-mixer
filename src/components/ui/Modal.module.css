@@ -10,6 +10,13 @@
   transition: opacity 0.2s ease;
 }
 
+/* Backdrop during drag operations */
+.backdrop.dragging {
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 998;
+}
+
 /* Modal container */
 .modal {
   position: fixed;
@@ -26,6 +33,17 @@
   z-index: 1001;
   transition: opacity 0.2s ease;
   outline: none;
+}
+
+/* Modal during drag operations */
+.modal.dragging {
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.modal.dragging .content {
+  pointer-events: auto;
 }
 
 /* Size variants */

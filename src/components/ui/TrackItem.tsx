@@ -147,7 +147,7 @@ const TrackItem = memo(
             ...style,
             gridTemplateColumns: gridTemplate,
           }}
-          data-testid="track-item"
+          data-testid={`track-item-${track.id}`}
           role="listitem"
           tabIndex={0}
           {...otherProps}
