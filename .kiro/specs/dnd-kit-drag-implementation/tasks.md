@@ -138,7 +138,20 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - **Note**: This is for dragging FROM modal TO preview panel (adding tracks), not for reordering within modal
   - _Requirements: 6.3, 9.2, 9.3_
 
-- [ ] 11. Test mobile touch functionality
+- [x] 11. Create shared DndContext architecture for cross-component drag operations (MAX 60 lines)
+  - **Purpose**: Replace multiple separate DndContext instances with a single shared context at PlaylistMixer level to enable drag-to-add functionality between modals and preview panel.
+  - **CRITICAL**: Remove DndContext from TrackSourceModal.tsx and DraggableTrackList.tsx
+  - Move DndContext to PlaylistMixer.tsx to wrap both modals and preview components
+  - Create shared onDragEnd handler that distinguishes between reorder (within preview) and add (from modal to preview) operations
+  - Make preview panel a droppable target using useDroppable hook with id="preview-drop-zone"
+  - Update TrackSourceModal to work without its own DndContext (tracks remain draggable via SortableWrapper)
+  - Update DraggableTrackList to work without its own DndContext (tracks remain sortable via SortableContext)
+  - Test that drag-to-add works from all modals (TrackSourceModal, SpotifySearchModal, AddUnselectedModal) to preview
+  - Test that reordering within preview continues to work as before
+  - **GOAL**: Single DndContext enables both reordering within preview AND adding from modals to preview
+  - _Requirements: Cross-component drag operations, drag-to-add functionality_
+
+- [ ] 12. Test mobile touch functionality
   - Test touch drag on actual iOS device (Safari)
   - Test touch drag on actual Android device (Chrome)
   - Verify 250ms delay feels responsive
@@ -146,7 +159,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Test in different mobile browsers
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 12. Test keyboard accessibility
+- [ ] 13. Test keyboard accessibility
   - Test keyboard navigation with Tab key
   - Test drag initiation with Space/Enter keys
   - Test movement with arrow keys
@@ -154,7 +167,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Verify ARIA attributes are applied correctly
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 13. Add error boundary for drag operations (MAX 25 lines)
+- [ ] 14. Add error boundary for drag operations (MAX 25 lines)
   - Create simple error boundary component for drag functionality
   - Wrap TrackList with error boundary
   - Add basic error logging and fallback UI
@@ -162,7 +175,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Ensure graceful degradation when drag fails
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 14. Performance testing and optimization
+- [ ] 15. Performance testing and optimization
   - Test with large track lists (100+ items)
   - Measure bundle size impact
   - Profile memory usage during drag operations
@@ -170,7 +183,7 @@ This implementation plan includes specific safeguards to prevent over-engineerin
   - Optimize if any performance issues found
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 15. Integration testing with existing features
+- [ ] 16. Integration testing with existing features
   - Test drag works with existing modal functionality
   - Test drag works with existing search/filter features
   - Test drag works with existing playlist operations

@@ -38,6 +38,8 @@ export interface MixedTrack extends SpotifyTrack {
   popularityScore?: number;
   recencyScore?: number;
   finalScore?: number;
+  // Unique instance ID for drag/drop operations (allows duplicate songs)
+  instanceId?: string;
 }
 
 export interface PlaylistMixResult {

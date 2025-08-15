@@ -443,3 +443,9 @@
     grid-template-columns: 1fr;
   }
 }
+/* Drag over styles for drop zones */
+.dragOver {
+  background-color: rgba(139, 195, 74, 0.1);
+  border: 2px dashed var(--moss-green);
+  border-radius: 8px;
+}

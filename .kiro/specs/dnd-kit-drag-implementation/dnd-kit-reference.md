@@ -241,9 +241,98 @@ function TrackList() {
 }
 ```
 
+## Shared DndContext for Cross-Component Operations
+
+For drag operations between different components (e.g., from modals to preview panels), use a single shared DndContext:
+
+```javascript
+import { useDroppable } from '@dnd-kit/core';
+
+// Parent component with shared context
+function App() {
+  const sensors = useSensors(/* sensor config */);
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    // Route different operation types
+    if (over.id === 'drop-zone') {
+      // Handle drag-to-add operation
+      const trackData = active.data.current?.track;
+      addTrack(trackData);
+    } else {
+      // Handle reorder operation
+      reorderTracks(active.id, over.id);
+    }
+  };
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <Modal>
+        <SortableContext items={modalTracks}>
+          {modalTracks.map(track => (
+            <SortableWrapper key={track.id} id={track.id} data={{ track }}>
+              <TrackItem track={track} />
+            </SortableWrapper>
+          ))}
+        </SortableContext>
+      </Modal>
+      
+      <DroppablePreview />
+    </DndContext>
+  );
+}
+
+// Droppable target component
+function DroppablePreview() {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'drop-zone',
+  });
+
+  return (
+    <div ref={setNodeRef} className={isOver ? 'drag-over' : ''}>
+      <SortableContext items={previewTracks}>
+        {previewTracks.map(track => (
+          <SortableWrapper key={track.id} id={track.id}>
+            <TrackItem track={track} />
+          </SortableWrapper>
+        ))}
+      </SortableContext>
+    </div>
+  );
+}
+```
+
+### Key Imports for Cross-Component Operations
+
+```javascript
+// Additional imports for droppable functionality
+import { useDroppable } from '@dnd-kit/core';
+```
+
+### Data Passing for Drag-to-Add
+
+```javascript
+// Pass custom data with draggable items
+<SortableWrapper 
+  id={track.id} 
+  data={{ track, type: 'source' }}
+>
+  <TrackItem track={track} />
+</SortableWrapper>
+
+// Access data in onDragEnd
+const handleDragEnd = (event) => {
+  const trackData = event.active.data.current?.track;
+  const itemType = event.active.data.current?.type;
+};
+```
+
 ## Performance Notes
 
 - **Lightweight**: ~10KB total bundle size
 - **Optimized**: Uses efficient collision detection algorithms
 - **Mobile-first**: TouchSensor designed for mobile performance
 - **Memory efficient**: Proper cleanup of event listeners and timers
+- **Shared Context**: Single DndContext handles multiple operation types efficiently

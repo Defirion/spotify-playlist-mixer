@@ -1,9 +1,2 @@
-We have multiple separate DndContext instances when we need a single shared one. The modal has its own DndContext and the preview panel (via TrackListContainer) has its own DndContext, so they can't communicate.
-
-The solution is to:
-
-Create a single shared DndContext at the PlaylistMixer level that wraps both the preview and modals
-
-Remove the individual DndContext instances from TrackSourceModal and TrackListContainer
-
-Make the preview panel a droppable target that can accept tracks from the modal sources
+currently we are working on adding newids for SpotifySearchModal tracks
+we need to fix the rearranging of the tracks when we add songs to the preview list (aka reimplement add to the bottom and rearrange)

@@ -187,6 +187,88 @@ If you find yourself:
 
 **STOP** and re-read the dnd-kit documentation. The solution is likely simpler than you think.
 
+## Shared DndContext Architecture
+
+### Single Context Pattern (CRITICAL for Cross-Component Drag)
+```typescript
+// CORRECT: Single DndContext at top level
+function PlaylistMixer() {
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    // Route operations based on drop target
+    if (over.id === 'preview-drop-zone') {
+      // Drag-to-add: from modal to preview
+      const trackData = active.data.current?.track;
+      mixPreview.addTrack(trackData);
+    } else {
+      // Reorder: within preview
+      reorderTracks(active.id, over.id);
+    }
+  };
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      {/* All modals and preview participate in shared context */}
+      <TrackSourceModal /> {/* No DndContext here */}
+      <DroppableMixPreview /> {/* No DndContext here */}
+    </DndContext>
+  );
+}
+```
+
+### Droppable Target Pattern (Copy Exactly)
+```typescript
+import { useDroppable } from '@dnd-kit/core';
+
+function DroppableMixPreview({ tracks }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'preview-drop-zone',
+  });
+
+  return (
+    <div ref={setNodeRef} className={isOver ? 'drag-over' : ''}>
+      <SortableContext items={tracks.map(t => t.id)}>
+        {tracks.map(track => (
+          <SortableWrapper key={track.id} id={track.id}>
+            <TrackItem track={track} />
+          </SortableWrapper>
+        ))}
+      </SortableContext>
+    </div>
+  );
+}
+```
+
+### Data Passing Pattern (Copy Exactly)
+```typescript
+// In modal: Pass track data for drag-to-add
+<SortableWrapper 
+  id={track.id} 
+  data={{ track, source: 'modal' }}
+>
+  <TrackItem track={track} />
+</SortableWrapper>
+
+// In onDragEnd: Access the data
+const trackData = event.active.data.current?.track;
+```
+
+## Anti-Patterns for Shared Context
+
+### ❌ NEVER Do These:
+- Multiple DndContext instances in the same drag flow
+- Nested DndContext components
+- Custom event systems between contexts
+- Complex collision detection for cross-component drags
+
+### ✅ ALWAYS Do These:
+- Single DndContext at the highest common parent
+- Route operations in shared onDragEnd handler
+- Use useDroppable for drop targets
+- Pass data via the data prop on useSortable
+
 ## Reference Documentation
 
 All essential dnd-kit patterns and APIs are documented in:

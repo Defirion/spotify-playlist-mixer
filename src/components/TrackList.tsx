@@ -16,15 +16,9 @@ function TrackList({ tracks }: { tracks: SpotifyTrack[] }) {
   );
 }
 
-function TrackListContainer({
-  tracks,
-  onReorder,
-}: {
-  tracks: SpotifyTrack[];
-  onReorder: (activeId: string, overId: string) => void;
-}) {
+function TrackListContainer({ tracks }: { tracks: SpotifyTrack[] }) {
   return (
-    <DraggableTrackList tracks={tracks.map(t => t.id)} onReorder={onReorder}>
+    <DraggableTrackList tracks={tracks.map(t => t.id)}>
       <TrackList tracks={tracks} />
     </DraggableTrackList>
   );

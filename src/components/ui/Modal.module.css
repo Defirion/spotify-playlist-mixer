@@ -46,6 +46,23 @@
   pointer-events: auto;
 }
 
+/* Global drag state - applied to body during drag operations */
+:global(body.dnd-dragging) .modal {
+  z-index: 1 !important;
+  opacity: 0.1 !important;
+  pointer-events: none !important;
+}
+
+:global(body.dnd-dragging) .backdrop {
+  z-index: 1 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+:global(body.dnd-dragging) .content {
+  pointer-events: none !important;
+}
+
 /* Size variants */
 .modal.small {
   width: 90%;

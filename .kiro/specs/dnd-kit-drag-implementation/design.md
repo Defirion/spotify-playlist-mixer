@@ -6,36 +6,56 @@ This design document outlines the implementation of a reliable drag-and-drop sys
 
 ## Drag Operation Types
 
-The system supports two distinct types of drag operations:
+The system supports two distinct types of drag operations within a single shared DndContext:
 
 ### 1. Drag-to-Add (FROM modals TO preview panel)
 - **Source**: TrackSourceModal, SpotifySearchModal, AddUnselectedModal
-- **Target**: MixPreview component
+- **Target**: MixPreview component (droppable zone)
 - **Purpose**: Add new tracks to the mix by dragging from selection modals
-- **Implementation**: Tracks in modals are wrapped with SortableWrapper to make them draggable sources
+- **Implementation**: Tracks in modals are wrapped with SortableWrapper, preview panel uses useDroppable
 
 ### 2. Drag-to-Reorder (WITHIN preview panel)
 - **Source**: Tracks already in MixPreview
 - **Target**: Different positions within the same MixPreview
 - **Purpose**: Reorder existing tracks within the mix
-- **Implementation**: TrackListContainer with DraggableTrackList for internal reordering
+- **Implementation**: SortableContext within the shared DndContext for internal reordering
+
+### Shared Context Architecture
+- **Single DndContext**: Located at PlaylistMixer level, wraps all drag operations
+- **Cross-Component Communication**: Enables drag operations between modals and preview
+- **Event Routing**: Single onDragEnd handler distinguishes between add vs reorder operations
 
 ## Architecture
 
 ### Core Components
 
-1. **DndContext** - Main provider that manages drag state and sensor coordination
-2. **SortableContext** - Specialized context for sortable lists with vertical strategy
-3. **useSortable Hook** - Individual track item drag functionality
-4. **Sensor Configuration** - MouseSensor, TouchSensor, and KeyboardSensor setup
-5. **Zustand Integration** - External state management via onDragEnd callback
+1. **Shared DndContext** - Single provider at PlaylistMixer level managing all drag operations
+2. **SortableContext** - Specialized context for sortable lists within the shared context
+3. **useDroppable Hook** - Makes preview panel a drop target for tracks from modals
+4. **useSortable Hook** - Individual track item drag functionality (both sources and sortable items)
+5. **Sensor Configuration** - MouseSensor, TouchSensor, and KeyboardSensor setup
+6. **Zustand Integration** - External state management via shared onDragEnd callback
 
 ### Component Interaction Flow
 
 ```
-User Input → Sensor Detection → DndContext → SortableContext → useSortable → Transform → Visual Feedback
-                                     ↓
-                              onDragEnd → Zustand Store → arrayMove → Re-render
+User Input → Sensor Detection → Shared DndContext → Route Operation Type
+                                        ↓                    ↓
+                              SortableContext         useDroppable
+                                        ↓                    ↓
+                                 useSortable            Drop Target
+                                        ↓                    ↓
+                                   Transform            Visual Feedback
+                                        ↓                    ↓
+                              Shared onDragEnd Handler
+                                        ↓
+                           Determine: Reorder vs Add
+                                   ↓         ↓
+                            arrayMove    addTrack
+                                   ↓         ↓
+                              Zustand Store Update
+                                        ↓
+                                   Re-render
 ```
 
 ### Eliminated Components
@@ -48,9 +68,143 @@ All complex custom logic is replaced by dnd-kit:
 - Manual focus management and accessibility
 - Custom collision detection and drop zone logic
 
+## Shared DndContext Architecture
+
+### 1. PlaylistMixer with Shared DndContext
+
+```typescript
+import React, { useCallback } from 'react';
+import { DndContext, DragEndEvent, useDroppable } from '@dnd-kit/core';
+import { useDragSensors } from '../hooks/useDragSensors';
+
+function PlaylistMixer({ /* existing props */ }) {
+  const sensors = useDragSensors();
+
+  // Shared drag end handler that routes operations
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    // Check if this is drag-to-add (from modal to preview)
+    if (over.id === 'preview-drop-zone') {
+      // Add track to preview
+      const trackData = active.data.current?.track;
+      if (trackData) {
+        mixPreview.addTrack(trackData);
+      }
+      return;
+    }
+
+    // Check if this is reorder within preview
+    const previewTracks = mixPreview.getPreviewTracks();
+    const activeInPreview = previewTracks.find(t => t.id === active.id);
+    const overInPreview = previewTracks.find(t => t.id === over.id);
+
+    if (activeInPreview && overInPreview) {
+      // Reorder within preview
+      const oldIndex = previewTracks.findIndex(t => t.id === active.id);
+      const newIndex = previewTracks.findIndex(t => t.id === over.id);
+      if (oldIndex !== newIndex) {
+        const newTracks = arrayMove(previewTracks, oldIndex, newIndex);
+        mixPreview.updateTrackOrder(newTracks);
+      }
+    }
+  }, [mixPreview]);
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div className={styles.container}>
+        {/* Existing PlaylistMixer content */}
+        
+        {/* Modals - now participate in shared context */}
+        {modalState.isOpen && (
+          <TrackSourceModal
+            // ... existing props
+            // No longer needs its own DndContext
+          />
+        )}
+
+        {/* Preview - now both sortable and droppable */}
+        {mixPreview.state.preview && (
+          <DroppableMixPreview
+            tracks={mixPreview.state.preview.tracks}
+            // ... existing props
+          />
+        )}
+      </div>
+    </DndContext>
+  );
+}
+```
+
+### 2. Droppable MixPreview Component
+
+```typescript
+import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+
+function DroppableMixPreview({ tracks, ...props }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'preview-drop-zone',
+  });
+
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`mix-preview ${isOver ? 'drag-over' : ''}`}
+    >
+      <SortableContext 
+        items={tracks.map(t => t.id)} 
+        strategy={verticalListSortingStrategy}
+      >
+        {tracks.map(track => (
+          <SortableWrapper key={track.id} id={track.id}>
+            <TrackItem track={track} />
+          </SortableWrapper>
+        ))}
+      </SortableContext>
+    </div>
+  );
+}
+```
+
+### 3. Updated TrackSourceModal (No DndContext)
+
+```typescript
+import React from 'react';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+
+function TrackSourceModal({ tracks, ...props }) {
+  // No longer creates its own DndContext
+  // Participates in shared context from PlaylistMixer
+
+  return (
+    <Modal {...modalProps}>
+      <SortableContext 
+        items={tracks.map(t => t.id)} 
+        strategy={verticalListSortingStrategy}
+      >
+        <div className={styles.trackList}>
+          {tracks.map(track => (
+            <SortableWrapper 
+              key={track.id} 
+              id={track.id}
+              data={{ track }} // Pass track data for drag-to-add
+            >
+              <TrackItem track={track} />
+            </SortableWrapper>
+          ))}
+        </div>
+      </SortableContext>
+    </Modal>
+  );
+}
+```
+
 ## Components and Interfaces
 
-### 1. DraggableTrackList Container (Drag Orchestration Only)
+### 1. DraggableTrackList Container (Legacy - To Be Removed)
 
 ```typescript
 import React from 'react';

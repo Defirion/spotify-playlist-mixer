@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { MixedTrack } from '../../../types';
-import { TrackListContainer } from '../../TrackList';
+import SortableWrapper from '../../SortableWrapper';
+import TrackItem from '../../ui/TrackItem';
 import SpotifySearchModal from '../../SpotifySearchModal';
 import AddUnselectedModal from '../../AddUnselectedModal';
 import styles from '../../PlaylistMixer.module.css';
@@ -22,6 +27,44 @@ interface MixPreviewProps {
   accessToken: string;
   selectedPlaylists: any[];
 }
+
+const DroppableTrackList: React.FC<{ tracks: MixedTrack[] }> = ({ tracks }) => {
+  return (
+    <div className={styles.trackListContainer}>
+      {tracks.length === 0 && (
+        <div
+          style={{
+            textAlign: 'center',
+            color: 'rgba(139, 195, 74, 0.7)',
+            fontSize: '16px',
+            padding: '40px',
+            border: '2px dashed rgba(139, 195, 74, 0.3)',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(139, 195, 74, 0.05)',
+          }}
+        >
+          Drag tracks from modals to add them here
+        </div>
+      )}
+      <SortableContext
+        items={tracks.map(t => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {tracks.map(track => {
+          return (
+            <SortableWrapper
+              key={track.id}
+              id={track.id}
+              data={{ context: 'preview' }}
+            >
+              <TrackItem track={track} />
+            </SortableWrapper>
+          );
+        })}
+      </SortableContext>
+    </div>
+  );
+};
 
 const MixPreview: React.FC<MixPreviewProps> = ({
   tracks,
@@ -110,23 +153,8 @@ const MixPreview: React.FC<MixPreviewProps> = ({
           ))}
         </div>
 
-        {/* Track list */}
-        <div className={styles.trackListContainer}>
-          <TrackListContainer
-            tracks={tracks}
-            onReorder={(activeId: string, overId: string) => {
-              const oldIndex = tracks.findIndex(track => track.id === activeId);
-              const newIndex = tracks.findIndex(track => track.id === overId);
-
-              if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-                const newTracks = [...tracks];
-                const [movedTrack] = newTracks.splice(oldIndex, 1);
-                newTracks.splice(newIndex, 0, movedTrack);
-                onTrackOrderChange(newTracks);
-              }
-            }}
-          />
-        </div>
+        {/* Track list - droppable and sortable */}
+        <DroppableTrackList tracks={tracks} />
       </div>
 
       {/* Modals */}

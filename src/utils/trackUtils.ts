@@ -1,66 +1,98 @@
-// Track utility functions (extracted from removed dragAndDrop utilities)
+// Utility functions for track management
 
-import { SpotifyTrack } from '../types/spotify';
+import { MixedTrack, SpotifyTrack } from '../types';
 
 /**
- * Format duration from milliseconds to human-readable format
+ * Format duration from milliseconds to MM:SS format
  */
-export const formatDuration = (durationMs: number): string => {
-  if (typeof durationMs !== 'number' || durationMs < 0 || isNaN(durationMs)) {
-    return '0:00';
-  }
-
+export function formatDuration(durationMs: number): string {
   const totalSeconds = Math.floor(durationMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
+}
 
 /**
- * Get track quadrant based on audio features (simplified version)
+ * Get track quadrant based on track properties
+ * This is a simplified version that uses popularity as a proxy
  */
-export const getTrackQuadrant = (track: SpotifyTrack): string => {
-  // Simplified implementation - in the future this could use audio features
-  // For now, return a default quadrant
-  return 'moderate-energy-moderate-valence';
-};
+export function getTrackQuadrant(track: SpotifyTrack): string {
+  // Simplified logic using popularity and track name length as proxies
+  // In a real implementation, this would use audio features
+  const popularity = track.popularity || 50;
+  const nameLength = track.name.length;
+
+  if (popularity > 50 && nameLength > 20) return 'high-energy-high-valence';
+  if (popularity > 50 && nameLength <= 20) return 'high-energy-low-valence';
+  if (popularity <= 50 && nameLength > 20) return 'low-energy-high-valence';
+  return 'low-energy-low-valence';
+}
 
 /**
- * Get popularity style based on quadrant and popularity score
+ * Get popularity style based on quadrant and popularity
  */
-export const getPopularityStyle = (
+export function getPopularityStyle(
   quadrant: string,
-  popularity: number
-): { background: string; color: string; text: string } | null => {
-  if (typeof popularity !== 'number') {
-    return null;
-  }
+  popularity?: number
+): { background: string; color: string; text: string } {
+  // This is a simplified version - the original might have more complex logic
+  const popularityText = popularity ? `${popularity}%` : '';
 
-  // Simple popularity styling based on score
-  if (popularity >= 80) {
+  switch (quadrant) {
+    case 'high-energy-high-valence':
+      return { background: '#4CAF50', color: '#fff', text: popularityText };
+    case 'high-energy-low-valence':
+      return { background: '#FF5722', color: '#fff', text: popularityText };
+    case 'low-energy-high-valence':
+      return { background: '#2196F3', color: '#fff', text: popularityText };
+    default:
+      return { background: '#9E9E9E', color: '#fff', text: popularityText };
+  }
+}
+
+/**
+ * Generate a unique instance ID for a track
+ * This allows the same Spotify track to be added multiple times
+ */
+export function generateTrackInstanceId(): string {
+  return `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Get the unique identifier for drag/drop operations
+ * Uses instanceId if available, falls back to Spotify track ID
+ */
+export function getTrackDragId(track: MixedTrack): string {
+  return track.instanceId || track.id;
+}
+
+/**
+ * Create a MixedTrack with a unique instance ID
+ * This allows adding the same Spotify track multiple times
+ */
+export function createMixedTrackInstance(
+  track: SpotifyTrack | MixedTrack,
+  sourcePlaylist: string
+): MixedTrack {
+  const mixedTrack: MixedTrack = {
+    ...track,
+    sourcePlaylist,
+    instanceId: generateTrackInstanceId(),
+  };
+
+  return mixedTrack;
+}
+
+/**
+ * Ensure a track has an instance ID
+ * If it doesn't have one, generate it
+ */
+export function ensureTrackInstanceId(track: MixedTrack): MixedTrack {
+  if (!track.instanceId) {
     return {
-      background: '#4CAF50',
-      color: '#fff',
-      text: 'Hit',
-    };
-  } else if (popularity >= 60) {
-    return {
-      background: '#FF9800',
-      color: '#fff',
-      text: 'Popular',
-    };
-  } else if (popularity >= 40) {
-    return {
-      background: '#2196F3',
-      color: '#fff',
-      text: 'Moderate',
-    };
-  } else {
-    return {
-      background: '#9C27B0',
-      color: '#fff',
-      text: 'Deep Cut',
+      ...track,
+      instanceId: generateTrackInstanceId(),
     };
   }
-};
+  return track;
+}

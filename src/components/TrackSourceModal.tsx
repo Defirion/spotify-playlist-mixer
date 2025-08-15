@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, memo, useState } from 'react';
-import { DndContext, useDndMonitor } from '@dnd-kit/core';
+import React, { useCallback, useEffect, memo } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -8,7 +7,6 @@ import Modal from './ui/Modal';
 import TrackItem from './ui/TrackItem';
 import SortableWrapper from './SortableWrapper';
 import { useTrackSelection } from '../hooks/useTrackSelection';
-import { useDragSensors } from '../hooks/useDragSensors';
 import { SpotifyTrack } from '../types';
 import styles from './TrackSourceModal.module.css';
 
@@ -40,18 +38,6 @@ interface TrackSourceModalProps {
   showLoadingIndicator?: boolean;
 }
 
-// Component to monitor drag state from within DndContext
-const DragMonitor: React.FC<{
-  onDragStateChange: (isDragging: boolean) => void;
-}> = ({ onDragStateChange }) => {
-  useDndMonitor({
-    onDragStart: () => onDragStateChange(true),
-    onDragEnd: () => onDragStateChange(false),
-    onDragCancel: () => onDragStateChange(false),
-  });
-  return null;
-};
-
 const TrackSourceModal = memo<TrackSourceModalProps>(
   ({
     // Modal props
@@ -78,9 +64,6 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
     emptyMessage = 'No tracks available',
     showLoadingIndicator = false,
   }) => {
-    const sensors = useDragSensors();
-    const [isDragging, setIsDragging] = useState(false);
-
     const {
       selectedTracksToAdd,
       handleTrackSelect,
@@ -90,12 +73,6 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
       availableTracks: tracks,
       onAddTracks,
     });
-
-    // Handle drag end - for drag-to-add functionality
-    const handleDragEnd = useCallback(() => {
-      // Drag end will be handled by the drop target (preview panel)
-      // This modal only provides draggable sources
-    }, []);
 
     // Enhanced onClose handler
     const handleModalClose = useCallback(() => {
@@ -157,7 +134,6 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
         title={title}
         size="large"
         className={`${styles.modal} ${className}`}
-        dragging={isDragging}
       >
         {/* Header Info */}
         <div className={styles.header}>
@@ -207,30 +183,31 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
               {emptyMessage}
             </div>
           ) : (
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-              <DragMonitor onDragStateChange={setIsDragging} />
-              <SortableContext
-                items={tracks.map(t => t.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className={styles.trackList} data-testid="track-list">
-                  {tracks.map(track => (
-                    <SortableWrapper key={track.id} id={track.id}>
-                      <TrackItem
-                        track={track}
-                        onSelect={handleTrackSelect}
-                        selected={selectedTracksToAdd.has(track.id)}
-                        showCheckbox={true}
-                        showAlbumArt={true}
-                        showPopularity={true}
-                        showDuration={true}
-                        showSourcePlaylist={true}
-                      />
-                    </SortableWrapper>
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+            <SortableContext
+              items={tracks.map(t => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className={styles.trackList} data-testid="track-list">
+                {tracks.map(track => (
+                  <SortableWrapper
+                    key={track.id}
+                    id={track.id}
+                    data={{ track, context: 'modal' }}
+                  >
+                    <TrackItem
+                      track={track}
+                      onSelect={handleTrackSelect}
+                      selected={selectedTracksToAdd.has(track.id)}
+                      showCheckbox={true}
+                      showAlbumArt={true}
+                      showPopularity={true}
+                      showDuration={true}
+                      showSourcePlaylist={true}
+                    />
+                  </SortableWrapper>
+                ))}
+              </div>
+            </SortableContext>
           )}
         </div>
 
