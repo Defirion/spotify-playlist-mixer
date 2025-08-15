@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  closestCenter,
+} from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
@@ -32,6 +37,9 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   onError,
 }) => {
   const sensors = useDragSensors();
+
+  // Ref to track optimistically added tracks for drag operations
+  const optimisticTrackRef = useRef<MixedTrack | null>(null);
 
   // Custom hooks
   const mixGeneration = useMixGeneration(accessToken, {
@@ -89,16 +97,62 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
     [mixPreview]
   );
 
-  // Simple drag start handler - only for visual feedback
-  const handleDragStart = useCallback(() => {
-    console.log('Drag started - adding dnd-dragging class');
-    document.body.classList.add('dnd-dragging');
-  }, []);
+  // Enhanced drag start handler - optimistic UI for external drags
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      console.log('Drag started - adding dnd-dragging class');
+      document.body.classList.add('dnd-dragging');
+
+      const { active } = event;
+      const isExternalDrag = active.data.current?.context === 'modal';
+
+      if (isExternalDrag) {
+        const trackData = active.data.current?.track;
+        if (trackData) {
+          // Create optimistic track using the SAME instance ID as the dragged track
+          // This ensures the drag system can find the track in the preview
+          const optimisticTrack: MixedTrack = {
+            ...trackData,
+            sourcePlaylist: trackData.sourcePlaylist || 'unknown',
+            instanceId: trackData.instanceId || active.id, // Use the drag ID as instance ID
+          };
+
+          // Store reference for potential cleanup
+          optimisticTrackRef.current = optimisticTrack;
+
+          // Add to end of preview for immediate visual feedback
+          const currentTracks = mixPreview.getPreviewTracks();
+          const updatedTracks = [...currentTracks, optimisticTrack];
+          mixPreview.updateTrackOrder(updatedTracks);
+
+          console.log('Added optimistic track:', optimisticTrack.instanceId);
+        }
+      }
+    },
+    [mixPreview]
+  );
 
   const handleDragCancel = useCallback(() => {
     console.log('Drag cancelled - removing dnd-dragging class');
     document.body.classList.remove('dnd-dragging');
-  }, []);
+
+    // Remove optimistic track if drag was cancelled
+    if (optimisticTrackRef.current) {
+      const currentTracks = mixPreview.getPreviewTracks();
+      const optimisticTrackId = getTrackDragId(optimisticTrackRef.current);
+
+      // Remove the optimistic track
+      const updatedTracks = currentTracks.filter(
+        t => getTrackDragId(t) !== optimisticTrackId
+      );
+
+      mixPreview.updateTrackOrder(updatedTracks);
+      console.log('Removed optimistic track on cancel:', optimisticTrackId);
+
+      // Clear the reference
+      optimisticTrackRef.current = null;
+    }
+  }, [mixPreview]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -122,46 +176,49 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
       const isExternalDrag = active.data.current?.context === 'modal';
 
       if (isExternalDrag) {
-        // Adding a new track from modal
+        // Track was already added optimistically in handleDragStart
+        // Now we just need to finalize its position
         const trackData = active.data.current?.track;
-        if (!trackData) return;
+        if (!trackData || !optimisticTrackRef.current) return;
 
-        // Create new track instance with unique ID using utility function
-        const newTrack: MixedTrack = {
-          ...trackData,
-          sourcePlaylist: trackData.sourcePlaylist || 'unknown',
-          instanceId: `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        };
+        const optimisticTrackId = getTrackDragId(optimisticTrackRef.current);
 
-        console.log('Created new track with instanceId:', newTrack.instanceId);
-
-        // Find where to insert the track
+        // Find where to move the optimistic track
         const targetIndex = previewTracks.findIndex(
           t => getTrackDragId(t) === over.id
         );
 
-        if (targetIndex >= 0) {
-          // Insert before the target track
-          const updatedTracks = [...previewTracks];
-          updatedTracks.splice(targetIndex, 0, newTrack);
-          console.log('Inserting track at position:', targetIndex);
-          mixPreview.updateTrackOrder(updatedTracks);
-        } else {
-          // Add to end if no target found or list is empty
-          const updatedTracks = [...previewTracks, newTrack];
-          console.log('Adding track to end');
-          mixPreview.updateTrackOrder(updatedTracks);
+        if (
+          targetIndex >= 0 &&
+          getTrackDragId(previewTracks[targetIndex]) !== optimisticTrackId
+        ) {
+          // Move the optimistic track to the target position
+          const currentIndex = previewTracks.findIndex(
+            t => getTrackDragId(t) === optimisticTrackId
+          );
+
+          if (currentIndex >= 0) {
+            const reorderedTracks = arrayMove(
+              previewTracks,
+              currentIndex,
+              targetIndex
+            );
+            mixPreview.updateTrackOrder(reorderedTracks);
+            console.log('Moved optimistic track to position:', targetIndex);
+          }
         }
+        // If no target or target is the optimistic track itself, keep it where it is
 
         // Notify that a track was successfully added via drag
         // This will trigger regeneration of instance IDs in modals
-        // Use the original track ID, not the instance ID
         window.dispatchEvent(
           new CustomEvent('trackDraggedToPreview', {
             detail: { trackId: trackData.id },
           })
         );
 
+        // Clear the optimistic reference
+        optimisticTrackRef.current = null;
         return;
       }
 

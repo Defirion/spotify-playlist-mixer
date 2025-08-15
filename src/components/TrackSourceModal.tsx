@@ -275,7 +275,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                       showAlbumArt={true}
                       showPopularity={true}
                       showDuration={true}
-                      showSourcePlaylist={true}
+                      showSourcePlaylist={false}
                     />
                   </SortableWrapper>
                 ))}

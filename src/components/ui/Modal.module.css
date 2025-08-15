@@ -20,7 +20,7 @@
 /* Modal container */
 .modal {
   position: fixed;
-  top: 75%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: var(--hunter-green);
@@ -35,9 +35,17 @@
   outline: none;
 }
 
+/* Adjust positioning for smaller screens */
+@media (max-width: 768px) {
+  .modal {
+    top: 55%; /* Adjust this value to align with your preview panel */
+    transform: translateX(-50%); /* Only center horizontally, align top edge */
+  }
+}
+
 /* Modal during drag operations */
 .modal.dragging {
-  opacity: 0.3;
+  opacity: 0;
   pointer-events: none;
   z-index: 999;
 }
@@ -49,7 +57,7 @@
 /* Global drag state - applied to body during drag operations */
 :global(body.dnd-dragging) .modal {
   z-index: 1 !important;
-  opacity: 0.1 !important;
+  opacity: 0 !important;
   pointer-events: none !important;
 }
 
