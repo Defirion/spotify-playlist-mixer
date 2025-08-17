@@ -15,6 +15,7 @@ import { getTrackDragId } from '../utils/trackUtils';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
 import MixControls from './features/mixer/MixControls';
+import ErrorBoundary from './ui/ErrorBoundary';
 import { SpotifyPlaylist, MixOptions, RatioConfig, MixedTrack } from '../types';
 import styles from './PlaylistMixer.module.css';
 
@@ -328,15 +329,17 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
         />
 
         {mixPreview.state.preview && (
-          <MixPreview
-            tracks={mixPreview.state.preview.tracks}
-            stats={mixPreview.state.preview.stats}
-            totalDuration={mixPreview.state.preview.totalDuration}
-            loading={mixPreview.state.loading}
-            onTrackOrderChange={handlePreviewOrderChange}
-            accessToken={accessToken}
-            selectedPlaylists={selectedPlaylists}
-          />
+          <ErrorBoundary>
+            <MixPreview
+              tracks={mixPreview.state.preview.tracks}
+              stats={mixPreview.state.preview.stats}
+              totalDuration={mixPreview.state.preview.totalDuration}
+              loading={mixPreview.state.loading}
+              onTrackOrderChange={handlePreviewOrderChange}
+              accessToken={accessToken}
+              selectedPlaylists={selectedPlaylists}
+            />
+          </ErrorBoundary>
         )}
 
         <MixControls

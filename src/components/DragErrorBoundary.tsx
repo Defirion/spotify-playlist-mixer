@@ -1,28 +1,25 @@
 import React from 'react';
+import ErrorBoundary from './ui/ErrorBoundary';
 
-type P = { children: React.ReactNode };
+type Props = { children: React.ReactNode };
 
-export default class DragErrorBoundary extends React.Component<
-  P,
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(e: Error) {
-    console.error('DragErrorBoundary', e);
-  }
-  render() {
-    if (this.state.hasError)
-      return (
-        <div role="alert" data-testid="drag-error-boundary">
-          <p>Something went wrong with drag operations.</p>
-          <button onClick={() => this.setState({ hasError: false })}>
-            Retry
-          </button>
-        </div>
-      );
-    return this.props.children as React.ReactElement;
-  }
+export default function DragErrorBoundary({ children }: Props) {
+  const fallback = (
+    _error: Error | null,
+    _errorInfo: React.ErrorInfo | null,
+    handleRetry?: () => void
+  ) => (
+    <div role="alert" data-testid="drag-error-boundary">
+      <p>Something went wrong with drag operations.</p>
+      <button
+        onClick={() => {
+          if (handleRetry) handleRetry();
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
+
+  return <ErrorBoundary fallback={fallback}>{children}</ErrorBoundary>;
 }

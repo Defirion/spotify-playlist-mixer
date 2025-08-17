@@ -6,7 +6,7 @@ This plan consolidates the remaining incomplete tasks from multiple refactor spe
 
 ## Consolidated Tasks
 
-- [ ] 1. Complete TypeScript migration for remaining JavaScript files (MAX 30 lines of changes per file)
+- [x] 1. Complete TypeScript migration for remaining JavaScript files (MAX 30 lines of changes per file)
   - **Purpose**: Convert all remaining JavaScript files to TypeScript with proper type annotations
   - Convert `src/jest.polyfills.js` to TypeScript (likely can stay as .js since it's polyfills)
   - Convert `src/hooks/index.js` to TypeScript (remove duplicate with existing index.ts)
@@ -26,7 +26,7 @@ This plan consolidates the remaining incomplete tasks from multiple refactor spe
   - Run `npx tsc --noEmit` to verify zero TypeScript errors
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 2. Complete error boundary implementation for critical UI sections (MAX 40 lines)
+- [x] 2. Complete error boundary implementation for critical UI sections (MAX 40 lines)
   - **Purpose**: Add error boundaries to critical components that don't already have them
   - **Step 1**: Search for components that handle user data: `grep -r "useState\|useEffect" src/components/ --include="*.tsx"` to identify components needing error boundaries
   - **Step 2**: Check existing error boundary coverage: `grep -r "ErrorBoundary\|withErrorBoundary" src/components/ --include="*.tsx"`

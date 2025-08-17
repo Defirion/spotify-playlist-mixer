@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { StoreProvider } from './store/StoreProvider';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,8 +13,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <ErrorBoundary>
+      <StoreProvider>
+        <App />
+      </StoreProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
