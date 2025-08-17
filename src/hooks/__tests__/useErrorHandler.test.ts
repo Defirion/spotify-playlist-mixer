@@ -1,10 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
-import useErrorHandler, {
-  UseErrorHandlerReturn,
-  ErrorType,
-} from '../useErrorHandler';
+import useErrorHandler from '../useErrorHandler';
 
 describe('useErrorHandler', () => {
+  let consoleErrorSpy: any;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore?.();
+  });
   it('initializes with no error', () => {
     const { result } = renderHook(() => useErrorHandler());
 

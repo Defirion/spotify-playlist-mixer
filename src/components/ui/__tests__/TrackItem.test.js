@@ -40,7 +40,9 @@ describe('TrackItem', () => {
     it('renders track item with basic information', () => {
       render(<TrackItem {...defaultProps} />);
 
-      expect(screen.getByTestId('track-item')).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`track-item-${mockTracks[0].id}`)
+      ).toBeInTheDocument();
       expect(screen.getByText(mockTracks[0].name)).toBeInTheDocument();
       expect(
         screen.getByText(mockTracks[0].artists[0].name)
@@ -81,14 +83,14 @@ describe('TrackItem', () => {
     it('applies selected class when selected is true', () => {
       render(<TrackItem {...defaultProps} selected={true} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toHaveClass('selected');
     });
 
     it('applies custom className', () => {
       render(<TrackItem {...defaultProps} className="custom-track" />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toHaveClass('custom-track');
     });
 
@@ -96,7 +98,7 @@ describe('TrackItem', () => {
       const customStyle = { backgroundColor: 'red' };
       render(<TrackItem {...defaultProps} style={customStyle} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toHaveStyle('background-color: red');
     });
   });
@@ -106,7 +108,7 @@ describe('TrackItem', () => {
       render(<TrackItem {...defaultProps} showCheckbox={true} />);
 
       // Check that the track item has the expected structure for checkbox display
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toBeInTheDocument();
 
       // The checkbox functionality is tested through the selected state
@@ -125,7 +127,7 @@ describe('TrackItem', () => {
       render(<TrackItem {...defaultProps} showCheckbox={false} />);
 
       // Check that the track item renders normally without checkbox functionality
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toBeInTheDocument();
       expect(trackItem).not.toHaveClass('selected');
     });
@@ -182,7 +184,7 @@ describe('TrackItem', () => {
       const user = userEvent.setup();
       render(<TrackItem {...defaultProps} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       await user.click(trackItem);
 
       expect(defaultProps.onSelect).toHaveBeenCalledWith(mockTracks[0]);
@@ -193,7 +195,7 @@ describe('TrackItem', () => {
       const user = userEvent.setup();
       render(<TrackItem {...defaultProps} onClick={onClick} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       await user.click(trackItem);
 
       expect(onClick).toHaveBeenCalledWith(expect.any(Object), mockTracks[0]);
@@ -206,7 +208,7 @@ describe('TrackItem', () => {
       const user = userEvent.setup();
       render(<TrackItem {...defaultProps} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       trackItem.focus();
       await user.keyboard('{Enter}');
 
@@ -217,7 +219,7 @@ describe('TrackItem', () => {
       const user = userEvent.setup();
       render(<TrackItem {...defaultProps} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       trackItem.focus();
       await user.keyboard(' ');
 
@@ -228,7 +230,7 @@ describe('TrackItem', () => {
       const user = userEvent.setup();
       render(<TrackItem {...defaultProps} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       trackItem.focus();
 
       // Test Enter key
@@ -250,7 +252,7 @@ describe('TrackItem', () => {
       const onMouseEnter = jest.fn();
       render(<TrackItem {...defaultProps} onMouseEnter={onMouseEnter} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       fireEvent.mouseEnter(trackItem);
 
       expect(onMouseEnter).toHaveBeenCalled();
@@ -260,7 +262,7 @@ describe('TrackItem', () => {
       const onMouseLeave = jest.fn();
       render(<TrackItem {...defaultProps} onMouseLeave={onMouseLeave} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       fireEvent.mouseLeave(trackItem);
 
       expect(onMouseLeave).toHaveBeenCalled();
@@ -272,7 +274,7 @@ describe('TrackItem', () => {
       const onTouchStart = jest.fn();
       render(<TrackItem {...defaultProps} onTouchStart={onTouchStart} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       fireEvent.touchStart(trackItem);
 
       expect(onTouchStart).toHaveBeenCalled();
@@ -282,7 +284,7 @@ describe('TrackItem', () => {
       const onTouchMove = jest.fn();
       render(<TrackItem {...defaultProps} onTouchMove={onTouchMove} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       fireEvent.touchMove(trackItem);
 
       expect(onTouchMove).toHaveBeenCalled();
@@ -292,7 +294,7 @@ describe('TrackItem', () => {
       const onTouchEnd = jest.fn();
       render(<TrackItem {...defaultProps} onTouchEnd={onTouchEnd} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       fireEvent.touchEnd(trackItem);
 
       expect(onTouchEnd).toHaveBeenCalled();
@@ -363,7 +365,7 @@ describe('TrackItem', () => {
     it('has correct ARIA attributes', () => {
       render(<TrackItem {...defaultProps} />);
 
-      const trackItem = screen.getByTestId('track-item');
+      const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
       expect(trackItem).toHaveAttribute('role', 'listitem');
       expect(trackItem).toHaveAttribute('tabIndex', '0');
     });

@@ -49,6 +49,16 @@ describe('usePlaylistSearch', () => {
     jest.useRealTimers();
   });
 
+  // Silence console.error in this suite to keep test output clean when
+  // the hook intentionally logs errors during negative tests.
+  let consoleErrorSpy: jest.SpyInstance;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   describe('Initial State', () => {
     it('returns initial state correctly', () => {
       const { result } = renderHook(() =>

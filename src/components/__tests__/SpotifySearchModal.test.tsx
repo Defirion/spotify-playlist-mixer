@@ -18,6 +18,7 @@ jest.mock('../../utils/trackUtils', () => ({
   ),
   getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
   getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
+  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
 }));
 
 const mockUseSpotifySearch =
@@ -80,6 +81,7 @@ describe('SpotifySearchModal', () => {
     accessToken: 'test-token',
     onAddTracks: jest.fn(),
   };
+  const mockHandleTrackSelection = jest.fn();
 
   const mockSearchHookReturn = {
     query: '',
@@ -98,12 +100,20 @@ describe('SpotifySearchModal', () => {
     isLoadingMore: false,
   };
 
+  // Silence console.log for modal closing noise emitted by TrackSourceModal
+  let consoleLogSpy: jest.SpyInstance;
+
   // Drag-related mock return removed
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSpotifySearch.mockReturnValue(mockSearchHookReturn);
     // Drag-related mocks removed
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleLogSpy?.mockRestore?.();
   });
 
   describe('Rendering', () => {
@@ -136,10 +146,14 @@ describe('SpotifySearchModal', () => {
       );
 
       expect(
-        screen.getByPlaceholderText('Search for songs, artists, or albums...')
+        screen.getByPlaceholderText(
+          'Type to search songs, artists, or albums...'
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: 'Search' })
+        screen.getByTitle(
+          'Search manually (searches automatically as you type)'
+        )
       ).toBeInTheDocument();
     });
 
@@ -155,7 +169,7 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText(/2 tracks found/)).toBeInTheDocument();
+      expect(screen.getByText(/2\s*tracks/)).toBeInTheDocument();
     });
 
     it('renders loading state', () => {
@@ -171,7 +185,7 @@ describe('SpotifySearchModal', () => {
       );
 
       expect(screen.getAllByText('Searching...')[0]).toBeInTheDocument();
-      expect(screen.getByText('Searching Spotify...')).toBeInTheDocument();
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
     it('renders error state', () => {
@@ -187,7 +201,7 @@ describe('SpotifySearchModal', () => {
       );
 
       expect(
-        screen.getByText('Error searching Spotify. Please try again.')
+        screen.getByText('Error loading tracks. Please try again.')
       ).toBeInTheDocument();
     });
   });
@@ -208,7 +222,7 @@ describe('SpotifySearchModal', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search for songs, artists, or albums...'
+        'Type to search songs, artists, or albums...'
       );
       await user.type(searchInput, 'test');
 
@@ -233,7 +247,9 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
-      const searchButton = screen.getByRole('button', { name: 'Search' });
+      const searchButton = screen.getByTitle(
+        'Search manually (searches automatically as you type)'
+      );
       await user.click(searchButton);
 
       expect(mockSearch).toHaveBeenCalled();
@@ -255,7 +271,7 @@ describe('SpotifySearchModal', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search for songs, artists, or albums...'
+        'Type to search songs, artists, or albums...'
       );
       await user.type(searchInput, '{enter}');
 
@@ -274,7 +290,9 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
-      const searchButton = screen.getByRole('button', { name: 'Search' });
+      const searchButton = screen.getByTitle(
+        'Search manually (searches automatically as you type)'
+      );
       expect(searchButton).toBeDisabled();
     });
 
@@ -291,7 +309,9 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
-      const searchButton = screen.getByRole('button', { name: 'Searching...' });
+      const searchButton = screen.getByTitle(
+        'Search manually (searches automatically as you type)'
+      );
       expect(searchButton).toBeDisabled();
     });
   });
@@ -459,15 +479,16 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
+      // placeholder updated in refactor
       const searchInput = screen.getByPlaceholderText(
-        'Search for songs, artists, or albums...'
+        'Type to search songs, artists, or albums...'
       );
 
       // Check basic input attributes
       expect(searchInput).toHaveAttribute('type', 'text');
       expect(searchInput).toHaveAttribute(
         'placeholder',
-        'Search for songs, artists, or albums...'
+        'Type to search songs, artists, or albums...'
       );
     });
 
@@ -504,8 +525,9 @@ describe('SpotifySearchModal', () => {
         </TestWrapper>
       );
 
+      // error text changed to a more generic loading message
       expect(
-        screen.getByText('Error searching Spotify. Please try again.')
+        screen.getByText('Error loading tracks. Please try again.')
       ).toBeInTheDocument();
     });
 

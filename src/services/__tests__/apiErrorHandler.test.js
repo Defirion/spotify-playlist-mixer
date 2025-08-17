@@ -4,7 +4,15 @@ import {
   ERROR_TYPES,
   handleApiError,
   withRetry,
+  defaultApiErrorHandler,
 } from '../apiErrorHandler';
+
+// Disable global/default handler logging for this test file so any tests that
+// use the convenience functions (`handleApiError`, `withRetry`) don't emit
+// console.error during passing runs. Individual tests can still assert on
+// logging by mocking or re-enabling if needed.
+// disable logging on the default handler during these tests
+defaultApiErrorHandler.enableLogging = false;
 
 describe('ApiError', () => {
   it('creates an error with correct properties', () => {
@@ -81,6 +89,16 @@ describe('ApiErrorHandler', () => {
       onError: mockOnError,
       enableLogging: false,
     });
+  });
+
+  // Silence console.error for this suite to avoid clutter from default
+  // error handler logging. Restored after each test.
+  let consoleErrorSpy;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe('classifyError', () => {

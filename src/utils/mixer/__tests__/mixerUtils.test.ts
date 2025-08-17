@@ -1,5 +1,7 @@
 // Unit tests for mixer utility functions
 
+// Opt out of global silence wrapper because we install spies at module scope
+// so Jest matchers can assert against them reliably.
 import {
   safeObjectKeys,
   calculateTotalDuration,
@@ -10,19 +12,27 @@ import {
 } from '../mixerUtils';
 import { SpotifyTrack } from '../../../types/spotify';
 
-// Mock console methods for testing
-const originalConsoleLog = console.log;
-const originalConsoleWarn = console.warn;
+(globalThis as any).__NO_SILENCE = true;
+
+// Use jest.spyOn so mocks are recognized by Jest even when the global
+// test wrapper replaces console functions for silence-on-pass behavior.
 const originalEnv = process.env.NODE_ENV;
 
+// Create spies at module scope so they are installed before any test wrapper
+// (such as our silenceIfPass) replaces console methods at test runtime.
+const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
 beforeEach(() => {
-  console.log = jest.fn();
-  console.warn = jest.fn();
+  // Clear per-test call history
+  logSpy.mockClear();
+  warnSpy.mockClear();
 });
 
-afterEach(() => {
-  console.log = originalConsoleLog;
-  console.warn = originalConsoleWarn;
+afterAll(() => {
+  // Restore originals after the whole suite
+  logSpy.mockRestore();
+  warnSpy.mockRestore();
   process.env.NODE_ENV = originalEnv;
 });
 
@@ -247,24 +257,24 @@ describe('logDebugInfo', () => {
 
   it('should log info messages in development', () => {
     logDebugInfo('info', 'Test info message');
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('ℹ️'));
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('ℹ️'));
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining('Test info message')
     );
   });
 
   it('should log warning messages in development', () => {
     logDebugInfo('warn', 'Test warning message');
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('⚠️'));
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('⚠️'));
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining('Test warning message')
     );
   });
 
   it('should log error messages in development', () => {
     logDebugInfo('error', 'Test error message');
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('❌'));
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('❌'));
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining('Test error message')
     );
   });
@@ -272,12 +282,12 @@ describe('logDebugInfo', () => {
   it('should not log in production', () => {
     process.env.NODE_ENV = 'production';
     logDebugInfo('info', 'Test message');
-    expect(console.log).not.toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it('should include timestamp in log messages', () => {
     logDebugInfo('info', 'Test message');
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringMatching(/\[\d{2}:\d{2}:\d{2}\]/)
     );
   });

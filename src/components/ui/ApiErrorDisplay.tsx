@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ERROR_TYPES } from '../../services/apiErrorHandler';
+// ERROR_TYPES imported in the past; not needed here so removed to avoid lint warnings
 import styles from './ApiErrorDisplay.module.css';
 
 // API Error types based on the existing error handler

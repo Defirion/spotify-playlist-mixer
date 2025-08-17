@@ -217,7 +217,8 @@ describe('Zustand Store', () => {
       });
 
       expect(result.current.mixOptions.popularityStrategy).toBe('popular');
-      expect(result.current.mixOptions.totalSongs).toBe(75);
+      // applyPresetOptions no longer mutates totalSongs; it updates playlistName and other flags.
+      expect(result.current.mixOptions.totalSongs).toBe(100);
       expect(result.current.mixOptions.recencyBoost).toBe(false);
       expect(result.current.mixOptions.playlistName).toBe('Popular Mix Mix');
     });

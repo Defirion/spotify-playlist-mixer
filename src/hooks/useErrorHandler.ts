@@ -31,6 +31,7 @@ const useErrorHandler = (
 ): UseErrorHandlerReturn => {
   const [error, setError] = useState<Error | null>(null);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
+  // keep options object to reference callbacks when needed
 
   /**
    * Handle an error by setting it in state
@@ -49,7 +50,7 @@ const useErrorHandler = (
         options.onError(errorObj);
       }
     },
-    [options.onError]
+    [options]
   );
 
   /**

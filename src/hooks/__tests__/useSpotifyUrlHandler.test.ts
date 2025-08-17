@@ -10,13 +10,13 @@ const mockGetSpotifyApi = getSpotifyApi as jest.MockedFunction<
 >;
 
 const mockPlaylist: SpotifyPlaylist = {
-  id: 'test-playlist-id',
+  id: 'test123456789012345678',
   name: 'Test Playlist',
   description: 'A test playlist',
   images: [{ url: 'https://example.com/image.jpg', height: 300, width: 300 }],
   tracks: {
     total: 25,
-    href: 'https://api.spotify.com/v1/playlists/test-playlist-id/tracks',
+    href: 'https://api.spotify.com/v1/playlists/test123456789012345678/tracks',
   },
   owner: {
     id: 'user1',
@@ -25,9 +25,9 @@ const mockPlaylist: SpotifyPlaylist = {
   },
   public: true,
   collaborative: false,
-  uri: 'spotify:playlist:test-playlist-id',
+  uri: 'spotify:playlist:test123456789012345678',
   external_urls: {
-    spotify: 'https://open.spotify.com/playlist/test-playlist-id',
+    spotify: 'https://open.spotify.com/playlist/test123456789012345678',
   },
 };
 
@@ -73,6 +73,15 @@ describe('useSpotifyUrlHandler', () => {
 
     // Reset mock implementations for each test
     mockGet.mockReset();
+  });
+
+  // Silence console.error for tests that intentionally trigger errors.
+  let consoleErrorSpy: jest.SpyInstance;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe('URL Validation', () => {
@@ -130,21 +139,23 @@ describe('useSpotifyUrlHandler', () => {
 
     it('extracts playlist IDs correctly', () => {
       const { result } = renderHook(() => useSpotifyUrlHandler(defaultProps));
+      // use a 22-character playlist id which the hook expects
+      const longId = 'test123456789012345678';
 
       expect(
         result.current.extractPlaylistId(
-          'https://open.spotify.com/playlist/test123'
+          `https://open.spotify.com/playlist/${longId}`
         )
-      ).toBe('test123');
-      expect(result.current.extractPlaylistId('spotify:playlist:test123')).toBe(
-        'test123'
-      );
-      expect(result.current.extractPlaylistId('test123')).toBe('test123');
+      ).toBe(longId);
+      expect(
+        result.current.extractPlaylistId(`spotify:playlist:${longId}`)
+      ).toBe(longId);
+      expect(result.current.extractPlaylistId(longId)).toBe(longId);
       expect(
         result.current.extractPlaylistId(
-          'https://open.spotify.com/playlist/test123?si=abc'
+          `https://open.spotify.com/playlist/${longId}?si=abc`
         )
-      ).toBe('test123');
+      ).toBe(longId);
 
       expect(result.current.extractPlaylistId('invalid-url')).toBe(null);
       expect(result.current.extractPlaylistId('')).toBe(null);
@@ -162,13 +173,13 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
-      expect(mockGet).toHaveBeenCalledWith('/playlists/test-playlist-id');
+      expect(mockGet).toHaveBeenCalledWith('/playlists/test123456789012345678');
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test-playlist-id/tracks?offset=0&limit=100'
+        '/playlists/test123456789012345678/tracks?offset=0&limit=100'
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
@@ -189,7 +200,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -218,7 +229,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -264,15 +275,15 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test-playlist-id/tracks?offset=0&limit=100'
+        '/playlists/test123456789012345678/tracks?offset=0&limit=100'
       );
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test-playlist-id/tracks?offset=100&limit=100'
+        '/playlists/test123456789012345678/tracks?offset=100&limit=100'
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
@@ -310,7 +321,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -328,7 +339,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -345,7 +356,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -363,7 +374,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -387,7 +398,7 @@ describe('useSpotifyUrlHandler', () => {
 
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -404,9 +415,14 @@ describe('useSpotifyUrlHandler', () => {
       );
 
       // Add playlist successfully first time
+      // ensure the mocked API returns playlist data and tracks
+      mockGet
+        .mockResolvedValueOnce({ data: mockPlaylist })
+        .mockResolvedValue(mockTracksResponse);
+
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -422,7 +438,7 @@ describe('useSpotifyUrlHandler', () => {
       // Try to add the same playlist again
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 
@@ -452,9 +468,14 @@ describe('useSpotifyUrlHandler', () => {
       rerender({ ...defaultProps, accessToken: 'new-token' });
 
       // Try again with access token
+      // ensure mocked API resolves for the successful add
+      mockGet
+        .mockResolvedValueOnce({ data: mockPlaylist })
+        .mockResolvedValue(mockTracksResponse);
+
       await act(async () => {
         await result.current.handleAddPlaylistByUrl(
-          'https://open.spotify.com/playlist/test-playlist-id'
+          'https://open.spotify.com/playlist/test123456789012345678'
         );
       });
 

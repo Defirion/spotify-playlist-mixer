@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Import individual components for integration testing
@@ -36,6 +36,10 @@ const localStorageMock = {
 };
 global.localStorage = localStorageMock;
 
+// Helper to collect track items rendered inside the track list using Testing Library
+const getAllTrackItems = () =>
+  within(screen.getByTestId('track-list')).getAllByRole('listitem');
+
 // Mock utility functions
 jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
@@ -50,6 +54,7 @@ jest.mock('../../utils/trackUtils', () => ({
     color: '#fff',
     text: 'Popular',
   })),
+  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
 }));
 
 // Mock virtualization hook
@@ -90,12 +95,10 @@ describe('Playlist Mixer Integration Tests', () => {
 
       // Verify track list is rendered inside modal
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
 
       // Test track selection
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       await user.click(firstTrack);
       expect(onTrackSelect).toHaveBeenCalledWith(mockTracks[0]);
 
@@ -125,7 +128,7 @@ describe('Playlist Mixer Integration Tests', () => {
 
       // Second tab should go to first track item
       await user.tab();
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       expect(firstTrack).toHaveFocus();
 
       // Test Enter key on track
@@ -152,7 +155,7 @@ describe('Playlist Mixer Integration Tests', () => {
       );
 
       // Verify first track is selected
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       expect(trackItems[0]).toHaveClass('selected');
       expect(trackItems[1]).not.toHaveClass('selected');
 
@@ -241,7 +244,7 @@ describe('Playlist Mixer Integration Tests', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       // Select tracks
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       await user.click(trackItems[0]);
       await user.click(trackItems[1]);
 
@@ -296,9 +299,7 @@ describe('Playlist Mixer Integration Tests', () => {
 
       // Initial state - tracks loaded
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
 
       // Simulate error
       await user.click(screen.getByText('Simulate Error'));
@@ -309,9 +310,7 @@ describe('Playlist Mixer Integration Tests', () => {
       // Retry and recover
       await user.click(screen.getByText('Retry'));
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
     });
   });
 
@@ -341,12 +340,12 @@ describe('Playlist Mixer Integration Tests', () => {
 
       // Tab to first track
       await user.tab();
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       expect(firstTrack).toHaveFocus();
 
       // Tab to second track
       await user.tab();
-      const secondTrack = screen.getAllByTestId('track-item')[1];
+      const secondTrack = getAllTrackItems()[1];
       expect(secondTrack).toHaveFocus();
     });
 
@@ -363,7 +362,7 @@ describe('Playlist Mixer Integration Tests', () => {
       expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
 
       // Track items have proper roles
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       trackItems.forEach(item => {
         expect(item).toHaveAttribute('role', 'listitem');
         expect(item).toHaveAttribute('tabIndex', '0');
@@ -390,9 +389,7 @@ describe('Playlist Mixer Integration Tests', () => {
       // Verify components are rendered
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
     });
 
     it('handles large track lists efficiently', async () => {

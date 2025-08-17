@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import useVirtualization from '../useVirtualization';
 
 // Mock data for testing

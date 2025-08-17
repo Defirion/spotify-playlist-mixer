@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useRatioConfig } from '../useRatioConfig';
-import { RatioConfig, RatioConfigItem } from '../../types/mixer';
+import { RatioConfig } from '../../types/mixer';
 
 describe('useRatioConfig', () => {
   it('initializes with empty config', () => {

@@ -1,5 +1,7 @@
 // Unit tests for mixing strategies module
 
+// Opt out of global silence helper; this file installs spies at module scope
+// so assertions should hit the original jest spies directly.
 import {
   MixedStrategy,
   FrontLoadedStrategy,
@@ -10,20 +12,23 @@ import {
   addFallbackTracks,
 } from '../mixingStrategies';
 import { PopularityPools, TrackWithPopularity } from '../types';
-import { SpotifyTrack } from '../../../types/spotify';
 
-// Mock console methods to avoid noise in tests
-const originalConsoleLog = console.log;
-const originalConsoleWarn = console.warn;
+(globalThis as any).__NO_SILENCE = true;
+// SpotifyTrack type imported previously but not used in these tests
+
+// Use jest.spyOn so the mocks are recognized by Jest even when the global
+// test wrapper replaces console functions for silence-on-pass behavior.
+let logSpy: any;
+let warnSpy: any;
 
 beforeEach(() => {
-  console.log = jest.fn();
-  console.warn = jest.fn();
+  logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  console.log = originalConsoleLog;
-  console.warn = originalConsoleWarn;
+  logSpy.mockRestore();
+  warnSpy.mockRestore();
 });
 
 // Helper function to create mock tracks with popularity data
@@ -425,7 +430,7 @@ describe('addFallbackTracks', () => {
 
     const result = addFallbackTracks([], allTracks);
     expect(result).toEqual(allTracks);
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       '   ⚠️ Fallback: Using all quadrants (strategy pools empty)'
     );
 
@@ -457,7 +462,7 @@ describe('addFallbackTracks', () => {
     process.env.NODE_ENV = 'development';
 
     addFallbackTracks(strategyTracks, allTracks);
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       '   📋 Strategy pools: 2, Fallback pools: 2'
     );
 

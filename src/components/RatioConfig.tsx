@@ -238,9 +238,17 @@ const RatioConfig = memo<RatioConfigProps>(
                           value={config.min}
                           onChange={e => {
                             const newMin = parseInt(e.target.value);
-                            handleConfigChange(playlist.id, 'min', newMin);
+                            // If new min exceeds current max, update both in a
+                            // single call to avoid transient inconsistent states
                             if (newMin > config.max) {
-                              handleConfigChange(playlist.id, 'max', newMin);
+                              onRatioUpdate(playlist.id, {
+                                min: newMin,
+                                max: newMin,
+                                weight: config.weight,
+                                weightType: config.weightType,
+                              });
+                            } else {
+                              handleConfigChange(playlist.id, 'min', newMin);
                             }
                           }}
                           className={styles.rangeMin}
@@ -252,12 +260,13 @@ const RatioConfig = memo<RatioConfigProps>(
                           value={config.max}
                           onChange={e => {
                             const newMax = parseInt(e.target.value);
-                            const adjustedMin =
-                              newMax < config.min ? newMax : config.min;
-                            const adjustedMax = newMax;
+                            // Ensure max never drops below current min. If it does,
+                            // clamp the max to the existing min so we don't move
+                            // the min down unexpectedly.
+                            const adjustedMax = Math.max(newMax, config.min);
 
                             onRatioUpdate(playlist.id, {
-                              min: adjustedMin,
+                              min: config.min,
                               max: adjustedMax,
                               weight: config.weight,
                               weightType: config.weightType,

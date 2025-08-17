@@ -221,11 +221,18 @@ export class ApiError extends Error {
     this.timestamp = new Date().toISOString();
     this.retryable = RETRY_CONFIG[type].maxRetries > 0;
 
-    // Preserve original error properties
+    // Preserve original error properties. Support AxiosError shape and
+    // also plain Error objects that include a `response` property (used in tests).
     if (this.isAxiosError(originalError)) {
       this.status = originalError.response?.status;
       this.statusText = originalError.response?.statusText;
       this.data = originalError.response?.data;
+    } else if ((originalError as any).response) {
+      // Non-axios error but contains response-like payload
+      const resp = (originalError as any).response;
+      this.status = resp?.status;
+      this.statusText = resp?.statusText;
+      this.data = resp?.data;
     } else if ('status' in originalError) {
       this.status = (originalError as any).status;
       this.statusText = (originalError as any).statusText;

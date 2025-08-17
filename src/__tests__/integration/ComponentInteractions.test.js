@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Modal from '../../components/ui/Modal';
 import TrackList from '../../components/ui/TrackList';
@@ -19,6 +19,7 @@ jest.mock('../../utils/trackUtils', () => ({
     color: '#fff',
     text: 'Popular',
   })),
+  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
 }));
 
 // Mock the virtualization hook
@@ -31,6 +32,10 @@ jest.mock('../../hooks/useVirtualization', () => {
     getItemProps: () => ({}),
   }));
 });
+
+// Helper to collect track items rendered inside the track list using Testing Library queries
+const getAllTrackItems = () =>
+  within(screen.getByTestId('track-list')).getAllByRole('listitem');
 
 describe('Component Integration Tests', () => {
   describe('Modal and TrackList Integration', () => {
@@ -55,12 +60,10 @@ describe('Component Integration Tests', () => {
 
       // Verify track list is rendered inside modal
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
 
       // Test track selection
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       await user.click(firstTrack);
       expect(onTrackSelect).toHaveBeenCalledWith(mockTracks[0]);
 
@@ -91,7 +94,7 @@ describe('Component Integration Tests', () => {
 
       // Second tab should go to first track item
       await user.tab();
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       expect(firstTrack).toHaveFocus();
 
       // Test Enter key on track
@@ -107,8 +110,8 @@ describe('Component Integration Tests', () => {
   describe('TrackList and TrackItem Integration', () => {
     it('handles track selection and removal workflows', async () => {
       const user = userEvent.setup();
-      const onTrackSelect = jest.fn();
       const onTrackRemove = jest.fn();
+      const onTrackSelect = jest.fn();
       const selectedTracks = new Set([mockTracks[0].id]);
 
       render(
@@ -122,7 +125,7 @@ describe('Component Integration Tests', () => {
       );
 
       // Verify first track is selected
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       expect(trackItems[0]).toHaveClass('selected');
       expect(trackItems[1]).not.toHaveClass('selected');
 
@@ -209,7 +212,7 @@ describe('Component Integration Tests', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       // Select tracks
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       await user.click(trackItems[0]);
       await user.click(trackItems[1]);
 
@@ -273,9 +276,7 @@ describe('Component Integration Tests', () => {
 
       // Initial state - tracks loaded
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
 
       // Simulate error
       await user.click(screen.getByText('Simulate Error'));
@@ -286,9 +287,7 @@ describe('Component Integration Tests', () => {
       // Retry and recover
       await user.click(screen.getByText('Retry'));
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      expect(getAllTrackItems()).toHaveLength(mockTracks.length);
     });
   });
 
@@ -318,12 +317,12 @@ describe('Component Integration Tests', () => {
 
       // Tab to first track
       await user.tab();
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getAllTrackItems()[0];
       expect(firstTrack).toHaveFocus();
 
       // Tab to second track
       await user.tab();
-      const secondTrack = screen.getAllByTestId('track-item')[1];
+      const secondTrack = getAllTrackItems()[1];
       expect(secondTrack).toHaveFocus();
 
       // Tab to close button
@@ -349,7 +348,7 @@ describe('Component Integration Tests', () => {
       expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
 
       // Track items have proper roles
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getAllTrackItems();
       trackItems.forEach(item => {
         expect(item).toHaveAttribute('role', 'listitem');
         expect(item).toHaveAttribute('tabIndex', '0');

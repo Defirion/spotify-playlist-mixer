@@ -93,12 +93,12 @@ export const handlers = [
   http.post(
     'https://api.spotify.com/v1/users/:userId/playlists',
     async ({ request, params }) => {
-      const body = await request.json();
+      const _body = await request.json();
       const newPlaylist = {
         id: `playlist_${Date.now()}`,
-        name: body.name,
-        description: body.description || '',
-        public: body.public || false,
+        name: _body.name,
+        description: _body.description || '',
+        public: _body.public || false,
         collaborative: false,
         owner: {
           id: params.userId,
@@ -122,8 +122,6 @@ export const handlers = [
   http.post(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
     async ({ request, params }) => {
-      const body = await request.json();
-
       return HttpResponse.json(
         {
           snapshot_id: `snapshot_${Date.now()}`,
@@ -137,8 +135,6 @@ export const handlers = [
   http.delete(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
     async ({ request, params }) => {
-      const body = await request.json();
-
       return HttpResponse.json({
         snapshot_id: `snapshot_${Date.now()}`,
       });

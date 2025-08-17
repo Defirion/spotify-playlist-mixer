@@ -1,8 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TrackList from '../TrackList';
 import { mockTracks } from '../../../mocks/fixtures';
+
+// Helper to query track-item nodes inside the track list using Testing Library
+const getTrackItems = () =>
+  within(screen.getByTestId('track-list')).getAllByRole('listitem');
 
 // Mock the virtualization hook
 jest.mock('../../../hooks/useVirtualization', () => {
@@ -42,9 +46,8 @@ describe('TrackList', () => {
       render(<TrackList {...defaultProps} />);
 
       expect(screen.getByTestId('track-list')).toBeInTheDocument();
-      expect(screen.getAllByTestId('track-item')).toHaveLength(
-        mockTracks.length
-      );
+      // Component now renders per-item testids like `track-item-<id>`
+      expect(getTrackItems()).toHaveLength(mockTracks.length);
     });
 
     it('renders empty message when no tracks', () => {
@@ -86,7 +89,7 @@ describe('TrackList', () => {
       const user = userEvent.setup();
       render(<TrackList {...defaultProps} selectable={true} />);
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       await user.click(firstTrack);
 
       expect(defaultProps.onTrackSelect).toHaveBeenCalledWith(mockTracks[0]);
@@ -96,7 +99,7 @@ describe('TrackList', () => {
       const user = userEvent.setup();
       render(<TrackList {...defaultProps} selectable={false} />);
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       await user.click(firstTrack);
 
       expect(defaultProps.onTrackSelect).not.toHaveBeenCalled();
@@ -112,7 +115,7 @@ describe('TrackList', () => {
         />
       );
 
-      const trackItems = screen.getAllByTestId('track-item');
+      const trackItems = getTrackItems();
       expect(trackItems[0]).toHaveClass('selected');
       expect(trackItems[1]).not.toHaveClass('selected');
     });
@@ -145,7 +148,7 @@ describe('TrackList', () => {
       const user = userEvent.setup();
       render(<TrackList {...defaultProps} onTrackClick={onTrackClick} />);
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       await user.click(firstTrack);
 
       expect(onTrackClick).toHaveBeenCalledWith(
@@ -161,7 +164,7 @@ describe('TrackList', () => {
         <TrackList {...defaultProps} onTrackMouseEnter={onTrackMouseEnter} />
       );
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       fireEvent.mouseEnter(firstTrack);
 
       expect(onTrackMouseEnter).toHaveBeenCalledWith(
@@ -212,7 +215,7 @@ describe('TrackList', () => {
       const user = userEvent.setup();
       render(<TrackList {...defaultProps} selectable={true} />);
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       firstTrack.focus();
       await user.keyboard('{Enter}');
 
@@ -223,7 +226,7 @@ describe('TrackList', () => {
       const user = userEvent.setup();
       render(<TrackList {...defaultProps} selectable={true} />);
 
-      const firstTrack = screen.getAllByTestId('track-item')[0];
+      const firstTrack = getTrackItems()[0];
       firstTrack.focus();
       await user.keyboard(' ');
 

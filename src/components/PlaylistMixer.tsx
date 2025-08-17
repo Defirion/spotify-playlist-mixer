@@ -6,6 +6,7 @@ import {
   closestCenter,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
 import { useMixWarnings } from '../hooks/useMixWarnings';
@@ -308,6 +309,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
+      modifiers={[restrictToVerticalAxis]}
     >
       <div className={styles.container}>
         <div className={styles.header}>

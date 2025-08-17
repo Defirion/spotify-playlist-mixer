@@ -37,6 +37,16 @@ describe('useUserPlaylists', () => {
     MockedSpotifyService.mockImplementation(() => mockSpotifyService);
   });
 
+  // Silence console.error in this suite to avoid noisy logs from expected
+  // errors that are part of negative tests.
+  let consoleErrorSpy: jest.SpyInstance;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   describe('Initialization', () => {
     it('initializes with default state', () => {
       const { result } = renderHook(() =>

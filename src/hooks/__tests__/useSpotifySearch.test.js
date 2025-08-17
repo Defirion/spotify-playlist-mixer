@@ -27,6 +27,16 @@ describe('useSpotifySearch', () => {
     jest.useRealTimers();
   });
 
+  // Silence console.error for this suite to reduce noisy output from
+  // expected errors and React act warnings printed as console.error.
+  let consoleErrorSpy;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   describe('Initialization', () => {
     it('initializes with default state', () => {
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));
@@ -81,6 +91,8 @@ describe('useSpotifySearch', () => {
       // Fast-forward past debounce delay
       await act(async () => {
         jest.advanceTimersByTime(300);
+        // allow microtasks from resolved promises to flush so state updates happen inside act
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -108,16 +120,18 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('first query');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(100);
+        await Promise.resolve();
       });
 
       act(() => {
         result.current.setQuery('second query');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -158,8 +172,9 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('test query');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -179,8 +194,9 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('test query');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -206,6 +222,7 @@ describe('useSpotifySearch', () => {
       await act(async () => {
         result.current.search('manual query');
         jest.runAllTimers();
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -228,6 +245,7 @@ describe('useSpotifySearch', () => {
       await act(async () => {
         result.current.setQuery('test');
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await act(async () => {
@@ -272,8 +290,9 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('test');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -308,8 +327,9 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('test');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {
@@ -336,8 +356,9 @@ describe('useSpotifySearch', () => {
         result.current.setQuery('test');
       });
 
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(300);
+        await Promise.resolve();
       });
 
       await waitFor(() => {

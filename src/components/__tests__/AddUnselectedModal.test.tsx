@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // Jest globals are available by default in CRA
 import AddUnselectedModal from '../AddUnselectedModal';
@@ -18,6 +18,7 @@ jest.mock('../../utils/trackUtils', () => ({
   ),
   getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
   getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
+  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
 }));
 jest.mock('../ui/Modal', () => ({
   __esModule: true,
@@ -177,9 +178,16 @@ const mockSpotifyApi = {
 };
 
 describe('AddUnselectedModal', () => {
+  let consoleErrorSpy: any;
+  // Silence console.log noise from TrackSourceModal closing messages
+  let consoleLogSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
     (spotifyUtils.getSpotifyApi as any).mockReturnValue(mockSpotifyApi);
+    // Silence console.error to reduce noisy act warnings in test output
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     // Legacy drag utils mock removed
 
     // Mock API response for playlist tracks
@@ -189,15 +197,13 @@ describe('AddUnselectedModal', () => {
       },
     });
 
-    // Mock DOM methods
-    Object.defineProperty(document, 'querySelector', {
-      value: jest.fn().mockReturnValue(null),
-      writable: true,
-    });
+    // No manual DOM mocks required for these tests
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    consoleErrorSpy?.mockRestore?.();
+    consoleLogSpy?.mockRestore?.();
   });
 
   it('renders modal when open', () => {

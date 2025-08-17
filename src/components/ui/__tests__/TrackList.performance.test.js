@@ -93,7 +93,7 @@ describe('TrackList Performance Tests', () => {
   it('should automatically enable virtualization for lists over 100 items', () => {
     const mediumTracks = generateLargeMockTracks(150);
 
-    const { container } = render(
+    render(
       <TrackList
         tracks={mediumTracks}
         virtualized={true} // Explicitly enabled for 100+ items
