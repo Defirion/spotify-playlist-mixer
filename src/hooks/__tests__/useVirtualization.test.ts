@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import useVirtualization from '../useVirtualization';
 
 // Mock data for testing
-const createMockItems = count => {
+const createMockItems = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     id: `item-${index}`,
     name: `Item ${index}`,
@@ -18,7 +18,7 @@ describe('useVirtualization', () => {
   };
 
   it('should initialize with correct default values', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     expect(result.current.scrollTop).toBe(0);
     expect(result.current.isScrolling).toBe(false);
@@ -28,7 +28,7 @@ describe('useVirtualization', () => {
   });
 
   it('should calculate visible items correctly', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     // Initially should show items from start with overscan
     expect(result.current.startIndex).toBe(0);
@@ -38,7 +38,7 @@ describe('useVirtualization', () => {
 
   it('should handle empty items array', () => {
     const { result } = renderHook(() =>
-      useVirtualization({ ...defaultProps, items: [] })
+      useVirtualization({ ...defaultProps, items: [] } as any)
     );
 
     expect(result.current.visibleItems).toHaveLength(0);
@@ -48,7 +48,7 @@ describe('useVirtualization', () => {
   });
 
   it('should provide correct container props', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     expect(result.current.containerProps).toHaveProperty('ref');
     expect(result.current.containerProps).toHaveProperty('onScroll');
@@ -61,7 +61,7 @@ describe('useVirtualization', () => {
   });
 
   it('should provide correct spacer props', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     expect(result.current.spacerProps.style).toEqual({
       height: 64000, // 1000 items * 64px
@@ -70,7 +70,7 @@ describe('useVirtualization', () => {
   });
 
   it('should generate correct item props', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     const itemProps = result.current.getItemProps(0);
     expect(itemProps.style).toEqual({
@@ -88,7 +88,7 @@ describe('useVirtualization', () => {
   });
 
   it('should calculate item position correctly', () => {
-    const { result } = renderHook(() => useVirtualization(defaultProps));
+    const { result } = renderHook(() => useVirtualization(defaultProps as any));
 
     const position = result.current.getItemPosition(10);
     expect(position).toEqual({
@@ -98,7 +98,7 @@ describe('useVirtualization', () => {
   });
 
   it('should handle different item heights', () => {
-    const customProps = { ...defaultProps, itemHeight: 100 };
+    const customProps = { ...defaultProps, itemHeight: 100 } as any;
     const { result } = renderHook(() => useVirtualization(customProps));
 
     expect(result.current.totalHeight).toBe(100000); // 1000 * 100px
@@ -111,7 +111,7 @@ describe('useVirtualization', () => {
   });
 
   it('should handle different container heights', () => {
-    const customProps = { ...defaultProps, containerHeight: 800 };
+    const customProps = { ...defaultProps, containerHeight: 800 } as any;
     const { result } = renderHook(() => useVirtualization(customProps));
 
     expect(result.current.containerProps.style.height).toBe(800);
@@ -120,7 +120,7 @@ describe('useVirtualization', () => {
   });
 
   it('should handle overscan correctly', () => {
-    const customProps = { ...defaultProps, overscan: 10 };
+    const customProps = { ...defaultProps, overscan: 10 } as any;
     const { result } = renderHook(() => useVirtualization(customProps));
 
     // With larger overscan, should render more items

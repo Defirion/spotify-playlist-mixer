@@ -105,6 +105,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_1',
         },
+        uri: 'spotify:artist:artist_1',
       },
     ],
     album: {
@@ -121,6 +122,7 @@ export const mockTracks = [
       external_urls: {
         spotify: 'https://open.spotify.com/album/album_1',
       },
+      uri: 'spotify:album:album_1',
     },
     duration_ms: 210000,
     explicit: false,
@@ -142,6 +144,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_2',
         },
+        uri: 'spotify:artist:artist_2',
       },
       {
         id: 'artist_3',
@@ -149,6 +152,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_3',
         },
+        uri: 'spotify:artist:artist_3',
       },
     ],
     album: {
@@ -165,6 +169,7 @@ export const mockTracks = [
       external_urls: {
         spotify: 'https://open.spotify.com/album/album_2',
       },
+      uri: 'spotify:album:album_2',
     },
     duration_ms: 195000,
     explicit: true,
@@ -186,6 +191,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_4',
         },
+        uri: 'spotify:artist:artist_4',
       },
     ],
     album: {
@@ -202,6 +208,7 @@ export const mockTracks = [
       external_urls: {
         spotify: 'https://open.spotify.com/album/album_3',
       },
+      uri: 'spotify:album:album_3',
     },
     duration_ms: 240000,
     explicit: false,
@@ -223,6 +230,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_5',
         },
+        uri: 'spotify:artist:artist_5',
       },
     ],
     album: {
@@ -239,6 +247,7 @@ export const mockTracks = [
       external_urls: {
         spotify: 'https://open.spotify.com/album/album_4',
       },
+      uri: 'spotify:album:album_4',
     },
     duration_ms: 180000,
     explicit: false,
@@ -260,6 +269,7 @@ export const mockTracks = [
         external_urls: {
           spotify: 'https://open.spotify.com/artist/artist_6',
         },
+        uri: 'spotify:artist:artist_6',
       },
     ],
     album: {
@@ -276,6 +286,7 @@ export const mockTracks = [
       external_urls: {
         spotify: 'https://open.spotify.com/album/album_5',
       },
+      uri: 'spotify:album:album_5',
     },
     duration_ms: 225000,
     explicit: false,
