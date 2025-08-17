@@ -51,6 +51,14 @@ Object.defineProperty(globalThis, 'silenceIfPass', {
   configurable: false,
 });
 
+// Minimal shim: some test utils (user-event) expect navigator/clipboard on global
+// Ensure minimal navigator exists so user-event clipboard helpers don't throw
+if (typeof (globalThis as any).navigator === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).navigator = { userAgent: 'node.js' };
+}
+
+
 // Note: we intentionally do NOT wrap global `test`/`it` anymore.
 // The `silenceIfPass` helper is available for tests to use directly when
 // they want captured console output to be replayed only on failure.

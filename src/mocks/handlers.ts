@@ -10,8 +10,8 @@ export const handlers = [
   // Get user playlists
   http.get('https://api.spotify.com/v1/me/playlists', ({ request }) => {
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit')) || 20;
-    const offset = parseInt(url.searchParams.get('offset')) || 0;
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
 
     const items = mockPlaylists.slice(offset, offset + limit);
 
@@ -36,13 +36,13 @@ export const handlers = [
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
     ({ params, request }) => {
       const url = new URL(request.url);
-      const limit = parseInt(url.searchParams.get('limit')) || 100;
-      const offset = parseInt(url.searchParams.get('offset')) || 0;
+      const limit = parseInt(url.searchParams.get('limit') || '100');
+      const offset = parseInt(url.searchParams.get('offset') || '0');
 
       const playlistTracks = mockTracks.slice(offset, offset + limit);
 
       return HttpResponse.json({
-        items: playlistTracks.map(track => ({ track })),
+        items: playlistTracks.map((track) => ({ track })),
         total: mockTracks.length,
         limit,
         offset,
@@ -61,14 +61,14 @@ export const handlers = [
   // Search tracks
   http.get('https://api.spotify.com/v1/search', ({ request }) => {
     const url = new URL(request.url);
-    const query = url.searchParams.get('q');
+    const query = url.searchParams.get('q') || '';
     const type = url.searchParams.get('type');
-    const limit = parseInt(url.searchParams.get('limit')) || 20;
+    const limit = parseInt(url.searchParams.get('limit') || '20');
 
     if (type === 'track') {
       const filteredTracks = mockTracks
         .filter(
-          track =>
+          (track) =>
             track.name.toLowerCase().includes(query.toLowerCase()) ||
             track.artists[0].name.toLowerCase().includes(query.toLowerCase())
         )
@@ -93,7 +93,7 @@ export const handlers = [
   http.post(
     'https://api.spotify.com/v1/users/:userId/playlists',
     async ({ request, params }) => {
-      const _body = await request.json();
+      const _body: any = await request.json();
       const newPlaylist = {
         id: `playlist_${Date.now()}`,
         name: _body.name,
@@ -142,25 +142,22 @@ export const handlers = [
   ),
 
   // Get track audio features
-  http.get(
-    'https://api.spotify.com/v1/audio-features/:trackId',
-    ({ params }) => {
-      return HttpResponse.json({
-        id: params.trackId,
-        danceability: Math.random(),
-        energy: Math.random(),
-        key: Math.floor(Math.random() * 12),
-        loudness: -60 + Math.random() * 60,
-        mode: Math.round(Math.random()),
-        speechiness: Math.random(),
-        acousticness: Math.random(),
-        instrumentalness: Math.random(),
-        liveness: Math.random(),
-        valence: Math.random(),
-        tempo: 60 + Math.random() * 140,
-        duration_ms: 180000 + Math.random() * 120000,
-        time_signature: 4,
-      });
-    }
-  ),
+  http.get('https://api.spotify.com/v1/audio-features/:trackId', ({ params }) => {
+    return HttpResponse.json({
+      id: params.trackId,
+      danceability: Math.random(),
+      energy: Math.random(),
+      key: Math.floor(Math.random() * 12),
+      loudness: -60 + Math.random() * 60,
+      mode: Math.round(Math.random()),
+      speechiness: Math.random(),
+      acousticness: Math.random(),
+      instrumentalness: Math.random(),
+      liveness: Math.random(),
+      valence: Math.random(),
+      tempo: 60 + Math.random() * 140,
+      duration_ms: 180000 + Math.random() * 120000,
+      time_signature: 4,
+    });
+  }),
 ];

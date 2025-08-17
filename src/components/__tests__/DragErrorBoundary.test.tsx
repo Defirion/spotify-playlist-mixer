@@ -7,11 +7,16 @@ const Bomb: React.FC = () => {
 };
 
 test('DragErrorBoundary catches rendering errors and shows fallback', () => {
-  render(
-    <DragErrorBoundary>
-      <Bomb />
-    </DragErrorBoundary>
-  );
+  const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    render(
+      <DragErrorBoundary>
+        <Bomb />
+      </DragErrorBoundary>
+    );
 
-  expect(screen.getByTestId('drag-error-boundary')).toBeInTheDocument();
+    expect(screen.getByTestId('drag-error-boundary')).toBeInTheDocument();
+  } finally {
+    spy.mockRestore();
+  }
 });

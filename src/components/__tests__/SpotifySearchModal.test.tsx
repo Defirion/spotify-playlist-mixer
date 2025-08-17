@@ -10,6 +10,9 @@ import { makeTrack } from '../../test-utils/mocks/spotify';
 // Mock the hooks and utilities
 jest.mock('../../hooks/useSpotifySearch');
 // Drag-related mocks removed
+let _trackIdCounter = 0;
+const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
+
 jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
@@ -19,7 +22,7 @@ jest.mock('../../utils/trackUtils', () => ({
   ),
   getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
   getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
-  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
+  generateTrackInstanceId: jest.fn(() => _genTrackId()),
 }));
 
 const mockUseSpotifySearch =

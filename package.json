@@ -27,9 +27,14 @@
     "prepare": "husky install"
   },
   "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
     "transformIgnorePatterns": [
       "node_modules/(?!(@bundled-es-modules|msw|@mswjs)/)"
-    ]
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/src/__mocks__/fileMock.js"
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -57,16 +62,22 @@
     ]
   },
   "devDependencies": {
-  "@types/jest": "^29.5.5",
+    "@babel/core": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.5",
     "@types/react": "^18.3.7",
     "@types/react-dom": "^18.3.7",
+    "babel-jest": "^29.7.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
     "husky": "^9.1.7",
+    "identity-obj-proxy": "^3.0.0",
     "lint-staged": "^16.1.2",
     "msw": "^2.10.4",
     "node-fetch": "^3.3.2",

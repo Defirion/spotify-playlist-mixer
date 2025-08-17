@@ -1,12 +1,12 @@
-// MSW test setup utility
+// MSW test setup utility (TypeScript)
 // Import this in tests that need API mocking
 
 // Import Jest polyfills first (required for MSW)
-import '../jest.polyfills.js';
+import '../jest.polyfills';
 import { server } from '../mocks/server';
 
 // Setup function for tests that need MSW
-export const setupMSW = () => {
+export const setupMSW = (): void => {
   beforeAll(() => {
     server.listen({
       onUnhandledRequest: 'warn',

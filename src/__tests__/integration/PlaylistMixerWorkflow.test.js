@@ -41,6 +41,9 @@ const getAllTrackItems = () =>
   within(screen.getByTestId('track-list')).getAllByRole('listitem');
 
 // Mock utility functions
+let _trackIdCounter = 0;
+const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
+
 jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
@@ -54,7 +57,7 @@ jest.mock('../../utils/trackUtils', () => ({
     color: '#fff',
     text: 'Popular',
   })),
-  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
+  generateTrackInstanceId: jest.fn(() => _genTrackId()),
 }));
 
 // Mock virtualization hook

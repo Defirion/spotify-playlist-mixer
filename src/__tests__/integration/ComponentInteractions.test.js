@@ -6,6 +6,9 @@ import TrackList from '../../components/ui/TrackList';
 import { mockTracks } from '../../mocks/fixtures';
 
 // Mock the utility functions
+let _trackIdCounter = 0;
+const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
+
 jest.mock('../../utils/trackUtils', () => ({
   formatDuration: jest.fn(
     ms =>
@@ -19,7 +22,7 @@ jest.mock('../../utils/trackUtils', () => ({
     color: '#fff',
     text: 'Popular',
   })),
-  generateTrackInstanceId: jest.fn(() => 'track_mock_id'),
+  generateTrackInstanceId: jest.fn(() => _genTrackId()),
 }));
 
 // Mock the virtualization hook

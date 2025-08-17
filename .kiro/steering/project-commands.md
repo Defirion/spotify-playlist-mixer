@@ -13,20 +13,20 @@ This steering file provides the EXACT commands for this React project to prevent
 ### **Testing Commands (CRITICAL - Use These Exactly)**
 
 ```bash
-# Run all tests
-npm test
+# Run all tests (explicit runner — preferred for CI and deterministic environment)
+npx jest --env=jsdom --no-cache
 
 # Run tests in watch mode (for development)
-npm test -- --watchAll=false
+npx jest --env=jsdom --watchAll=false
 
 # Run tests with coverage
-npm test -- --coverage --watchAll=false
+npx jest --env=jsdom --coverage --no-cache
 
 # Run specific test file
-npm test -- --testPathPattern=SortableWrapper.test.tsx
+npx jest --env=jsdom --testPathPattern=SortableWrapper.test.tsx --no-cache
 
 # Run tests matching pattern
-npm test -- --testNamePattern="should render"
+npx jest --env=jsdom --testNamePattern="should render" --no-cache
 ```
 
 ### **Build Commands**
@@ -90,7 +90,8 @@ npm run build
 
 ### **Gate 3: Test Success**
 ```bash
-npm test -- --watchAll=false
+# Preferred: explicit Jest runner to ensure jsdom environment and fresh runs
+npx jest --env=jsdom --no-cache
 ```
 **Expected**: All tests pass
 
@@ -105,7 +106,6 @@ npm run format:check            # Check formatting
 ## Common Mistakes to Avoid
 
 ### **❌ NEVER Use These Commands:**
-- `jest` (use `npm test` instead)
 - `tsc` for building (use `npm run build` instead)
 - `eslint` directly (use `npm run lint` instead)
 - `prettier` directly (use `npm run format` instead)
@@ -209,11 +209,11 @@ git commit -m "Complete dnd-kit migration task X"
 
 ```bash
 # The Big 5 Commands You'll Use Most:
-npm test -- --watchAll=false    # Run tests
-npm run build                   # Build project
-npm run lint                    # Check code quality
-npm run lint:fix                # Fix linting issues
-npx tsc --noEmit               # Check TypeScript
+npx jest --env=jsdom --no-cache    # Run tests (preferred explicit runner)
+npm run build                      # Build project
+npm run lint                       # Check code quality
+npm run lint:fix                   # Fix linting issues
+npx tsc --noEmit                   # Check TypeScript
 ```
 
 **Remember: Always use npm, never yarn. Always use the scripts defined in package.json.**
