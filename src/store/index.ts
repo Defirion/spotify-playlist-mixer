@@ -8,6 +8,11 @@ import { createPlaylistSlice, PlaylistSlice } from './slices/playlistSlice';
 import { createMixingSlice, MixingSlice } from './slices/mixingSlice';
 import { createUISlice, UISlice } from './slices/uiSlice';
 import { createTrackSlice, TrackSlice } from './slices/trackSlice';
+
+// Migration helper: set UI error from any unknown/error shape by normalizing
+// to the DisplayError structure. This lets older call sites pass strings or
+// Error objects and still populate the store with a consistent type.
+import { toDisplayError } from '../utils/migrateError';
 // Drag slice removed - will be replaced with dnd-kit implementation
 
 // Combined store type
@@ -84,12 +89,18 @@ export const useUI = () =>
     useShallow((state: AppStore) => ({
       error: state.error,
       mixedPlaylists: state.mixedPlaylists,
-      setError: state.setError,
+      // Expose only read/notification helpers here.
+      // To set UI errors from arbitrary error shapes, use the setUIError(err) helper
+      // which normalizes unknown errors to the DisplayError structure.
       dismissError: state.dismissError,
       addMixedPlaylist: state.addMixedPlaylist,
       dismissSuccessToast: state.dismissSuccessToast,
     }))
   );
+
+export function setUIError(err: unknown) {
+  useAppStore.getState().setError(toDisplayError(err));
+}
 
 // Combined selectors for complex operations
 export const usePlaylistOperations = () =>
@@ -113,7 +124,7 @@ export const useMixingState = () =>
       mixOptions: state.mixOptions,
       accessToken: state.accessToken,
       addMixedPlaylist: state.addMixedPlaylist,
-      setError: state.setError,
+      // Avoid exposing the raw setError setter here; use setUIError when needed.
     }))
   );
 

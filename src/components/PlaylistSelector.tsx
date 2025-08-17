@@ -3,6 +3,7 @@ import { SpotifyPlaylist } from '../types';
 import LoadingOverlay from './LoadingOverlay';
 import { usePlaylistSearch } from '../hooks/usePlaylistSearch';
 import { useSpotifyUrlHandler } from '../hooks/useSpotifyUrlHandler';
+import { getDisplayErrorWithLabel } from '../utils/normalizeError';
 import styles from './PlaylistSelector.module.css';
 
 interface PlaylistSelectorProps {
@@ -10,7 +11,10 @@ interface PlaylistSelectorProps {
   selectedPlaylists: SpotifyPlaylist[];
   onPlaylistSelect: (playlist: SpotifyPlaylist) => void;
   onClearAll: () => void;
-  onError: (error: string) => void;
+  // Keep backwards-compatible behavior (string errors) but accept any
+  // richer error objects (ApiError, Error, etc.) so callers can pass
+  // normalized error shapes through the global UI store.
+  onError: (error: unknown) => void;
 }
 
 const PlaylistSelector = memo<PlaylistSelectorProps>(
@@ -63,10 +67,17 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
         onError,
       });
 
-    // Handle search error
+    // Handle search error - prefer passing through plain strings unchanged
+    // for backward-compatibility; if a richer error object is present,
+    // normalize it to the DisplayError details so callers can surface
+    // structured information.
     useEffect(() => {
       if (searchError) {
-        onError(searchError);
+        if (typeof searchError === 'string') {
+          onError(searchError);
+        } else {
+          onError(getDisplayErrorWithLabel(searchError).details);
+        }
       }
     }, [searchError, onError]);
 

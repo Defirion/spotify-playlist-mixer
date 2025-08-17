@@ -1,5 +1,6 @@
 import { useReducer, useCallback } from 'react';
 import { SpotifyPlaylist } from '../types/spotify';
+import { DisplayError } from '../utils/normalizeError';
 
 // Action types
 export const APP_ACTIONS = {
@@ -20,13 +21,16 @@ export interface MixedPlaylistToast extends SpotifyPlaylist {
 
 export interface AppState {
   accessToken: string | null;
-  error: string | null;
+  error: DisplayError | string | null;
   mixedPlaylists: MixedPlaylistToast[];
 }
 
 export type AppAction =
   | { type: typeof APP_ACTIONS.SET_ACCESS_TOKEN; payload: string | null }
-  | { type: typeof APP_ACTIONS.SET_ERROR; payload: string | null }
+  | {
+      type: typeof APP_ACTIONS.SET_ERROR;
+      payload: DisplayError | string | null;
+    }
   | { type: typeof APP_ACTIONS.DISMISS_ERROR }
   | { type: typeof APP_ACTIONS.ADD_MIXED_PLAYLIST; payload: SpotifyPlaylist }
   | { type: typeof APP_ACTIONS.DISMISS_SUCCESS_TOAST; payload: number };
@@ -34,12 +38,12 @@ export type AppAction =
 export interface UseAppStateReturn {
   // State
   accessToken: string | null;
-  error: string | null;
+  error: DisplayError | string | null;
   mixedPlaylists: MixedPlaylistToast[];
 
   // Actions
   setAccessToken: (token: string | null) => void;
-  setError: (error: string | null) => void;
+  setError: (error: DisplayError | string | null) => void;
   dismissError: () => void;
   addMixedPlaylist: (playlist: SpotifyPlaylist) => void;
   dismissSuccessToast: (toastId: number) => void;
@@ -108,7 +112,7 @@ export const useAppState = (): UseAppStateReturn => {
     dispatch({ type: APP_ACTIONS.SET_ACCESS_TOKEN, payload: token });
   }, []);
 
-  const setError = useCallback((error: string | null) => {
+  const setError = useCallback((error: DisplayError | string | null) => {
     dispatch({ type: APP_ACTIONS.SET_ERROR, payload: error });
   }, []);
 

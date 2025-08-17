@@ -17,24 +17,45 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
 }) => {
   if (!error) return null;
 
-  // If it's an ApiError, use the enhanced display component
-  if (error instanceof ApiError) {
+  // If it's an ApiError instance or ApiError-like object, prefer the enhanced display
+  const isApiErrorLike = (obj: any): obj is Partial<ApiErrorData> => {
+    return (
+      obj &&
+      typeof obj === 'object' &&
+      (obj.type !== undefined ||
+        obj.title !== undefined ||
+        obj.suggestions !== undefined)
+    );
+  };
+
+  if (error instanceof ApiError || isApiErrorLike(error)) {
+    // Map whatever fields are present to the ApiErrorData shape with safe defaults
+    const src: any = error;
     const apiErrorData: ApiErrorData = {
-      type: error.type,
-      title: error.title,
-      message: error.message,
-      suggestions: error.suggestions,
-      retryable: error.retryable,
-      timestamp: error.timestamp,
-      status: error.status,
-      statusText: error.statusText,
-      context: error.context,
-      originalError: error.originalError
-        ? {
-            message: error.originalError.message,
-            stack: error.originalError.stack,
-          }
-        : undefined,
+      type: (src.type as ApiErrorData['type']) || 'UNKNOWN',
+      title:
+        src.title ||
+        (typeof src === 'string' ? src : src.message) ||
+        '⚠️ Something Went Wrong',
+      message:
+        src.message ||
+        (typeof src === 'string' ? src : src.message) ||
+        'An unexpected error occurred.',
+      suggestions: src.suggestions || [],
+      retryable: typeof src.retryable === 'boolean' ? src.retryable : true,
+      timestamp: src.timestamp || new Date().toISOString(),
+      status: src.status,
+      statusText: src.statusText,
+      context: src.context,
+      originalError:
+        src.originalError && typeof src.originalError === 'object'
+          ? {
+              message: src.originalError.message,
+              stack: src.originalError.stack,
+            }
+          : src instanceof Error
+            ? { message: src.message, stack: src.stack }
+            : undefined,
     };
 
     return (

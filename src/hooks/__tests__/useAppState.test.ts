@@ -24,11 +24,13 @@ describe('useAppState', () => {
   it('sets and dismisses error', () => {
     const { result } = renderHook(() => useAppState());
 
+    const testError = { message: 'Test error', title: 'Test' } as any;
+
     act(() => {
-      result.current.setError('Test error');
+      result.current.setError(testError);
     });
 
-    expect(result.current.error).toBe('Test error');
+    expect(result.current.error).toEqual(testError);
 
     act(() => {
       result.current.dismissError();

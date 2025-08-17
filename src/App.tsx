@@ -26,6 +26,7 @@ import {
   useRatioConfig,
   useMixOptions,
   useUI,
+  setUIError,
 } from './store';
 
 // Drag hooks removed
@@ -40,8 +41,7 @@ function MainApp() {
     usePlaylistSelection();
   const { setRatioConfigBulk } = useRatioConfig();
   const { applyPresetOptions } = useMixOptions();
-  const { error, mixedPlaylists, setError, dismissError, dismissSuccessToast } =
-    useUI();
+  const { error, mixedPlaylists, dismissError, dismissSuccessToast } = useUI();
 
   // Global scroll lock removed - will be handled by dnd-kit
 
@@ -85,7 +85,7 @@ function MainApp() {
     setRatioConfigBulk(newRatioConfig);
     applyPresetOptions({ strategy, settings, presetName });
     if (error) {
-      setError(null);
+      setUIError(null);
     }
   };
 
@@ -127,7 +127,7 @@ function MainApp() {
             selectedPlaylists={selectedPlaylists}
             onPlaylistSelect={handlePlaylistSelection}
             onClearAll={handleClearAllPlaylists}
-            onError={setError}
+            onError={err => setUIError(err)}
           />
         </ErrorBoundary>
 
@@ -183,7 +183,7 @@ function PlaylistMixerContainer() {
   const { selectedPlaylists } = usePlaylistSelection();
   const { ratioConfig } = useRatioConfig();
   const { mixOptions, updateMixOptions } = useMixOptions();
-  const { addMixedPlaylist, setError } = useUI();
+  const { addMixedPlaylist } = useUI();
 
   const handleMixedPlaylist = (result: SpotifyPlaylist) => {
     // The result already contains the correct playlist data from Spotify API
@@ -199,7 +199,7 @@ function PlaylistMixerContainer() {
       mixOptions={mixOptions}
       updateMixOptions={updateMixOptions}
       onMixedPlaylist={handleMixedPlaylist}
-      onError={setError}
+      onError={err => setUIError(err)}
     />
   );
 }

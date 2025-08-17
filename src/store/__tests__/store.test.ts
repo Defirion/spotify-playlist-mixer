@@ -245,11 +245,14 @@ describe('Zustand Store', () => {
 
       expect(result.current.error).toBeNull();
 
+      const testError = { message: 'Test error', title: 'Test' } as any;
+
       act(() => {
-        result.current.setError('Test error');
+        // Use the store setter directly for tests (selectors no longer expose setError)
+        useAppStore.getState().setError(testError as any);
       });
 
-      expect(result.current.error).toBe('Test error');
+      expect(result.current.error).toEqual(testError);
 
       act(() => {
         result.current.dismissError();
@@ -317,7 +320,9 @@ describe('Zustand Store', () => {
       expect(result.current.ratioConfig['playlist1']).toBeDefined();
       expect(result.current.mixOptions).toBeDefined();
       expect(typeof result.current.addMixedPlaylist).toBe('function');
-      expect(typeof result.current.setError).toBe('function');
+      // The raw setter is available on the store; selectors intentionally avoid
+      // exposing it to encourage use of the normalized helper in components.
+      expect(typeof useAppStore.getState().setError).toBe('function');
     });
   });
 

@@ -63,7 +63,17 @@ import { useAppStore } from './store';
 
 // Direct store access
 const accessToken = useAppStore(state => state.accessToken);
-const setError = useAppStore(state => state.setError);
+// To set UI-visible errors from arbitrary error shapes, prefer the migration
+// helper which normalizes the input to the DisplayError shape:
+//
+// import { setUIError } from '../store';
+// setUIError(err);
+//
+// Avoid calling the raw store setter directly from components. If you need to
+// inspect read-only UI state in a component use the hooks below.
+//
+// (Older examples used: const setError = useAppStore(state => state.setError)
+// — prefer setUIError to ensure consistent error normalization.)
 ```
 
 ### Selector Hooks
@@ -75,7 +85,7 @@ import { useAuth, usePlaylistSelection, useMixOptions, useUI } from './store';
 const { accessToken, isAuthenticated, setAccessToken } = useAuth();
 const { selectedPlaylists, togglePlaylistSelection } = usePlaylistSelection();
 const { mixOptions, updateMixOptions } = useMixOptions();
-const { error, setError, dismissError } = useUI();
+const { error, dismissError } = useUI();
 ```
 
 ### Combined Selectors
@@ -126,7 +136,10 @@ const legacyState = useLegacyAppState();
 
 // New approach
 const { accessToken, error } = useAuth();
-const { mixedPlaylists, setError } = useUI();
+const { mixedPlaylists } = useUI();
+// To set UI-visible errors, use the migration helper:
+// import { setUIError } from './store';
+// setUIError(err);
 ```
 
 ## Testing

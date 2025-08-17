@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { SpotifyPlaylist } from '../../types/spotify';
+import { DisplayError } from '../../utils/normalizeError';
 
 export interface MixedPlaylistToast extends SpotifyPlaylist {
   toastId: string;
@@ -8,11 +9,11 @@ export interface MixedPlaylistToast extends SpotifyPlaylist {
 
 export interface UISlice {
   // State
-  error: string | null;
+  error: DisplayError | null;
   mixedPlaylists: MixedPlaylistToast[];
 
   // Actions
-  setError: (error: string | null) => void;
+  setError: (error: DisplayError | null) => void;
   dismissError: () => void;
   addMixedPlaylist: (playlist: SpotifyPlaylist) => void;
   dismissSuccessToast: (toastId: string) => void;
@@ -31,6 +32,8 @@ export const createUISlice: StateCreator<
   // Actions
   setError: error =>
     set(state =>
+      // Simple shallow compare is fine for this slice; callers should
+      // provide normalized DisplayError objects created by normalizeError
       state.error === error
         ? state
         : {

@@ -10,6 +10,8 @@ import { useTrackSelection } from '../hooks/useTrackSelection';
 import { generateTrackInstanceId } from '../utils/trackUtils';
 import { SpotifyTrack } from '../types';
 import styles from './TrackSourceModal.module.css';
+import ErrorHandler from './ErrorHandler';
+import { getDisplayErrorWithLabel } from '../utils/normalizeError';
 
 // Track with instance ID for drag operations
 interface TrackWithInstanceId extends SpotifyTrack {
@@ -248,9 +250,28 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
         {/* Track List */}
         <div className={styles.trackListContainer}>
           {error ? (
-            <div className={styles.errorState}>
-              Error loading tracks. Please try again.
-            </div>
+            // Preserve legacy simple message for plain Error/string inputs to
+            // avoid breaking tests that expect the exact text. For ApiError
+            // instances or ApiError-like objects, use the richer ErrorHandler
+            // but show a short label in-line.
+            typeof error === 'string' || error instanceof Error ? (
+              <div className={styles.errorState}>
+                Error loading tracks. Please try again.
+              </div>
+            ) : (
+              <div className={styles.errorState}>
+                {/* show short label and full ErrorHandler for rich errors */}
+                <div className={styles.errorLabel}>
+                  {getDisplayErrorWithLabel(error).label}
+                </div>
+                <ErrorHandler
+                  error={error}
+                  onDismiss={onClose}
+                  onRetry={onManualSearch}
+                  className={styles.errorHandler}
+                />
+              </div>
+            )
           ) : tracksWithInstanceIds.length === 0 ? (
             <div className={styles.empty} data-testid="empty-message">
               {emptyMessage}

@@ -105,7 +105,7 @@ export interface TrackListProps extends BaseComponentProps {
   renderTrackActions?: (track: SpotifyTrack, index: number) => React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
-  error?: string | null;
+  error?: import('../utils/normalizeError').DisplayError | string | null;
   showHeader?: boolean;
   sortable?: boolean;
   sortBy?: 'name' | 'artist' | 'album' | 'duration' | 'popularity';
@@ -186,7 +186,7 @@ export interface PlaylistListProps extends BaseComponentProps {
   renderPlaylistActions?: (playlist: SpotifyPlaylist) => React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
-  error?: string | null;
+  error?: import('../utils/normalizeError').DisplayError | string | null;
   virtualized?: boolean;
 }
 

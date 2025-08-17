@@ -31,7 +31,7 @@ export interface ApiErrorData {
 }
 
 export interface ApiErrorDisplayProps {
-  error: ApiErrorData | null;
+  error: Partial<ApiErrorData> | null;
   onRetry?: () => void;
   onDismiss?: () => void;
   showDetails?: boolean;
@@ -89,8 +89,16 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
     return classMap[type] || 'default-class';
   };
 
-  const errorIcon = getErrorIcon(error.type);
-  const errorTypeClass = getErrorTypeClass(error.type);
+  const errorType = (error.type as ApiErrorType) || 'UNKNOWN';
+  const errorIcon = getErrorIcon(errorType);
+  const errorTypeClass = getErrorTypeClass(errorType);
+
+  const title =
+    error.title || (error.message ? undefined : '⚠️ Something went wrong');
+  const message =
+    error.message ||
+    (typeof error.originalError === 'object' && error.originalError?.message) ||
+    'An unexpected error occurred.';
 
   return (
     <div
@@ -103,11 +111,11 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
           {/* Error Title */}
           <h3 className={`${styles.title} ${styles[errorTypeClass]}`}>
             <span className={styles.icon}>{errorIcon}</span>
-            {error.title}
+            {title}
           </h3>
 
           {/* Error Message */}
-          <p className={styles.message}>{error.message}</p>
+          <p className={styles.message}>{message}</p>
 
           {/* Suggestions */}
           {error.suggestions && error.suggestions.length > 0 && (
@@ -118,7 +126,7 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
                 💡 What you can try:
               </strong>
               <ul className={styles.suggestionsList}>
-                {error.suggestions.map((suggestion, index) => (
+                {error.suggestions!.map((suggestion, index) => (
                   <li key={index} className={styles.suggestionItem}>
                     {suggestion}
                   </li>
@@ -131,14 +139,15 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
           <div
             className={`${styles.actions} ${showDetails ? styles.hasDetails : ''}`}
           >
-            {error.retryable && onRetry && (
-              <button
-                className={`btn ${styles.retryButton} ${styles[errorTypeClass]}`}
-                onClick={onRetry}
-              >
-                🔄 Try Again
-              </button>
-            )}
+            {(typeof error.retryable === 'boolean' ? error.retryable : true) &&
+              onRetry && (
+                <button
+                  className={`btn ${styles.retryButton} ${styles[errorTypeClass]}`}
+                  onClick={onRetry}
+                >
+                  🔄 Try Again
+                </button>
+              )}
 
             {onDismiss && (
               <button
@@ -179,7 +188,7 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Timestamp:</span>{' '}
-                  {new Date(error.timestamp).toLocaleString()}
+                  {new Date(error.timestamp || Date.now()).toLocaleString()}
                 </div>
                 {error.status && (
                   <div className={styles.detailItem}>
@@ -199,7 +208,7 @@ const ApiErrorDisplay: React.FC<ApiErrorDisplayProps> = ({
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Original Error:</span>
                     <pre className={styles.detailValue}>
-                      {error.originalError.message}
+                      {error.originalError.message || 'No message available'}
                     </pre>
                   </div>
                 )}

@@ -141,14 +141,14 @@ export interface UseAppStateReturn {
       userPlaylists: SpotifyPlaylist[];
       selectedPlaylists: PlaylistSelectionItem[];
       loading: boolean;
-      error: string | null;
+      error: import('../utils/normalizeError').DisplayError | string | null;
     };
     mixer: {
       mixOptions: MixOptions;
       ratioConfig: RatioConfig;
       mixResult: PlaylistMixResult | null;
       isLoading: boolean;
-      error: string | null;
+      error: import('../utils/normalizeError').DisplayError | string | null;
     };
     ui: {
       activeModal: string | null;

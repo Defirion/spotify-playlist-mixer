@@ -1,5 +1,5 @@
 import { getSpotifyApi } from '../utils/spotify';
-import { ApiErrorHandler } from './apiErrorHandler';
+import { ApiErrorHandler, ApiError, ERROR_TYPES } from './apiErrorHandler';
 import {
   ISpotifyService,
   SpotifyTrack,
@@ -42,7 +42,11 @@ class SpotifyService implements ISpotifyService {
 
   constructor(accessToken: string, errorHandler?: ApiErrorHandler | null) {
     if (!accessToken) {
-      throw new Error('Access token is required for SpotifyService');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Access token is required for SpotifyService'),
+        { service: 'SpotifyService', operation: 'constructor' }
+      );
     }
     this.api = getSpotifyApi(accessToken);
     this.accessToken = accessToken;
@@ -92,11 +96,19 @@ class SpotifyService implements ISpotifyService {
     const { limit = 20, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {
-      throw new Error('Search query cannot be empty');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Search query cannot be empty'),
+        { operation: 'searchTracks' }
+      );
     }
 
     if (limit > 50) {
-      throw new Error('Limit cannot exceed 50 for search requests');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Limit cannot exceed 50 for search requests'),
+        { operation: 'searchTracks', limit }
+      );
     }
 
     return this.withRetry(
@@ -145,7 +157,11 @@ class SpotifyService implements ISpotifyService {
     options: GetPlaylistTracksOptions = {}
   ): Promise<{ tracks: SpotifyTrack[]; total: number; hasMore: boolean }> {
     if (!playlistId) {
-      throw new Error('Playlist ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Playlist ID is required'),
+        { operation: 'getPlaylistTracks' }
+      );
     }
 
     const { market, onProgress } = options;
@@ -242,7 +258,11 @@ class SpotifyService implements ISpotifyService {
     const { limit = 50, offset = 0, all = false } = options;
 
     if (limit > 50) {
-      throw new Error('Limit cannot exceed 50 for playlist requests');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Limit cannot exceed 50 for playlist requests'),
+        { operation: 'getUserPlaylists', limit }
+      );
     }
 
     if (all) {
@@ -316,11 +336,19 @@ class SpotifyService implements ISpotifyService {
     playlistData: SpotifyCreatePlaylistRequest
   ): Promise<SpotifyPlaylist> {
     if (!userId) {
-      throw new Error('User ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('User ID is required'),
+        { operation: 'createPlaylist' }
+      );
     }
 
     if (!playlistData?.name) {
-      throw new Error('Playlist name is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Playlist name is required'),
+        { operation: 'createPlaylist' }
+      );
     }
 
     const {
@@ -350,7 +378,11 @@ class SpotifyService implements ISpotifyService {
     request: SpotifyAddTracksRequest
   ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
-      throw new Error('Playlist ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Playlist ID is required'),
+        { operation: 'addTracksToPlaylist' }
+      );
     }
 
     const { uris: trackUris, position } = request;
@@ -370,7 +402,11 @@ class SpotifyService implements ISpotifyService {
         'DEBUG (spotify.ts): Validation failed: trackUris is not an array or is empty.',
         trackUris
       );
-      throw new Error('Track URIs array is required and cannot be empty');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Track URIs array is required and cannot be empty'),
+        { operation: 'addTracksToPlaylist' }
+      );
     }
 
     // Spotify API allows maximum 100 tracks per request
@@ -410,13 +446,21 @@ class SpotifyService implements ISpotifyService {
     request: SpotifyRemoveTracksRequest
   ): Promise<{ snapshot_id: string }> {
     if (!playlistId) {
-      throw new Error('Playlist ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Playlist ID is required'),
+        { operation: 'removeTracksFromPlaylist' }
+      );
     }
 
     const { tracks } = request;
 
     if (!Array.isArray(tracks) || tracks.length === 0) {
-      throw new Error('Tracks array is required and cannot be empty');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Tracks array is required and cannot be empty'),
+        { operation: 'removeTracksFromPlaylist' }
+      );
     }
 
     return this.withRetry(async () => {
@@ -439,7 +483,11 @@ class SpotifyService implements ISpotifyService {
     options: { market?: string; fields?: string } = {}
   ): Promise<SpotifyPlaylist> {
     if (!playlistId) {
-      throw new Error('Playlist ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Playlist ID is required'),
+        { operation: 'getPlaylist' }
+      );
     }
 
     const { market, fields } = options;
@@ -479,11 +527,19 @@ class SpotifyService implements ISpotifyService {
     const { limit = 20, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {
-      throw new Error('Search query cannot be empty');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Search query cannot be empty'),
+        { operation: 'searchPlaylists' }
+      );
     }
 
     if (limit > 50) {
-      throw new Error('Limit cannot exceed 50 for search requests');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Limit cannot exceed 50 for search requests'),
+        { operation: 'searchPlaylists', limit }
+      );
     }
 
     return this.withRetry(async () => {
@@ -517,7 +573,11 @@ class SpotifyService implements ISpotifyService {
    */
   async getTrackAudioFeatures(trackId: string): Promise<any> {
     if (!trackId) {
-      throw new Error('Track ID is required');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Track ID is required'),
+        { operation: 'getTrackAudioFeatures' }
+      );
     }
 
     return this.withRetry(async () => {
@@ -531,7 +591,11 @@ class SpotifyService implements ISpotifyService {
    */
   async getMultipleTrackAudioFeatures(trackIds: string[]): Promise<any[]> {
     if (!Array.isArray(trackIds) || trackIds.length === 0) {
-      throw new Error('Track IDs array is required and cannot be empty');
+      throw new ApiError(
+        ERROR_TYPES.BAD_REQUEST,
+        new Error('Track IDs array is required and cannot be empty'),
+        { operation: 'getMultipleTrackAudioFeatures' }
+      );
     }
 
     return this.withRetry(async () => {
