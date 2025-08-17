@@ -56,17 +56,25 @@ const createMockTrack = (
     name: `Album for ${name}`,
     release_date: releaseDate || '2020-01-01',
     images: [],
+    uri: `spotify:album:album-${id}`,
+    external_urls: { spotify: `https://open.spotify.com/album/album-${id}` },
   },
   artists: [
     {
       id: `artist-${id}`,
       name: `Artist for ${name}`,
       uri: `spotify:artist:artist-${id}`,
+      external_urls: {
+        spotify: `https://open.spotify.com/artist/artist-${id}`,
+      },
     },
   ],
   external_urls: {
     spotify: `https://open.spotify.com/track/${id}`,
   },
+  explicit: false,
+  preview_url: null,
+  track_number: 1,
 });
 
 const createMockTrackWithPopularity = (

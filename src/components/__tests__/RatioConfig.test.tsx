@@ -3,22 +3,28 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RatioConfig from '../RatioConfig';
 import { SpotifyPlaylist } from '../../types/spotify';
+import { makePlaylist } from '../../test-utils/mocks/spotify';
 import { RatioConfig as RatioConfigType } from '../../types/mixer';
 
 // Remove mock to test with actual hook
 
-const mockPlaylist: SpotifyPlaylist = {
+// Use factory to ensure full SpotifyPlaylist shape
+const mockPlaylist: SpotifyPlaylist = makePlaylist({
   id: '1',
   name: 'Test Playlist',
   description: 'A test playlist',
   images: [{ url: 'test.jpg', height: 300, width: 300 }],
-  tracks: { total: 50 },
-  owner: { id: 'user1', display_name: 'Test User' },
+  tracks: { total: 50, href: 'https://api.spotify.com/playlists/1/tracks' },
+  owner: {
+    id: 'user1',
+    display_name: 'Test User',
+    external_urls: { spotify: 'https://open.spotify.com/user/user1' },
+  },
   public: true,
   uri: 'spotify:playlist:1',
   realAverageDurationSeconds: 180,
   tracksWithDuration: 50,
-};
+});
 
 const mockRatioConfig: RatioConfigType = {
   '1': { min: 1, max: 2, weight: 3, weightType: 'frequency' },

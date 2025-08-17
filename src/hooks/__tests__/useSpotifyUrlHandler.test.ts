@@ -57,7 +57,12 @@ describe('useSpotifyUrlHandler', () => {
   const mockOnPlaylistSelect = jest.fn();
   const mockOnError = jest.fn();
 
-  const defaultProps = {
+  const defaultProps: {
+    accessToken: string | null;
+    selectedPlaylists: any[];
+    onPlaylistSelect: (p: any) => void;
+    onError: (e: any) => void;
+  } = {
     accessToken: 'test-token',
     selectedPlaylists: [],
     onPlaylistSelect: mockOnPlaylistSelect,
@@ -465,7 +470,7 @@ describe('useSpotifyUrlHandler', () => {
       jest.clearAllMocks();
 
       // Update with access token
-      rerender({ ...defaultProps, accessToken: 'new-token' });
+      rerender({ ...defaultProps, accessToken: 'new-token' } as any);
 
       // Try again with access token
       // ensure mocked API resolves for the successful add

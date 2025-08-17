@@ -1,34 +1,43 @@
 import { renderHook } from '@testing-library/react';
 import { useRatioCalculation } from '../useRatioCalculation';
 import { SpotifyPlaylist } from '../../types/spotify';
+import { makePlaylist } from '../../test-utils/mocks/spotify';
 import { RatioConfig, WeightType } from '../../types/mixer';
 
 // Mock playlist data
-const mockPlaylist1: SpotifyPlaylist = {
+const mockPlaylist1: SpotifyPlaylist = makePlaylist({
   id: '1',
   name: 'Playlist 1',
   description: 'Test playlist 1',
   images: [{ url: 'test1.jpg', height: 300, width: 300 }],
-  tracks: { total: 50 },
-  owner: { id: 'user1', display_name: 'User 1' },
+  tracks: { total: 50, href: 'https://api.spotify.com/playlists/1/tracks' },
+  owner: {
+    id: 'user1',
+    display_name: 'User 1',
+    external_urls: { spotify: 'https://open.spotify.com/user/user1' },
+  },
   public: true,
   uri: 'spotify:playlist:1',
   realAverageDurationSeconds: 180, // 3 minutes
   tracksWithDuration: 50,
-};
+});
 
-const mockPlaylist2: SpotifyPlaylist = {
+const mockPlaylist2: SpotifyPlaylist = makePlaylist({
   id: '2',
   name: 'Playlist 2',
   description: 'Test playlist 2',
   images: [{ url: 'test2.jpg', height: 300, width: 300 }],
-  tracks: { total: 30 },
-  owner: { id: 'user2', display_name: 'User 2' },
+  tracks: { total: 30, href: 'https://api.spotify.com/playlists/2/tracks' },
+  owner: {
+    id: 'user2',
+    display_name: 'User 2',
+    external_urls: { spotify: 'https://open.spotify.com/user/user2' },
+  },
   public: true,
   uri: 'spotify:playlist:2',
   realAverageDurationSeconds: 240, // 4 minutes
   tracksWithDuration: 30,
-};
+});
 
 const mockRatioConfig: RatioConfig = {
   '1': { min: 1, max: 2, weight: 3, weightType: 'frequency' },

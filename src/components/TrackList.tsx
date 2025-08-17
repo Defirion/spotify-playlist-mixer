@@ -3,6 +3,7 @@ import { SpotifyTrack } from '../types/spotify';
 import SortableWrapper from './SortableWrapper';
 import TrackItem from './ui/TrackItem';
 import DraggableTrackList from './DraggableTrackList';
+import DragErrorBoundary from './DragErrorBoundary';
 
 function TrackList({ tracks }: { tracks: SpotifyTrack[] }) {
   return (
@@ -24,5 +25,11 @@ function TrackListContainer({ tracks }: { tracks: SpotifyTrack[] }) {
   );
 }
 
-export default TrackList;
+const WrappedTrackList = (props: { tracks: SpotifyTrack[] }) => (
+  <DragErrorBoundary>
+    <TrackList {...props} />
+  </DragErrorBoundary>
+);
+
+export default WrappedTrackList;
 export { TrackListContainer };

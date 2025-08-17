@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import SpotifySearchModal from '../SpotifySearchModal';
 // DragProvider removed - using Zustand drag slice instead
 import * as useSpotifySearchModule from '../../hooks/useSpotifySearch';
+import { makeTrack } from '../../test-utils/mocks/spotify';
 // Drag-related imports removed
 
 // Mock the hooks and utilities
@@ -28,43 +29,42 @@ const mockUseSpotifySearch =
 // Drag-related mock variables removed
 
 // Mock data
+// Use factory to ensure complete SpotifyTrack shape
 const mockTracks = [
-  {
+  makeTrack({
     id: '1',
     name: 'Test Song 1',
-    artists: [
-      { id: 'artist1', name: 'Test Artist 1', uri: 'spotify:artist:artist1' },
-    ],
-    album: {
-      id: 'album1',
-      name: 'Test Album 1',
-      images: [{ url: 'test-image-1.jpg', height: 300, width: 300 }],
-      release_date: '2023-01-01',
-    },
     duration_ms: 180000,
     popularity: 75,
     uri: 'spotify:track:1',
     preview_url: 'test-preview-1.mp3',
     external_urls: { spotify: 'https://open.spotify.com/track/1' },
-  },
-  {
+    album: {
+      id: 'album1',
+      name: 'Test Album 1',
+      uri: 'spotify:album:album1',
+      external_urls: { spotify: 'https://open.spotify.com/album/album1' },
+      images: [{ url: 'test-image-1.jpg', height: 300, width: 300 }],
+      release_date: '2023-01-01',
+    },
+  }),
+  makeTrack({
     id: '2',
     name: 'Test Song 2',
-    artists: [
-      { id: 'artist2', name: 'Test Artist 2', uri: 'spotify:artist:artist2' },
-    ],
-    album: {
-      id: 'album2',
-      name: 'Test Album 2',
-      images: [{ url: 'test-image-2.jpg', height: 300, width: 300 }],
-      release_date: '2023-02-01',
-    },
     duration_ms: 200000,
     popularity: 80,
     uri: 'spotify:track:2',
     preview_url: 'test-preview-2.mp3',
     external_urls: { spotify: 'https://open.spotify.com/track/2' },
-  },
+    album: {
+      id: 'album2',
+      name: 'Test Album 2',
+      uri: 'spotify:album:album2',
+      external_urls: { spotify: 'https://open.spotify.com/album/album2' },
+      images: [{ url: 'test-image-2.jpg', height: 300, width: 300 }],
+      release_date: '2023-02-01',
+    },
+  }),
 ];
 
 // Drag context mock removed

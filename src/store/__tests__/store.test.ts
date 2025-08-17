@@ -10,29 +10,44 @@ import {
   useMixingState,
 } from '../index';
 import { SpotifyPlaylist } from '../../types/spotify';
+import { makePlaylist } from '../../test-utils/mocks/spotify';
 
-// Mock playlist data
-const mockPlaylist1: SpotifyPlaylist = {
+// Mock playlist data using factory to provide required fields
+const mockPlaylist1: SpotifyPlaylist = makePlaylist({
   id: 'playlist1',
   name: 'Test Playlist 1',
   description: 'Test description',
   images: [],
-  tracks: { total: 10 },
-  owner: { id: 'user1', display_name: 'Test User' },
+  tracks: {
+    total: 10,
+    href: 'https://api.spotify.com/playlists/playlist1/tracks',
+  },
+  owner: {
+    id: 'user1',
+    display_name: 'Test User',
+    external_urls: { spotify: 'https://open.spotify.com/user/user1' },
+  },
   public: true,
   uri: 'spotify:playlist:playlist1',
-};
+});
 
-const mockPlaylist2: SpotifyPlaylist = {
+const mockPlaylist2: SpotifyPlaylist = makePlaylist({
   id: 'playlist2',
   name: 'Test Playlist 2',
   description: 'Test description 2',
   images: [],
-  tracks: { total: 20 },
-  owner: { id: 'user1', display_name: 'Test User' },
+  tracks: {
+    total: 20,
+    href: 'https://api.spotify.com/playlists/playlist2/tracks',
+  },
+  owner: {
+    id: 'user1',
+    display_name: 'Test User',
+    external_urls: { spotify: 'https://open.spotify.com/user/user1' },
+  },
   public: true,
   uri: 'spotify:playlist:playlist2',
-};
+});
 
 describe('Zustand Store', () => {
   beforeEach(() => {

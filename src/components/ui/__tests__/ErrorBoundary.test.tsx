@@ -54,7 +54,7 @@ describe('ErrorBoundary', () => {
     };
 
     const { rerender } = render(
-      <ErrorBoundary key={true}>
+      <ErrorBoundary key="err-1">
         <ErrorThrower shouldThrow={true} />
       </ErrorBoundary>
     );
@@ -68,7 +68,7 @@ describe('ErrorBoundary', () => {
 
     // Rerender with shouldThrow=false to simulate recovery
     rerender(
-      <ErrorBoundary key={false}>
+      <ErrorBoundary key="err-2">
         <ErrorThrower shouldThrow={false} />
       </ErrorBoundary>
     );
@@ -128,7 +128,15 @@ describe('ErrorBoundary', () => {
       throw new Error('Test Error');
     };
 
-    const CustomFallback = ({ error, errorInfo, handleRetry }) => (
+    const CustomFallback = ({
+      error,
+      errorInfo,
+      handleRetry,
+    }: {
+      error?: Error;
+      errorInfo?: any;
+      handleRetry?: () => void;
+    }) => (
       <div>
         <h1>Custom Error Fallback</h1>
         <p>{error?.message}</p>
@@ -140,8 +148,8 @@ describe('ErrorBoundary', () => {
       <ErrorBoundary
         fallback={(error, errorInfo, handleRetry) => (
           <CustomFallback
-            error={error}
-            errorInfo={errorInfo}
+            error={error || undefined}
+            errorInfo={errorInfo || undefined}
             handleRetry={handleRetry}
           />
         )}

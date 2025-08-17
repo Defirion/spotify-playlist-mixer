@@ -14,7 +14,7 @@ const MockedSpotifyService = SpotifyService as jest.MockedClass<
 >;
 
 describe('useUserPlaylists', () => {
-  let mockSpotifyService: jest.Mocked<SpotifyService>;
+  let mockSpotifyService: any;
   const mockAccessToken = 'mock-access-token';
 
   beforeEach(() => {
@@ -32,7 +32,10 @@ describe('useUserPlaylists', () => {
       searchTracks: jest.fn(),
       getTrackAudioFeatures: jest.fn(),
       getMultipleTrackAudioFeatures: jest.fn(),
-    };
+      // Additional methods expected by the mocked class
+      getPlaylist: jest.fn(),
+      searchPlaylists: jest.fn(),
+    } as any;
 
     MockedSpotifyService.mockImplementation(() => mockSpotifyService);
   });
@@ -116,15 +119,21 @@ describe('useUserPlaylists', () => {
     ];
 
     const mockPlaylistsResponse = {
+      items: mockPlaylists,
       playlists: mockPlaylists,
       total: 100,
+      limit: 50,
+      offset: 0,
+      next: null,
+      previous: null,
+      href: '',
       hasMore: true,
       nextOffset: 2,
-    };
+    } as any;
 
     it('fetches playlists automatically by default', async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue(
-        mockPlaylistsResponse
+        mockPlaylistsResponse as any
       );
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
@@ -154,15 +163,34 @@ describe('useUserPlaylists', () => {
 
     it('fetches all playlists when fetchAll is true', async () => {
       const allPlaylistsResponse = {
+        items: mockPlaylists,
         playlists: mockPlaylists,
         total: 2,
+        limit: mockPlaylists.length,
+        offset: 0,
+        next: null,
+        previous: null,
+        href: '',
         hasMore: false,
         nextOffset: 2,
-      };
+      } as any;
 
-      mockSpotifyService.getUserPlaylists.mockResolvedValue(
+      // First call returns the aggregated/all response, subsequent page calls
+      // should return a paginated shape that includes `playlists` for older code
+      mockSpotifyService.getUserPlaylists.mockResolvedValueOnce(
         allPlaylistsResponse
       );
+      mockSpotifyService.getUserPlaylists.mockResolvedValueOnce({
+        playlists: allPlaylistsResponse.playlists,
+        items: allPlaylistsResponse.playlists,
+        total: allPlaylistsResponse.total,
+        limit: allPlaylistsResponse.playlists.length,
+        offset: 0,
+        next: null,
+        previous: null,
+        href: '',
+        hasMore: false,
+      } as any);
 
       const { result } = renderHook(() =>
         useUserPlaylists(mockAccessToken, { fetchAll: true })
@@ -185,10 +213,12 @@ describe('useUserPlaylists', () => {
   describe('Loading states', () => {
     it('sets loading state during fetch', async () => {
       let resolveGetPlaylists: (value: any) => void;
-      const playlistsPromise = new Promise(resolve => {
+      const playlistsPromise = new Promise<any>(resolve => {
         resolveGetPlaylists = resolve;
       });
-      mockSpotifyService.getUserPlaylists.mockReturnValue(playlistsPromise);
+      mockSpotifyService.getUserPlaylists.mockReturnValue(
+        playlistsPromise as any
+      );
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
 
@@ -207,10 +237,12 @@ describe('useUserPlaylists', () => {
 
     it('calculates isInitialLoad correctly', async () => {
       let resolveGetPlaylists: (value: any) => void;
-      const playlistsPromise = new Promise(resolve => {
+      const playlistsPromise = new Promise<any>(resolve => {
         resolveGetPlaylists = resolve;
       });
-      mockSpotifyService.getUserPlaylists.mockReturnValue(playlistsPromise);
+      mockSpotifyService.getUserPlaylists.mockReturnValue(
+        playlistsPromise as any
+      );
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
 
@@ -302,8 +334,30 @@ describe('useUserPlaylists', () => {
 
     it('loads more playlists', async () => {
       mockSpotifyService.getUserPlaylists
-        .mockResolvedValueOnce(mockFirstPage)
-        .mockResolvedValueOnce(mockSecondPage);
+        .mockResolvedValueOnce({
+          items: mockFirstPage.playlists,
+          playlists: mockFirstPage.playlists,
+          total: mockFirstPage.total,
+          limit: mockFirstPage.playlists.length,
+          offset: 0,
+          next: null,
+          previous: null,
+          href: '',
+          hasMore: true,
+          nextOffset: 1,
+        } as any)
+        .mockResolvedValueOnce({
+          items: mockSecondPage.playlists,
+          playlists: mockSecondPage.playlists,
+          total: mockSecondPage.total,
+          limit: mockSecondPage.playlists.length,
+          offset: mockFirstPage.playlists.length,
+          next: null,
+          previous: null,
+          href: '',
+          hasMore: false,
+          nextOffset: 2,
+        } as any);
 
       const { result } = renderHook(() =>
         useUserPlaylists(mockAccessToken, { limit: 50 })
@@ -345,10 +399,13 @@ describe('useUserPlaylists', () => {
     });
 
     it('does not load more when already loading', async () => {
-      const playlistsPromise = new Promise(() => {
-        // Never resolve to keep loading state
+      // Create a promise that never resolves to keep loading state
+      const neverResolvingPromise = new Promise<any>(() => {
+        // intentionally never resolve
       });
-      mockSpotifyService.getUserPlaylists.mockReturnValue(playlistsPromise);
+      mockSpotifyService.getUserPlaylists.mockReturnValue(
+        neverResolvingPromise as any
+      );
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
 
@@ -365,7 +422,7 @@ describe('useUserPlaylists', () => {
 
     it('does not load more when hasMore is false', async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        playlists: [
+        items: [
           {
             id: '1',
             name: 'Playlist 1',
@@ -383,9 +440,13 @@ describe('useUserPlaylists', () => {
             external_urls: { spotify: '' },
           },
         ],
-        hasMore: false,
         total: 1,
-      });
+        limit: 1,
+        offset: 0,
+        next: null,
+        previous: null,
+        href: '',
+      } as any);
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
 

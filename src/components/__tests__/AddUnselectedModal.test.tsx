@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 // Jest globals are available by default in CRA
 import AddUnselectedModal from '../AddUnselectedModal';
 import { SpotifyTrack, SpotifyPlaylist } from '../../types';
+import { makeTrack, makePlaylist } from '../../test-utils/mocks/spotify';
 import * as spotifyUtils from '../../utils/spotify';
 // dragAndDrop utils import removed - will be replaced with dnd-kit
 
@@ -109,55 +110,42 @@ jest.mock('../ui/TrackList', () => ({
 }));
 // Legacy drag mocks removed - will be replaced with dnd-kit mocks
 
-// Mock data
+// Mock data (use factories to ensure correct shape)
 const mockTracks: SpotifyTrack[] = [
-  {
+  makeTrack({
     id: 'track1',
     name: 'Test Track 1',
-    artists: [
-      { id: 'artist1', name: 'Test Artist 1', uri: 'spotify:artist:artist1' },
-    ],
-    album: {
-      id: 'album1',
-      name: 'Test Album 1',
-      images: [],
-      release_date: '2023-01-01',
-    },
     duration_ms: 180000,
     popularity: 75,
     uri: 'spotify:track:track1',
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
-  },
-  {
+  }),
+  makeTrack({
     id: 'track2',
     name: 'Test Track 2',
-    artists: [
-      { id: 'artist2', name: 'Test Artist 2', uri: 'spotify:artist:artist2' },
-    ],
-    album: {
-      id: 'album2',
-      name: 'Test Album 2',
-      images: [],
-      release_date: '2023-01-02',
-    },
     duration_ms: 200000,
     popularity: 80,
     uri: 'spotify:track:track2',
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
-  },
+  }),
 ];
 
 const mockPlaylists: SpotifyPlaylist[] = [
-  {
+  makePlaylist({
     id: 'playlist1',
     name: 'Test Playlist 1',
     description: 'Test Description 1',
-    images: [],
-    tracks: { total: 10 },
-    owner: { id: 'user1', display_name: 'Test User' },
-    public: true,
+    tracks: {
+      total: 10,
+      href: 'https://api.spotify.com/playlists/playlist1/tracks',
+    },
+    owner: {
+      id: 'user1',
+      display_name: 'Test User',
+      external_urls: { spotify: 'https://open.spotify.com/user/user1' },
+    },
     uri: 'spotify:playlist:playlist1',
-  },
+  }),
 ];
 
 const mockCurrentTracks: SpotifyTrack[] = [];

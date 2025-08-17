@@ -2,62 +2,42 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import MixPreview from '../MixPreview';
 import { MixedTrack } from '../../../../types';
+import { makeTrack } from '../../../../test-utils/mocks/spotify';
 
 // Mock the TrackListContainer component
 // The TrackList/Draggable container was refactored to render per-item testids like `track-item-<id>`.
 // Keep tests coupled to DOM testids instead of mocking the old TrackList export.
 
+// Use factories to make full SpotifyTrack shapes and then cast to MixedTrack where needed
 const mockTracks: MixedTrack[] = [
   {
-    id: 'track1',
-    name: 'Track 1',
-    artists: [
-      {
-        id: 'artist1',
-        name: 'Artist 1',
-        uri: 'spotify:artist:artist1',
-        external_urls: { spotify: 'https://spotify.com' },
-      },
-    ],
-    album: {
-      id: 'album1',
-      name: 'Album 1',
-      uri: 'spotify:album:album1',
-      release_date: '2023-01-01',
-      images: [],
+    ...makeTrack({
+      id: 'track1',
+      name: 'Track 1',
+      duration_ms: 180000,
+      popularity: 80,
+      uri: 'spotify:track:track1',
       external_urls: { spotify: 'https://spotify.com' },
-    },
-    duration_ms: 180000,
-    popularity: 80,
-    uri: 'spotify:track:track1',
-    external_urls: { spotify: 'https://spotify.com' },
+      track_number: 1,
+      explicit: false,
+      preview_url: null,
+    }),
     sourcePlaylist: 'playlist1',
-  },
+  } as unknown as MixedTrack,
   {
-    id: 'track2',
-    name: 'Track 2',
-    artists: [
-      {
-        id: 'artist2',
-        name: 'Artist 2',
-        uri: 'spotify:artist:artist2',
-        external_urls: { spotify: 'https://spotify.com' },
-      },
-    ],
-    album: {
-      id: 'album2',
-      name: 'Album 2',
-      uri: 'spotify:album:album2',
-      release_date: '2023-01-01',
-      images: [],
+    ...makeTrack({
+      id: 'track2',
+      name: 'Track 2',
+      duration_ms: 200000,
+      popularity: 70,
+      uri: 'spotify:track:track2',
       external_urls: { spotify: 'https://spotify.com' },
-    },
-    duration_ms: 200000,
-    popularity: 70,
-    uri: 'spotify:track:track2',
-    external_urls: { spotify: 'https://spotify.com' },
+      track_number: 1,
+      explicit: false,
+      preview_url: null,
+    }),
     sourcePlaylist: 'playlist2',
-  },
+  } as unknown as MixedTrack,
 ];
 
 const mockStats = {

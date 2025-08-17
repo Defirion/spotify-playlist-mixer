@@ -1,61 +1,38 @@
 import { act, renderHook } from '@testing-library/react';
 import { useAppStore, useTracks } from '../index';
 import { SpotifyTrack } from '../../types/spotify';
+import { makeTrack } from '../../test-utils/mocks/spotify';
 
-// Mock track data
-const mockTrack1: SpotifyTrack = {
+// Mock track data using factory to ensure full shape
+const mockTrack1: SpotifyTrack = makeTrack({
   id: 'track1',
   name: 'Test Track 1',
-  artists: [{ id: 'artist1', name: 'Test Artist 1' }],
-  album: {
-    id: 'album1',
-    name: 'Test Album 1',
-    images: [],
-    release_date: '2023-01-01',
-    total_tracks: 10,
-  },
   duration_ms: 180000,
   popularity: 75,
   preview_url: 'https://example.com/preview1',
   external_urls: { spotify: 'https://open.spotify.com/track/track1' },
   uri: 'spotify:track:track1',
-};
+});
 
-const mockTrack2: SpotifyTrack = {
+const mockTrack2: SpotifyTrack = makeTrack({
   id: 'track2',
   name: 'Test Track 2',
-  artists: [{ id: 'artist2', name: 'Test Artist 2' }],
-  album: {
-    id: 'album2',
-    name: 'Test Album 2',
-    images: [],
-    release_date: '2023-02-01',
-    total_tracks: 12,
-  },
   duration_ms: 200000,
   popularity: 80,
   preview_url: 'https://example.com/preview2',
   external_urls: { spotify: 'https://open.spotify.com/track/track2' },
   uri: 'spotify:track:track2',
-};
+});
 
-const mockTrack3: SpotifyTrack = {
+const mockTrack3: SpotifyTrack = makeTrack({
   id: 'track3',
   name: 'Test Track 3',
-  artists: [{ id: 'artist3', name: 'Test Artist 3' }],
-  album: {
-    id: 'album3',
-    name: 'Test Album 3',
-    images: [],
-    release_date: '2023-03-01',
-    total_tracks: 8,
-  },
   duration_ms: 220000,
   popularity: 65,
   preview_url: 'https://example.com/preview3',
   external_urls: { spotify: 'https://open.spotify.com/track/track3' },
   uri: 'spotify:track:track3',
-};
+});
 
 describe('Track Store', () => {
   beforeEach(() => {

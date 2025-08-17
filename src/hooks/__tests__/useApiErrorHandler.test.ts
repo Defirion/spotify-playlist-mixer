@@ -57,13 +57,13 @@ describe('useApiErrorHandler', () => {
     expect(result.current.hasError).toBe(true);
 
     // Retry should clear error
-    let retryResult: string | void;
+    let retryResult: string | void = undefined;
     await act(async () => {
       retryResult = await result.current.retry(retryFn);
+      // Assert inside act to avoid TS complaining about use-before-assignment
+      expect(retryFn).toHaveBeenCalled();
+      expect(retryResult).toBe('success');
     });
-
-    expect(retryFn).toHaveBeenCalled();
-    expect(retryResult).toBe('success');
     expect(result.current.error).toBeNull();
     expect(result.current.hasError).toBe(false);
     expect(result.current.isRetrying).toBe(false);

@@ -374,7 +374,7 @@ describe('usePlaylistSearch', () => {
       expect(mockGet).not.toHaveBeenCalled();
 
       // Update with valid access token
-      rerender({ accessToken: 'test-token' });
+      rerender({ accessToken: 'test-token' } as any);
 
       act(() => {
         jest.advanceTimersByTime(150);

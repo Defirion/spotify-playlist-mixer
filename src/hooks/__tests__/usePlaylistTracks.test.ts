@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import usePlaylistTracks from '../usePlaylistTracks';
 import SpotifyService from '../../services/spotify';
 import type { SpotifyTrack } from '../../types';
+import { makeTrack } from '../../test-utils/mocks/spotify';
 
 // Mock axios
 jest.mock('axios');
@@ -75,65 +76,31 @@ describe('usePlaylistTracks', () => {
 
   describe('Auto-fetch functionality', () => {
     const mockTracks: SpotifyTrack[] = [
-      {
+      makeTrack({
         id: '1',
         name: 'Track 1',
-        artists: [
-          {
-            id: 'artist1',
-            name: 'Artist 1',
-            uri: 'spotify:artist:artist1',
-            external_urls: { spotify: '' },
-          },
-        ],
-        album: {
-          id: 'album1',
-          name: 'Album 1',
-          images: [],
-          release_date: '2023-01-01',
-          uri: 'spotify:album:album1',
-          external_urls: { spotify: '' },
-        },
         duration_ms: 180000,
-        explicit: false,
         popularity: 75,
-        preview_url: null,
         track_number: 1,
-        uri: 'spotify:track:1',
-        external_urls: { spotify: '' },
-      },
-      {
+        explicit: false,
+        preview_url: null,
+      }),
+      makeTrack({
         id: '2',
         name: 'Track 2',
-        artists: [
-          {
-            id: 'artist2',
-            name: 'Artist 2',
-            uri: 'spotify:artist:artist2',
-            external_urls: { spotify: '' },
-          },
-        ],
-        album: {
-          id: 'album2',
-          name: 'Album 2',
-          images: [],
-          release_date: '2023-01-02',
-          uri: 'spotify:album:album2',
-          external_urls: { spotify: '' },
-        },
         duration_ms: 200000,
-        explicit: false,
         popularity: 80,
-        preview_url: null,
         track_number: 1,
-        uri: 'spotify:track:2',
-        external_urls: { spotify: '' },
-      },
+        explicit: false,
+        preview_url: null,
+      }),
     ];
 
     it('fetches tracks automatically when playlistId is provided', async () => {
       mockSpotifyService.getPlaylistTracks.mockResolvedValue({
         tracks: mockTracks,
+        total: mockTracks.length,
+        hasMore: false,
       });
 
       const { result } = renderHook(() =>
@@ -167,6 +134,8 @@ describe('usePlaylistTracks', () => {
     it('clears tracks when playlistId is null', async () => {
       mockSpotifyService.getPlaylistTracks.mockResolvedValue({
         tracks: mockTracks,
+        total: mockTracks.length,
+        hasMore: false,
       });
 
       const { result, rerender } = renderHook(
@@ -183,7 +152,7 @@ describe('usePlaylistTracks', () => {
         expect(result.current.tracks).toEqual(mockTracks);
       });
 
-      rerender({ playlistId: null });
+      rerender({ playlistId: null } as any);
 
       await waitFor(() => {
         expect(result.current.tracks).toEqual([]);
@@ -229,8 +198,16 @@ describe('usePlaylistTracks', () => {
       ];
 
       mockSpotifyService.getPlaylistTracks
-        .mockResolvedValueOnce({ tracks: mockTracks })
-        .mockResolvedValueOnce({ tracks: newTracks });
+        .mockResolvedValueOnce({
+          tracks: mockTracks,
+          total: mockTracks.length,
+          hasMore: false,
+        })
+        .mockResolvedValueOnce({
+          tracks: newTracks,
+          total: newTracks.length,
+          hasMore: false,
+        });
 
       const { result, rerender } = renderHook(
         ({ playlistId }: { playlistId: string }) =>
@@ -276,7 +253,7 @@ describe('usePlaylistTracks', () => {
       });
 
       act(() => {
-        resolveGetTracks({ tracks: [] });
+        resolveGetTracks({ tracks: [], total: 0, hasMore: false });
       });
 
       await waitFor(() => {
@@ -313,7 +290,7 @@ describe('usePlaylistTracks', () => {
           if (options.onProgress) {
             options.onProgress(mockProgressData);
           }
-          return Promise.resolve({ tracks: [] });
+          return Promise.resolve({ tracks: [], total: 0, hasMore: false });
         }
       );
 
@@ -334,7 +311,7 @@ describe('usePlaylistTracks', () => {
           if (options.onProgress) {
             options.onProgress(mockProgressData);
           }
-          return Promise.resolve({ tracks: [] });
+          return Promise.resolve({ tracks: [], total: 0, hasMore: false });
         }
       );
 
@@ -440,6 +417,8 @@ describe('usePlaylistTracks', () => {
     it('manually fetches tracks', async () => {
       mockSpotifyService.getPlaylistTracks.mockResolvedValue({
         tracks: mockTracks,
+        total: mockTracks.length,
+        hasMore: false,
       });
 
       const { result } = renderHook(() =>
@@ -460,6 +439,8 @@ describe('usePlaylistTracks', () => {
     it('refreshes tracks', async () => {
       mockSpotifyService.getPlaylistTracks.mockResolvedValue({
         tracks: mockTracks,
+        total: mockTracks.length,
+        hasMore: false,
       });
 
       const { result } = renderHook(() =>
@@ -480,7 +461,11 @@ describe('usePlaylistTracks', () => {
     it('retries after error', async () => {
       mockSpotifyService.getPlaylistTracks
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({ tracks: mockTracks });
+        .mockResolvedValueOnce({
+          tracks: mockTracks,
+          total: mockTracks.length,
+          hasMore: false,
+        });
 
       const { result } = renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId)
@@ -608,6 +593,8 @@ describe('usePlaylistTracks', () => {
     beforeEach(async () => {
       mockSpotifyService.getPlaylistTracks.mockResolvedValue({
         tracks: mockTracks,
+        total: mockTracks.length,
+        hasMore: false,
       });
     });
 
@@ -663,7 +650,11 @@ describe('usePlaylistTracks', () => {
 
   describe('Options', () => {
     it('passes market option to getPlaylistTracks', async () => {
-      mockSpotifyService.getPlaylistTracks.mockResolvedValue({ tracks: [] });
+      mockSpotifyService.getPlaylistTracks.mockResolvedValue({
+        tracks: [],
+        total: 0,
+        hasMore: false,
+      });
 
       renderHook(() =>
         usePlaylistTracks(mockAccessToken, mockPlaylistId, { market: 'US' })
@@ -719,6 +710,8 @@ describe('usePlaylistTracks', () => {
             external_urls: { spotify: '' },
           },
         ],
+        total: 1,
+        hasMore: false,
       });
 
       await act(async () => {
@@ -771,6 +764,8 @@ describe('usePlaylistTracks', () => {
                 external_urls: { spotify: '' },
               },
             ],
+            total: 1,
+            hasMore: false,
           });
         }
       );
