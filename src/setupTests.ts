@@ -58,7 +58,21 @@ if (typeof (globalThis as any).navigator === 'undefined') {
   (globalThis as any).navigator = { userAgent: 'node.js' };
 }
 
-
 // Note: we intentionally do NOT wrap global `test`/`it` anymore.
 // The `silenceIfPass` helper is available for tests to use directly when
 // they want captured console output to be replayed only on failure.
+
+// --- Integration test global setup: register centralized hook mocks ---
+// This keeps mock registration consistent and avoids duplication across
+// integration test files. Individual tests may still opt into MSW by
+// importing and calling `setupMSW()` from `src/test-utils/mocks/mswSetup`.
+// Provide default mock implementations for the mixing hooks. Each factory
+// uses `require` inside the module factory so Jest does not capture out-of-
+// scope variables (which is disallowed for mock factories).
+jest.mock('./hooks/useMixPreview', () =>
+  require('./test-utils/mocks/mixHooks').makeUseMixPreviewModule()
+);
+
+jest.mock('./hooks/useMixGeneration', () =>
+  require('./test-utils/mocks/mixHooks').makeUseMixGenerationModule()
+);

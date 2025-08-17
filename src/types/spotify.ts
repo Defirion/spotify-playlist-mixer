@@ -70,6 +70,8 @@ export interface SpotifyPlaylistOwner {
 export interface SpotifyPlaylistTracks {
   total: number;
   href: string;
+  // Optional full items when available (paginated response shape)
+  items?: SpotifyPlaylistTrackItem[];
 }
 
 export interface SpotifyPlaylist {
