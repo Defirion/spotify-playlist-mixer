@@ -18,3 +18,11 @@
     gap: var(--spacing-md);
   }
 }
+
+/* dnd dragging helpers: we manage scroll lock in JS to preserve position, but keep touch/overscroll containment. */
+html.dnd-dragging,
+body.dnd-dragging {
+  touch-action: none !important;
+  -ms-touch-action: none !important; /* IE/Edge */
+  overscroll-behavior: contain !important; /* Prevent scroll chaining */
+}

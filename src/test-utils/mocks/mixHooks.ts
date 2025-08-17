@@ -121,4 +121,5 @@ export const makeUseMixGenerationMock = (impl?: UseMixGenImpl) => {
   return { mockModule, _mixFn };
 };
 
-export default {};
+const mixHooksNoop = {};
+export default mixHooksNoop;

@@ -1,10 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {
-  makeUseMixPreviewMock,
-  makeUseMixGenerationMock,
-} from '../../test-utils/mocks/mixHooks';
+// using inline mock factories below; legacy helpers omitted
 import { setupMSW } from '../../test-utils/mocks/mswSetup';
 
 // MSW test setup helper

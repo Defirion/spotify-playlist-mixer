@@ -103,7 +103,12 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       console.log('Drag started - adding dnd-dragging class');
-      document.body.classList.add('dnd-dragging');
+
+      // Add class to the scrolling element (preferred) to prevent auto-scroll and user scroll.
+      // Use document.scrollingElement when available, fall back to document.documentElement.
+      const scrollingElement =
+        (document.scrollingElement as HTMLElement) || document.documentElement;
+      scrollingElement.classList.add('dnd-dragging');
 
       const { active } = event;
       const isExternalDrag = active.data.current?.context === 'modal';
@@ -136,7 +141,11 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
   const handleDragCancel = useCallback(() => {
     console.log('Drag cancelled - removing dnd-dragging class');
-    document.body.classList.remove('dnd-dragging');
+
+    // Remove class from the scrolling element (preferred) or html as fallback
+    const scrollingElement =
+      (document.scrollingElement as HTMLElement) || document.documentElement;
+    scrollingElement.classList.remove('dnd-dragging');
 
     // Remove optimistic track if drag was cancelled
     if (optimisticTrackRef.current) {
@@ -159,7 +168,11 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       console.log('Drag ended - removing dnd-dragging class');
-      document.body.classList.remove('dnd-dragging');
+
+      // Remove class from the scrolling element (preferred) or html as fallback
+      const scrollingElement =
+        (document.scrollingElement as HTMLElement) || document.documentElement;
+      scrollingElement.classList.remove('dnd-dragging');
 
       const { active, over } = event;
 
@@ -307,6 +320,14 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      autoScroll={{
+        // Prevent the main document from being auto-scrolled by dnd-kit.
+        // We manage page scroll via the dnd-dragging class instead.
+        canScroll(element) {
+          if (element === document.scrollingElement) return false;
+          return true;
+        },
+      }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}

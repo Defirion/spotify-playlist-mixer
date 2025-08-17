@@ -42,7 +42,7 @@ export const handlers = [
       const playlistTracks = mockTracks.slice(offset, offset + limit);
 
       return HttpResponse.json({
-        items: playlistTracks.map((track) => ({ track })),
+        items: playlistTracks.map(track => ({ track })),
         total: mockTracks.length,
         limit,
         offset,
@@ -68,7 +68,7 @@ export const handlers = [
     if (type === 'track') {
       const filteredTracks = mockTracks
         .filter(
-          (track) =>
+          track =>
             track.name.toLowerCase().includes(query.toLowerCase()) ||
             track.artists[0].name.toLowerCase().includes(query.toLowerCase())
         )
@@ -142,22 +142,25 @@ export const handlers = [
   ),
 
   // Get track audio features
-  http.get('https://api.spotify.com/v1/audio-features/:trackId', ({ params }) => {
-    return HttpResponse.json({
-      id: params.trackId,
-      danceability: Math.random(),
-      energy: Math.random(),
-      key: Math.floor(Math.random() * 12),
-      loudness: -60 + Math.random() * 60,
-      mode: Math.round(Math.random()),
-      speechiness: Math.random(),
-      acousticness: Math.random(),
-      instrumentalness: Math.random(),
-      liveness: Math.random(),
-      valence: Math.random(),
-      tempo: 60 + Math.random() * 140,
-      duration_ms: 180000 + Math.random() * 120000,
-      time_signature: 4,
-    });
-  }),
+  http.get(
+    'https://api.spotify.com/v1/audio-features/:trackId',
+    ({ params }) => {
+      return HttpResponse.json({
+        id: params.trackId,
+        danceability: Math.random(),
+        energy: Math.random(),
+        key: Math.floor(Math.random() * 12),
+        loudness: -60 + Math.random() * 60,
+        mode: Math.round(Math.random()),
+        speechiness: Math.random(),
+        acousticness: Math.random(),
+        instrumentalness: Math.random(),
+        liveness: Math.random(),
+        valence: Math.random(),
+        tempo: 60 + Math.random() * 140,
+        duration_ms: 180000 + Math.random() * 120000,
+        time_signature: 4,
+      });
+    }
+  ),
 ];

@@ -20,8 +20,14 @@
 // names to avoid TypeScript collisions with lib.dom.d.ts.
 try {
   const util = require('util');
-  const NativeTextEncoder = (global as any).TextEncoder || util.TextEncoder || require('util').TextEncoder;
-  const NativeTextDecoder = (global as any).TextDecoder || util.TextDecoder || require('util').TextDecoder;
+  const NativeTextEncoder =
+    (global as any).TextEncoder ||
+    util.TextEncoder ||
+    require('util').TextEncoder;
+  const NativeTextDecoder =
+    (global as any).TextDecoder ||
+    util.TextDecoder ||
+    require('util').TextDecoder;
   if (NativeTextEncoder) (global as any).TextEncoder = NativeTextEncoder;
   if (NativeTextDecoder) (global as any).TextDecoder = NativeTextDecoder;
 } catch (e) {
@@ -107,7 +113,6 @@ if (!(global as any).ReadableStream) {
 
 if (!(global as any).WritableStream) {
   (global as any).WritableStream = class WritableStream {
-    constructor(sink: any = {}) {}
     getWriter() {
       return {
         write: async () => {},

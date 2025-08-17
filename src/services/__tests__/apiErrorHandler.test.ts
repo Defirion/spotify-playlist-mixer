@@ -2,8 +2,6 @@ import {
   ApiError,
   ApiErrorHandler,
   ERROR_TYPES,
-  handleApiError,
-  withRetry,
   defaultApiErrorHandler,
 } from '../apiErrorHandler';
 

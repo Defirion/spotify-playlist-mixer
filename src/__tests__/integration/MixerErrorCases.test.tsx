@@ -1,10 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import {
-  makeUseMixPreviewMock,
-  makeUseMixGenerationMock,
-} from '../../test-utils/mocks/mixHooks';
+import { render, screen } from '@testing-library/react';
 import { makePlaylistWithTracks } from '../../../src/test-utils/fixtures/playlistFactory';
 
 import PlaylistMixer from '../../components/PlaylistMixer';
@@ -17,12 +12,7 @@ jest.mock('../../hooks/useMixGeneration', () =>
   require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule()
 );
 
-const getPreviewMock = () =>
-  (require('../../hooks/useMixPreview') as any).useMixPreview()
-    ._previewFn as jest.Mock;
-const getMixMock = () =>
-  (require('../../hooks/useMixGeneration') as any).useMixGeneration()
-    ._mixFn as jest.Mock;
+// legacy helpers removed; use inline mocks where needed
 
 describe('Mixer error scenarios (hook-mocked)', () => {
   test('handles empty playlists with user-friendly error via hook error', async () => {

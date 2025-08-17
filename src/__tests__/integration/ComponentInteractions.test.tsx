@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Modal from '../../components/ui/Modal';
 import TrackList from '../../components/ui/TrackList';
@@ -112,7 +112,6 @@ describe('Component Integration Tests', () => {
 
   describe('TrackList and TrackItem Integration', () => {
     it('handles track selection and removal workflows', async () => {
-      const user = userEvent.setup();
       const onClose = jest.fn();
       const onTrackSelect = jest.fn();
 

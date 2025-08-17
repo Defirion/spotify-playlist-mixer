@@ -1,9 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import {
-  makeUseMixPreviewMock,
-  makeUseMixGenerationMock,
-} from '../../test-utils/mocks/mixHooks';
+// using inline mock factories in-place; legacy helpers omitted
 import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactory';
 
 import PlaylistMixer from '../../components/PlaylistMixer';
