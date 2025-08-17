@@ -8,6 +8,21 @@ if (typeof (global as any).TextEncoder === 'undefined') {
   (global as any).TextDecoder = TextDecoder;
 }
 
+// Ensure Web Streams globals exist (TransformStream, ReadableStream, WritableStream)
+if (typeof (global as any).TransformStream === 'undefined') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ponyfill = require('web-streams-polyfill/ponyfill');
+    (global as any).TransformStream = ponyfill.TransformStream;
+    (global as any).ReadableStream = ponyfill.ReadableStream;
+    (global as any).WritableStream = ponyfill.WritableStream;
+  } catch (e) {
+    // If ponyfill isn't installed, we'll let MSW setup fail gracefully and
+    // show the prior console.warn. Installing 'web-streams-polyfill' is the
+    // recommended fix for running MSW in some Node/Jest environments.
+  }
+}
+
 export const setupMSW = () => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -20,10 +35,14 @@ export const setupMSW = () => {
     // @ts-ignore
     global.__msw_server = server;
   } catch (err) {
-    // eslint-disable-next-line no-console
+    // Avoid noisy warnings in test output when MSW can't be required
+    // (ESM/CJS transform issues or missing ponyfills). Provide an opt-in
+    // verbose mode via MSW_VERBOSE=1 for debugging.
     const e: any = err;
-    // Not fatal in environments where MSW import fails (ESM/CJS mismatch)
-    console.warn('MSW setup skipped: ', e && e.message ? e.message : e);
+    if (process.env.MSW_VERBOSE) {
+      // eslint-disable-next-line no-console
+      console.warn('MSW setup skipped: ', e && e.message ? e.message : e);
+    }
     return;
   }
 };
