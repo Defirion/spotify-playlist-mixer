@@ -553,7 +553,11 @@ input[type='range']:active::-moz-range-thumb {
 
 /* === DRAG AND DROP COMPONENTS === */
 .sortable-wrapper {
-  touch-action: none; /* Essential for mobile touch */
+  /* Allow native vertical scrolling by default so quick touch+drag gestures
+     can scroll the preview panel. When an item becomes actively dragged
+     (data-dragging="true") we switch to `touch-action: none` to prevent
+     the browser's native scrolling while the user is dragging. */
+  touch-action: pan-y;
   transition:
     transform 200ms ease,
     opacity 200ms ease;
@@ -567,6 +571,9 @@ input[type='range']:active::-moz-range-thumb {
 .sortable-wrapper[data-dragging='true'] {
   z-index: 1000;
   opacity: 0.8;
+  /* Disable native touch actions while actively dragging so the drag
+     interaction isn't interrupted by scrolling. */
+  touch-action: none;
 }
 
 /* Drop line indicator */
