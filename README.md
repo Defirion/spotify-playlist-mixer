@@ -215,6 +215,24 @@ Result: Epic finale with everyone singing along!
 
 ## 🤝 Contributing
 
+## Developer note — setting UI errors
+
+When setting errors that should be displayed to users, prefer the exported
+helper from the store rather than calling the raw setter directly. Use:
+
+```ts
+import { setUIError } from './src/store';
+
+// Pass any unknown/error shape — it will be normalized to the app's
+// DisplayError structure before being stored and shown in the UI.
+setUIError(err);
+```
+
+This ensures consistent error labels, details, retry metadata, and suggestions
+across the app. Avoid calling `useAppStore(state => state.setError)` from
+components so callers don't bypass normalization.
+
+
 We welcome contributions from music lovers and developers!
 
 ### **Development Setup**
