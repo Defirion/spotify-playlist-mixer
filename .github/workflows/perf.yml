@@ -1,0 +1,39 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [ main, final-refactor ]
+  workflow_dispatch: {}
+
+jobs:
+  perf:
+    name: Run perf test and compare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance test
+        env:
+          PERF_TOTAL: ${{ env.PERF_TOTAL }}
+        run: npm run test:perf
+
+      - name: Upload perf artifacts (baselines + current-run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-baselines
+          path: src/__tests__/performance/baselines
+          retention-days: 90
+
+      - name: Compare with baseline
+        env:
+          PERF_REGRESS_THRESHOLD: ${{ env.PERF_REGRESS_THRESHOLD || '10' }}
+        run: npm run perf:compare

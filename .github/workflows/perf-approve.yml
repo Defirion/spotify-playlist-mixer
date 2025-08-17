@@ -1,0 +1,53 @@
+name: Approve Perf Baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_name:
+        description: 'Baseline filename to create (e.g. baseline-2025-08-17-2000.json)'
+        required: true
+        default: 'baseline-{{ github.run_id }}.json'
+
+jobs:
+  create-baseline-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Ensure current-run exists
+        run: |
+          if [ ! -f src/__tests__/performance/baselines/current-run.json ]; then
+            echo "current-run.json not found"; exit 1;
+          fi
+
+      - name: Create branch and commit baseline
+        env:
+          BRANCH: perf/baseline-${{ github.run_id }}
+          FILE: src/__tests__/performance/baselines/${{ github.event.inputs.baseline_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          cp src/__tests__/performance/baselines/current-run.json "$FILE"
+          git add "$FILE"
+          git commit -m "chore(perf): add baseline $FILE"
+          git push --set-upstream origin "$BRANCH"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(perf): add baseline ${{ github.event.inputs.baseline_name }}"
+          branch: perf/baseline-${{ github.run_id }}
+          title: "perf(baseline): add ${{ github.event.inputs.baseline_name }}"
+          body: |
+            This PR adds a new performance baseline created by workflow run ${{ github.run_id }}.
+            Please review and merge to update the repository baseline.

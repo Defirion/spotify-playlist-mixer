@@ -1,0 +1,11 @@
+{
+  "elapsedMs": 97.375,
+  "heapDelta": 29244104,
+  "createdTracks": {
+    "total": 2000,
+    "p1": 1000,
+    "p2": 600,
+    "p3": 400
+  },
+  "mixedCount": 1201
+}

@@ -1,0 +1,10 @@
+{
+  "test": "mixPlaylists performance — PERF_TOTAL=2000",
+  "createdTracks": { "total": 2000, "p1": 1000, "p2": 600, "p3": 400 },
+  "probeEstimatedSongs": 1260,
+  "mixedCount": 1201,
+  "elapsedMs": 98.28800000000001,
+  "heapDelta": 29174296,
+  "timestamp": "2025-08-17T00:00:00.000Z",
+  "notes": "Synthetic unique tracks per playlist; options.useAllSongs=true; saved as baseline-2025-08-17-2000.json"
+}
