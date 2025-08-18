@@ -4,6 +4,7 @@ This file collects focused, high-value tasks to close testing gaps discovered du
 
 ## 1. Service-level & MSW tests (MAX 100 lines)
 - Purpose: Ensure `src/services/spotify.ts` is correct, resilient to malformed payloads and server errors, and easy to test.
+- Note: added a deterministic retry timing unit test and wired `retryWithBackoff` into `addTracksToPlaylist` to honor `Retry-After` headers (see tests in `src/services/_helpers` and `src/services/__tests__`).
 - Strategy: Make the service modular so pure helper logic (batching, pagination, request-body builders) is unit-testable; keep a thin orchestration `SpotifyService` that is covered by a small set of MSW-backed integration tests as a regression guard.
 - Detailed plan (contract-first, incremental):
   - Goal: Extract small, pure helpers with explicit contracts, add fast unit tests for each, then wire them into a thin `SpotifyService` and validate behavior with a small MSW-backed regression suite.

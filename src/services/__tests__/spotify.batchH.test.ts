@@ -25,19 +25,24 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
     let call = 0;
     server.use(
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('msw').rest.post('https://api.spotify.com/v1/playlists/:playlistId/tracks', async (req: any, res: any, ctx: any) => {
-        call++;
-        if (call === 1) {
-          return res(ctx.status(201), ctx.json({ snapshot_id: 'snap_ok' }));
+      require('msw').rest.post(
+        'https://api.spotify.com/v1/playlists/:playlistId/tracks',
+        async (req: any, res: any, ctx: any) => {
+          call++;
+          if (call === 1) {
+            return res(ctx.status(201), ctx.json({ snapshot_id: 'snap_ok' }));
+          }
+          // Simulate server error on second batch
+          return res(ctx.status(500), ctx.json({ error: 'server_error' }));
         }
-        // Simulate server error on second batch
-        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
-      })
+      )
     );
 
     const service = new SpotifyService('normal_token');
 
-    const uris = Array.from({ length: 150 }).map((_, i) => `spotify:track:err_${i}`);
+    const uris = Array.from({ length: 150 }).map(
+      (_, i) => `spotify:track:err_${i}`
+    );
 
     // Force ApiError retry delays to zero so test runs quickly and deterministic
     const originalGetRetryDelay = ApiError.prototype.getRetryDelay;
@@ -47,7 +52,9 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
     };
 
     try {
-      await expect(service.addTracksToPlaylist('pl_err', { uris })).rejects.toBeInstanceOf(ApiError);
+      await expect(
+        service.addTracksToPlaylist('pl_err', { uris })
+      ).rejects.toBeInstanceOf(ApiError);
     } finally {
       // @ts-ignore
       ApiError.prototype.getRetryDelay = originalGetRetryDelay;
@@ -60,13 +67,20 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
     let calls = 0;
     server.use(
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('msw').rest.delete('https://api.spotify.com/v1/playlists/:playlistId/tracks', async (req: any, res: any, ctx: any) => {
-        calls++;
-        if (calls < 2) {
-          return res(ctx.status(429), ctx.set('Retry-After', '0'), ctx.json({ error: 'rate_limited' }));
+      require('msw').rest.delete(
+        'https://api.spotify.com/v1/playlists/:playlistId/tracks',
+        async (req: any, res: any, ctx: any) => {
+          calls++;
+          if (calls < 2) {
+            return res(
+              ctx.status(429),
+              ctx.set('Retry-After', '0'),
+              ctx.json({ error: 'rate_limited' })
+            );
+          }
+          return res(ctx.json({ snapshot_id: 'snap_del_ok' }));
         }
-        return res(ctx.json({ snapshot_id: 'snap_del_ok' }));
-      })
+      )
     );
 
     // shorten retry delays
@@ -78,7 +92,9 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
 
     try {
       const service = new SpotifyService('normal_token');
-      const res = await service.removeTracksFromPlaylist('pl_del', { tracks: [{ uri: 'spotify:track:1' }] } as any);
+      const res = await service.removeTracksFromPlaylist('pl_del', {
+        tracks: [{ uri: 'spotify:track:1' }],
+      } as any);
       expect(res).toHaveProperty('snapshot_id', 'snap_del_ok');
       expect(calls).toBeGreaterThanOrEqual(2);
     } finally {

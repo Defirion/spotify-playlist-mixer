@@ -6,10 +6,12 @@ describe('paginate', () => {
       { items: [1, 2], next_cursor: 'a' },
       { items: [3], next_cursor: null },
     ];
-    const fetchPage = jest.fn().mockImplementation((cursor) => Promise.resolve(pages.shift() as any));
-  const out: unknown[] = [];
-  for await (const x of paginate(fetchPage)) out.push(x);
-  expect(out).toEqual([1, 2, 3]);
+    const fetchPage = jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(pages.shift() as any));
+    const out: unknown[] = [];
+    for await (const x of paginate(fetchPage)) out.push(x);
+    expect(out).toEqual([1, 2, 3]);
     expect(fetchPage).toHaveBeenCalledTimes(2);
   });
 
@@ -19,7 +21,7 @@ describe('paginate', () => {
     await expect(async () => {
       // consume one value to trigger
       // @ts-ignore
-      for await (const _ of it) break;
+      await it.next();
     }).rejects.toThrow('Malformed page');
   });
 });

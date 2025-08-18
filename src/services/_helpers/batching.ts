@@ -2,7 +2,10 @@
  * Split an array into chunks of `batchSize`.
  * Returns an array of arrays. Empty or null input returns [] (no-op).
  */
-export function chunkArray<T>(items: T[] | null | undefined, batchSize: number): T[][] {
+export function chunkArray<T>(
+  items: T[] | null | undefined,
+  batchSize: number
+): T[][] {
   if (!Number.isInteger(batchSize) || batchSize <= 0) {
     throw new Error('batchSize must be a positive integer');
   }

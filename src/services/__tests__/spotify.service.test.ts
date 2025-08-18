@@ -7,7 +7,6 @@ const mockPlaylistTrack = {
   added_at: '2020-01-01T00:00:00Z',
   added_by: { id: 'u1' },
 };
-const mockUserProfile = { id: 'u1', display_name: 'Test User' };
 
 describe('SpotifyService - service level behaviors', () => {
   const ACCESS_TOKEN = 'test_token';

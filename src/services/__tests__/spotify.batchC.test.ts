@@ -41,7 +41,9 @@ describe('SpotifyService - Batch C (search & audio features)', () => {
     server.use(
       rest.get('https://api.spotify.com/v1/audio-features', (req, res, ctx) => {
         const url = new URL(req.url.toString());
-        const ids = (url.searchParams.get('ids') || '').split(',').filter(Boolean);
+        const ids = (url.searchParams.get('ids') || '')
+          .split(',')
+          .filter(Boolean);
         const features = ids.map(id => ({ id, danceability: 0.5 }));
         return res(ctx.json({ audio_features: features }));
       })
@@ -50,7 +52,10 @@ describe('SpotifyService - Batch C (search & audio features)', () => {
     const service = new SpotifyService('normal_token');
     const single = await service.getTrackAudioFeatures('track_1');
     expect(single).toHaveProperty('id', 'track_1');
-    const multiple = await service.getMultipleTrackAudioFeatures(['track_1', 'track_2']);
+    const multiple = await service.getMultipleTrackAudioFeatures([
+      'track_1',
+      'track_2',
+    ]);
     expect(Array.isArray(multiple)).toBe(true);
   });
 

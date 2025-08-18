@@ -1,5 +1,9 @@
 import { getSpotifyApi } from '../utils/spotify';
 import { ApiErrorHandler, ApiError, ERROR_TYPES } from './apiErrorHandler';
+import chunkArray from './_helpers/batching';
+import buildAddRequestBody from './_helpers/requestBody';
+import paginate from './_helpers/pagination';
+import retryWithBackoff from './_helpers/retry';
 import {
   ISpotifyService,
   SpotifyTrack,
@@ -165,64 +169,54 @@ class SpotifyService implements ISpotifyService {
     }
 
     const { market, onProgress } = options;
-    let allTracks: SpotifyTrack[] = [];
-    let offset = 0;
+    const allTracks: SpotifyTrack[] = [];
     const limit = 100; // Maximum allowed by Spotify API
     let totalTracks: number | null = null;
 
-    while (true) {
-      const currentOffset = offset;
-      const currentTotalTracks = totalTracks;
+    const fetchPage = async (cursor?: string | null) => {
+      const offset = cursor ? Number(cursor) : 0;
+      const params = new URLSearchParams({
+        offset: offset.toString(),
+        limit: limit.toString(),
+      });
 
-      const result = await this.withRetry(
-        async () => {
-          const params = new URLSearchParams({
-            offset: currentOffset.toString(),
-            limit: limit.toString(),
-          });
-
-          if (market) {
-            params.append('market', market);
-          }
-
-          const response = await this.api.get(
-            `/playlists/${playlistId}/tracks?${params.toString()}`
-          );
-
-          // Set total on first request
-          if (currentTotalTracks === null) {
-            return {
-              ...response.data,
-              totalTracks: response.data.total,
-            };
-          }
-
-          return response.data;
-        },
-        {
-          operation: 'getPlaylistTracks',
-          playlistId,
-          offset: currentOffset,
-          limit,
-        }
-      );
-
-      // Set total on first request
-      if (totalTracks === null && result.totalTracks) {
-        totalTracks = result.totalTracks;
+      if (market) {
+        params.append('market', market);
       }
 
-      const tracks = result.items
-        .filter((item: any) => item.track && item.track.id) // Filter out null/invalid tracks
+      const response = await this.withRetry(
+        async () => {
+          return (
+            await this.api.get(
+              `/playlists/${playlistId}/tracks?${params.toString()}`
+            )
+          ).data;
+        },
+        { operation: 'getPlaylistTracks', playlistId, offset, limit }
+      );
+
+      if (totalTracks === null && typeof response.total === 'number') {
+        totalTracks = response.total;
+      }
+
+      const items = (response.items || [])
         .map((item: any) => ({
           ...item.track,
           added_at: item.added_at,
           added_by: item.added_by,
-        }));
+        }))
+        .filter((t: any) => t && t.id);
 
-      allTracks = [...allTracks, ...tracks];
+      const nextCursor =
+        response.offset + response.limit < response.total
+          ? String(response.offset + response.limit)
+          : null;
 
-      // Call progress callback if provided
+      return { items, next_cursor: nextCursor };
+    };
+
+    for await (const track of paginate<SpotifyTrack>(fetchPage)) {
+      allTracks.push(track);
       if (onProgress && typeof onProgress === 'function') {
         onProgress({
           loaded: allTracks.length,
@@ -233,13 +227,18 @@ class SpotifyService implements ISpotifyService {
               : 0,
         });
       }
+    }
 
-      // Break if we've fetched all tracks
-      if (tracks.length < limit) {
-        break;
-      }
-
-      offset += limit;
+    // Ensure progress callback is invoked at least once (even if there are no items)
+    if (onProgress && typeof onProgress === 'function') {
+      onProgress({
+        loaded: allTracks.length,
+        total: totalTracks || 0,
+        percentage:
+          totalTracks && totalTracks > 0
+            ? Math.round((allTracks.length / totalTracks) * 100)
+            : 0,
+      });
     }
 
     return {
@@ -266,28 +265,31 @@ class SpotifyService implements ISpotifyService {
     }
 
     if (all) {
-      // Fetch all playlists automatically
-      let allPlaylists: SpotifyPlaylist[] = [];
-      let currentOffset = 0;
+      // Fetch all playlists automatically using the paginate helper
+      const allPlaylists: SpotifyPlaylist[] = [];
       const pageLimit = 50;
 
-      while (true) {
-        const currentOffsetValue = currentOffset;
-
-        const result = await this.withRetry(async () => {
-          const response = await this.api.get(
-            `/me/playlists?limit=${pageLimit}&offset=${currentOffsetValue}`
-          );
-          return response.data;
+      const fetchPage = async (cursor?: string | null) => {
+        const offset = cursor ? Number(cursor) : 0;
+        // Use withRetry for each page fetch
+        const response = await this.withRetry(async () => {
+          return (
+            await this.api.get(
+              `/me/playlists?limit=${pageLimit}&offset=${offset}`
+            )
+          ).data;
         });
 
-        allPlaylists = [...allPlaylists, ...result.items];
+        const nextCursor =
+          response.offset + response.limit < response.total
+            ? String(response.offset + response.limit)
+            : null;
 
-        if (result.items.length < pageLimit) {
-          break;
-        }
+        return { items: response.items, next_cursor: nextCursor };
+      };
 
-        currentOffset += pageLimit;
+      for await (const pl of paginate<SpotifyPlaylist>(fetchPage)) {
+        allPlaylists.push(pl);
       }
 
       return {
@@ -413,23 +415,57 @@ class SpotifyService implements ISpotifyService {
     const batchSize = 100;
     const results: { snapshot_id: string }[] = [];
 
-    for (let i = 0; i < trackUris.length; i += batchSize) {
-      const batch = trackUris.slice(i, i + batchSize);
+    const batches = chunkArray(trackUris, batchSize);
+    for (const [batchIndex, batch] of batches.entries()) {
+      // Build a deterministic request body and filter invalid URIs
+      const requestBody = buildAddRequestBody(batch as any, {
+        position: batchIndex === 0 ? position : undefined,
+      }) as SpotifyAddTracksRequest;
 
-      const result = await this.withRetry(async () => {
-        const requestBody: SpotifyAddTracksRequest = { uris: batch };
-
-        // Only add position for the first batch
-        if (position !== null && i === 0) {
-          requestBody.position = position;
-        }
-
-        const response = await this.api.post(
-          `/playlists/${playlistId}/tracks`,
-          requestBody
+      // Use retryWithBackoff to honor Retry-After headers on 429 responses.
+      let lastError: any = null;
+      let result: any;
+      try {
+        result = await retryWithBackoff(
+          async () => {
+            try {
+              const response = await this.api.post(
+                `/playlists/${playlistId}/tracks`,
+                requestBody
+              );
+              return response.data;
+            } catch (err: any) {
+              lastError = err;
+              throw err;
+            }
+          },
+          {
+            maxRetries: 3,
+            baseMs: 200,
+            getRetryAfter: () => {
+              try {
+                const ra =
+                  lastError &&
+                  lastError.response &&
+                  lastError.response.headers &&
+                  (lastError.response.headers['retry-after'] ||
+                    lastError.response.headers['Retry-After']);
+                return ra ? Number(ra) : null;
+              } catch (e) {
+                return null;
+              }
+            },
+          }
         );
-        return response.data;
-      });
+      } catch (err: any) {
+        // Convert to ApiError with context so callers/tests receive ApiError
+        const apiErr = this.errorHandler.handleError(err, {
+          operation: 'addTracksToPlaylist',
+          playlistId,
+          batchIndex,
+        });
+        throw apiErr;
+      }
 
       results.push(result);
     }

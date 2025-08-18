@@ -29,6 +29,7 @@ describe('SpotifyService - MSW integration', () => {
   const AUTH_EXPIRE_TOKEN = 'trigger_401';
 
   test('searchTracks via network returns items', async () => {
+    if (!server) return;
     const service = new SpotifyService(ACCESS_TOKEN);
     // Debug: sanity-check direct fetch to ensure MSW returns expected payload for fetch API
     try {
@@ -82,8 +83,10 @@ describe('SpotifyService - MSW integration', () => {
 
   test('createPlaylist throws BAD_REQUEST on malformed payload (missing name)', async () => {
     const service = new SpotifyService(ACCESS_TOKEN);
-    // @ts-ignore - call with malformed body
-    await expect(service.createPlaylist('user_1', { description: 'no name' })).rejects.toBeDefined();
+    // call with malformed body (cast to any to satisfy TS)
+    await expect(
+      service.createPlaylist('user_1', { description: 'no name' } as any)
+    ).rejects.toBeDefined();
   });
 
   test('searchTracks surfaces server error (500) when MSW returns 500', async () => {

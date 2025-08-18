@@ -21,7 +21,10 @@ describe('chunkArray', () => {
   });
 
   test('chunks exactly when divisible', () => {
-    expect(chunkArray([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]]);
+    expect(chunkArray([1, 2, 3, 4], 2)).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
   });
 
   test('batchSize 1 returns single-item arrays', () => {

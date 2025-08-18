@@ -11,7 +11,10 @@ function isValidUri(u: unknown): u is string {
 /**
  * Build a request body for adding tracks. Filters invalid URIs.
  */
-export function buildAddRequestBody(uris: unknown[], opts?: { position?: number; snapshot_id?: string }): AddRequestBody {
+export function buildAddRequestBody(
+  uris: unknown[],
+  opts?: { position?: number; snapshot_id?: string }
+): AddRequestBody {
   const filtered = (uris || []).filter(isValidUri) as string[];
   return {
     uris: filtered,

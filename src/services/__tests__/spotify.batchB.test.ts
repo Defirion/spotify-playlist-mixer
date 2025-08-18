@@ -33,7 +33,11 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
     if (!server) return;
 
     // Create multiple pages in MSW for this test
-    const allPlaylists = Array.from({ length: 120 }).map((_, i) => ({ id: `pl_all_${i}`, name: `PL ${i}`, tracks: { total: 0 } }));
+    const allPlaylists = Array.from({ length: 120 }).map((_, i) => ({
+      id: `pl_all_${i}`,
+      name: `PL ${i}`,
+      tracks: { total: 0 },
+    }));
 
     server.use(
       rest.get('https://api.spotify.com/v1/me/playlists', (req, res, ctx) => {
@@ -41,7 +45,9 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
         const limit = parseInt(url.searchParams.get('limit') || '50', 10);
         const offset = parseInt(url.searchParams.get('offset') || '0', 10);
         const slice = allPlaylists.slice(offset, offset + limit);
-        return res(ctx.json({ items: slice, total: allPlaylists.length, limit, offset }));
+        return res(
+          ctx.json({ items: slice, total: allPlaylists.length, limit, offset })
+        );
       })
     );
 
@@ -54,9 +60,14 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
     if (!server) return;
     // Provide a handler for this test to avoid unhandled request
     server.use(
-      rest.get('https://api.spotify.com/v1/playlists/:playlistId', (req, res, ctx) => {
-        return res(ctx.json({ id: req.params.playlistId, name: 'My Awesome Playlist' }));
-      })
+      rest.get(
+        'https://api.spotify.com/v1/playlists/:playlistId',
+        (req, res, ctx) => {
+          return res(
+            ctx.json({ id: req.params.playlistId, name: 'My Awesome Playlist' })
+          );
+        }
+      )
     );
 
     const service = new SpotifyService('normal_token');
@@ -67,7 +78,10 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
   test('createPlaylist happy path returns created playlist', async () => {
     if (!server) return;
     const service = new SpotifyService('normal_token');
-    const res = await service.createPlaylist('test_user_123', { name: 'New One', description: 'desc' });
+    const res = await service.createPlaylist('test_user_123', {
+      name: 'New One',
+      description: 'desc',
+    });
     expect(res).toHaveProperty('id');
     expect(res).toHaveProperty('name', 'New One');
   });
@@ -75,7 +89,9 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
   test('removeTracksFromPlaylist successful response', async () => {
     if (!server) return;
     const service = new SpotifyService('normal_token');
-    const res = await service.removeTracksFromPlaylist('playlist_1', { tracks: [{ uri: 'spotify:track:track_1' }] } as any);
+    const res = await service.removeTracksFromPlaylist('playlist_1', {
+      tracks: [{ uri: 'spotify:track:track_1' }],
+    } as any);
     expect(res).toHaveProperty('snapshot_id');
   });
 });

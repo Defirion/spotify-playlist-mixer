@@ -28,30 +28,64 @@ export function normalizeApiError(err: unknown): NormalizedApiError {
       const retryAfterSeconds = raRaw ? Number(raRaw) || null : null;
 
       if (status === 401) {
-        return { type: 'AUTH', status, retryable: false, retryAfterSeconds, message: 'Authentication required' };
+        return {
+          type: 'AUTH',
+          status,
+          retryable: false,
+          retryAfterSeconds,
+          message: 'Authentication required',
+        };
       }
 
       if (status === 429) {
-        return { type: 'RATE_LIMIT', status, retryable: true, retryAfterSeconds, message: 'Rate limited' };
+        return {
+          type: 'RATE_LIMIT',
+          status,
+          retryable: true,
+          retryAfterSeconds,
+          message: 'Rate limited',
+        };
       }
 
       if (status >= 500 && status < 600) {
-        return { type: 'SERVER', status, retryable: true, retryAfterSeconds, message: 'Server error' };
+        return {
+          type: 'SERVER',
+          status,
+          retryable: true,
+          retryAfterSeconds,
+          message: 'Server error',
+        };
       }
 
       if (status >= 400 && status < 500) {
-        return { type: 'CLIENT', status, retryable: false, retryAfterSeconds, message: 'Client error' };
+        return {
+          type: 'CLIENT',
+          status,
+          retryable: false,
+          retryAfterSeconds,
+          message: 'Client error',
+        };
       }
     }
 
     // fallback for objects with message
     if (anyErr.message && typeof anyErr.message === 'string') {
-      return { type: 'UNKNOWN', retryable: false, retryAfterSeconds: null, message: anyErr.message };
+      return {
+        type: 'UNKNOWN',
+        retryable: false,
+        retryAfterSeconds: null,
+        message: anyErr.message,
+      };
     }
   }
 
   // unknown shape
-  return { type: 'UNKNOWN', retryable: false, retryAfterSeconds: null, message: 'Unknown error' };
+  return {
+    type: 'UNKNOWN',
+    retryable: false,
+    retryAfterSeconds: null,
+    message: 'Unknown error',
+  };
 }
 
 export default normalizeApiError;

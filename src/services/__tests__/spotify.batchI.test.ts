@@ -2,31 +2,53 @@
  * @jest-environment node
  */
 
-import { ApiErrorHandler, ApiError, ERROR_TYPES } from '../../services/apiErrorHandler';
+import {
+  ApiErrorHandler,
+  ApiError,
+  ERROR_TYPES,
+} from '../../services/apiErrorHandler';
 
 describe('ApiErrorHandler - Batch I (classification, retry config, wrappers)', () => {
   test('classifyError maps HTTP statuses to correct types', () => {
     const handler = new ApiErrorHandler({ enableLogging: false });
 
-    const makeResp = (status: number) => ({
-      name: 'AxiosError',
-      message: `E${status}`,
-      response: { status, statusText: 's', data: {} },
-      config: {},
-    } as any);
+    const makeResp = (status: number) =>
+      ({
+        name: 'AxiosError',
+        message: `E${status}`,
+        response: { status, statusText: 's', data: {} },
+        config: {},
+      }) as any;
 
-    expect(handler.classifyError(makeResp(401)).type).toBe(ERROR_TYPES.AUTHENTICATION);
-    expect(handler.classifyError(makeResp(403)).type).toBe(ERROR_TYPES.AUTHORIZATION);
-    expect(handler.classifyError(makeResp(404)).type).toBe(ERROR_TYPES.NOT_FOUND);
-    expect(handler.classifyError(makeResp(400)).type).toBe(ERROR_TYPES.BAD_REQUEST);
-    expect(handler.classifyError(makeResp(429)).type).toBe(ERROR_TYPES.RATE_LIMIT);
-    expect(handler.classifyError(makeResp(500)).type).toBe(ERROR_TYPES.SERVER_ERROR);
-    expect(handler.classifyError({ message: 'Network Error' } as any).type).toBe(ERROR_TYPES.NETWORK);
+    expect(handler.classifyError(makeResp(401)).type).toBe(
+      ERROR_TYPES.AUTHENTICATION
+    );
+    expect(handler.classifyError(makeResp(403)).type).toBe(
+      ERROR_TYPES.AUTHORIZATION
+    );
+    expect(handler.classifyError(makeResp(404)).type).toBe(
+      ERROR_TYPES.NOT_FOUND
+    );
+    expect(handler.classifyError(makeResp(400)).type).toBe(
+      ERROR_TYPES.BAD_REQUEST
+    );
+    expect(handler.classifyError(makeResp(429)).type).toBe(
+      ERROR_TYPES.RATE_LIMIT
+    );
+    expect(handler.classifyError(makeResp(500)).type).toBe(
+      ERROR_TYPES.SERVER_ERROR
+    );
+    expect(
+      handler.classifyError({ message: 'Network Error' } as any).type
+    ).toBe(ERROR_TYPES.NETWORK);
   });
 
   test('getRetryDelay exponential behavior and shouldRetry boundaries', () => {
     const handler = new ApiErrorHandler({ enableLogging: false });
-    const err = handler.classifyError({ response: { status: 500 }, message: 'server' } as any);
+    const err = handler.classifyError({
+      response: { status: 500 },
+      message: 'server',
+    } as any);
 
     // Stub Math.random to remove jitter
     const orig = Math.random;
@@ -47,9 +69,14 @@ describe('ApiErrorHandler - Batch I (classification, retry config, wrappers)', (
 
   test('wrapApiCall handles errors via handler and rethrows ApiError', async () => {
     const handler = new ApiErrorHandler({ enableLogging: false });
-    const wrapped = handler.wrapApiCall(async () => {
-      throw { name: 'Error', message: 'auth', response: { status: 401 } } as any;
-    }, { context: 'x' });
+    const wrapped = handler.wrapApiCall(
+      async () => {
+        const e: any = new Error('auth');
+        e.response = { status: 401 };
+        throw e;
+      },
+      { context: 'x' }
+    );
 
     await expect(wrapped()).rejects.toBeInstanceOf(ApiError);
   });
@@ -59,7 +86,9 @@ describe('ApiErrorHandler - Batch I (classification, retry config, wrappers)', (
 
     // Function that always throws 400 (bad request) which is non-retryable
     const wrapped = handler.wrapApiCallWithRetry(async () => {
-      throw { name: 'Error', message: 'bad', response: { status: 400 } } as any;
+      const e: any = new Error('bad');
+      e.response = { status: 400 };
+      throw e;
     });
 
     await expect(wrapped()).rejects.toBeInstanceOf(ApiError);

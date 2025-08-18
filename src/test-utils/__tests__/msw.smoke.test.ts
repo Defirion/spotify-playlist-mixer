@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 
-import https from 'https';
 import setupMSW from '../msw-setup';
 
 const server = setupMSW();

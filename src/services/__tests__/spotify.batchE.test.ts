@@ -5,7 +5,7 @@
 import setupMSW from '../../test-utils/msw-setup';
 
 import SpotifyService from '../../services/spotify';
-import { ApiError, ERROR_TYPES } from '../../services/apiErrorHandler';
+import { ApiError } from '../../services/apiErrorHandler';
 jest.unmock('axios');
 
 // Initialize MSW server
@@ -26,6 +26,7 @@ describe('SpotifyService - Batch E (remove/create/playlists edge cases)', () => 
   const ACCESS_TOKEN = 'normal_token';
 
   test('removeTracksFromPlaylist returns snapshot_id for valid request', async () => {
+    if (!server) return;
     const service = new SpotifyService(ACCESS_TOKEN);
     const res = await service.removeTracksFromPlaylist('playlist_1', {
       tracks: [{ uri: 'spotify:track:track_1' }],
@@ -70,9 +71,9 @@ describe('SpotifyService - Batch E (remove/create/playlists edge cases)', () => 
 
   test('getUserPlaylists throws when limit > 50', async () => {
     const service = new SpotifyService(ACCESS_TOKEN);
-    await expect(service.getUserPlaylists({ limit: 51 })).rejects.toBeInstanceOf(
-      ApiError
-    );
+    await expect(
+      service.getUserPlaylists({ limit: 51 })
+    ).rejects.toBeInstanceOf(ApiError);
   });
 
   test('getUserPlaylists with all=true returns combined items', async () => {

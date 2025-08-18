@@ -1,6 +1,9 @@
 export type Page<T> = { items?: T[]; next_cursor?: string | null };
 
-export async function* paginate<T>(fetchPage: (cursor?: string | null) => Promise<Page<T>>, options?: { initialCursor?: string | null }) {
+export async function* paginate<T>(
+  fetchPage: (cursor?: string | null) => Promise<Page<T>>,
+  options?: { initialCursor?: string | null }
+) {
   let cursor = options?.initialCursor ?? null;
   while (true) {
     const page = await fetchPage(cursor);

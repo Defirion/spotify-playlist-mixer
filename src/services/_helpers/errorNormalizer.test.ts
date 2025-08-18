@@ -16,7 +16,9 @@ describe('normalizeApiError', () => {
   });
 
   test('classifies 429 with Retry-After', () => {
-    const err: any = { response: { status: 429, headers: { 'Retry-After': '5' } } };
+    const err: any = {
+      response: { status: 429, headers: { 'Retry-After': '5' } },
+    };
     const n = normalizeApiError(err);
     expect(n.type).toBe('RATE_LIMIT');
     expect(n.retryable).toBe(true);
