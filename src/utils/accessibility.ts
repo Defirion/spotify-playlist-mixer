@@ -172,13 +172,21 @@ export const focusManagement = {
       // Shift + Tab
       if (document.activeElement === firstElement) {
         event.preventDefault();
-        lastElement.focus();
+        try {
+          lastElement.focus({ preventScroll: true });
+        } catch (e) {
+          lastElement.focus();
+        }
       }
     } else {
       // Tab
       if (document.activeElement === lastElement) {
         event.preventDefault();
-        firstElement.focus();
+        try {
+          firstElement.focus({ preventScroll: true });
+        } catch (e) {
+          firstElement.focus();
+        }
       }
     }
   },
@@ -206,7 +214,11 @@ export const focusManagement = {
       nextIndex = 0;
     }
 
-    focusableElements[nextIndex]?.focus();
+    try {
+      focusableElements[nextIndex]?.focus({ preventScroll: true });
+    } catch (e) {
+      focusableElements[nextIndex]?.focus();
+    }
   },
 };
 

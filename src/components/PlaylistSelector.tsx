@@ -60,7 +60,11 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
           // Auto-focus input for immediate next search
           setTimeout(() => {
             if (inputRef.current) {
-              inputRef.current.focus();
+              try {
+                inputRef.current.focus({ preventScroll: true });
+              } catch (e) {
+                inputRef.current.focus();
+              }
             }
           }, 100);
         },
@@ -175,7 +179,11 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
     // Auto-focus input on component mount
     useEffect(() => {
       if (inputRef.current) {
-        inputRef.current.focus();
+        try {
+          inputRef.current.focus({ preventScroll: true });
+        } catch (e) {
+          inputRef.current.focus();
+        }
       }
     }, []);
 

@@ -46,9 +46,15 @@ const Modal = memo<ModalProps>(
         // Store the currently focused element
         previousActiveElement.current = document.activeElement;
 
-        // Focus the modal
+        // Focus the modal without causing the browser to scroll.
+        // preventScroll prevents viewport jumps when modals open.
         if (modalRef.current) {
-          modalRef.current.focus();
+          try {
+            modalRef.current.focus({ preventScroll: true });
+          } catch (e) {
+            // Older browsers may not support the options object; fall back.
+            modalRef.current.focus();
+          }
         }
 
         // Add escape key listener
@@ -57,12 +63,19 @@ const Modal = memo<ModalProps>(
         return () => {
           document.removeEventListener('keydown', handleEscapeKey);
 
-          // Restore focus to the previously focused element
+          // Restore focus to the previously focused element, but avoid
+          // scrolling the page when doing so. Use the preventScroll option
+          // where supported and fall back otherwise.
           if (
             previousActiveElement.current &&
             'focus' in previousActiveElement.current
           ) {
-            (previousActiveElement.current as HTMLElement).focus();
+            const el = previousActiveElement.current as HTMLElement;
+            try {
+              el.focus({ preventScroll: true });
+            } catch (e) {
+              el.focus();
+            }
           }
         };
       }
