@@ -18,10 +18,12 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Run tests with coverage
+      - name: Run tests with coverage (hermetic MSW)
         run: npm test -- --coverage --watchAll=false
         env:
           CI: true
+          MSW_HERMETIC: '1'        # fail on unmocked network requests
+          MSW_VERBOSE: '0'         # set to '1' to get MSW verbose logs during CI
       - name: Check coverage threshold
         env:
           COVERAGE_THRESHOLD: 60
