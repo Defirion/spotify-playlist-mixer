@@ -9,23 +9,28 @@ export const getSpotifyApi = (accessToken: string): AxiosInstance => {
   // CJS require) doesn't attempt to parse axios' ESM entrypoint.
   let axiosModule: any = null;
   try {
-    // First, attempt to require the CommonJS bundle if it's available.
-    // Build the path dynamically so bundlers (webpack) don't statically
-    // analyze and reject the import based on the package `exports` field.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const cjsPath = ['axios', '/dist/node/axios.cjs'].join('');
-    axiosModule = require(cjsPath);
-  } catch (e) {
-    try {
-      // Fallback to the package entrypoint. In some test environments this
-      // may be an ESM module; callers relying on a CJS axios instance may
-      // still prefer the CJS bundle above when it's present.
+    // In Node/Jest environments we prefer the CJS bundle when available.
+    // Use eval('require') here (rather than require(variable)) so bundlers
+    // like webpack don't treat this as a dynamic dependency and emit
+    // "Critical dependency" warnings which are treated as errors in CI.
+    if (typeof window === 'undefined') {
+      // eslint-disable-next-line no-eval
+      const req: any = eval('require');
+      try {
+        axiosModule = req('axios/dist/node/axios.cjs');
+      } catch (e) {
+        // Fallback to package entry if CJS bundle not present
+        axiosModule = req('axios');
+      }
+    } else {
+      // Browser build: use package entrypoint (ESM) which bundlers handle
+      // normally.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       axiosModule = require('axios');
-    } catch (err) {
-      // Re-throw the original error so callers see the underlying cause.
-      throw err;
     }
+  } catch (err) {
+    // Surface the underlying error to the caller.
+    throw err;
   }
   const axios =
     axiosModule && axiosModule.default ? axiosModule.default : axiosModule;
