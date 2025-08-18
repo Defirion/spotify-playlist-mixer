@@ -9,13 +9,23 @@ export const getSpotifyApi = (accessToken: string): AxiosInstance => {
   // CJS require) doesn't attempt to parse axios' ESM entrypoint.
   let axiosModule: any = null;
   try {
+    // First, attempt to require the CommonJS bundle if it's available.
+    // Build the path dynamically so bundlers (webpack) don't statically
+    // analyze and reject the import based on the package `exports` field.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    axiosModule = require('axios/dist/node/axios.cjs');
+    const cjsPath = ['axios', '/dist/node/axios.cjs'].join('');
+    axiosModule = require(cjsPath);
   } catch (e) {
-    // Fallback to the package entry; some environments may not include the
-    // prebuilt CJS bundle in that location.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    axiosModule = require('axios');
+    try {
+      // Fallback to the package entrypoint. In some test environments this
+      // may be an ESM module; callers relying on a CJS axios instance may
+      // still prefer the CJS bundle above when it's present.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      axiosModule = require('axios');
+    } catch (err) {
+      // Re-throw the original error so callers see the underlying cause.
+      throw err;
+    }
   }
   const axios =
     axiosModule && axiosModule.default ? axiosModule.default : axiosModule;
