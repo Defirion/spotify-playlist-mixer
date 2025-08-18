@@ -36,8 +36,8 @@
   background: var(--hunter-green);
   padding: 20px;
   border-radius: 12px;
-  margin-bottom: 20px;
   border: 1px solid var(--fern-green);
+  margin-bottom: 20px;
 }
 
 .sectionTitle {
@@ -272,20 +272,29 @@
   border-radius: 8px;
   padding: 16px;
   border: 1px solid var(--fern-green);
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .playlistBreakdown {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .playlistStat {
   background: var(--hunter-green);
-  padding: 12px;
+  padding: 8px;
   border-radius: 6px;
   border: 1px solid var(--fern-green);
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0; /* allow flex/grid children to shrink */
 }
 
 .playlistStatName {
@@ -293,6 +302,10 @@
   font-size: 14px;
   color: var(--mindaro);
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .playlistStatDetails {
@@ -300,6 +313,37 @@
   color: rgba(236, 243, 158, 0.7);
   display: flex;
   justify-content: space-between;
+}
+
+.tracksFull {
+  display: inline;
+}
+.tracksShort {
+  display: none;
+}
+
+/* Mobile: show up to 5 per row, max 2 rows */
+@media (max-width: 768px) {
+  .playlistBreakdown {
+    /* force fixed columns so we can show up to 5 across */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .playlistStat {
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  /* use shorter label when items are tight */
+  .tracksFull {
+    display: none;
+  }
+  .tracksShort {
+    display: inline;
+  }
 }
 
 .trackListContainer {
@@ -415,9 +459,7 @@
     justify-content: center;
   }
 
-  .playlistBreakdown {
-    grid-template-columns: 1fr;
-  }
+  /* keep playlistBreakdown grid behavior defined earlier */
 
   .strategyGrid {
     grid-template-columns: repeat(2, 1fr);

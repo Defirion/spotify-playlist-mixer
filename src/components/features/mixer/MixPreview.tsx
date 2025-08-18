@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -79,6 +79,74 @@ const MixPreview: React.FC<MixPreviewProps> = ({
 }) => {
   const [isSpotifySearchOpen, setIsSpotifySearchOpen] = useState(false);
   const [isAddUnselectedOpen, setIsAddUnselectedOpen] = useState(false);
+  const trackCountRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+  const [useShortLabel, setUseShortLabel] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  useEffect(() => {
+    const observers: ResizeObserver[] = [];
+
+    const updateForId = (id: string) => {
+      const el = trackCountRefs.current[id];
+      const stat = (stats as any)[id];
+      if (!el || !stat) return;
+
+      // measure required width for the full label using canvas (reliable across overflow behaviors)
+      const text = `${stat.count} tracks`;
+      const cs = window.getComputedStyle(el);
+      const font =
+        `${cs.fontStyle || ''} ${cs.fontWeight || ''} ${cs.fontSize} ${cs.fontFamily}`.trim();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let textWidth = 0;
+      if (ctx) {
+        ctx.font = font;
+        textWidth = Math.ceil(ctx.measureText(text).width);
+      } else {
+        // fallback to scrollWidth check
+        textWidth = el.scrollWidth;
+      }
+
+      const available = el.clientWidth - 4; // small padding tolerance
+      const needsShort = textWidth > available;
+
+      setUseShortLabel(prev => {
+        if (prev[id] === needsShort) return prev;
+        return { ...prev, [id]: needsShort };
+      });
+    };
+
+    Object.keys(stats).forEach(id => {
+      const el = trackCountRefs.current[id];
+      if (el) {
+        // observe the parent/container so changes to layout (name wrap, available width) trigger measurement
+        const container = el.parentElement ?? el;
+        const ro = new ResizeObserver(() => updateForId(id));
+        try {
+          ro.observe(container);
+        } catch (e) {
+          // fallback to observing the element itself
+          try {
+            ro.observe(el);
+          } catch (_) {
+            /* ignore */
+          }
+        }
+        observers.push(ro);
+        // initial check on next paint to ensure layout settled
+        requestAnimationFrame(() => updateForId(id));
+      }
+    });
+
+    const onWindow = () => Object.keys(stats).forEach(updateForId);
+    window.addEventListener('resize', onWindow);
+
+    return () => {
+      observers.forEach(o => o.disconnect());
+      window.removeEventListener('resize', onWindow);
+    };
+  }, [stats]);
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
@@ -146,9 +214,19 @@ const MixPreview: React.FC<MixPreviewProps> = ({
         <div className={styles.playlistBreakdown}>
           {Object.entries(stats).map(([playlistId, stat]) => (
             <div key={playlistId} className={styles.playlistStat}>
-              <div className={styles.playlistStatName}>{stat.name}</div>
+              {/* show truncated name with full title on hover */}
+              <div className={styles.playlistStatName} title={stat.name}>
+                {stat.name}
+              </div>
               <div className={styles.playlistStatDetails}>
-                <span>{stat.count} tracks</span>
+                <span
+                  className={styles.trackCount}
+                  ref={el => (trackCountRefs.current[playlistId] = el)}
+                >
+                  {useShortLabel[playlistId]
+                    ? `${stat.count} tr`
+                    : `${stat.count} tracks`}
+                </span>
                 <span>{formatTotalDuration(stat.totalDuration)}</span>
               </div>
             </div>
