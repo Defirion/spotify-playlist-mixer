@@ -1,4 +1,5 @@
-import React, { memo, useEffect } from 'react';
+// Use named React helpers; JSX runtime enabled
+import { memo, useEffect } from 'react';
 import TrackSourceModal from './TrackSourceModal';
 import useSpotifySearch from '../hooks/useSpotifySearch';
 import { SpotifyTrack } from '../types';

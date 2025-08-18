@@ -16,7 +16,7 @@ const DndProvider: React.FC<Props> = ({ children, ...rest }) => {
   // Small monitor component to centralize haptics on dnd-kit lifecycle events
   const HapticsMonitor: React.FC = () => {
     useDndMonitor({
-      onDragStart(event) {
+      onDragStart(_event) {
         try {
           vibrate(50);
         } catch (e) {

@@ -1,4 +1,4 @@
-import React from 'react';
+// JSX runtime is automatic; no default React import required here
 import { SpotifyTrack } from '../types/spotify';
 import SortableWrapper from './SortableWrapper';
 import TrackItem from './ui/TrackItem';

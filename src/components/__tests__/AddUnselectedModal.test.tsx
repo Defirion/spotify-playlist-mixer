@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - using automatic JSX runtime
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // Jest globals are available by default in CRA
@@ -83,7 +83,7 @@ jest.mock('../ui/TrackList', () => ({
         {...domProps}
       >
         {tracks && tracks.length > 0 ? (
-          tracks.map((track: SpotifyTrack, index: number) => (
+          tracks.map((track: SpotifyTrack, _index: number) => (
             <div
               key={track.id}
               data-testid={`track-item-${track.id}`}

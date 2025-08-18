@@ -514,7 +514,7 @@ describe('useSpotifySearch', () => {
     });
 
     it('calculates isInitialLoad correctly', async () => {
-      const searchPromise = new Promise(resolve => {});
+      const searchPromise = new Promise(_resolve => {});
       mockSpotifyService.searchTracks.mockReturnValue(searchPromise);
 
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));

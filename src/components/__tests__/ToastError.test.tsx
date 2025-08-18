@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - using automatic JSX runtime
 import { render, fireEvent, screen } from '@testing-library/react';
 import ToastError from '../ToastError';
 

@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - using automatic JSX runtime
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -130,7 +130,7 @@ describe('ErrorBoundary', () => {
 
     const CustomFallback = ({
       error,
-      errorInfo,
+      errorInfo: _errorInfo,
       handleRetry,
     }: {
       error?: Error;

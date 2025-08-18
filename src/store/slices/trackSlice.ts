@@ -17,7 +17,7 @@ export const createTrackSlice: StateCreator<
   [['zustand/devtools', never], ['zustand/subscribeWithSelector', never]],
   [],
   TrackSlice
-> = (set, get) => ({
+> = (set, _get) => ({
   // Initial state
   tracks: [],
 

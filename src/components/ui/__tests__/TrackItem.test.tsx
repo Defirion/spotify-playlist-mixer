@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - using automatic JSX runtime
 import { render, screen } from '@testing-library/react';
 import TrackItem from '../TrackItem';
 import { mockTracks } from '../../../mocks/fixtures';
@@ -12,7 +12,7 @@ jest.mock('../../../utils/trackUtils', () => ({
         .padStart(2, '0')}`
   ),
   getTrackQuadrant: jest.fn(() => 'high-energy-high-valence'),
-  getPopularityStyle: jest.fn((quadrant: any, popularity: any) => {
+  getPopularityStyle: jest.fn((_quadrant: any, popularity: any) => {
     if (popularity !== undefined) {
       return {
         background: '#4CAF50',

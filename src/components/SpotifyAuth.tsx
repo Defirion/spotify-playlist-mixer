@@ -2,15 +2,8 @@ import React from 'react';
 import { SpotifyAuthProps } from '../types/components';
 import styles from './SpotifyAuth.module.css';
 
-const SpotifyAuth: React.FC<SpotifyAuthProps> = ({
-  onAuth,
-  onError,
-  redirectUri,
-  scopes,
-  clientId,
-  className,
-  testId,
-}) => {
+const SpotifyAuth: React.FC<SpotifyAuthProps> = props => {
+  const { onError, redirectUri, scopes, clientId, className, testId } = props;
   const CLIENT_ID = clientId || process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const REDIRECT_URI = redirectUri || window.location.origin + '/';
   const SCOPES = scopes || [

@@ -26,7 +26,7 @@ const useVirtualization = <T = any>({
   itemHeight = 64,
   containerHeight = 400,
   overscan = 5,
-  getItemHeight = null,
+  getItemHeight: _getItemHeight = null as any,
 }: VirtualizationOptions<T>): UseVirtualizationReturn => {
   const [scrollTop, setScrollTop] = useState<number>(0);
   const [isScrolling, setIsScrolling] = useState<boolean>(false);

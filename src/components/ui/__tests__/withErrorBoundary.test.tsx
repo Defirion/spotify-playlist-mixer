@@ -42,9 +42,9 @@ describe('withErrorBoundary', () => {
 
   test('passes error boundary specific props correctly', () => {
     const customFallback = (
-      error: Error | null,
-      errorInfo: React.ErrorInfo | null,
-      handleRetry: () => void
+      _error: Error | null,
+      _errorInfo: React.ErrorInfo | null,
+      _handleRetry: () => void
     ) => <div>Custom Fallback</div>;
     const handleError = jest.fn();
     const Component = withErrorBoundary(WorkingComponent);

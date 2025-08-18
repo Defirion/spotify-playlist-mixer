@@ -285,7 +285,7 @@ describe('usePlaylistTracks', () => {
       const mockProgressData = { loaded: 50, total: 100, percentage: 50 };
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId: string, options: any) => {
+        (_playlistId: string, options: any) => {
           // Simulate progress callback
           if (options.onProgress) {
             options.onProgress(mockProgressData);
@@ -307,7 +307,7 @@ describe('usePlaylistTracks', () => {
       const mockProgressData = { loaded: 25, total: 100, percentage: 25 };
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId: string, options: any) => {
+        (_playlistId: string, options: any) => {
           if (options.onProgress) {
             options.onProgress(mockProgressData);
           }
@@ -730,7 +730,7 @@ describe('usePlaylistTracks', () => {
       expect(result.current.isComplete).toBe(false);
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
-        (playlistId: string, options: any) => {
+        (_playlistId: string, options: any) => {
           if (options.onProgress) {
             options.onProgress({ loaded: 100, total: 100, percentage: 100 });
           }

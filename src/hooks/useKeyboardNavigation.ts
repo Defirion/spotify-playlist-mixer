@@ -61,7 +61,7 @@ const useKeyboardNavigation = <T = any>({
 
   // Move focus to a specific index
   const moveFocus = useCallback(
-    (newIndex: number, reason: string = 'navigation'): void => {
+    (newIndex: number, _reason: string = 'navigation'): void => {
       if (items.length === 0) return;
 
       let targetIndex = newIndex;

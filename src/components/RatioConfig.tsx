@@ -1,4 +1,5 @@
-import React, { useState, memo, useCallback, useEffect } from 'react';
+// Import React helpers explicitly to avoid unused default import
+import { memo, useState, useCallback, useEffect } from 'react';
 import { SpotifyPlaylist } from '../types/spotify';
 import {
   RatioConfig as RatioConfigType,

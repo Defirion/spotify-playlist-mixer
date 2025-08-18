@@ -1,4 +1,5 @@
-import React, { memo } from 'react';
+// Use named imports for helpers; JSX runtime is automatic
+import { memo } from 'react';
 import TrackSourceModal from './TrackSourceModal';
 import { useUnselectedTracks } from '../hooks/useUnselectedTracks';
 import { SpotifyTrack, SpotifyPlaylist } from '../types';
