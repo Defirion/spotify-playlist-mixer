@@ -30,21 +30,90 @@ export const setupMSW = () => {
     const handlers = require('./mswHandlers').handlers || [];
     if (!handlers || handlers.length === 0) return;
     const server = setupServer(...handlers);
+    // Ensure axios (if used) uses the Node http adapter so msw/node can
+    // intercept requests. Some tests run in a jsdom-like environment where
+    // axios defaults to XHR and msw/node won't intercept those requests.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const axios = require('axios');
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const httpAdapter = require('axios/lib/adapters/http');
+        axios.defaults.adapter =
+          (httpAdapter && httpAdapter.default) || httpAdapter;
+      } catch (e) {
+        // if adapter not present, ignore; tests that need it should set explicitly
+      }
+    } catch (e) {
+      // axios not installed or not used in this environment; ignore
+    }
     // Allow tests or CI to opt into hermetic mode where any unhandled
     // request causes an immediate error. This helps CI surface network
     // leaks early. Default to 'warn' for local developer runs.
     const hermetic =
       process.env.MSW_HERMETIC === '1' || process.env.MSW_HERMETIC === 'true';
     server.listen({ onUnhandledRequest: hermetic ? 'error' : 'warn' });
+
+    const _mswVerbose = String(
+      process.env.MSW_VERBOSE || process.env.TEST_VERBOSE || ''
+    ).toLowerCase();
+    if (hermetic && (_mswVerbose === '1' || _mswVerbose === 'true')) {
+      // eslint-disable-next-line no-console
+      console.info('MSW hermetic mode enabled: onUnhandledRequest=error');
+    }
+
     // Attach to global so tests can modify handlers if needed
     // @ts-ignore
     global.__msw_server = server;
+
+    // Ensure the server is closed when the process exits (cleanup for long-running runners)
+    if (
+      typeof process !== 'undefined' &&
+      process &&
+      typeof process.on === 'function'
+    ) {
+      try {
+        process.on('exit', () => {
+          try {
+            server.close();
+          } catch (e) {
+            // ignore
+          }
+        });
+      } catch (e) {
+        // ignore
+      }
+    }
   } catch (err) {
-    // Avoid noisy warnings in test output when MSW can't be required
-    // (ESM/CJS transform issues or missing ponyfills). Provide an opt-in
-    // verbose mode via MSW_VERBOSE=1 for debugging.
+    // If MSW can't be required this may be due to ESM/CJS transform issues
+    // or missing polyfills. In local dev we keep this as a no-op so tests can
+    // continue using hook-level mocks; in CI hermetic mode we must fail fast
+    // because many integration tests rely on network handlers.
     const e: any = err;
-    if (process.env.MSW_VERBOSE) {
+    const hermetic =
+      process.env.MSW_HERMETIC === '1' || process.env.MSW_HERMETIC === 'true';
+
+    if (hermetic) {
+      // Always fail fast in hermetic CI, but only log detailed error when requested
+      const _mswVerbose = String(
+        process.env.MSW_VERBOSE || process.env.TEST_VERBOSE || ''
+      ).toLowerCase();
+      if (_mswVerbose === '1' || _mswVerbose === 'true') {
+        // eslint-disable-next-line no-console
+        console.error(
+          'MSW setup failed in hermetic mode; aborting tests. Error:',
+          e && e.message ? e.message : e
+        );
+      }
+      // Re-throw so Jest fails immediately and CI surfaces the configuration issue
+      throw e;
+    }
+
+    // Non-hermetic fallback: log only when verbose debugging is requested.
+    const _mswVerbose = String(
+      process.env.MSW_VERBOSE || process.env.TEST_VERBOSE || ''
+    ).toLowerCase();
+    if (_mswVerbose === '1' || _mswVerbose === 'true') {
       // eslint-disable-next-line no-console
       console.warn('MSW setup skipped: ', e && e.message ? e.message : e);
     }

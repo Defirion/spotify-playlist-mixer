@@ -74,11 +74,21 @@ export const usePlaylistSearch = ({
         const items =
           response?.data?.playlists?.items ?? response?.data?.tracks?.items;
         if (!Array.isArray(items)) {
-          // Log unexpected API shapes to help debugging in CI or locally
-          console.error(
-            'Unexpected Spotify API response shape for playlist search:',
-            response
-          );
+          // Log unexpected API shapes to help debugging in CI or locally.
+          // Respect TEST_VERBOSE so passing test runs stay quiet unless requested.
+          const _testVerbose = String(
+            process.env.TEST_VERBOSE || ''
+          ).toLowerCase();
+          if (
+            _testVerbose === '1' ||
+            _testVerbose === 'true' ||
+            process.env.NODE_ENV === 'development'
+          ) {
+            console.error(
+              'Unexpected Spotify API response shape for playlist search:',
+              response
+            );
+          }
           setResults([]);
         } else {
           setResults(items);
@@ -93,11 +103,20 @@ export const usePlaylistSearch = ({
           // tests that assert this call continue to pass.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const maybeResponse = (err as any)?.response ?? null;
-          console.error('Failed to search playlists:', err);
-          if (maybeResponse) {
-            // Log the response object separately to avoid changing the
-            // original error call signature asserted in tests.
-            console.error('Spotify API response:', maybeResponse);
+          const _testVerbose = String(
+            process.env.TEST_VERBOSE || ''
+          ).toLowerCase();
+          if (
+            _testVerbose === '1' ||
+            _testVerbose === 'true' ||
+            process.env.NODE_ENV === 'development'
+          ) {
+            console.error('Failed to search playlists:', err);
+            if (maybeResponse) {
+              // Log the response object separately to avoid changing the
+              // original error call signature asserted in tests.
+              console.error('Spotify API response:', maybeResponse);
+            }
           }
           setError('Failed to search playlists. Please try again.');
           setResults([]);

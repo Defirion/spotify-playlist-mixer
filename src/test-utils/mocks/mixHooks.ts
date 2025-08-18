@@ -47,7 +47,7 @@ export const makeUseMixPreviewModule = (impl?: UseMixPreviewImpl) => {
       // an "Invalid hook call". We detect that and fall back to a plain object
       // implementation so those tests don't crash.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const React = require('react');
+      const React = require('react') as typeof import('react');
 
       let isHookContext = true as boolean;
       let state: any;
@@ -172,13 +172,23 @@ export const makeUseMixGenerationModule = (impl?: UseMixGenImpl) => {
         Promise<{ id: string; name: string }>,
         [string, unknown]
       >(async (name?: string, tracks?: unknown) => {
-        // eslint-disable-next-line no-console
-        console.log('mock.createPlaylist called', {
-          name,
-          tracksLength: Array.isArray(tracks)
-            ? (tracks as any).length
-            : undefined,
-        });
+        // Only log when explicitly requested by tests or during development
+        const _testVerbose = String(
+          process.env.TEST_VERBOSE || ''
+        ).toLowerCase();
+        if (
+          _testVerbose === '1' ||
+          _testVerbose === 'true' ||
+          process.env.NODE_ENV === 'development'
+        ) {
+          // eslint-disable-next-line no-console
+          console.log('mock.createPlaylist called', {
+            name,
+            tracksLength: Array.isArray(tracks)
+              ? (tracks as any).length
+              : undefined,
+          });
+        }
         return { id: 'created', name: name || 'created' };
       }),
       reset: jest.fn() as jest.Mock<void, []>,

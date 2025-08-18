@@ -126,7 +126,11 @@ export const handlers = [
     const rawAuth = req.headers.get('authorization');
     const token = tokenScenario(req);
     // Only emit verbose MSW debugging when explicitly requested via env var
-    if (process.env.MSW_VERBOSE) {
+    // Support MSW_VERBOSE or TEST_VERBOSE (accepts '1' or 'true')
+    const _mswVerbose = String(
+      process.env.MSW_VERBOSE || process.env.TEST_VERBOSE || ''
+    ).toLowerCase();
+    if (_mswVerbose === '1' || _mswVerbose === 'true') {
       // eslint-disable-next-line no-console
       console.error('MSW handler - /search raw Authorization:', rawAuth);
       // eslint-disable-next-line no-console

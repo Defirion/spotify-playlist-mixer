@@ -78,7 +78,7 @@ This file collects focused, high-value tasks to close testing gaps discovered du
   - MSW handlers provide deterministic triggers for 429 / 401 / 500 and are used only in integration/regression tests.
   - No production behavior changes; all MSW-backed integration tests remain green after each refactor step.
 
-## 2. App-level integration & hook coverage (MAX 150 lines)
+## 2. App-level integration & hook coverage (MAX 150 lines) DONE
 - Purpose: Increase coverage for `App.tsx`, zero-covered hooks, and ensure the main app flow is exercised by tests.
 - Steps:
   - Create an integration test that mounts `src/App.tsx` and runs a full mix flow (select playlists → configure → run mix) using MSW fixtures.
@@ -125,14 +125,14 @@ This file collects focused, high-value tasks to close testing gaps discovered du
 
  Acceptance: Coverage for `App.tsx` and the listed hooks increases noticeably; no new runtime network calls occur during tests.
 
-## 3. PlaylistMixer orchestration tests (MAX 120 lines)
+## 3. PlaylistMixer orchestration tests (MAX 120 lines) DONE
 - Purpose: Cover `src/utils/playlistMixer.ts` orchestration logic and edge cases.
 - Steps:
   - Add deterministic fixtures for playlists (empty, single, large) and test orchestration outputs.
   - Validate behavior on invalid ratios and empty source lists.
 - Acceptance: `playlistMixer.ts` reaches >90% unit coverage and edge cases are asserted.
 
-## 4. MSW leak detection and test hermeticity (MAX 40 lines)
+## 4. MSW leak detection and test hermeticity (MAX 40 lines) DONE
 - Purpose: Fail tests if a real network call escapes MSW mocks.
 - Steps:
   - Add a small test in `src/test-utils` that asserts no network requests were made outside MSW handlers (or use `msw/node` to track unmatched requests).

@@ -17,7 +17,12 @@ export const safeObjectKeys = (obj: any): string[] => {
   // Ensure the result is a proper array with filter method
   if (!Array.isArray(keys) || typeof keys.filter !== 'function') {
     // Use console.warn directly to avoid potential circular dependency
-    if (process.env.NODE_ENV === 'development') {
+    const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (
+      _testVerbose === '1' ||
+      _testVerbose === 'true' ||
+      process.env.NODE_ENV === 'development'
+    ) {
       console.warn(
         '⚠️ Object.keys returned invalid array, creating manual array'
       );
@@ -39,7 +44,12 @@ export const safeObjectKeys = (obj: any): string[] => {
  */
 export const calculateTotalDuration = (tracks: SpotifyTrack[]): number => {
   if (!Array.isArray(tracks)) {
-    if (process.env.NODE_ENV === 'development') {
+    const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (
+      _testVerbose === '1' ||
+      _testVerbose === 'true' ||
+      process.env.NODE_ENV === 'development'
+    ) {
       console.warn('⚠️ calculateTotalDuration received non-array input', {
         tracks,
       });
@@ -76,7 +86,12 @@ export const validateTrack = (track: any): track is SpotifyTrack => {
  */
 export const cleanPlaylistTracks = (playlistTracks: any): PlaylistTracks => {
   if (!playlistTracks || typeof playlistTracks !== 'object') {
-    if (process.env.NODE_ENV === 'development') {
+    const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (
+      _testVerbose === '1' ||
+      _testVerbose === 'true' ||
+      process.env.NODE_ENV === 'development'
+    ) {
       console.warn('⚠️ cleanPlaylistTracks received invalid input', {
         playlistTracks,
       });
@@ -116,7 +131,12 @@ export const cleanPlaylistTracks = (playlistTracks: any): PlaylistTracks => {
       cleanedPlaylistTracks[playlistId] = validTracks;
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (
+      _testVerbose === '1' ||
+      _testVerbose === 'true' ||
+      process.env.NODE_ENV === 'development'
+    ) {
       console.log(
         `ℹ️ Cleaned playlist ${playlistId}: ${validTracks.length} valid tracks from ${tracksArray.length} total`
       );
@@ -149,8 +169,12 @@ export const logDebugInfo = (
   message: string,
   data?: any
 ): void => {
-  // Only log in development environment
-  if (process.env.NODE_ENV !== 'development') {
+  // Only log in development or when tests request verbose output
+  const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
+  if (
+    !(_testVerbose === '1' || _testVerbose === 'true') &&
+    process.env.NODE_ENV !== 'development'
+  ) {
     return;
   }
 
