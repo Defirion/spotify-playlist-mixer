@@ -55,3 +55,28 @@ If you need help implementing the CI/tooling changes above, ping the team and al
 Note about Jest transforms and CI
 
 We updated the repository Jest transform settings to allow Babel to transform a small set of ESM-style node_modules (notably `msw`, `axios`, `undici`, and `whatwg-fetch`). This enables running network-style MSW tests with the real HTTP stack (real `axios` + `msw`) instead of per-test fetch/undici workarounds. CI must use the same Node version as local dev and pick up the repo `jest.config.js`; transforming additional node_modules may slow test startup. If CI shows transform-related failures, revert the transform change and file a follow-up ticket to address ESM compatibility.
+
+## MSW hermetic mode (MSW_HERMETIC)
+
+This repository supports an optional "hermetic" MSW test mode that fails the test run when any network request is made without a registered MSW handler. The feature is controlled by the `MSW_HERMETIC` environment variable and is intended to prevent accidental, unmocked network calls in CI.
+
+How it works
+- When `MSW_HERMETIC=1` the MSW test setup configures `onUnhandledRequest` to throw or fail tests on unmocked requests. This makes any stray network call fail loudly.
+- When `MSW_HERMETIC` is unset or false, MSW continues to log unhandled requests but will not fail the suite (the previous behavior).
+
+Why we added it
+- Ensures tests remain hermetic in CI and prevents flaky or accidental external network access.
+- Encourages adding explicit MSW handlers for any external interactions exercised by tests.
+
+CI enforcement
+- The repository CI workflow now sets `MSW_HERMETIC: '1'` and `MSW_VERBOSE: '0'` for the test step. This enforces hermetic mode for all automated runs.
+
+How to run locally with hermetic mode
+- PowerShell (single session):
+   $env:MSW_HERMETIC = '1'; npm test -- --watchAll=false
+- Use cross-env in npm scripts if you need a cross-platform one-liner:
+   npm i -D cross-env
+   cross-env MSW_HERMETIC=1 npm test -- --watchAll=false
+
+Troubleshooting
+- If a test starts failing after enabling hermetic mode, add an MSW handler for the expected request in the test's mock handlers. The hermetic test failure message includes the request details.
