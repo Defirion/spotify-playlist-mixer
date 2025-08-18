@@ -87,30 +87,7 @@ export const announceToScreenReader = (
 /**
  * Generate ARIA label for drag-and-drop items
  */
-export const generateTrackAriaLabel = (
-  track: SpotifyTrack,
-  index: number,
-  total: number,
-  isDragging: boolean = false,
-  isSelected: boolean = false
-): string => {
-  const trackName = track.name || 'Unknown track';
-  const artistName = track.artists?.[0]?.name || 'Unknown artist';
-  const position = `${index + 1} of ${total}`;
-
-  let label = `${trackName} by ${artistName}, ${position}`;
-
-  if (isSelected && isDragging) {
-    label +=
-      ', selected for moving. Use arrow keys to choose new position, spacebar to drop, or escape to cancel.';
-  } else if (isDragging) {
-    label += ', available drop target';
-  } else {
-    label += ', press spacebar to select for moving';
-  }
-
-  return label;
-};
+// generateTrackAriaLabel removed (unused). If needed in future, reintroduce or inline at call site.
 
 /**
  * Generate ARIA description for drag-and-drop instructions
