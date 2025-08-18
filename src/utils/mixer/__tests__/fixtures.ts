@@ -17,7 +17,9 @@ export const makeTrack = (idSuffix: string | number, overrides: any = {}) => {
 export const makePlaylist = (prefix: string, count: number, startIndex = 1) => {
   const tracks: any[] = [];
   for (let i = 0; i < count; i++) {
-    tracks.push(makeTrack(`${prefix}_${startIndex + i}`, { duration_ms: 180000 }));
+    tracks.push(
+      makeTrack(`${prefix}_${startIndex + i}`, { duration_ms: 180000 })
+    );
   }
   return tracks;
 };

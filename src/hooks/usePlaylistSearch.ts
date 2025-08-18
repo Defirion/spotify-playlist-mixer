@@ -71,10 +71,14 @@ export const usePlaylistSearch = ({
         // `playlists` or `tracks` depending on test harness. Be defensive
         // and accept either shape. Validate the resulting items before
         // setting state to avoid "cannot read properties of undefined" errors.
-        const items = response?.data?.playlists?.items ?? response?.data?.tracks?.items;
+        const items =
+          response?.data?.playlists?.items ?? response?.data?.tracks?.items;
         if (!Array.isArray(items)) {
           // Log unexpected API shapes to help debugging in CI or locally
-          console.error('Unexpected Spotify API response shape for playlist search:', response);
+          console.error(
+            'Unexpected Spotify API response shape for playlist search:',
+            response
+          );
           setResults([]);
         } else {
           setResults(items);

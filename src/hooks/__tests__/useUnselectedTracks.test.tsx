@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
+import { render, cleanup, screen } from '@testing-library/react';
 import { useUnselectedTracks } from '../useUnselectedTracks';
 
 // Prevent accidental network calls by stubbing the spotify API helper used by the hook
@@ -28,8 +27,6 @@ afterEach(() => {
 });
 
 test('useUnselectedTracks mounts without crashing', () => {
-  act(() => {
-    mountedUtils = render(<Harness />);
-  });
-  expect(mountedUtils.getByTestId('harness')).toBeTruthy();
+  mountedUtils = render(<Harness />);
+  expect(screen.getByTestId('harness')).toBeTruthy();
 });

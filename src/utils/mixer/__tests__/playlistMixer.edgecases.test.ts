@@ -1,6 +1,4 @@
-import {
-  mixPlaylists,
-} from '../playlistMixer';
+import { mixPlaylists } from '../playlistMixer';
 import { addSongsFromPlaylist } from '../mixingCalculations';
 import { makePlaylist, makeTrack } from './fixtures';
 
@@ -47,7 +45,17 @@ describe('playlistMixer edge cases', () => {
       b: { min: 1, max: 1, weight: 1, weightType: 'frequency' },
     } as any;
 
-    const options = { totalSongs: 4, targetDuration: 10, useTimeLimit: false, useAllSongs: false, playlistName: 'Edge', shuffleWithinGroups: false, popularityStrategy: 'mixed', recencyBoost: false, continueWhenPlaylistEmpty: false } as any;
+    const options = {
+      totalSongs: 4,
+      targetDuration: 10,
+      useTimeLimit: false,
+      useAllSongs: false,
+      playlistName: 'Edge',
+      shuffleWithinGroups: false,
+      popularityStrategy: 'mixed',
+      recencyBoost: false,
+      continueWhenPlaylistEmpty: false,
+    } as any;
 
     const mixed = mixPlaylists(playlists, ratioConfig, options);
     expect(mixed.every((t: any) => t.sourcePlaylist !== 'a')).toBe(true);
@@ -55,7 +63,9 @@ describe('playlistMixer edge cases', () => {
 
   test('addSongsFromPlaylist prefers max when playlist is behind on time share', () => {
     const playlistId = 'x';
-    const ratioConfig = { x: { min: 1, max: 3, weight: 1, weightType: 'frequency' } } as any;
+    const ratioConfig = {
+      x: { min: 1, max: 3, weight: 1, weightType: 'frequency' },
+    } as any;
     const totalWeight = 1;
 
     const popularityPools = { x: [] } as any;
@@ -107,7 +117,17 @@ describe('playlistMixer edge cases', () => {
       b: { min: 1, max: 1, weight: 1, weightType: 'frequency' },
     } as any;
 
-    const options = { totalSongs: 100, targetDuration: 300, useTimeLimit: false, useAllSongs: false, playlistName: 'PerfMix', shuffleWithinGroups: false, popularityStrategy: 'mixed', recencyBoost: false, continueWhenPlaylistEmpty: false } as any;
+    const options = {
+      totalSongs: 100,
+      targetDuration: 300,
+      useTimeLimit: false,
+      useAllSongs: false,
+      playlistName: 'PerfMix',
+      shuffleWithinGroups: false,
+      popularityStrategy: 'mixed',
+      recencyBoost: false,
+      continueWhenPlaylistEmpty: false,
+    } as any;
 
     const start = Date.now();
     const mixed = mixPlaylists(playlists, ratioConfig, options);

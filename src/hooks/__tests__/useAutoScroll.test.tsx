@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import useAutoScroll from '../useAutoScroll';
 
@@ -38,15 +38,32 @@ test('checkAutoScroll starts auto-scrolling when pointer near top edge', () => {
 
   // create a fake scroll container
   const container = document.createElement('div');
-  Object.defineProperty(container, 'clientHeight', { value: 200, configurable: true });
-  Object.defineProperty(container, 'scrollHeight', { value: 1000, configurable: true });
+  Object.defineProperty(container, 'clientHeight', {
+    value: 200,
+    configurable: true,
+  });
+  Object.defineProperty(container, 'scrollHeight', {
+    value: 1000,
+    configurable: true,
+  });
   // start with some scrollTop so we can scroll up
   (container as any).scrollTop = 100;
-  container.getBoundingClientRect = () => ({ top: 0, bottom: 600, left: 0, right: 0, width: 0, height: 600 } as DOMRect);
+  container.getBoundingClientRect = () =>
+    ({
+      top: 0,
+      bottom: 600,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 600,
+    }) as DOMRect;
   document.body.appendChild(container);
 
   function Harness() {
-    const { checkAutoScroll, stopAutoScroll } = useAutoScroll({ scrollContainer: container, scrollThreshold: 80 });
+    const { checkAutoScroll, stopAutoScroll } = useAutoScroll({
+      scrollContainer: container,
+      scrollThreshold: 80,
+    });
     // expose methods to the test runner
     // @ts-ignore
     (window as any).__testAutoScroll = { checkAutoScroll, stopAutoScroll };
@@ -80,14 +97,13 @@ test('checkAutoScroll starts auto-scrolling when pointer near top edge', () => {
   });
 });
 
-  function HarnessMount() {
-    // Call the hook to ensure it mounts without runtime errors
-    useAutoScroll({});
-    return <div data-testid="harness">ok</div>;
-  }
+function HarnessMount() {
+  // Call the hook to ensure it mounts without runtime errors
+  useAutoScroll({});
+  return <div data-testid="harness">ok</div>;
+}
 
-  test('useAutoScroll mounts without crashing', () => {
-    const { render: rtlRender, screen: rtlScreen } = require('@testing-library/react');
-    rtlRender(<HarnessMount />);
-    expect(rtlScreen.getByTestId('harness')).toBeTruthy();
-  });
+test('useAutoScroll mounts without crashing', () => {
+  render(<HarnessMount />);
+  expect(screen.getByTestId('harness')).toBeTruthy();
+});

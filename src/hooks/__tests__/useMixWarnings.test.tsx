@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useMixWarnings } from '../useMixWarnings';
 
 function Harness() {
@@ -18,6 +18,6 @@ function Harness() {
 }
 
 test('useMixWarnings mounts without crashing', () => {
-  const { getByTestId } = render(<Harness />);
-  expect(getByTestId('harness')).toBeTruthy();
+  render(<Harness />);
+  expect(screen.getByTestId('harness')).toBeTruthy();
 });

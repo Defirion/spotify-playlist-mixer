@@ -13,11 +13,15 @@ export const getSpotifyApi = (accessToken: string): AxiosInstance => {
     // Use eval('require') here (rather than require(variable)) so bundlers
     // like webpack don't treat this as a dynamic dependency and emit
     // "Critical dependency" warnings which are treated as errors in CI.
-  // Prefer the Node (CJS) axios build when running under Node/Jest so that
-  // MSW's setupServer can intercept requests. In some Jest setups `window`
-  // (jsdom) is present which would otherwise pick the browser build and
-  // cause requests to use XHR (not intercepted by setupServer).
-  if (typeof window === 'undefined' || process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+    // Prefer the Node (CJS) axios build when running under Node/Jest so that
+    // MSW's setupServer can intercept requests. In some Jest setups `window`
+    // (jsdom) is present which would otherwise pick the browser build and
+    // cause requests to use XHR (not intercepted by setupServer).
+    if (
+      typeof window === 'undefined' ||
+      process.env.NODE_ENV === 'test' ||
+      process.env.JEST_WORKER_ID
+    ) {
       // eslint-disable-next-line no-eval
       const req: any = eval('require');
       try {

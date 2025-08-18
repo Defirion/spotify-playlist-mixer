@@ -42,7 +42,7 @@ test('useTrackOperations handlers call onTrackOrderChange with expected arrays',
 
   expect(onTrackOrderChange).toHaveBeenCalled();
   let calledWith = onTrackOrderChange.mock.calls[0][0];
-    expect(calledWith.map((t: any) => t.id)).toEqual(['t2', 't1', 't3']);
+  expect(calledWith.map((t: any) => t.id)).toEqual(['t2', 't1', 't3']);
 
   // external add: insert a new track at index 1
   act(() => {
@@ -53,7 +53,7 @@ test('useTrackOperations handlers call onTrackOrderChange with expected arrays',
 
   expect(onTrackOrderChange).toHaveBeenCalledTimes(2);
   calledWith = onTrackOrderChange.mock.calls[1][0];
-    expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't4', 't2', 't3']);
+  expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't4', 't2', 't3']);
 
   // remove track at index 2
   act(() => {
@@ -63,7 +63,7 @@ test('useTrackOperations handlers call onTrackOrderChange with expected arrays',
 
   expect(onTrackOrderChange).toHaveBeenCalledTimes(3);
   calledWith = onTrackOrderChange.mock.calls[2][0];
-    expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't2']);
+  expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't2']);
 
   // add spotify tracks (appends)
   act(() => {
@@ -74,5 +74,5 @@ test('useTrackOperations handlers call onTrackOrderChange with expected arrays',
 
   expect(onTrackOrderChange).toHaveBeenCalledTimes(4);
   calledWith = onTrackOrderChange.mock.calls[3][0];
-    expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't2', 't3', 's1']);
+  expect(calledWith.map((t: any) => t.id)).toEqual(['t1', 't2', 't3', 's1']);
 });

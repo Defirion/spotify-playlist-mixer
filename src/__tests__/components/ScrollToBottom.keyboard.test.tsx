@@ -2,13 +2,16 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, act } from '@testing-library/react';
 import ScrollToBottom from '../../components/ScrollToBottom';
-import { createVisualViewportMock } from '../../test-utils/mocks/visualViewportMock';
-import { mockVisualViewport, restoreVisualViewport } from '../../test-utils/mockVisualViewport';
+// import helper removed (unused): createVisualViewportMock
+import {
+  mockVisualViewport,
+  restoreVisualViewport,
+} from '../../test-utils/mockVisualViewport';
 
 describe('ScrollToBottom keyboard behavior', () => {
   it('moves above virtual keyboard by setting inline bottom when visualViewport shrinks', async () => {
-  // capture real visualViewport for restore later
-  const realInnerHeight = window.innerHeight;
+    // capture real visualViewport for restore later
+    const realInnerHeight = window.innerHeight;
 
     // make page taller than viewport so the arrow will show
     Object.defineProperty(window, 'innerHeight', {
@@ -20,9 +23,9 @@ describe('ScrollToBottom keyboard behavior', () => {
       configurable: true,
     });
 
-  // Mock visualViewport using the centralized helper so tests share the same setup
-  const realVV = (window as any).visualViewport;
-  const { vv, setHeight } = mockVisualViewport(800, 0);
+    // Mock visualViewport using the centralized helper so tests share the same setup
+    const realVV = (window as any).visualViewport;
+    const { setHeight } = mockVisualViewport(800, 0);
 
     render(<ScrollToBottom />);
 
@@ -45,9 +48,9 @@ describe('ScrollToBottom keyboard behavior', () => {
     const newPx = parseInt(newBottom, 10);
     expect(newPx).toBeGreaterThan(initialPx);
 
-  // restore
-  if (realVV) (window as any).visualViewport = realVV;
-  else restoreVisualViewport();
+    // restore
+    if (realVV) (window as any).visualViewport = realVV;
+    else restoreVisualViewport();
     Object.defineProperty(window, 'innerHeight', {
       value: realInnerHeight,
       configurable: true,

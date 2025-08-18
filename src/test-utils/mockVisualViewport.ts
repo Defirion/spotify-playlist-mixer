@@ -18,10 +18,10 @@ export function restoreVisualViewport() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   try {
-  // assign undefined to avoid TS 'delete' operand errors
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  global.visualViewport = undefined;
+    // assign undefined to avoid TS 'delete' operand errors
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    global.visualViewport = undefined;
   } catch (e) {
     // ignore
   }

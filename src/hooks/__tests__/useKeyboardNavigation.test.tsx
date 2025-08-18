@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import useKeyboardNavigation from '../useKeyboardNavigation';
 
 function Harness() {
@@ -9,6 +9,6 @@ function Harness() {
 }
 
 test('useKeyboardNavigation mounts without crashing', () => {
-  const { getByTestId } = render(<Harness />);
-  expect(getByTestId('harness')).toBeTruthy();
+  render(<Harness />);
+  expect(screen.getByTestId('harness')).toBeTruthy();
 });
