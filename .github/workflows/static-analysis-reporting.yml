@@ -1,0 +1,44 @@
+name: CI — tests + static analysis reports
+
+on:
+  push:
+    branches: [ main, final-refactor ]
+  pull_request:
+    branches: [ main, final-refactor ]
+
+jobs:
+  build-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test --silent
+
+      - name: Run depcheck (report only)
+        run: |
+          npx depcheck --json > depcheck.json || true
+          echo "Saved depcheck output to depcheck.json"
+
+      - name: Run ts-prune (report only)
+        run: |
+          npx ts-prune --json > ts-prune.json || true
+          echo "Saved ts-prune output to ts-prune.json"
+
+      - name: Upload static analysis reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-reports
+          path: |
+            depcheck.json
+            ts-prune.json
