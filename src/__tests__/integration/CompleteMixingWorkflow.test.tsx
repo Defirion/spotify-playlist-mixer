@@ -1,4 +1,5 @@
 import React from 'react';
+/// <reference types="@testing-library/jest-dom" />
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // using inline mock factories below; legacy helpers omitted

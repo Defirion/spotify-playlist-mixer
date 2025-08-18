@@ -17,7 +17,8 @@ export function useDragSensors() {
       activationConstraint: { distance: 10 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 },
+      // increased from 250 -> 300ms to delay drag activation slightly
+      activationConstraint: { delay: 300, tolerance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,

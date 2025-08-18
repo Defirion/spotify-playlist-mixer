@@ -1,16 +1,11 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import {
-  DndContext,
-  DragEndEvent,
-  DragStartEvent,
-  closestCenter,
-} from '@dnd-kit/core';
+import { DragEndEvent, DragStartEvent, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
 import { useMixWarnings } from '../hooks/useMixWarnings';
-import { useDragSensors } from '../hooks/useDragSensors';
+import DndProvider from './DndProvider';
 import { getTrackDragId } from '../utils/trackUtils';
 import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
@@ -38,8 +33,6 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   onMixedPlaylist,
   onError,
 }) => {
-  const sensors = useDragSensors();
-
   // Ref to track optimistically added tracks for drag operations
   const optimisticTrackRef = useRef<MixedTrack | null>(null);
 
@@ -102,13 +95,23 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   // Enhanced drag start handler - optimistic UI for external drags
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      console.log('Drag started - adding dnd-dragging class');
+      // log with timestamp for correlating haptics behavior
+      // eslint-disable-next-line no-console
+      console.log('Drag started - adding dnd-dragging class', {
+        time: new Date().toISOString(),
+        hr:
+          typeof performance !== 'undefined' && performance.now
+            ? performance.now()
+            : Date.now(),
+      });
 
       // Add class to the scrolling element (preferred) to prevent auto-scroll and user scroll.
       // Use document.scrollingElement when available, fall back to document.documentElement.
       const scrollingElement =
         (document.scrollingElement as HTMLElement) || document.documentElement;
       scrollingElement.classList.add('dnd-dragging');
+
+      // haptic triggering moved to DndProvider's HapticsMonitor (uses useDndMonitor)
 
       const { active } = event;
       const isExternalDrag = active.data.current?.context === 'modal';
@@ -317,8 +320,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   ]);
 
   return (
-    <DndContext
-      sensors={sensors}
+    <DndProvider
       collisionDetection={closestCenter}
       autoScroll={{
         // Prevent the main document from being auto-scrolled by dnd-kit.
@@ -378,7 +380,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
           current settings
         </p>
       </div>
-    </DndContext>
+    </DndProvider>
   );
 };
 
