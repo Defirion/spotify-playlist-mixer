@@ -21,6 +21,10 @@ export const handlers = [
       );
     }
 
+    if (token === 'trigger_500') {
+      return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+    }
+
     if (token === 'trigger_401') {
       return res(ctx.status(401));
     }
@@ -36,6 +40,10 @@ export const handlers = [
         ctx.set('Retry-After', '1'),
         ctx.json({ error: 'rate_limited' })
       );
+    }
+
+    if (token === 'trigger_500') {
+      return res(ctx.status(500), ctx.json({ error: 'server_error' }));
     }
 
     if (token === 'trigger_401') {
@@ -77,6 +85,10 @@ export const handlers = [
           ctx.set('Retry-After', '1'),
           ctx.json({ error: 'rate_limited' })
         );
+      }
+
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
       }
 
       if (token === 'trigger_401') {
@@ -126,6 +138,10 @@ export const handlers = [
       );
     }
 
+    if (token === 'trigger_500') {
+      return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+    }
+
     if (token === 'trigger_401') {
       return res(ctx.status(401));
     }
@@ -172,6 +188,10 @@ export const handlers = [
         );
       }
 
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+      }
+
       if (token === 'trigger_401') {
         return res(ctx.status(401));
       }
@@ -214,6 +234,10 @@ export const handlers = [
         );
       }
 
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+      }
+
       if (token === 'trigger_401') {
         return res(ctx.status(401));
       }
@@ -238,6 +262,10 @@ export const handlers = [
         );
       }
 
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+      }
+
       if (token === 'trigger_401') {
         return res(ctx.status(401));
       }
@@ -257,6 +285,10 @@ export const handlers = [
           ctx.set('Retry-After', '1'),
           ctx.json({ error: 'rate_limited' })
         );
+      }
+
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
       }
 
       if (token === 'trigger_401') {

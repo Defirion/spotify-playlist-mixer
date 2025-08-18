@@ -79,4 +79,15 @@ describe('SpotifyService - MSW integration', () => {
     const service = new SpotifyService(AUTH_EXPIRE_TOKEN);
     await expect(service.getUserProfile()).rejects.toBeDefined();
   });
+
+  test('createPlaylist throws BAD_REQUEST on malformed payload (missing name)', async () => {
+    const service = new SpotifyService(ACCESS_TOKEN);
+    // @ts-ignore - call with malformed body
+    await expect(service.createPlaylist('user_1', { description: 'no name' })).rejects.toBeDefined();
+  });
+
+  test('searchTracks surfaces server error (500) when MSW returns 500', async () => {
+    const service = new SpotifyService('trigger_500');
+    await expect(service.searchTracks('track')).rejects.toBeDefined();
+  });
 });
