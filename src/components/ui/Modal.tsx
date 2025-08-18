@@ -125,6 +125,7 @@ const Modal = memo<ModalProps>(
           onClick={handleBackdropClick}
           aria-hidden="true"
           style={backdropStyle ? { ...backdropStyle } : undefined}
+          data-dragging={dragging}
         />
 
         {/* Modal Container */}
@@ -137,6 +138,7 @@ const Modal = memo<ModalProps>(
           onKeyDown={handleKeyDown}
           className={modalClasses}
           style={style ? { ...style } : undefined}
+          data-dragging={dragging}
         >
           {/* Header */}
           {(title || showCloseButton) && (

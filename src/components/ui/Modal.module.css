@@ -54,19 +54,25 @@
   pointer-events: auto;
 }
 
-/* Global drag state - applied to body during drag operations */
+/* Global drag state - applied to html or body during drag operations */
+/* Support both html.dnd-dragging and body.dnd-dragging because different browsers
+   and document.scrollingElement implementations may apply the class to either
+   document.documentElement (html) or document.body. */
+:global(html.dnd-dragging) .modal,
 :global(body.dnd-dragging) .modal {
   z-index: 1 !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
+:global(html.dnd-dragging) .backdrop,
 :global(body.dnd-dragging) .backdrop {
   z-index: 1 !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
+:global(html.dnd-dragging) .content,
 :global(body.dnd-dragging) .content {
   pointer-events: none !important;
 }

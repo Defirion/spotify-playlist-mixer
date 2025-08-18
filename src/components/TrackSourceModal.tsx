@@ -72,6 +72,52 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
     emptyMessage = 'No tracks available',
     showLoadingIndicator = false,
   }) => {
+    // Local drag state derived from global dnd-dragging class on the scrolling element.
+    const [isDragging, setIsDragging] = useState<boolean>(false);
+
+    // Observe class changes on the scrolling element (or documentElement) so we can
+    // apply a JS-driven muted class to the modal for environments where global CSS
+    // rules aren't applied (tests, some browsers). This makes the behavior testable.
+    useEffect(() => {
+      const target =
+        (document.scrollingElement as HTMLElement) || document.documentElement;
+
+      const update = () =>
+        setIsDragging(target.classList.contains('dnd-dragging'));
+
+      // Initialize
+      update();
+
+      // Use MutationObserver to watch class attribute changes
+      const observer = new MutationObserver(mutations => {
+        for (const m of mutations) {
+          if (
+            m.type === 'attributes' &&
+            (m as MutationRecord).attributeName === 'class'
+          ) {
+            update();
+            break;
+          }
+        }
+      });
+
+      try {
+        observer.observe(target, {
+          attributes: true,
+          attributeFilter: ['class'],
+        });
+      } catch (e) {
+        // Fallback: attach a global listener for events that toggle the class
+        window.addEventListener('dragstart', update);
+        window.addEventListener('dragend', update);
+      }
+
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('dragstart', update);
+        window.removeEventListener('dragend', update);
+      };
+    }, []);
     // State for tracks with regenerated instance IDs
     const [tracksWithInstanceIds, setTracksWithInstanceIds] = useState<
       TrackWithInstanceId[]
@@ -208,7 +254,8 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
         onClose={handleModalClose}
         title={title}
         size="large"
-        className={`${styles.modal} ${className}`}
+        className={`${styles.modal} ${className} ${isDragging ? styles.modalMuted : ''}`}
+        dragging={isDragging}
       >
         {/* Header Info */}
         <div className={styles.header}>
