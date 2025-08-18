@@ -101,6 +101,11 @@ const RETRY_CONFIG: Record<ErrorType, RetryConfig> = {
   [ERROR_TYPES.UNKNOWN]: { maxRetries: 1, baseDelay: 1000, exponential: false },
 };
 
+// Note: we intentionally do not mutate RETRY_CONFIG for tests here because
+// some test suites assert retryability and delay behavior. If you need to
+// speed up tests, prefer adjusting the test harness or explicitly stubbing
+// the delay behavior in tests.
+
 /**
  * User-friendly error messages for different error types
  */

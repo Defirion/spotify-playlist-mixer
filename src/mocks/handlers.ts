@@ -1,66 +1,136 @@
-import { http, HttpResponse } from 'msw';
+import { rest } from 'msw';
 import { mockTracks, mockPlaylists, mockUserProfile } from './fixtures';
+
+// Helper: allow tests to trigger special responses by setting the Authorization
+// header to a sentinel value. This keeps the SpotifyService API surface
+// unchanged while allowing MSW to simulate 429 / 401 flows deterministically.
+const tokenScenario = (req: any) => {
+  const auth = req.headers.get('authorization') || '';
+  return auth.replace(/^Bearer\s+/i, '');
+};
 
 export const handlers = [
   // Get user profile
-  http.get('https://api.spotify.com/v1/me', () => {
-    return HttpResponse.json(mockUserProfile);
+  rest.get('https://api.spotify.com/v1/me', (req, res, ctx) => {
+    const token = tokenScenario(req);
+    if (token === 'trigger_429') {
+      return res(
+        ctx.status(429),
+        ctx.set('Retry-After', '1'),
+        ctx.json({ error: 'rate_limited' })
+      );
+    }
+
+    if (token === 'trigger_401') {
+      return res(ctx.status(401));
+    }
+    return res(ctx.json(mockUserProfile));
   }),
 
   // Get user playlists
-  http.get('https://api.spotify.com/v1/me/playlists', ({ request }) => {
-    const url = new URL(request.url);
+  rest.get('https://api.spotify.com/v1/me/playlists', (req, res, ctx) => {
+    const token = tokenScenario(req);
+    if (token === 'trigger_429') {
+      return res(
+        ctx.status(429),
+        ctx.set('Retry-After', '1'),
+        ctx.json({ error: 'rate_limited' })
+      );
+    }
+
+    if (token === 'trigger_401') {
+      return res(ctx.status(401));
+    }
+
+    const url = new URL(req.url.toString());
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
     const items = mockPlaylists.slice(offset, offset + limit);
 
-    return HttpResponse.json({
-      items,
-      total: mockPlaylists.length,
-      limit,
-      offset,
-      next:
-        offset + limit < mockPlaylists.length
-          ? `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset + limit}`
-          : null,
-      previous:
-        offset > 0
-          ? `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${Math.max(0, offset - limit)}`
-          : null,
-    });
+    return res(
+      ctx.json({
+        items,
+        total: mockPlaylists.length,
+        limit,
+        offset,
+        next:
+          offset + limit < mockPlaylists.length
+            ? `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset + limit}`
+            : null,
+        previous:
+          offset > 0
+            ? `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${Math.max(0, offset - limit)}`
+            : null,
+      })
+    );
   }),
 
   // Get playlist tracks
-  http.get(
+  rest.get(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    ({ params, request }) => {
-      const url = new URL(request.url);
+    (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      const url = new URL(req.url.toString());
       const limit = parseInt(url.searchParams.get('limit') || '100');
       const offset = parseInt(url.searchParams.get('offset') || '0');
 
       const playlistTracks = mockTracks.slice(offset, offset + limit);
 
-      return HttpResponse.json({
-        items: playlistTracks.map(track => ({ track })),
-        total: mockTracks.length,
-        limit,
-        offset,
-        next:
-          offset + limit < mockTracks.length
-            ? `https://api.spotify.com/v1/playlists/${params.playlistId}/tracks?limit=${limit}&offset=${offset + limit}`
-            : null,
-        previous:
-          offset > 0
-            ? `https://api.spotify.com/v1/playlists/${params.playlistId}/tracks?limit=${limit}&offset=${Math.max(0, offset - limit)}`
-            : null,
-      });
+      return res(
+        ctx.json({
+          items: playlistTracks.map(track => ({ track })),
+          total: mockTracks.length,
+          limit,
+          offset,
+          next:
+            offset + limit < mockTracks.length
+              ? `https://api.spotify.com/v1/playlists/${req.params.playlistId}/tracks?limit=${limit}&offset=${offset + limit}`
+              : null,
+          previous:
+            offset > 0
+              ? `https://api.spotify.com/v1/playlists/${req.params.playlistId}/tracks?limit=${limit}&offset=${Math.max(0, offset - limit)}`
+              : null,
+        })
+      );
     }
   ),
 
   // Search tracks
-  http.get('https://api.spotify.com/v1/search', ({ request }) => {
-    const url = new URL(request.url);
+  rest.get('https://api.spotify.com/v1/search', (req, res, ctx) => {
+    // Debug: log incoming Authorization header and computed token to diagnose test token handling
+    // eslint-disable-next-line no-console
+    const rawAuth = req.headers.get('authorization');
+    // eslint-disable-next-line no-console
+    console.error('MSW handler - /search raw Authorization:', rawAuth);
+    const token = tokenScenario(req);
+    // eslint-disable-next-line no-console
+    console.error('MSW handler - /search computed token:', token);
+    if (token === 'trigger_429') {
+      return res(
+        ctx.status(429),
+        ctx.set('Retry-After', '1'),
+        ctx.json({ error: 'rate_limited' })
+      );
+    }
+
+    if (token === 'trigger_401') {
+      return res(ctx.status(401));
+    }
+
+    const url = new URL(req.url.toString());
     const query = url.searchParams.get('q') || '';
     const type = url.searchParams.get('type');
     const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -74,26 +144,39 @@ export const handlers = [
         )
         .slice(0, limit);
 
-      return HttpResponse.json({
-        tracks: {
-          items: filteredTracks,
-          total: filteredTracks.length,
-          limit,
-          offset: 0,
-        },
-      });
+      return res(
+        ctx.json({
+          tracks: {
+            items: filteredTracks,
+            total: filteredTracks.length,
+            limit,
+            offset: 0,
+          },
+        })
+      );
     }
 
-    return HttpResponse.json({
-      tracks: { items: [], total: 0, limit, offset: 0 },
-    });
+    return res(ctx.json({ tracks: { items: [], total: 0, limit, offset: 0 } }));
   }),
 
   // Create playlist
-  http.post(
+  rest.post(
     'https://api.spotify.com/v1/users/:userId/playlists',
-    async ({ request, params }) => {
-      const _body: any = await request.json();
+    async (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      const _body: any = await req.json();
       const newPlaylist = {
         id: `playlist_${Date.now()}`,
         name: _body.name,
@@ -101,7 +184,7 @@ export const handlers = [
         public: _body.public || false,
         collaborative: false,
         owner: {
-          id: params.userId,
+          id: req.params.userId,
           display_name: mockUserProfile.display_name,
         },
         tracks: {
@@ -114,53 +197,90 @@ export const handlers = [
         },
       };
 
-      return HttpResponse.json(newPlaylist, { status: 201 });
+      return res(ctx.status(201), ctx.json(newPlaylist));
     }
   ),
 
   // Add tracks to playlist
-  http.post(
+  rest.post(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    async ({ request, params }) => {
-      return HttpResponse.json(
-        {
-          snapshot_id: `snapshot_${Date.now()}`,
-        },
-        { status: 201 }
+    async (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      return res(
+        ctx.status(201),
+        ctx.json({ snapshot_id: `snapshot_${Date.now()}` })
       );
     }
   ),
 
   // Remove tracks from playlist
-  http.delete(
+  rest.delete(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    async ({ request, params }) => {
-      return HttpResponse.json({
-        snapshot_id: `snapshot_${Date.now()}`,
-      });
+    async (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      return res(ctx.json({ snapshot_id: `snapshot_${Date.now()}` }));
     }
   ),
 
   // Get track audio features
-  http.get(
+  rest.get(
     'https://api.spotify.com/v1/audio-features/:trackId',
-    ({ params }) => {
-      return HttpResponse.json({
-        id: params.trackId,
-        danceability: Math.random(),
-        energy: Math.random(),
-        key: Math.floor(Math.random() * 12),
-        loudness: -60 + Math.random() * 60,
-        mode: Math.round(Math.random()),
-        speechiness: Math.random(),
-        acousticness: Math.random(),
-        instrumentalness: Math.random(),
-        liveness: Math.random(),
-        valence: Math.random(),
-        tempo: 60 + Math.random() * 140,
-        duration_ms: 180000 + Math.random() * 120000,
-        time_signature: 4,
-      });
+    (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      return res(
+        ctx.json({
+          id: req.params.trackId,
+          danceability: Math.random(),
+          energy: Math.random(),
+          key: Math.floor(Math.random() * 12),
+          loudness: -60 + Math.random() * 60,
+          mode: Math.round(Math.random()),
+          speechiness: Math.random(),
+          acousticness: Math.random(),
+          instrumentalness: Math.random(),
+          liveness: Math.random(),
+          valence: Math.random(),
+          tempo: 60 + Math.random() * 140,
+          duration_ms: 180000 + Math.random() * 120000,
+          time_signature: 4,
+        })
+      );
     }
   ),
 ];

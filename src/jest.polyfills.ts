@@ -124,3 +124,7 @@ if (!(global as any).WritableStream) {
 
 // Make this file a module for isolatedModules + TypeScript builds
 export {};
+// Note: axios <-> MSW compatibility normalization used to live here as a
+// test-time global shim. That global monkey-patch has been removed and the
+// normalization is now applied per-axios-instance in `src/utils/spotify.ts`.
+// Keeping polyfills minimal in this file avoids test-time global side effects.

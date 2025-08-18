@@ -51,3 +51,7 @@ Recommended next steps (tech debt)
 Contact
 
 If you need help implementing the CI/tooling changes above, ping the team and allocate a short spike (1-2 days) to evaluate transform changes and confirm CI stability.
+
+Note about Jest transforms and CI
+
+We updated the repository Jest transform settings to allow Babel to transform a small set of ESM-style node_modules (notably `msw`, `axios`, `undici`, and `whatwg-fetch`). This enables running network-style MSW tests with the real HTTP stack (real `axios` + `msw`) instead of per-test fetch/undici workarounds. CI must use the same Node version as local dev and pick up the repo `jest.config.js`; transforming additional node_modules may slow test startup. If CI shows transform-related failures, revert the transform change and file a follow-up ticket to address ESM compatibility.

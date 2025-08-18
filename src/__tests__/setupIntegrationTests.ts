@@ -30,4 +30,4 @@ export const __integration_setup_noop = () => {};
 export {};
 
 /* istanbul ignore next */
-test.skip('__setup_integration_noop', () => {});
+test('__setup_integration_noop', () => {});
