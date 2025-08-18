@@ -90,10 +90,7 @@ describe('Modal drag visual state', () => {
     const modal = screen.getByRole('dialog');
     expect(modal).not.toBeNull();
 
-    // Record initial styles (may vary in JSDOM). We primarily assert a change
-    const initialModalStyle = window.getComputedStyle(modal);
-    const initialPointerEvents = initialModalStyle.pointerEvents;
-    const initialOpacity = Number(initialModalStyle.opacity);
+    // We primarily assert a change in the modal after the mutation observer runs
 
     // (Already added during act above)
 
