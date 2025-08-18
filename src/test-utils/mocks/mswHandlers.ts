@@ -12,6 +12,47 @@ try {
 // Minimal, realistic handlers for Spotify endpoints used in tests
 export const handlers = rest
   ? [
+      // Search playlists - return a small deterministic payload matching test fixtures
+      rest.get(
+        'https://api.spotify.com/v1/search',
+        (_req: any, res: any, ctx: any) => {
+          const items = [
+            {
+              id: 'aaaaaaaaaaaaaaaaaaaaaa',
+              name: 'My Awesome Playlist',
+              description: 'A collection of great songs',
+              owner: { id: 'test_user_123', display_name: 'Test User' },
+              tracks: {
+                total: 25,
+                href: 'https://api.spotify.com/v1/playlists/playlist_1/tracks',
+              },
+              images: [],
+              external_urls: {
+                spotify: 'https://open.spotify.com/playlist/playlist_1',
+              },
+            },
+            {
+              id: 'bbbbbbbbbbbbbbbbbbbbbb',
+              name: 'Chill Vibes',
+              description: 'Relaxing music for any time',
+              owner: { id: 'test_user_123', display_name: 'Test User' },
+              tracks: {
+                total: 18,
+                href: 'https://api.spotify.com/v1/playlists/playlist_2/tracks',
+              },
+              images: [],
+              external_urls: {
+                spotify: 'https://open.spotify.com/playlist/playlist_2',
+              },
+            },
+          ];
+          return res(
+            ctx.status(200),
+            ctx.json({ playlists: { items, total: items.length } })
+          );
+        }
+      ),
+
       // Get playlist tracks
       rest.get(
         'https://api.spotify.com/v1/playlists/:playlistId/tracks',
@@ -42,6 +83,37 @@ export const handlers = rest
           }));
 
           return res(ctx.status(200), ctx.json({ items: tracks, total: 5 }));
+        }
+      ),
+
+      // Get playlist metadata
+      rest.get(
+        'https://api.spotify.com/v1/playlists/:playlistId',
+        (req: any, res: any, ctx: any) => {
+          const { playlistId } = req.params as any;
+          // Return a minimal playlist object consistent with fixtures
+          return res(
+            ctx.status(200),
+            ctx.json({
+              id: playlistId,
+              name:
+                playlistId === 'aaaaaaaaaaaaaaaaaaaaaa'
+                  ? 'My Awesome Playlist'
+                  : playlistId === 'bbbbbbbbbbbbbbbbbbbbbb'
+                    ? 'Chill Vibes'
+                    : 'Unknown',
+              description: 'Mocked playlist',
+              owner: { id: 'test_user_123', display_name: 'Test User' },
+              images: [],
+              tracks: {
+                total: 10,
+                href: `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+              },
+              external_urls: {
+                spotify: `https://open.spotify.com/playlist/${playlistId}`,
+              },
+            })
+          );
         }
       ),
 

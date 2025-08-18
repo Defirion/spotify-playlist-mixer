@@ -2,8 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { StoreProvider } from './store/StoreProvider';
-import ErrorBoundary from './components/ui/ErrorBoundary';
+import AppProviders from './AppProviders';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,10 +12,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <StoreProvider>
-        <App />
-      </StoreProvider>
-    </ErrorBoundary>
+    <AppProviders>
+      <App />
+    </AppProviders>
   </React.StrictMode>
 );

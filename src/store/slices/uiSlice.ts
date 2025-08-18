@@ -50,6 +50,13 @@ export const createUISlice: StateCreator<
 
   addMixedPlaylist: playlist =>
     set(state => {
+      // Debug: log when addMixedPlaylist is called
+      // eslint-disable-next-line no-console
+      console.log('uiSlice.addMixedPlaylist called', {
+        id: playlist?.id,
+        name: playlist?.name,
+      });
+
       const playlistWithId: MixedPlaylistToast = {
         ...playlist,
         toastId: `${Date.now()}-${Math.random()}`,

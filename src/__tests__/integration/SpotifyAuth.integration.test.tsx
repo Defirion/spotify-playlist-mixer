@@ -6,17 +6,25 @@ import SpotifyAuth from '../../components/SpotifyAuth';
 // Mock environment variables
 const mockClientId = 'test-client-id';
 const originalEnv = process.env;
+let originalLocation: Location | undefined;
 
 describe('SpotifyAuth Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Mock window.location
-    delete (window as any).location;
-    window.location = {
-      ...window.location,
+    // capture original so we can restore it later
+    originalLocation = window.location;
+    try {
+      // delete then reassign a safe mock; use any cast to avoid readonly errors
+      delete (window as any).location;
+    } catch (e) {
+      // some environments may not allow delete, ignore and overwrite via cast
+    }
+    (window as any).location = {
+      ...(originalLocation as any),
       origin: 'http://localhost:3000',
       href: '',
-    };
+    } as Location;
 
     // Mock environment
     process.env = {
@@ -27,6 +35,15 @@ describe('SpotifyAuth Integration Tests', () => {
 
   afterEach(() => {
     process.env = originalEnv;
+    // restore original window.location if we captured it
+    if (originalLocation) {
+      try {
+        (window as any).location = originalLocation;
+      } catch (e) {
+        // ignore restore errors in constrained environments
+      }
+      originalLocation = undefined;
+    }
   });
 
   it('integrates properly with parent component authentication flow', async () => {

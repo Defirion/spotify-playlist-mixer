@@ -298,11 +298,22 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
         );
       }
 
+      // Debug: log before creating playlist
+      // eslint-disable-next-line no-console
+      console.log('handleCreatePlaylist: about to create playlist', {
+        name: mixOptions.playlistName,
+        finalTracksLength: finalTracks.length,
+      });
+
       // Create the Spotify playlist with the final track list
       const result = await mixGeneration.createPlaylist(
         mixOptions.playlistName,
         finalTracks
       );
+
+      // Debug: log create result
+      // eslint-disable-next-line no-console
+      console.log('handleCreatePlaylist: createPlaylist result', result);
 
       if (onMixedPlaylist) {
         onMixedPlaylist(result);

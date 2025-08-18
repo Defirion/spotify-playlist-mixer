@@ -2,7 +2,7 @@
 
 This file collects focused, high-value tasks to close testing gaps discovered during the coverage run and to harden MSW/API behavior.
 
-## 1. Service-level & MSW tests (MAX 100 lines)
+## 1. Service-level & MSW tests (MAX 100 lines) DONE
 - Purpose: Ensure `src/services/spotify.ts` is correct, resilient to malformed payloads and server errors, and easy to test.
 - Note: added a deterministic retry timing unit test and wired `retryWithBackoff` into `addTracksToPlaylist` to honor `Retry-After` headers (see tests in `src/services/_helpers` and `src/services/__tests__`).
 - Strategy: Make the service modular so pure helper logic (batching, pagination, request-body builders) is unit-testable; keep a thin orchestration `SpotifyService` that is covered by a small set of MSW-backed integration tests as a regression guard.
@@ -84,7 +84,46 @@ This file collects focused, high-value tasks to close testing gaps discovered du
   - Create an integration test that mounts `src/App.tsx` and runs a full mix flow (select playlists → configure → run mix) using MSW fixtures.
   - Add unit tests for zero-covered hooks (`useAutoScroll`, `useCustomTouchEvents`, `useDropPosition`, `useMixGeneration`, `useMixPreview`, `useScrollDebugger`, `useTrackOperations`) by mounting tiny components that call the hooks.
   - Ensure tests stub or mock browser APIs where needed (visualViewport, pointer events).
-- Acceptance: Coverage for `App.tsx` and the listed hooks increases noticeably; no new runtime network calls occur during tests.
+ 
+ Refactor guidance (minimal, test-friendly — keep behavior identical):
+ - Goal: make `App.tsx` easy to mount in integration tests and make hooks testable in isolation without loading global singletons or complex providers.
+ - Small, safe split:
+   1. `AppProviders.tsx` — move global providers (Zustand providers, DnD provider, theme, i18n, error boundaries) into a single file that returns the provider tree. This file has no runtime logic besides composition.
+   2. `AppShell.tsx` — extract pure presentation (layout, selectors, buttons, and callbacks via props). No side-effects, no direct service calls.
+   3. `AppController.tsx` (or keep `App.tsx` as the controller) — compose hooks, side-effects, and service calls; render `AppShell`. Accept injectable dependencies (spotify client, services) via props or a small `DepsProvider` to enable hermetic tests.
+ - Export `AppShell` and `AppController` so tests can mount the UI-level shell with stubbed callbacks or mount the controller with test providers.
+
+ Concrete test plan and helpers:
+ - Integration test (happy path): `src/__tests__/app.integration.test.tsx`
+   - Wrap `AppController` with `AppProviders` but inject a test spotify client and MSW handlers for endpoints used during the mix flow.
+   - Drive UI via React Testing Library: select two playlists, open the configure modal, set ratios, click "Mix", wait for progress UI, assert success toast and MSW-captured network calls.
+ - Hook unit tests: one file per hook under `src/hooks/__tests__`.
+   - Pattern: create tiny harness components that call the hook and expose values via text or refs. Use `render` from RTL and assert hook behavior.
+   - Provide a central `src/test-utils/mockVisualViewport.ts` and `src/test-utils/pointerUtils.ts` to stub `global.visualViewport` and to synthesize pointer events.
+ - MSW hermeticity: add `src/test-utils/hermeticity.test.ts` that fails on unmatched requests (or configures MSW to throw on unmatched). Run early in the suite.
+
+ Example contracts (keeps tests small and focused):
+ - `AppShell` contract: props { onStartMix: () => void, onSelectPlaylists: (ids: string[]) => void, initialState?: Partial<AppState> } — presentational only.
+ - `AppController` contract: props { deps?: Partial<Deps> } where `Deps` contains `spotifyClient`, `trackService`, and optional test hooks; defaults remain the same in production.
+
+ Implementation steps (one small PR, iterate):
+ 1. Add `src/AppProviders.tsx`, move provider composition there. Update `src/index.tsx` to use it. Run tests.
+ 2. Extract `AppShell.tsx` from `App.tsx` (UI only). Export it. Run tests.
+ 3. Turn `App.tsx` into the controller (or add `AppController.tsx`) that uses hooks and renders `AppShell`. Make deps injectable. Run tests.
+ 4. Add the integration test and one hook test as templates; add `mockVisualViewport` helper.
+ 5. Iterate on flaky browser API stubs and MSW handlers until hermetic.
+
+ Acceptance and verification:
+ - Integration test runs without network leaks (MSW only) and asserts the end-to-end mix flow UI changes and MSW-observed calls.
+ - Each listed hook has at least one unit test exercising its main behavior.
+ - Tests expose a hermeticity check that fails the suite if any real network call escapes MSW.
+ - Keep behavior identical: each refactor step is followed by running the test suite and verifying no regressions.
+
+ Estimated effort and risk:
+ - Effort: small refactor + test templates ≈ 1–2 days. If the app contains tightly-coupled singletons the effort may increase slightly to make deps injectable.
+ - Risk: low if changes are purely file-structure and composition; run tests after each step to catch regressions.
+
+ Acceptance: Coverage for `App.tsx` and the listed hooks increases noticeably; no new runtime network calls occur during tests.
 
 ## 3. PlaylistMixer orchestration tests (MAX 120 lines)
 - Purpose: Cover `src/utils/playlistMixer.ts` orchestration logic and edge cases.

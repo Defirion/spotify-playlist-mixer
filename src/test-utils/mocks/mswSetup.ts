@@ -30,7 +30,12 @@ export const setupMSW = () => {
     const handlers = require('./mswHandlers').handlers || [];
     if (!handlers || handlers.length === 0) return;
     const server = setupServer(...handlers);
-    server.listen({ onUnhandledRequest: 'warn' });
+    // Allow tests or CI to opt into hermetic mode where any unhandled
+    // request causes an immediate error. This helps CI surface network
+    // leaks early. Default to 'warn' for local developer runs.
+    const hermetic =
+      process.env.MSW_HERMETIC === '1' || process.env.MSW_HERMETIC === 'true';
+    server.listen({ onUnhandledRequest: hermetic ? 'error' : 'warn' });
     // Attach to global so tests can modify handlers if needed
     // @ts-ignore
     global.__msw_server = server;
