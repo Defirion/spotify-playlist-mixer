@@ -140,19 +140,28 @@ This file collects focused, high-value tasks to close testing gaps discovered du
 - Acceptance: Suite fails if any test performs an unmocked network request.
 
 ## 5. Performance smoke & large fixture tests (MAX 80 lines)
-- Purpose: Verify mixing performance on large playlists (1k tracks) without full profiling in CI.
-- Steps:
   - Add a fast-running perf test that measures runtime for mixing 1k tracks and asserts it completes within an agreed budget (e.g., 300ms on CI baseline).
   - Mark as a perf test to run on schedule or selectively in CI.
 - Acceptance: Test exists and runs locally/CI; results are recorded in `PERF_BACKLOG.md`.
 
 ## 6. CI gating & documentation (MAX 40 lines)
-- Purpose: Add gating to prevent regressions and document test patterns.
-- Steps:
-  - Add a CI job or step to run coverage check and fail if overall coverage drops below the baseline (e.g., 60% now, target 75+).
-  - Document MSW testing patterns in `docs/MSW_TESTING.md` with examples used by the new tests.
-- Acceptance: CI enforces coverage threshold and docs contain examples for MSW+Jest usage.
+  - Add a CI job or step to run the full test suite and coverage, failing the pipeline when coverage drops below the baseline (e.g., 60%).
+  - Add a short hermeticity check that fails if tests make real network requests (unmocked by MSW).
+  - Document MSW+Jest testing patterns in `docs/MSW_TESTING.md` and include examples for handler overrides and hermeticity tests.
 
+Acceptance criteria:
+  - CI runs the test suite and fails when overall coverage drops below the configured baseline.
+  - A hermeticity check exists and fails the suite if any test performs an unmocked network request.
+  - `docs/MSW_TESTING.md` contains concise examples for writing MSW-backed tests and for overriding handlers in integration tests.
+
+Quick commands (local):
+
+```
+npm test -- --coverage --watchAll=false
+```
+
+For CI: add a job that runs the same command and fails the build when coverage is under threshold; run the hermeticity test early in the suite.
+  - Document MSW testing patterns in `docs/MSW_TESTING.md` with examples used by the new tests.
 ## Notes & Next Actions
 - Prioritize Service-level/MSW tests and App-level integration tests first — these reduce the biggest uncovered areas.
 - After tests are added, run `npm test -- --coverage --watchAll=false` and iterate on failing/edge cases.
