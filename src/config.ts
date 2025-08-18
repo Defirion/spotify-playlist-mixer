@@ -7,24 +7,5 @@ export interface SpotifyConfig {
   scopes: string[];
 }
 
-const SPOTIFY_CLIENT_ID: string = '4803b23aaf60497d909466fd4e1ca0c5';
-
-const SPOTIFY_REDIRECT_URI: string =
-  process.env.NODE_ENV === 'production'
-    ? 'https://your-production-domain.com/callback'
-    : 'http://localhost:3000/callback';
-
-const SPOTIFY_SCOPES: string[] = [
-  'playlist-read-private',
-  'playlist-read-collaborative',
-  'playlist-modify-public',
-  'playlist-modify-private',
-  'user-read-private',
-  'user-read-email',
-];
-
-const spotifyConfig: SpotifyConfig = {
-  clientId: SPOTIFY_CLIENT_ID,
-  redirectUri: SPOTIFY_REDIRECT_URI,
-  scopes: SPOTIFY_SCOPES,
-};
+// Spotify values should be provided via environment variables or a secure local config.
+// This file exposes the `SpotifyConfig` interface only; keep secrets out of source.

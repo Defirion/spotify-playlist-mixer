@@ -2,7 +2,7 @@
  * Accessibility utilities for screen reader announcements and ARIA management
  */
 
-import { SpotifyTrack } from '../types/spotify';
+// ...existing code... (SpotifyTrack type removed because it's no longer used)
 
 // Live region interface
 interface LiveRegion {
