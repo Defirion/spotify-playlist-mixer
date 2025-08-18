@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-report:
     runs-on: ubuntu-latest
+    env:
+      MSW_HERMETIC: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

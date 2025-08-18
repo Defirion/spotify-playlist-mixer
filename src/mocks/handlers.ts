@@ -123,13 +123,15 @@ export const handlers = [
   // Search tracks
   rest.get('https://api.spotify.com/v1/search', (req, res, ctx) => {
     // Debug: log incoming Authorization header and computed token to diagnose test token handling
-    // eslint-disable-next-line no-console
     const rawAuth = req.headers.get('authorization');
-    // eslint-disable-next-line no-console
-    console.error('MSW handler - /search raw Authorization:', rawAuth);
     const token = tokenScenario(req);
-    // eslint-disable-next-line no-console
-    console.error('MSW handler - /search computed token:', token);
+    // Only emit verbose MSW debugging when explicitly requested via env var
+    if (process.env.MSW_VERBOSE) {
+      // eslint-disable-next-line no-console
+      console.error('MSW handler - /search raw Authorization:', rawAuth);
+      // eslint-disable-next-line no-console
+      console.error('MSW handler - /search computed token:', token);
+    }
     if (token === 'trigger_429') {
       return res(
         ctx.status(429),
