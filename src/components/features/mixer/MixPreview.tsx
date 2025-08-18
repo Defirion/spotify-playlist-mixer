@@ -83,6 +83,10 @@ const MixPreview: React.FC<MixPreviewProps> = ({
   const [useShortLabel, setUseShortLabel] = useState<Record<string, boolean>>(
     {}
   );
+  const playlistStatRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [useStackedDetails, setUseStackedDetails] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     const observers: ResizeObserver[] = [];
@@ -147,12 +151,76 @@ const MixPreview: React.FC<MixPreviewProps> = ({
       window.removeEventListener('resize', onWindow);
     };
   }, [stats]);
+
+  // measure per-playlist whether track count + duration fit side-by-side; if not, stack them
+  useEffect(() => {
+    const observers: ResizeObserver[] = [];
+
+    const updateStackForId = (id: string) => {
+      const statEl = playlistStatRefs.current[id];
+      const trackEl = trackCountRefs.current[id];
+      const statData = (stats as any)[id];
+      if (!statEl || !trackEl || !statData) return;
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const cs = window.getComputedStyle(trackEl);
+      const font =
+        `${cs.fontStyle || ''} ${cs.fontWeight || ''} ${cs.fontSize} ${cs.fontFamily}`.trim();
+      ctx.font = font;
+      const trackText = useShortLabel[id]
+        ? `${statData.count} tr`
+        : `${statData.count} tracks`;
+      const durText = formatTotalDuration(statData.totalDuration);
+      const trackW = Math.ceil(ctx.measureText(trackText).width);
+      const durW = Math.ceil(ctx.measureText(durText).width);
+
+      const gap = 8; // approximate gap in CSS
+      const available = statEl.clientWidth - 8; // small padding
+      const needsStack = trackW + durW + gap > available;
+
+      setUseStackedDetails(prev => {
+        if (prev[id] === needsStack) return prev;
+        return { ...prev, [id]: needsStack };
+      });
+    };
+
+    Object.keys(stats).forEach(id => {
+      const el = playlistStatRefs.current[id];
+      if (el) {
+        const ro = new ResizeObserver(() => updateStackForId(id));
+        ro.observe(el);
+        observers.push(ro);
+        requestAnimationFrame(() => updateStackForId(id));
+      }
+    });
+
+    const onWindow = () => Object.keys(stats).forEach(updateStackForId);
+    window.addEventListener('resize', onWindow);
+
+    return () => {
+      observers.forEach(o => o.disconnect());
+      window.removeEventListener('resize', onWindow);
+    };
+  }, [stats, useShortLabel]);
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
+
+  // compute adaptive grid columns based on playlist count
+  const playlistIds = Object.keys(stats || {});
+  const playlistCount = playlistIds.length;
+  let gridCols = playlistCount > 0 ? playlistCount : 1;
+  if (playlistCount > 5) {
+    const top = Math.min(5, Math.ceil(playlistCount / 2));
+    const bottom = playlistCount - top;
+    gridCols = Math.max(top, bottom);
+  }
 
   const handleAddTracks = (newTracks: any[]) => {
     // Add the new tracks to the existing mix
@@ -211,9 +279,21 @@ const MixPreview: React.FC<MixPreviewProps> = ({
 
       <div className={styles.previewContent}>
         {/* Playlist breakdown */}
-        <div className={styles.playlistBreakdown}>
+        <div
+          className={styles.playlistBreakdown}
+          style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
+        >
           {Object.entries(stats).map(([playlistId, stat]) => (
-            <div key={playlistId} className={styles.playlistStat}>
+            <div
+              key={playlistId}
+              className={
+                styles.playlistStat +
+                (useStackedDetails[playlistId]
+                  ? ` ${styles.stackedDetails}`
+                  : '')
+              }
+              ref={el => (playlistStatRefs.current[playlistId] = el)}
+            >
               {/* show truncated name with full title on hover */}
               <div className={styles.playlistStatName} title={stat.name}>
                 {stat.name}
@@ -227,7 +307,9 @@ const MixPreview: React.FC<MixPreviewProps> = ({
                     ? `${stat.count} tr`
                     : `${stat.count} tracks`}
                 </span>
-                <span>{formatTotalDuration(stat.totalDuration)}</span>
+                <span className={styles.playlistDuration}>
+                  {formatTotalDuration(stat.totalDuration)}
+                </span>
               </div>
             </div>
           ))}

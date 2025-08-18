@@ -279,18 +279,18 @@
 .playlistBreakdown {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px; /* tighter */
+  margin-bottom: 8px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .playlistStat {
   background: var(--hunter-green);
-  padding: 8px;
+  padding: 6px; /* tighter */
   border-radius: 6px;
   border: 1px solid var(--fern-green);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -299,9 +299,9 @@
 
 .playlistStatName {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px; /* slightly smaller */
   color: var(--mindaro);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -309,10 +309,21 @@
 }
 
 .playlistStatDetails {
-  font-size: 12px;
+  font-size: 11px; /* slightly smaller */
   color: rgba(236, 243, 158, 0.7);
   display: flex;
   justify-content: space-between;
+}
+
+.stackedDetails .playlistStatDetails {
+  flex-direction: column;
+  gap: 2px; /* reduced spacing between lines */
+  align-items: flex-start;
+  line-height: 1.05; /* tighter lines */
+}
+
+.playlistDuration {
+  color: rgba(236, 243, 158, 0.7);
 }
 
 .tracksFull {
@@ -327,14 +338,14 @@
   .playlistBreakdown {
     /* force fixed columns so we can show up to 5 across */
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 4px;
+    margin-bottom: 6px;
   }
 
   .playlistStat {
-    padding: 6px;
+    padding: 4px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
   }
 
   /* use shorter label when items are tight */
