@@ -82,8 +82,11 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
       const target =
         (document.scrollingElement as HTMLElement) || document.documentElement;
 
-      const update = () =>
-        setIsDragging(target.classList.contains('dnd-dragging'));
+      const update = () => {
+        const isNow = target.classList.contains('dnd-dragging');
+        // avoid redundant state updates which can trigger act() warnings in tests
+        setIsDragging(prev => (prev === isNow ? prev : isNow));
+      };
 
       // Initialize
       update();

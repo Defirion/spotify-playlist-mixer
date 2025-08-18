@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -29,9 +29,12 @@ interface MixPreviewProps {
   selectedPlaylists: any[];
 }
 
-const DroppableTrackList: React.FC<{ tracks: MixedTrack[] }> = ({ tracks }) => {
+const DroppableTrackList: React.FC<{
+  tracks: MixedTrack[];
+  containerClassName?: string;
+}> = ({ tracks, containerClassName }) => {
   return (
-    <div className={styles.trackListContainer}>
+    <div className={`${styles.trackListContainer} ${containerClassName || ''}`}>
       {tracks.length === 0 && (
         <div
           style={{
@@ -79,132 +82,8 @@ const MixPreview: React.FC<MixPreviewProps> = ({
 }) => {
   const [isSpotifySearchOpen, setIsSpotifySearchOpen] = useState(false);
   const [isAddUnselectedOpen, setIsAddUnselectedOpen] = useState(false);
-  const trackCountRefs = useRef<Record<string, HTMLSpanElement | null>>({});
-  const [useShortLabel, setUseShortLabel] = useState<Record<string, boolean>>(
-    {}
-  );
-  const playlistStatRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [useStackedDetails, setUseStackedDetails] = useState<
-    Record<string, boolean>
-  >({});
-
-  useEffect(() => {
-    const observers: ResizeObserver[] = [];
-
-    const updateForId = (id: string) => {
-      const el = trackCountRefs.current[id];
-      const stat = (stats as any)[id];
-      if (!el || !stat) return;
-
-      // measure required width for the full label using canvas (reliable across overflow behaviors)
-      const text = `${stat.count} tracks`;
-      const cs = window.getComputedStyle(el);
-      const font =
-        `${cs.fontStyle || ''} ${cs.fontWeight || ''} ${cs.fontSize} ${cs.fontFamily}`.trim();
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let textWidth = 0;
-      if (ctx) {
-        ctx.font = font;
-        textWidth = Math.ceil(ctx.measureText(text).width);
-      } else {
-        // fallback to scrollWidth check
-        textWidth = el.scrollWidth;
-      }
-
-      const available = el.clientWidth - 4; // small padding tolerance
-      const needsShort = textWidth > available;
-
-      setUseShortLabel(prev => {
-        if (prev[id] === needsShort) return prev;
-        return { ...prev, [id]: needsShort };
-      });
-    };
-
-    Object.keys(stats).forEach(id => {
-      const el = trackCountRefs.current[id];
-      if (el) {
-        // observe the parent/container so changes to layout (name wrap, available width) trigger measurement
-        const container = el.parentElement ?? el;
-        const ro = new ResizeObserver(() => updateForId(id));
-        try {
-          ro.observe(container);
-        } catch (e) {
-          // fallback to observing the element itself
-          try {
-            ro.observe(el);
-          } catch (_) {
-            /* ignore */
-          }
-        }
-        observers.push(ro);
-        // initial check on next paint to ensure layout settled
-        requestAnimationFrame(() => updateForId(id));
-      }
-    });
-
-    const onWindow = () => Object.keys(stats).forEach(updateForId);
-    window.addEventListener('resize', onWindow);
-
-    return () => {
-      observers.forEach(o => o.disconnect());
-      window.removeEventListener('resize', onWindow);
-    };
-  }, [stats]);
-
-  // measure per-playlist whether track count + duration fit side-by-side; if not, stack them
-  useEffect(() => {
-    const observers: ResizeObserver[] = [];
-
-    const updateStackForId = (id: string) => {
-      const statEl = playlistStatRefs.current[id];
-      const trackEl = trackCountRefs.current[id];
-      const statData = (stats as any)[id];
-      if (!statEl || !trackEl || !statData) return;
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const cs = window.getComputedStyle(trackEl);
-      const font =
-        `${cs.fontStyle || ''} ${cs.fontWeight || ''} ${cs.fontSize} ${cs.fontFamily}`.trim();
-      ctx.font = font;
-      const trackText = useShortLabel[id]
-        ? `${statData.count} tr`
-        : `${statData.count} tracks`;
-      const durText = formatTotalDuration(statData.totalDuration);
-      const trackW = Math.ceil(ctx.measureText(trackText).width);
-      const durW = Math.ceil(ctx.measureText(durText).width);
-
-      const gap = 8; // approximate gap in CSS
-      const available = statEl.clientWidth - 8; // small padding
-      const needsStack = trackW + durW + gap > available;
-
-      setUseStackedDetails(prev => {
-        if (prev[id] === needsStack) return prev;
-        return { ...prev, [id]: needsStack };
-      });
-    };
-
-    Object.keys(stats).forEach(id => {
-      const el = playlistStatRefs.current[id];
-      if (el) {
-        const ro = new ResizeObserver(() => updateStackForId(id));
-        ro.observe(el);
-        observers.push(ro);
-        requestAnimationFrame(() => updateStackForId(id));
-      }
-    });
-
-    const onWindow = () => Object.keys(stats).forEach(updateStackForId);
-    window.addEventListener('resize', onWindow);
-
-    return () => {
-      observers.forEach(o => o.disconnect());
-      window.removeEventListener('resize', onWindow);
-    };
-  }, [stats, useShortLabel]);
+  const [isTwoRowMobile, setIsTwoRowMobile] = useState(false);
+  // simplified: rely on CSS for truncation and stacking behavior
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
@@ -221,6 +100,20 @@ const MixPreview: React.FC<MixPreviewProps> = ({
     const bottom = playlistCount - top;
     gridCols = Math.max(top, bottom);
   }
+
+  // determine whether playlist grid will use more than one row based on
+  // the computed columns and playlist count. This is deterministic and
+  // avoids measuring the DOM, preventing changes when tracks are added.
+  React.useEffect(() => {
+    const update = () => {
+      const isMobile = window.innerWidth <= 768;
+      const rows = Math.ceil(playlistCount / gridCols);
+      setIsTwoRowMobile(isMobile && rows > 1);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [playlistCount, gridCols]);
 
   const handleAddTracks = (newTracks: any[]) => {
     // Add the new tracks to the existing mix
@@ -284,28 +177,20 @@ const MixPreview: React.FC<MixPreviewProps> = ({
           style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
         >
           {Object.entries(stats).map(([playlistId, stat]) => (
-            <div
-              key={playlistId}
-              className={
-                styles.playlistStat +
-                (useStackedDetails[playlistId]
-                  ? ` ${styles.stackedDetails}`
-                  : '')
-              }
-              ref={el => (playlistStatRefs.current[playlistId] = el)}
-            >
+            <div key={playlistId} className={styles.playlistStat}>
               {/* show truncated name with full title on hover */}
               <div className={styles.playlistStatName} title={stat.name}>
                 {stat.name}
               </div>
               <div className={styles.playlistStatDetails}>
-                <span
-                  className={styles.trackCount}
-                  ref={el => (trackCountRefs.current[playlistId] = el)}
-                >
-                  {useShortLabel[playlistId]
-                    ? `${stat.count} tr`
-                    : `${stat.count} tracks`}
+                {/* Render both variants and let CSS pick via .tracksFull/.tracksShort */}
+                <span className={styles.trackCount}>
+                  <span
+                    className={styles.tracksFull}
+                  >{`${stat.count} tracks`}</span>
+                  <span
+                    className={styles.tracksShort}
+                  >{`${stat.count} tr`}</span>
                 </span>
                 <span className={styles.playlistDuration}>
                   {formatTotalDuration(stat.totalDuration)}
@@ -316,7 +201,10 @@ const MixPreview: React.FC<MixPreviewProps> = ({
         </div>
 
         {/* Track list - droppable and sortable */}
-        <DroppableTrackList tracks={tracks} />
+        <DroppableTrackList
+          tracks={tracks}
+          containerClassName={isTwoRowMobile ? styles.twoRowMobile : ''}
+        />
       </div>
 
       {/* Modals */}
