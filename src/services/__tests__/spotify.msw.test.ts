@@ -39,16 +39,20 @@ describe('SpotifyService - MSW integration', () => {
         { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
       );
       const fJson = await fRes.json().catch(() => null);
-      // eslint-disable-next-line no-console
-      console.error(
-        'DEBUG fetch status:',
-        fRes.status,
-        'bodyKeys:',
-        fJson && Object.keys(fJson || {})
-      );
+      if (process.env.MSW_VERBOSE) {
+        // eslint-disable-next-line no-console
+        console.error(
+          'DEBUG fetch status:',
+          fRes.status,
+          'bodyKeys:',
+          fJson && Object.keys(fJson || {})
+        );
+      }
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('DEBUG fetch failed', e);
+      if (process.env.MSW_VERBOSE) {
+        // eslint-disable-next-line no-console
+        console.error('DEBUG fetch failed', e);
+      }
     }
     try {
       const res = await service.searchTracks('track');
