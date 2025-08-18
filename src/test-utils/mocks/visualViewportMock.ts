@@ -11,6 +11,12 @@ export type VisualViewportMockAPI = {
   setOffsetTop: (t: number) => void;
 };
 
+/**
+ * @deprecated Use the adapter `mockVisualViewport` in `src/test-utils/mockVisualViewport.ts`
+ * which installs and restores a global visualViewport mock and provides
+ * consistent setup/teardown for tests. The low-level `createVisualViewportMock`
+ * remains available for library-style usage but tests should prefer the adapter.
+ */
 export function createVisualViewportMock(
   initialHeight = 800,
   offsetTop = 0
