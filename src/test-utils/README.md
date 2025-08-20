@@ -38,7 +38,10 @@ const { vv, setHeight } = createVisualViewportMock(800, 0);
 Switch to the adapter which installs/restores the mock and keeps setup/teardown consistent:
 
 ```ts
-import { mockVisualViewport, restoreVisualViewport } from './mockVisualViewport';
+import {
+  mockVisualViewport,
+  restoreVisualViewport,
+} from './mockVisualViewport';
 const { vv, setHeight } = mockVisualViewport(800, 0);
 // use setHeight/setOffsetTop in your test
 restoreVisualViewport();

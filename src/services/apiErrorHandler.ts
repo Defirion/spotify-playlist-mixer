@@ -303,6 +303,7 @@ export class ApiError extends Error {
 export class ApiErrorHandler {
   private onError: ErrorHandlerFunction;
   private enableLogging: boolean;
+  private loggedNetworkMessages: Set<string> = new Set();
 
   constructor(options: ApiErrorHandlerOptions = {}) {
     this.onError = options.onError || this.defaultErrorHandler;
@@ -340,6 +341,38 @@ export class ApiErrorHandler {
       error.message.includes('timeout')
     ) {
       return new ApiError(ERROR_TYPES.TIMEOUT, error, context);
+    }
+
+    // Node/network-level errors (no HTTP response) e.g., ECONNREFUSED, ENOTFOUND
+    // Many Node/axios network failures surface as errors with a `request` but
+    // without a `response` property. Treat these as NETWORK errors so retry
+    // and user messaging behave correctly during tests and in CI.
+    // Also catch common Node error codes that indicate network failures.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyErr: any = error as any;
+    if (
+      (anyErr && 'request' in anyErr && !('response' in anyErr)) ||
+      (anyErr &&
+        typeof anyErr.code === 'string' &&
+        /^(ECONN|ENOTFOUND|EAI_AGAIN)/.test(anyErr.code))
+    ) {
+      if (this.enableLogging) {
+        try {
+          const key = anyErr && anyErr.message ? anyErr.message : 'unknown';
+          if (!this.loggedNetworkMessages.has(key)) {
+            // eslint-disable-next-line no-console
+            console.error('ApiErrorHandler: network-like error', {
+              message: anyErr.message,
+              code: anyErr.code,
+              hasResponse: Boolean(anyErr.response),
+            });
+            this.loggedNetworkMessages.add(key);
+          }
+        } catch (e) {
+          // swallow logging errors
+        }
+      }
+      return new ApiError(ERROR_TYPES.NETWORK, error, context);
     }
 
     // HTTP status-based classification

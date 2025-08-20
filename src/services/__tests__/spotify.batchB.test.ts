@@ -2,23 +2,16 @@
  * @jest-environment node
  */
 
+// Increase Jest default timeout for these integration-style tests
 import setupMSW from '../../test-utils/msw-setup';
 import { rest } from 'msw';
 import SpotifyService from '../../services/spotify';
 
+jest.setTimeout(30000);
+
 jest.unmock('axios');
 
 const server = setupMSW();
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore
-}
 
 describe('SpotifyService - Batch B (playlists & create/remove)', () => {
   test('getUserPlaylists single page returns items', async () => {

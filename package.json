@@ -22,7 +22,7 @@
     "test:watch": "react-scripts test",
     "test:perf": "jest --testPathPattern=performance --runInBand",
     "perf:compare": "node scripts/comparePerf.js",
-  "ci:test": "npm test -- --coverage --watchAll=false && node scripts/check-coverage.js",
+    "ci:test": "npm test -- --coverage --watchAll=false && node scripts/check-coverage.js",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
@@ -88,5 +88,8 @@
     "src/**/*.{css,md}": [
       "prettier --write"
     ]
+  },
+  "volta": {
+    "node": "22.18.0"
   }
 }

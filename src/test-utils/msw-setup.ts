@@ -3,6 +3,8 @@
 
 // Import Jest polyfills first (required for MSW)
 import '../jest.polyfills';
+// Ensure axios http adapter is set for Node so MSW can intercept before tests run
+// (Removed centralized axios http adapter override to allow axios to use fetch adapter in Node >=18)
 
 /**
  * Lazy MSW setup. Some Jest environments (CRA default) can fail when importing
@@ -21,22 +23,42 @@ export const setupMSW = (): any | undefined => {
     // adapters so MSW/node can intercept requests via its standard hooks.
 
     beforeAll(() => {
-      // Ensure axios uses Node http adapter so msw/node can intercept
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const axios = require('axios');
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const httpAdapter = require('axios/lib/adapters/http');
-          axios.defaults.adapter =
-            (httpAdapter && httpAdapter.default) || httpAdapter;
-        } catch (e) {
-          // ignore if adapter not available
+        const axiosMod = require('axios');
+        const realAxios = axiosMod.default || axiosMod; // support ESM/CJS shapes
+        const httpAdapterMod = require('axios/lib/adapters/http');
+        const httpAdapter = httpAdapterMod.default || httpAdapterMod;
+        if (realAxios && realAxios.defaults && httpAdapter) {
+          realAxios.defaults.adapter = httpAdapter;
+          if (
+            process.env.MSW_VERBOSE === '1' ||
+            process.env.TEST_VERBOSE === '1'
+          ) {
+            // eslint-disable-next-line no-console
+            console.error('[msw-setup] axios http adapter applied');
+          }
+        } else if (
+          process.env.MSW_VERBOSE === '1' ||
+          process.env.TEST_VERBOSE === '1'
+        ) {
+          // eslint-disable-next-line no-console
+          console.error('[msw-setup] axios/http adapter shape unsupported', {
+            hasDefaults: !!(realAxios && realAxios.defaults),
+            hasAdapter: !!httpAdapter,
+          });
         }
       } catch (e) {
-        // axios not present; ignore
+        if (
+          process.env.MSW_VERBOSE === '1' ||
+          process.env.TEST_VERBOSE === '1'
+        ) {
+          // eslint-disable-next-line no-console
+          console.error('[msw-setup] failed to apply axios adapter', e);
+        }
       }
-
+      // eslint-disable-next-line no-console
+      if (process.env.MSW_VERBOSE === '1' || process.env.TEST_VERBOSE === '1')
+        console.error('[msw-setup] starting MSW server');
       server.listen({ onUnhandledRequest: 'warn' });
     });
 

@@ -10,17 +10,6 @@ jest.unmock('axios');
 
 const server = setupMSW();
 
-// Ensure axios uses node http adapter for msw + axios consistency
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore
-}
-
 describe('SpotifyService - Batch A (pagination & batching)', () => {
   test('getPlaylistTracks paginates and calls onProgress', async () => {
     if (!server) return;

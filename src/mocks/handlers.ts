@@ -33,6 +33,13 @@ export const handlers = [
 
   // Get user playlists
   rest.get('https://api.spotify.com/v1/me/playlists', (req, res, ctx) => {
+    const _v = String(
+      process.env.MSW_VERBOSE || process.env.TEST_VERBOSE || ''
+    ).toLowerCase();
+    if (_v === '1' || _v === 'true') {
+      // eslint-disable-next-line no-console
+      console.error('[msw handler] /me/playlists invoked');
+    }
     const token = tokenScenario(req);
     if (token === 'trigger_429') {
       return res(
@@ -120,6 +127,45 @@ export const handlers = [
     }
   ),
 
+  // Get playlist details (fallback handler for tests)
+  rest.get(
+    'https://api.spotify.com/v1/playlists/:playlistId',
+    (req, res, ctx) => {
+      const token = tokenScenario(req);
+      if (token === 'trigger_429') {
+        return res(
+          ctx.status(429),
+          ctx.set('Retry-After', '1'),
+          ctx.json({ error: 'rate_limited' })
+        );
+      }
+
+      if (token === 'trigger_500') {
+        return res(ctx.status(500), ctx.json({ error: 'server_error' }));
+      }
+
+      if (token === 'trigger_401') {
+        return res(ctx.status(401));
+      }
+
+      const playlist = {
+        id: req.params.playlistId,
+        name: `Playlist ${req.params.playlistId}`,
+        owner: { id: 'user_1', display_name: mockUserProfile.display_name },
+        tracks: {
+          total: mockTracks.length,
+          href: `https://api.spotify.com/v1/playlists/${req.params.playlistId}/tracks`,
+        },
+        images: [],
+        external_urls: {
+          spotify: `https://open.spotify.com/playlist/${req.params.playlistId}`,
+        },
+      };
+
+      return res(ctx.json(playlist));
+    }
+  ),
+
   // Search tracks
   rest.get('https://api.spotify.com/v1/search', (req, res, ctx) => {
     // Debug: log incoming Authorization header and computed token to diagnose test token handling
@@ -171,6 +217,36 @@ export const handlers = [
           tracks: {
             items: filteredTracks,
             total: filteredTracks.length,
+            limit,
+            offset: 0,
+          },
+        })
+      );
+    }
+
+    // Support playlist searches in the test harness. Previously tests that
+    // searched for playlists would receive an empty `tracks` object because
+    // the handler only returned `tracks` for `type=track`. Return playlists
+    // under the `playlists` key so our client code (and tests) can consume
+    // playlist search results as expected.
+    if (type === 'playlist') {
+      const filteredPlaylists = mockPlaylists
+        .filter(
+          pl =>
+            pl.name.toLowerCase().includes(query.toLowerCase()) ||
+            (pl.owner && pl.owner.display_name
+              ? pl.owner.display_name
+                  .toLowerCase()
+                  .includes(query.toLowerCase())
+              : false)
+        )
+        .slice(0, limit);
+
+      return res(
+        ctx.json({
+          playlists: {
+            items: filteredPlaylists,
+            total: filteredPlaylists.length,
             limit,
             offset: 0,
           },

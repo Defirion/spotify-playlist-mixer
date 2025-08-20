@@ -10,21 +10,12 @@ interface StoreProviderProps {
  * This component can be used to set up store subscriptions, persistence, etc.
  */
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
+  // No-op: we intentionally do not persist access tokens to localStorage to
+  // ensure the app requires a fresh Spotify connection on each start.
   useEffect(() => {
-    // Set up store subscriptions for persistence
-    const unsubscribe = useAppStore.subscribe(
-      state => state.accessToken,
-      accessToken => {
-        if (accessToken) {
-          localStorage.setItem('spotify_access_token', accessToken);
-        } else {
-          localStorage.removeItem('spotify_access_token');
-        }
-      }
-    );
-
-    return unsubscribe;
-  }, []); // Empty dependency array - this should only run once
+    // Intentionally left blank.
+    return () => {};
+  }, []);
 
   return <>{children}</>;
 };

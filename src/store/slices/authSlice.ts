@@ -17,25 +17,33 @@ export const createAuthSlice: StateCreator<
   AuthSlice
 > = set => ({
   // Initial state
-  accessToken:
-    typeof window !== 'undefined'
-      ? localStorage.getItem('spotify_access_token')
-      : null,
-  isAuthenticated:
-    typeof window !== 'undefined'
-      ? !!localStorage.getItem('spotify_access_token')
-      : false,
+  // Do NOT persist access tokens across page reloads for the live app.
+  // Keep initial state unauthenticated so users must connect each session.
+  accessToken: null,
+  isAuthenticated: false,
 
   // Actions
-  setAccessToken: token =>
+  setAccessToken: token => {
+    // Do not persist to localStorage here. Keep auth in memory only so the
+    // app requires a fresh Spotify connection each time it starts.
     set({
       accessToken: token,
       isAuthenticated: !!token,
-    }),
+    });
+  },
 
   clearAuth: () =>
-    set({
-      accessToken: null,
-      isAuthenticated: false,
+    set(() => {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('spotify_access_token');
+        }
+      } catch (e) {
+        // ignore
+      }
+      return {
+        accessToken: null,
+        isAuthenticated: false,
+      };
     }),
 });

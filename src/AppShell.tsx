@@ -21,6 +21,7 @@ type AppShellProps = {
   isAuthenticated: boolean;
   accessToken?: string | null;
   selectedPlaylists: any[];
+  ratioConfig?: any;
   error?: any;
   mixedPlaylists?: any[];
   mixOptions?: any;
@@ -39,6 +40,7 @@ const AppShell: React.FC<AppShellProps> = ({
   isAuthenticated,
   accessToken,
   selectedPlaylists,
+  ratioConfig,
   error,
   mixedPlaylists,
   onAuth,
@@ -74,6 +76,14 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className="header">
           <h1>🎵 Spotify Playlist Mixer</h1>
           <p>Mix your playlists with custom ratios</p>
+          {process.env.NODE_ENV !== 'production' && accessToken ? (
+            <div style={{ fontSize: 12, marginTop: 6, color: '#666' }}>
+              DEV: token=
+              {accessToken.length > 10
+                ? `${accessToken.slice(0, 6)}...${accessToken.slice(-4)}`
+                : accessToken}
+            </div>
+          ) : null}
         </div>
 
         <ToastError error={error} onDismiss={onDismissError ?? (() => {})} />
@@ -106,7 +116,7 @@ const AppShell: React.FC<AppShellProps> = ({
           <ErrorBoundary>
             <RatioConfig
               selectedPlaylists={selectedPlaylists}
-              ratioConfig={{}}
+              ratioConfig={ratioConfig ?? {}}
               onRatioUpdate={() => {}}
               onPlaylistRemove={() => {}}
             />
@@ -118,7 +128,7 @@ const AppShell: React.FC<AppShellProps> = ({
             <PlaylistMixer
               accessToken={(accessToken ?? '') as string}
               selectedPlaylists={selectedPlaylists}
-              ratioConfig={{}}
+              ratioConfig={ratioConfig ?? {}}
               mixOptions={mixOptions || ({} as any)}
               updateMixOptions={updateMixOptions || (() => {})}
               onMixedPlaylist={onMixedPlaylist ?? (() => {})}

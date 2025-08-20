@@ -20,7 +20,7 @@ function MainApp() {
   const { accessToken, isAuthenticated, setAccessToken } = useAuth();
   const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
     usePlaylistSelection();
-  const { setRatioConfigBulk } = useRatioConfig();
+  const { setRatioConfigBulk, ratioConfig } = useRatioConfig();
   const { applyPresetOptions } = useMixOptions();
   const {
     error,
@@ -42,6 +42,18 @@ function MainApp() {
         const token = tokenParam.split('=')[1];
         if (token) {
           setAccessToken(token);
+          // Development-only: log masked token so we can confirm it's set after redirect
+          if (process.env.NODE_ENV !== 'production') {
+            const maskedToken =
+              token.length > 10
+                ? `${token.slice(0, 6)}...${token.slice(-4)}`
+                : token;
+            // eslint-disable-next-line no-console
+            console.debug(
+              'DEV: setAccessToken called, maskedToken=',
+              maskedToken
+            );
+          }
           window.location.hash = '';
         }
       }
@@ -75,6 +87,7 @@ function MainApp() {
       accessToken={accessToken}
       selectedPlaylists={selectedPlaylists}
       error={error}
+      ratioConfig={ratioConfig}
       mixedPlaylists={mixedPlaylists}
       mixOptions={mixOptions}
       updateMixOptions={updateMixOptions}

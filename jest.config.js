@@ -6,6 +6,10 @@ module.exports = {
   // meant to be test suites. This avoids deleting files and fixes CI/Jest
   // discovery on Windows where deletes can be flaky.
   testPathIgnorePatterns: ['<rootDir>/src/__tests__/mocks/', '<rootDir>/src/__tests__/_moved_helpers/', '<rootDir>/src/test-utils/_moved_helpers/'],
+  // Ignore nested worktrees which contain duplicate artifacts during local
+  // development. This prevents Jest from discovering duplicate manual mocks
+  // (e.g. src/__mocks__/fileMock) present in .worktrees.
+  modulePathIgnorePatterns: ['<rootDir>\\.worktrees'],
   // Allow transforming ESM dependencies that ship modern syntax (msw, axios, etc.)
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
@@ -15,6 +19,6 @@ module.exports = {
   ],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/src/__mocks__/fileMock.js'
+  '\.(gif|ttf|eot|svg|png)$': '<rootDir>/src/__mocks__/fileMock.ts'
   }
 };

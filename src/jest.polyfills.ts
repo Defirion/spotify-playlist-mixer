@@ -61,6 +61,28 @@ if (typeof (global as any).fetch === 'undefined') {
   }
 }
 
+// Some libraries (legacy or internal axios/follow-redirects paths) may
+// attempt to call `headers.all()` which is non-standard. Provide a safe,
+// idempotent polyfill that returns an object map of header -> values array.
+try {
+  const H = (global as any).Headers;
+  if (H && !H.prototype.all) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (H.prototype as any).all = function (name?: string) {
+      const out: Record<string, string[]> = {};
+      this.forEach((value: string, key: string) => {
+        if (!name || key === name) {
+          if (!out[key]) out[key] = [];
+          out[key].push(value);
+        }
+      });
+      return name ? out[name] || [] : out;
+    };
+  }
+} catch (_e) {
+  // ignore
+}
+
 // ------------------ Minimal Streams (TransformStream / ReadableStream / WritableStream) ------------------
 // These are intentionally minimal shims to satisfy tests or libraries that check the presence of these globals.
 // They do NOT fully implement the WHATWG Streams spec. If you need full streaming behavior, replace with

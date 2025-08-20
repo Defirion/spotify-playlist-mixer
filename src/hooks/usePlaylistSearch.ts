@@ -58,9 +58,69 @@ export const usePlaylistSearch = ({
         setError(null);
 
         const api = getSpotifyApi(accessToken);
-        const response = await api.get(
-          `/search?q=${encodeURIComponent(searchQuery)}&type=playlist&limit=${limit}`
-        );
+        const requestUrl = `/search?q=${encodeURIComponent(
+          searchQuery
+        )}&type=playlist&limit=${limit}`;
+
+        // Debug: surface request info to help diagnose live-app failures
+        try {
+          // Only log in development to avoid leaking tokens or affecting tests
+          if (process.env.NODE_ENV === 'development') {
+            const maskedToken = accessToken
+              ? accessToken.length > 10
+                ? `${accessToken.slice(0, 6)}...${accessToken.slice(-4)}`
+                : accessToken
+              : null;
+            const defaultAuthHeader =
+              api?.defaults?.headers?.Authorization ||
+              api?.defaults?.headers?.common?.Authorization;
+            // eslint-disable-next-line no-console
+            console.debug('DEBUG (usePlaylistSearch): performing request', {
+              url: requestUrl,
+              accessTokenPresent: !!accessToken,
+              maskedToken,
+              defaultAuthHeader,
+            });
+            try {
+              // Extra inspection: show all default headers shape to catch bundler/runtime differences
+              // eslint-disable-next-line no-console
+              console.debug(
+                'DEBUG (usePlaylistSearch): api.defaults.headers =',
+                api?.defaults?.headers
+              );
+            } catch (e) {
+              // ignore
+            }
+          }
+        } catch (e) {
+          // swallow debug errors
+        }
+
+        // Perform request and capture network errors for debugging
+        let response;
+        try {
+          response = await api.get(requestUrl);
+        } catch (err) {
+          // Development-only detailed error logging to help diagnose live failures
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const maybeResponse = (err as any)?.response;
+              // eslint-disable-next-line no-console
+              console.error('DEBUG (usePlaylistSearch): request failed', {
+                url: requestUrl,
+                error: err,
+                status: maybeResponse?.status,
+                responseData: maybeResponse?.data,
+                responseHeaders: maybeResponse?.headers,
+              });
+            }
+          } catch (e) {
+            // swallow
+          }
+
+          throw err;
+        }
 
         // Check if request was aborted
         if (abortControllerRef.current?.signal.aborted) {
