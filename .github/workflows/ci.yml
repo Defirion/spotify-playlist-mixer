@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, final-refactor ]
+    branches: [ main, master, final-refactor, test-troubleshooting ]
   pull_request:
-    branches: [ main, master, final-refactor ]
+    branches: [ main, master, final-refactor, test-troubleshooting ]
 
 jobs:
   smoke:
