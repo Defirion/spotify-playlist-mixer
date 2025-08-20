@@ -27,7 +27,7 @@ export const setupMSW = () => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { setupServer } = require('msw/node');
-    const handlers = require('./mswHandlers').handlers || [];
+    const handlers = require('../../mocks/handlers').handlers || [];
     if (!handlers || handlers.length === 0) return;
     const server = setupServer(...handlers);
     // Ensure axios (if used) uses the Node http adapter so msw/node can

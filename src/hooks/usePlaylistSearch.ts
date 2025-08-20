@@ -163,6 +163,10 @@ export const usePlaylistSearch = ({
           // tests that assert this call continue to pass.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const maybeResponse = (err as any)?.response ?? null;
+          // Always surface the primary error call so tests that assert on it
+          // remain stable. Additional diagnostic logging is gated behind
+          // TEST_VERBOSE or development mode to avoid noisy CI output.
+          console.error('Failed to search playlists:', err);
           const _testVerbose = String(
             process.env.TEST_VERBOSE || ''
           ).toLowerCase();
@@ -171,7 +175,6 @@ export const usePlaylistSearch = ({
             _testVerbose === 'true' ||
             process.env.NODE_ENV === 'development'
           ) {
-            console.error('Failed to search playlists:', err);
             if (maybeResponse) {
               // Log the response object separately to avoid changing the
               // original error call signature asserted in tests.

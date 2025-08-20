@@ -2,26 +2,18 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw-setup';
-
+import setupMSW from '../../test-utils/msw';
 import SpotifyService from '../../services/spotify';
-jest.unmock('axios');
+
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default:
+    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+}));
 
 // Initialize MSW server (lazy); tests will skip if MSW can't be required
 const server = setupMSW();
-// Force axios to use the Node http adapter for these tests only. This helps
-// avoid adapter-related header shape mismatches (AxiosHeaders vs Headers)
-// while we iterate on MSW + axios integration.
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore if requiring adapter fails in some environments; the test will
-  // still run and surface the same error for further debugging.
-}
+// Tests rely on global.fetch + MSW; no axios adapter required.
 
 describe('SpotifyService - MSW integration', () => {
   const ACCESS_TOKEN = 'normal_token';

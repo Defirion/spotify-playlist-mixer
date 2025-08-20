@@ -14,14 +14,20 @@
   - Identify tests that relied on tolerant fallback behavior
   - _Requirements: 1.1, 3.1, 4.1_
 
-- [ ] 2. Add JSON serializability gate test
+- [x] 2. Add JSON serializability gate test
   - Create unit test that runs JSON.stringify on all MSW fixture objects
   - Test for circular references, DOM nodes, Date objects, Map instances
   - Add this as automated gate before main test runs
   - Fix any non-serializable objects found immediately
   - _Requirements: 1.1, 1.3_
 
-- [ ] 3. Create MSW environment safety rules
+- [x] 3. Create MSW environment safety rules
+
+
+
+
+
+
   - Document Node vs browser MSW usage (setupServer vs worker)
   - Add rule to never call both setupServer and worker in same bootstrap
   - Ensure tests running in Node use setupServer only

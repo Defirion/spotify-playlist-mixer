@@ -2,11 +2,15 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw-setup';
+import setupMSW from '../../test-utils/msw';
 import SpotifyService from '../../services/spotify';
 import { ApiError } from '../../services/apiErrorHandler';
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default:
+    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+}));
 
-jest.unmock('axios');
 const server = setupMSW();
 
 try {
@@ -65,23 +69,54 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
     if (!server) return;
 
     let calls = 0;
-    server.use(
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('msw').rest.delete(
-        'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-        async (req: any, res: any, ctx: any) => {
-          calls++;
-          if (calls < 2) {
-            return res(
-              ctx.status(429),
-              ctx.set('Retry-After', '0'),
-              ctx.json({ error: 'rate_limited' })
-            );
-          }
-          return res(ctx.json({ snapshot_id: 'snap_del_ok' }));
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const msw = require('msw');
+
+    const handlerFn = async (req: any, res: any, ctx: any) => {
+      calls++;
+      if (calls < 2) {
+        if (typeof res === 'function' && ctx) {
+          return res(
+            ctx.status(429),
+            ctx.set('Retry-After', '0'),
+            ctx.json({ error: 'rate_limited' })
+          );
         }
-      )
-    );
+        return new msw.HttpResponse(JSON.stringify({ error: 'rate_limited' }), {
+          status: 429,
+          headers: { 'Retry-After': '0', 'Content-Type': 'application/json' },
+        });
+      }
+
+      const successResponse = { snapshot_id: 'snap_del_ok' };
+      if (typeof res === 'function' && ctx) {
+        return res(ctx.json(successResponse));
+      }
+      return msw.HttpResponse.json(successResponse);
+    };
+
+    // Use both rest and http APIs for compatibility
+    const handlers = [];
+    if (msw.rest && msw.rest.delete) {
+      handlers.push(
+        msw.rest.delete(
+          'https://api.spotify.com/v1/playlists/:playlistId/tracks',
+          handlerFn
+        )
+      );
+    }
+    if (msw.http && msw.http.delete) {
+      handlers.push(
+        msw.http.delete(
+          'https://api.spotify.com/v1/playlists/:playlistId/tracks',
+          (info: any) => {
+            return handlerFn(info, null, null);
+          }
+        )
+      );
+    }
+
+    server.use(...handlers);
 
     // shorten retry delays
     const originalGetRetryDelay = ApiError.prototype.getRetryDelay;

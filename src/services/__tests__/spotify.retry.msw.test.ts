@@ -2,22 +2,17 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw-setup';
+import setupMSW from '../../test-utils/msw';
 import SpotifyService from '../../services/spotify';
-jest.unmock('axios');
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default:
+    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+}));
 
 const server = setupMSW();
 
-try {
-  // Ensure axios uses node http adapter for msw/node
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore adapter patch failures
-}
+// No axios adapter required for fetch-based tests.
 
 describe('SpotifyService - Retry/Retry-After regression (MSW)', () => {
   test('retries when server returns 429 with Retry-After and eventually succeeds', async () => {
@@ -26,36 +21,57 @@ describe('SpotifyService - Retry/Retry-After regression (MSW)', () => {
     let call = 0;
     // Override /search handler to return 429 first with Retry-After: 0 then succeed
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { rest } = require('msw');
-    server.use(
-      rest.get(
-        'https://api.spotify.com/v1/search',
-        (req: any, res: any, ctx: any) => {
-          call++;
-          if (call === 1) {
-            return res(
-              ctx.status(429),
-              ctx.set('Retry-After', '0'),
-              ctx.json({ error: 'rate_limited' })
-            );
-          }
+    const msw = require('msw');
 
-          // Successful payload on retry
+    const handlerFn = (req: any, res: any, ctx: any) => {
+      call++;
+      if (call === 1) {
+        // First call returns 429
+        if (typeof res === 'function' && ctx) {
           return res(
-            ctx.json({
-              tracks: {
-                items: [
-                  { id: 't1', name: 'Track 1', artists: [{ name: 'A' }] },
-                ],
-                total: 1,
-                limit: 1,
-                offset: 0,
-              },
-            })
+            ctx.status(429),
+            ctx.set('Retry-After', '0'),
+            ctx.json({ error: 'rate_limited' })
           );
         }
-      )
-    );
+        return new msw.HttpResponse(JSON.stringify({ error: 'rate_limited' }), {
+          status: 429,
+          headers: { 'Retry-After': '0', 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Successful payload on retry
+      const successResponse = {
+        tracks: {
+          items: [{ id: 't1', name: 'Track 1', artists: [{ name: 'A' }] }],
+          total: 1,
+          limit: 1,
+          offset: 0,
+        },
+      };
+
+      if (typeof res === 'function' && ctx) {
+        return res(ctx.json(successResponse));
+      }
+      return msw.HttpResponse.json(successResponse);
+    };
+
+    // Use both rest and http APIs for compatibility
+    const handlers = [];
+    if (msw.rest && msw.rest.get) {
+      handlers.push(
+        msw.rest.get('https://api.spotify.com/v1/search', handlerFn)
+      );
+    }
+    if (msw.http && msw.http.get) {
+      handlers.push(
+        msw.http.get('https://api.spotify.com/v1/search', (info: any) => {
+          return handlerFn(info, null, null);
+        })
+      );
+    }
+
+    server.use(...handlers);
 
     const service = new SpotifyService('retry_token');
 

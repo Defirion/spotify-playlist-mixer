@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import setupMSW from '../msw-setup';
+import setupMSW from '../msw';
 
 const server = setupMSW();
 

@@ -212,7 +212,7 @@ describe('PlaylistSelector', () => {
 
     it('handles search result clicks', async () => {
       const user = userEvent.setup();
-      const mockHandleAddPlaylistByUrl = jest.fn().mockResolvedValue(undefined);
+      const mockOnPlaylistSelect = jest.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
@@ -229,15 +229,20 @@ describe('PlaylistSelector', () => {
         isValidSpotifyLink: jest.fn(() => false),
         isValidPlaylistUrl: jest.fn(() => false),
         extractPlaylistId: jest.fn(() => null),
-        handleAddPlaylistByUrl: mockHandleAddPlaylistByUrl,
+        handleAddPlaylistByUrl: jest.fn(),
       });
 
-      render(<PlaylistSelector {...defaultProps} />);
+      render(
+        <PlaylistSelector
+          {...defaultProps}
+          onPlaylistSelect={mockOnPlaylistSelect}
+        />
+      );
 
       const firstResult = screen.getByText('Test Playlist 1');
       await user.click(firstResult);
 
-      expect(mockHandleAddPlaylistByUrl).toHaveBeenCalledWith('playlist1');
+      expect(mockOnPlaylistSelect).toHaveBeenCalledWith(mockPlaylists[0]);
     });
   });
 

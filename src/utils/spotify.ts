@@ -1,9 +1,9 @@
-import type { AxiosInstance } from 'axios';
-import axios from 'axios';
+import type { FetchInstance } from '../services/fetchClient';
+import createFetchClient from '../services/fetchClient';
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
-export const getSpotifyApi = (accessToken: string): AxiosInstance => {
+export const getSpotifyApi = (accessToken: string): FetchInstance => {
   const normalizedToken = (accessToken || '').startsWith('Bearer ')
     ? accessToken.replace(/^Bearer\s+/i, '')
     : accessToken;
@@ -22,11 +22,19 @@ export const getSpotifyApi = (accessToken: string): AxiosInstance => {
     // ignore
   }
 
-  return axios.create({
+  const instance = createFetchClient({
     baseURL: SPOTIFY_API_BASE,
     headers: {
       Authorization: `Bearer ${normalizedToken}`,
       'Content-Type': 'application/json',
     },
   });
+
+  // Fetch-based client does not support axios-style transforms. Tests expect
+  // downstream code to be able to read headers via a Headers-like API. The
+  // FetchInstance returns native Response.headers which is already a Headers
+  // object in node (via polyfills used in tests) or in browsers, so no extra
+  // normalization is necessary here.
+
+  return instance;
 };

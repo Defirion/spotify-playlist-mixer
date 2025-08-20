@@ -2,11 +2,22 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw-setup';
-import { rest } from 'msw';
+import setupMSW from '../../test-utils/msw';
+import * as msw from 'msw';
 import SpotifyService from '../../services/spotify';
 
-jest.unmock('axios');
+type MSWInfo = {
+  request: Request & { json(): Promise<any> };
+  params: Record<string, string>;
+  cookies: Record<string, string>;
+};
+
+// Use shared mock helper to avoid importing axios-based implementation.
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default:
+    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+}));
 
 const server = setupMSW();
 
@@ -32,31 +43,38 @@ describe('SpotifyService - Batch A (pagination & batching)', () => {
 
     // Override the playlist tracks handler to return our largeTracks with pagination
     server.use(
-      rest.get(
+      msw.http.get(
         'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-        (req, res, ctx) => {
-          const url = new URL(req.url.toString());
+        (info: MSWInfo) => {
+          const url = new URL(info.request.url.toString());
           const limit = parseInt(url.searchParams.get('limit') || '100', 10);
           const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
           const slice = largeTracks.slice(offset, offset + limit);
 
-          return res(
-            ctx.json({
-              items: slice.map(t => ({
-                track: t,
-                added_at: new Date().toISOString(),
-                added_by: { id: 'u' },
-              })),
-              total: largeTracks.length,
-              limit,
-              offset,
-              next:
-                offset + limit < largeTracks.length
-                  ? `?limit=${limit}&offset=${offset + limit}`
-                  : null,
-            })
+          // debug: indicate the test-local handler ran
+          // eslint-disable-next-line no-console
+          console.error(
+            '[test handler] playlist tracks invoked for',
+            info.params.playlistId,
+            'offset',
+            offset
           );
+
+          return msw.HttpResponse.json({
+            items: slice.map(t => ({
+              track: t,
+              added_at: new Date().toISOString(),
+              added_by: { id: 'u' },
+            })),
+            total: largeTracks.length,
+            limit,
+            offset,
+            next:
+              offset + limit < largeTracks.length
+                ? `?limit=${limit}&offset=${offset + limit}`
+                : null,
+          });
         }
       )
     );
@@ -99,16 +117,24 @@ describe('SpotifyService - Batch A (pagination & batching)', () => {
     let postCalls = 0;
 
     server.use(
-      rest.post(
+      msw.http.post(
         'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-        async (req, res, ctx) => {
+        async (info: MSWInfo) => {
           postCalls++;
+          // debug: indicate the test-local POST handler ran
+          // eslint-disable-next-line no-console
+          console.error(
+            '[test handler] POST playlist tracks invoked for',
+            info.params.playlistId,
+            'call',
+            postCalls
+          );
           // read body to simulate normal handler
-          await req.json().catch(() => ({}));
+          await info.request.json().catch(() => ({}));
           // return a snapshot id that includes the call count
-          return res(
-            ctx.status(201),
-            ctx.json({ snapshot_id: `snap_${postCalls}` })
+          return new msw.HttpResponse(
+            JSON.stringify({ snapshot_id: `snap_${postCalls}` }),
+            { status: 201, headers: { 'Content-Type': 'application/json' } }
           );
         }
       )

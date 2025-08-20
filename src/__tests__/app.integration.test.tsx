@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AppProviders from '../AppProviders';
 import App from '../App';
-import { setupMSW } from '../test-utils/mocks/mswSetup';
+import setupMSW from '../test-utils/msw';
 import {
   mockVisualViewport,
   restoreVisualViewport,
@@ -11,8 +11,12 @@ import {
 
 // Integration test template: happy-path skeleton
 describe('App integration (happy path) - template', () => {
+  // Start MSW for this suite. Call at module initialization so hooks are
+  // registered synchronously (avoids "Cannot add a hook after tests have
+  // started running" errors when called inside runtime hooks).
+  setupMSW();
+
   beforeAll(() => {
-    setupMSW();
     mockVisualViewport();
   });
 

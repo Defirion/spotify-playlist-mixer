@@ -20,7 +20,7 @@ export const mockPlaylists = [
   {
     id: 'playlist_1',
     name: 'My Awesome Playlist',
-    description: 'A collection of great songs',
+    description: 'A collection of great songs, chill vibes',
     public: true,
     collaborative: false,
     owner: {

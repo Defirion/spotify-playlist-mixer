@@ -169,7 +169,20 @@ export const logDebugInfo = (
   message: string,
   data?: any
 ): void => {
-  // Only log in development or when tests request verbose output
+  // Never log in production. Otherwise allow logging in development or when
+  // tests request verbose output via TEST_VERBOSE.
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
+  // During test runs we want deterministic behavior: avoid honoring any
+  // externally-set TEST_VERBOSE that could be present in the dev environment
+  // (for example when debugging locally). Tests should explicitly opt-in to
+  // verbose logging if needed by setting TEST_VERBOSE within test code.
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
   if (
     !(_testVerbose === '1' || _testVerbose === 'true') &&

@@ -27,11 +27,12 @@ export const useSpotifyUrlHandler = ({
   onError,
 }: UseSpotifyUrlHandlerOptions): UseSpotifyUrlHandlerReturn => {
   const extractPlaylistId = useCallback((url: string): string | null => {
-    // Handle different Spotify URL formats
+    // Spotify playlist IDs are 22-char base62 (alphanumeric). Be strict so
+    // short or malformed strings (e.g. 'short', 'invalid-url') are rejected.
     const patterns = [
-      /spotify:playlist:([a-zA-Z0-9]+)/,
-      /open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/,
-      /^([a-zA-Z0-9]{22})$/, // Just the ID (22 characters for Spotify)
+      /spotify:playlist:([a-zA-Z0-9]{22})/,
+      /open\.spotify\.com\/playlist\/([a-zA-Z0-9]{22})/,
+      /^([a-zA-Z0-9]{22})$/,
     ];
 
     for (const pattern of patterns) {
@@ -43,17 +44,18 @@ export const useSpotifyUrlHandler = ({
 
   const isValidSpotifyLink = useCallback((input: string): boolean => {
     const spotifyUrlRegex =
-      /^(https?:\/\/(open\.)?spotify\.com\/(playlist|track|album)\/[a-zA-Z0-9]+(\?.*)?)$/;
+      /^(https?:\/\/(open\.)?spotify\.com\/(playlist|track|album)\/[a-zA-Z0-9_-]+(\?.*)?)$/;
     const spotifyUriRegex = /^spotify:(playlist|track|album):[a-zA-Z0-9]+$/;
     return spotifyUrlRegex.test(input) || spotifyUriRegex.test(input);
   }, []);
 
   const isValidPlaylistUrl = useCallback((input: string): boolean => {
     const trimmedInput = input.trim();
+    if (!trimmedInput) return false;
     const patterns = [
-      /spotify:playlist:([a-zA-Z0-9]+)/,
-      /open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/,
-      /^[a-zA-Z0-9]{22}$/, // Spotify playlist IDs are exactly 22 characters
+      /spotify:playlist:[a-zA-Z0-9]{22}$/,
+      /^(https?:\/\/)?open\.spotify\.com\/playlist\/[a-zA-Z0-9]{22}(?:[?&#].*)?$/,
+      /^[a-zA-Z0-9]{22}$/,
     ];
     return patterns.some(pattern => pattern.test(trimmedInput));
   }, []);

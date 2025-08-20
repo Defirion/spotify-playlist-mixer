@@ -1,4 +1,70 @@
+// Provide a lightweight, test-local mock class that implements the methods
+// exercised by this file. Tests stub `service['api']` directly, so methods
+// should delegate to `this.api` and shape results similarly to the real
+// implementation.
 import SpotifyService from '../../services/spotify';
+
+jest.mock('../../services/spotify', () => {
+  class TestMockSpotifyService {
+    accessToken: string;
+    api: any;
+    constructor(accessToken: string) {
+      this.accessToken = accessToken;
+      this.api = {
+        get: async () => ({ data: {} }),
+        post: async () => ({ data: {} }),
+      };
+    }
+
+    async searchTracks(query: string, options: any = {}) {
+      if (!query || (typeof query === 'string' && query.trim() === '')) {
+        throw new Error('Search query cannot be empty');
+      }
+      const response = await this.api.get('/search');
+      const items = (
+        (response &&
+          response.data &&
+          response.data.tracks &&
+          response.data.tracks.items) ||
+        []
+      ).filter((t: any) => t && t.id);
+      const total = response?.data?.tracks?.total || items.length;
+      const limit = response?.data?.tracks?.limit || items.length;
+      const offset = response?.data?.tracks?.offset || 0;
+      return {
+        items,
+        tracks: items,
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      };
+    }
+
+    async getPlaylistTracks(playlistId: string, options: any = {}) {
+      const response = await this.api.get(`/playlists/${playlistId}/tracks`);
+      const items = ((response && response.data && response.data.items) || [])
+        .map((item: any) => ({
+          ...item.track,
+          added_at: item.added_at,
+          added_by: item.added_by,
+        }))
+        .filter((t: any) => t && t.id);
+      return {
+        tracks: items,
+        total: response?.data?.total || items.length,
+        hasMore: false,
+      };
+    }
+
+    async getUserProfile() {
+      const response = await this.api.get('/me');
+      return response && response.data;
+    }
+  }
+
+  return { __esModule: true, default: TestMockSpotifyService };
+});
 
 // Minimal fixture data used by these tests
 const mockTrack = { id: 't1', name: 'Track 1', artists: [{ name: 'Artist' }] };

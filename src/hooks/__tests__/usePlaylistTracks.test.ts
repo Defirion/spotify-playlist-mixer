@@ -4,11 +4,11 @@ import SpotifyService from '../../services/spotify';
 import type { SpotifyTrack } from '../../types';
 import { makeTrack } from '../../test-utils/mocks/spotify';
 
-// Mock axios
-jest.mock('axios');
-
-// Mock the SpotifyService
-jest.mock('../../services/spotify');
+// Mock the SpotifyService as a jest.fn() so tests can call mockImplementation on the constructor
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
 const MockedSpotifyService = SpotifyService as jest.MockedClass<
   typeof SpotifyService

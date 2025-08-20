@@ -3,7 +3,9 @@
  * Provides consistent error handling, user-friendly messages, and retry logic
  */
 
-import { AxiosError } from 'axios';
+// We previously used AxiosError here. After removing axios, treat the error
+// shape generically and rely on duck-typing for `response`/`status` checks.
+type AxiosError = any;
 
 /**
  * Error types for different categories of API errors

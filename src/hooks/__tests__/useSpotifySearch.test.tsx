@@ -2,11 +2,11 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import useSpotifySearch from '../useSpotifySearch';
 import SpotifyService from '../../services/spotify';
 
-// Mock axios (kept the same behavior as original)
-jest.mock('axios');
-
-// Mock the SpotifyService
-jest.mock('../../services/spotify');
+// Mock the SpotifyService as a jest.fn() so tests can call mockImplementation on the constructor
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
 describe('useSpotifySearch', () => {
   let mockSpotifyService: any;

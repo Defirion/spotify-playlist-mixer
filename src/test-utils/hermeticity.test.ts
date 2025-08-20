@@ -8,7 +8,7 @@
  * ordering in CI to detect leaked network calls quickly.
  */
 
-import { setupMSW } from './mocks/mswSetup';
+import setupMSW, { server as __msw_server } from './msw';
 
 // Ensure the project's MSW helper runs (it attaches a global.__msw_server when available)
 setupMSW();

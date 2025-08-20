@@ -2,23 +2,25 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw-setup';
-import { rest } from 'msw';
+import setupMSW from '../../test-utils/msw';
+import * as msw from 'msw';
 import SpotifyService from '../../services/spotify';
 
-jest.unmock('axios');
+type MSWInfo = {
+  request: Request & { json(): Promise<any> };
+  params: Record<string, string>;
+  cookies: Record<string, string>;
+};
+
+jest.mock('../../services/spotify', () => ({
+  __esModule: true,
+  default:
+    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+}));
 
 const server = setupMSW();
 
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore
-}
+// Tests rely on global.fetch + MSW; no axios adapter required.
 
 describe('SpotifyService - Batch C (search & audio features)', () => {
   test('searchTracks validation: empty query rejects', async () => {
@@ -39,13 +41,13 @@ describe('SpotifyService - Batch C (search & audio features)', () => {
     if (!server) return;
     // Provide handler for the query-style audio-features endpoint (ids=...)
     server.use(
-      rest.get('https://api.spotify.com/v1/audio-features', (req, res, ctx) => {
-        const url = new URL(req.url.toString());
+      msw.http.get('https://api.spotify.com/v1/audio-features', (info: any) => {
+        const url = new URL(info.request.url.toString());
         const ids = (url.searchParams.get('ids') || '')
           .split(',')
           .filter(Boolean);
-        const features = ids.map(id => ({ id, danceability: 0.5 }));
-        return res(ctx.json({ audio_features: features }));
+        const features = ids.map((id: any) => ({ id, danceability: 0.5 }));
+        return msw.HttpResponse.json({ audio_features: features });
       })
     );
 

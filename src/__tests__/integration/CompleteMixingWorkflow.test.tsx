@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // using inline mock factories below; legacy helpers omitted
-import { setupMSW } from '../../test-utils/mocks/mswSetup';
+import setupMSW from '../../test-utils/msw';
 
 // MSW test setup helper
 // Avoid importing MSW in this test (MSW v2 pulls ESM deps that break Jest transform in this config).

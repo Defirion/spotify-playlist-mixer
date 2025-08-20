@@ -17,6 +17,16 @@ import '@testing-library/jest-dom';
 // the global `silenceIfPass` made available here.
 import { silenceIfPass as _silenceIfPass } from './test-utils/silenceIfPass';
 
+// Enable verbose test logging for handlers that conditionally emit errors.
+// Some code paths only call `console.error` when TEST_VERBOSE is truthy. Set it
+// here so tests that assert on specific console calls behave consistently.
+if (typeof process !== 'undefined' && process.env) {
+  // Default TEST_VERBOSE to 'false' so test suites opt-in when they need
+  // verbose logging. Some edge-case tests expect no logging in the 'test'
+  // environment unless explicitly enabled.
+  process.env.TEST_VERBOSE = String(process.env.TEST_VERBOSE || 'false');
+}
+
 // Extend Jest matchers with custom DOM matchers
 declare global {
   namespace jest {
@@ -65,7 +75,7 @@ if (typeof (globalThis as any).navigator === 'undefined') {
 // --- Integration test global setup: register centralized hook mocks ---
 // This keeps mock registration consistent and avoids duplication across
 // integration test files. Individual tests may still opt into MSW by
-// importing and calling `setupMSW()` from `src/test-utils/mocks/mswSetup`.
+// importing and calling `setupMSW()` from `src/test-utils/msw`.
 // Provide default mock implementations for the mixing hooks. Each factory
 // uses `require` inside the module factory so Jest does not capture out-of-
 // scope variables (which is disallowed for mock factories).

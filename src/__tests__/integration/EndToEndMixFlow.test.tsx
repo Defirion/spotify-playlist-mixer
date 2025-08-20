@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../App';
 import AppProviders from '../../AppProviders';
-import { setupMSW } from '../../test-utils/mocks/mswSetup';
+import setupMSW from '../../test-utils/msw';
 
 // Use fixtures for deterministic selections
 import { mockPlaylists } from '../../mocks/fixtures';

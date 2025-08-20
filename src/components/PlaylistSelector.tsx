@@ -194,11 +194,23 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
 
     const handleSearchResultClick = useCallback(
       (playlist: SpotifyPlaylist) => {
-        setLoading(true);
         setShowResults(false);
-        handleAddPlaylistByUrl(playlist.id).finally(() => setLoading(false));
+        onPlaylistSelect(playlist);
+        setPlaylistInput('');
+        clearResults();
+
+        // Auto-focus input for immediate next search
+        setTimeout(() => {
+          if (inputRef.current) {
+            try {
+              inputRef.current.focus({ preventScroll: true });
+            } catch (e) {
+              inputRef.current.focus();
+            }
+          }
+        }, 100);
       },
-      [handleAddPlaylistByUrl, setShowResults]
+      [onPlaylistSelect, setShowResults, clearResults]
     );
 
     const handleInputFocus = useCallback(() => {
