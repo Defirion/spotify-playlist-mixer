@@ -9,26 +9,26 @@
   - Implement CoverageTarget and TestingStrategy data models for tracking
   - _Requirements: 1.1, 1.5, 5.3_
 
-- [ ] 2. Test core utility functions with zero coverage
+- [x] 2. Test core utility functions with zero coverage
 - [ ] 2.1 Add tests for accessibility.ts utility functions
   - Write unit tests for screen reader helpers and keyboard navigation utilities
   - Test ARIA attribute management functions
   - Cover focus management and accessibility announcement functions
   - _Requirements: 2.1, 2.5, 4.1_
 
-- [ ] 2.2 Add tests for haptics.ts utility functions
+- [x] 2.2 Add tests for haptics.ts utility functions
   - Write unit tests for vibration pattern functions
   - Test device capability detection
   - Cover haptic feedback timing and intensity functions
   - _Requirements: 2.1, 2.5, 4.1_
 
-- [ ] 2.3 Add tests for migrateError.ts utility functions
+- [x] 2.3 Add tests for migrateError.ts utility functions
   - Write unit tests for error transformation functions
   - Test error message normalization
   - Cover error type conversion and validation
   - _Requirements: 2.1, 2.5, 4.1_
 
-- [ ] 2.4 Add tests for playlistMixer.ts utility functions
+- [x] 2.4 Add tests for playlistMixer.ts utility functions
   - Write unit tests for core playlist mixing algorithms
   - Test track selection and ratio calculation logic
   - Cover edge cases for empty playlists and invalid data
@@ -37,15 +37,15 @@
 
 
 
-- [ ] 3. Test core service layer with low coverage
-- [ ] 3.1 Enhance spotify.ts service tests (currently 10% coverage)
+- [x] 3. Test core service layer with low coverage
+- [x] 3.1 Enhance spotify.ts service tests (currently 10% coverage)
   - Write comprehensive tests for API authentication flow
   - Test playlist retrieval and track fetching functions
   - Cover error handling for network failures and API rate limits
   - Test data transformation and response parsing
   - _Requirements: 2.1, 2.3, 4.1, 4.4_
 
-- [ ] 3.2 Add tests for fetchClient.ts HTTP client (currently 37% coverage)
+- [x] 3.2 Add tests for fetchClient.ts HTTP client (currently 37% coverage)
   - Write tests for request configuration and headers
   - Test retry logic and timeout handling
   - Cover response parsing and error transformation

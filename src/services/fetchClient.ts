@@ -30,12 +30,7 @@ export class FetchInstance {
     return url;
   }
 
-  private async request<T = any>(
-    method: Method,
-    url: string,
-    data?: any,
-    config?: any
-  ) {
+  private async request(method: Method, url: string, data?: any, config?: any) {
     const headers = Object.assign(
       {},
       this.defaults.headers || {},
@@ -84,18 +79,16 @@ export class FetchInstance {
     return result;
   }
 
-  get<T = any>(url: string, config?: any) {
-    return this.request<T>('GET', url, undefined, config).then(r => r as any);
+  get(url: string, config?: any) {
+    return this.request('GET', url, undefined, config).then(r => r as any);
   }
 
-  post<T = any>(url: string, data?: any, config?: any) {
-    return this.request<T>('POST', url, data, config).then(r => r as any);
+  post(url: string, data?: any, config?: any) {
+    return this.request('POST', url, data, config).then(r => r as any);
   }
 
-  delete<T = any>(url: string, config?: any) {
-    return this.request<T>('DELETE', url, undefined, config).then(
-      r => r as any
-    );
+  delete(url: string, config?: any) {
+    return this.request('DELETE', url, undefined, config).then(r => r as any);
   }
 }
 

@@ -492,7 +492,6 @@ try {
       } else {
         // Fallback minimal Store class
         (global as any).Store = class Store {
-          constructor() {}
           findCookie() {
             return null;
           }
@@ -515,7 +514,6 @@ try {
     try {
       if (typeof (global as any).Store === 'undefined') {
         (global as any).Store = class Store {
-          constructor() {}
           findCookie() {
             return null;
           }

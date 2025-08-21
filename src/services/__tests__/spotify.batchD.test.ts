@@ -7,12 +7,6 @@ import '../../jest.polyfills';
 // Use local mocks and capture sinks for network simulation in tests
 import SpotifyService from '../../services/spotify';
 
-type MSWInfo = {
-  request: Request & { json(): Promise<any> };
-  params: Record<string, string>;
-  cookies: Record<string, string>;
-};
-
 // Use a focused test-local mock class so this file can be run in isolation.
 // The class delegates network calls to `global.fetch` (so MSW can intercept)
 // and implements validations and batching expected by these tests.

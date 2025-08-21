@@ -5,12 +5,6 @@
 // MSW removed from this test; use local mocks only
 import SpotifyService from '../../services/spotify';
 
-type MSWInfo = {
-  request: Request & { json(): Promise<any> };
-  params: Record<string, string>;
-  cookies: Record<string, string>;
-};
-
 jest.mock('../../services/spotify', () => ({
   __esModule: true,
   default:

@@ -5,12 +5,6 @@
 // Increase Jest default timeout for integration-style tests
 import SpotifyService from '../../services/spotify';
 
-type MSWInfo = {
-  request: Request & { json(): Promise<any> };
-  params: Record<string, string>;
-  cookies: Record<string, string>;
-};
-
 jest.setTimeout(30000);
 
 // Use shared mock factory for SpotifyService to ensure consistent behavior

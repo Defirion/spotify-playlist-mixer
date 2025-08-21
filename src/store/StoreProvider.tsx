@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useAppStore } from './index';
 
 interface StoreProviderProps {
   children: React.ReactNode;

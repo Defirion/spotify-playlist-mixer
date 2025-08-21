@@ -1,4 +1,5 @@
 import { getSpotifyApi } from '../utils/spotify';
+import type { FetchInstance } from './fetchClient';
 import { ApiErrorHandler, ApiError, ERROR_TYPES } from './apiErrorHandler';
 import chunkArray from './_helpers/batching';
 import buildAddRequestBody from './_helpers/requestBody';
@@ -41,19 +42,48 @@ interface PlaylistsResult {
  */
 class SpotifyService implements ISpotifyService {
   private api: any;
-  private accessToken: string;
+  private accessToken: string | null = null;
   private errorHandler: ApiErrorHandler;
 
-  constructor(accessToken: string, errorHandler?: ApiErrorHandler | null) {
-    if (!accessToken) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Access token is required for SpotifyService'),
-        { service: 'SpotifyService', operation: 'constructor' }
-      );
+  /**
+   * Constructor supports two signatures for gradual migration to dependency injection:
+   * 1. new SpotifyService(accessToken: string, errorHandler?) - legacy form
+   * 2. new SpotifyService(apiClient: FetchInstance, errorHandler?) - DI form
+   */
+  constructor(
+    accessTokenOrClient: string | FetchInstance,
+    errorHandler?: ApiErrorHandler | null
+  ) {
+    // Determine which signature was used
+    if (
+      typeof accessTokenOrClient === 'string' ||
+      accessTokenOrClient == null
+    ) {
+      const accessToken = accessTokenOrClient as string;
+      if (!accessToken) {
+        throw new ApiError(
+          ERROR_TYPES.BAD_REQUEST,
+          new Error('Access token is required for SpotifyService'),
+          { service: 'SpotifyService', operation: 'constructor' }
+        );
+      }
+      this.api = getSpotifyApi(accessToken);
+      this.accessToken = accessToken;
+    } else {
+      // Dependency injection form
+      this.api = accessTokenOrClient;
+      // Try to infer token from provided client headers if present
+      try {
+        const auth = (this.api?.defaults?.headers?.Authorization ||
+          this.api?.defaults?.headers?.authorization) as string | undefined;
+        if (auth) {
+          this.accessToken = auth.replace(/^Bearer\s+/i, '');
+        }
+      } catch (_) {
+        // ignore
+      }
     }
-    this.api = getSpotifyApi(accessToken);
-    this.accessToken = accessToken;
+
     this.errorHandler =
       errorHandler ||
       new ApiErrorHandler({
@@ -66,6 +96,15 @@ class SpotifyService implements ISpotifyService {
    */
   setAccessToken(token: string): void {
     this.accessToken = token;
+    // If the service was constructed with a DI client, attempt to update its headers; otherwise rebuild.
+    if (this.api && this.api.defaults && this.api.defaults.headers) {
+      try {
+        this.api.defaults.headers.Authorization = `Bearer ${token}`;
+        return;
+      } catch (_) {
+        // fall through to rebuild
+      }
+    }
     this.api = getSpotifyApi(token);
   }
 
