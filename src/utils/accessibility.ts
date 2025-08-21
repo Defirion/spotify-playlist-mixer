@@ -73,7 +73,16 @@ export const announceToScreenReader = (
   }
 
   // Always attempt initialization so stale references after DOM reset are repaired
-  initializeLiveRegion();
+  try {
+    initializeLiveRegion();
+  } catch (e) {
+    // If initialization throws for some reason (rare in tests/environments),
+    // warn and bail out so announceToScreenReader remains safe to call.
+    // This keeps behavior resilient in constrained environments.
+    // eslint-disable-next-line no-console
+    console.warn('Failed to initialize live region for accessibility');
+    return;
+  }
 
   if (!liveRegion) {
     console.warn('Failed to initialize live region for accessibility');
