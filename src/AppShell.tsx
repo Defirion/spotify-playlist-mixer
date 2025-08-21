@@ -26,6 +26,8 @@ type AppShellProps = {
   mixedPlaylists?: any[];
   mixOptions?: any;
   updateMixOptions?: (updates: Partial<any>) => void;
+  onRatioUpdate?: (playlistId: string, config: any) => void;
+  onPlaylistRemove?: (playlistId: string) => void;
   // callback hooks
   onAuth?: (token: string) => void;
   onPlaylistSelect?: (p: any) => void;
@@ -50,6 +52,8 @@ const AppShell: React.FC<AppShellProps> = ({
   onDismissError,
   onDismissSuccess,
   onMixedPlaylist,
+  onRatioUpdate,
+  onPlaylistRemove,
   mixOptions,
   updateMixOptions,
 }) => {
@@ -117,8 +121,8 @@ const AppShell: React.FC<AppShellProps> = ({
             <RatioConfig
               selectedPlaylists={selectedPlaylists}
               ratioConfig={ratioConfig ?? {}}
-              onRatioUpdate={() => {}}
-              onPlaylistRemove={() => {}}
+              onRatioUpdate={onRatioUpdate ?? (() => {})}
+              onPlaylistRemove={onPlaylistRemove ?? (() => {})}
             />
           </ErrorBoundary>
         )}

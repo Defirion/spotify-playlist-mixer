@@ -79,16 +79,22 @@ export class FetchInstance {
     return result;
   }
 
-  get(url: string, config?: any) {
-    return this.request('GET', url, undefined, config).then(r => r as any);
+  get<T = any>(url: string, config?: any) {
+    return this.request('GET', url, undefined, config).then(
+      r => r as any as { data: T }
+    );
   }
 
-  post(url: string, data?: any, config?: any) {
-    return this.request('POST', url, data, config).then(r => r as any);
+  post<T = any>(url: string, data?: any, config?: any) {
+    return this.request('POST', url, data, config).then(
+      r => r as any as { data: T }
+    );
   }
 
-  delete(url: string, config?: any) {
-    return this.request('DELETE', url, undefined, config).then(r => r as any);
+  delete<T = any>(url: string, config?: any) {
+    return this.request('DELETE', url, undefined, config).then(
+      r => r as any as { data: T }
+    );
   }
 }
 

@@ -1,4 +1,5 @@
 // Tests that exercise module-level initialization paths and assertive announcements
+export {};
 
 beforeEach(() => {
   // reset DOM and module cache between tests

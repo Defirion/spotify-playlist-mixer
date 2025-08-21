@@ -77,13 +77,13 @@ const RatioConfig = memo<RatioConfigProps>(
           return config && config.weightType === 'time';
         });
 
-        // Set global balance method based on the weightType found
+        // Determine method based on playlist configs. Use functional set to
+        // avoid races where we optimistically set the local method then
+        // immediately read stale props and revert it.
         const newMethod: WeightType = hasTimeWeighting ? 'time' : 'frequency';
-        if (newMethod !== globalBalanceMethod) {
-          setGlobalBalanceMethod(newMethod);
-        }
+        setGlobalBalanceMethod(prev => (prev === newMethod ? prev : newMethod));
       }
-    }, [ratioConfig, selectedPlaylists, globalBalanceMethod]);
+    }, [ratioConfig, selectedPlaylists]);
 
     const handleConfigChange = useCallback(
       (

@@ -70,7 +70,7 @@
   padding: 9px 0 !important;
 }
 
-.dualRangeSlider input[type='range'] {
+dualRangeSlider input[type='range'] {
   position: absolute !important;
   width: 100% !important;
   height: 30px !important;
@@ -82,7 +82,8 @@
   cursor: pointer !important;
   -webkit-appearance: none !important;
   appearance: none !important;
-  pointer-events: none !important;
+  /* Re-enable pointer events so the range inputs and thumbs are interactive */
+  pointer-events: auto !important;
   border-radius: 3px !important;
 }
 

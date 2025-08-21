@@ -3,6 +3,8 @@
  */
 
 // Simple test to verify authorization header handling
+export {};
+
 describe('Diagnostics - headers', () => {
   test('Authorization header formatting works correctly', () => {
     const token = 'diag_token';

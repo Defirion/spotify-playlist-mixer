@@ -1,4 +1,5 @@
 // Tests for src/utils/spotify.ts
+export {};
 
 describe('getSpotifyApi', () => {
   const originalEnv = process.env.NODE_ENV;

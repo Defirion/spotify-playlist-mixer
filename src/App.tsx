@@ -20,7 +20,8 @@ export function MainApp() {
   const { accessToken, isAuthenticated, setAccessToken } = useAuth();
   const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
     usePlaylistSelection();
-  const { setRatioConfigBulk, ratioConfig } = useRatioConfig();
+  const { setRatioConfigBulk, ratioConfig, updateRatioConfig } =
+    useRatioConfig();
   const { applyPresetOptions } = useMixOptions();
   const {
     error,
@@ -83,6 +84,15 @@ export function MainApp() {
     }
   };
 
+  const handlePlaylistRemove = (playlistId: string) => {
+    const playlist = selectedPlaylists.find(p => p.id === playlistId);
+    if (playlist) {
+      // reuse toggle to remove from selection
+      // togglePlaylistSelection will remove if already selected
+      togglePlaylistSelection(playlist);
+    }
+  };
+
   return (
     <AppShell
       isAuthenticated={isAuthenticated}
@@ -95,6 +105,8 @@ export function MainApp() {
       updateMixOptions={updateMixOptions}
       onAuth={setAccessToken}
       onPlaylistSelect={handlePlaylistSelection}
+      onRatioUpdate={updateRatioConfig}
+      onPlaylistRemove={handlePlaylistRemove}
       onClearAll={handleClearAllPlaylists}
       onApplyPreset={handleApplyPreset}
       onDismissError={dismissError}
