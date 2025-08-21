@@ -20,6 +20,41 @@
       "suites": null,
       "tests": null,
       "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T10:58:59.713Z",
+      "durationMs": 5812,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T11:35:01.715Z",
+      "durationMs": 5828,
+      "suites": null,
+      "tests": null,
+      "exitCode": 1
+    },
+    {
+      "date": "2025-08-21T11:37:00.257Z",
+      "durationMs": 5791,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T11:42:19.348Z",
+      "durationMs": 5907,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T11:46:54.122Z",
+      "durationMs": 5821,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
     }
   ]
 }

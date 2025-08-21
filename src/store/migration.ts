@@ -89,25 +89,7 @@ export const useLegacyRatioConfig = () => {
  */
 export const validateStoreState = () => {
   const state = useAppStore.getState();
-
-  const issues: string[] = [];
-
-  // Check for orphaned ratio configs
-  const selectedPlaylistIds = new Set(state.selectedPlaylists.map(p => p.id));
-  const ratioConfigIds = new Set(Object.keys(state.ratioConfig));
-
-  for (const ratioId of ratioConfigIds) {
-    if (!selectedPlaylistIds.has(ratioId)) {
-      issues.push(`Orphaned ratio config for playlist: ${ratioId}`);
-    }
-  }
-
-  // Check for missing ratio configs
-  for (const playlistId of selectedPlaylistIds) {
-    if (!ratioConfigIds.has(playlistId)) {
-      issues.push(`Missing ratio config for selected playlist: ${playlistId}`);
-    }
-  }
+  const issues = validateStoreStateFor(state);
 
   if (issues.length > 0) {
     console.warn('Store state validation issues:', issues);
@@ -117,31 +99,67 @@ export const validateStoreState = () => {
 };
 
 /**
- * Helper to clean up inconsistent state
+ * Pure helper: validate a given state object and return issues (no logging)
  */
-export const cleanupStoreState = () => {
-  const state = useAppStore.getState();
-  const selectedPlaylistIds = new Set(state.selectedPlaylists.map(p => p.id));
+export const validateStoreStateFor = (state: any): string[] => {
+  const issues: string[] = [];
 
-  // Remove orphaned ratio configs
-  const cleanedRatioConfig: RatioConfig = {};
-  for (const [playlistId, config] of Object.entries(state.ratioConfig)) {
-    if (selectedPlaylistIds.has(playlistId)) {
-      cleanedRatioConfig[playlistId] = config;
+  const selectedPlaylistIds = new Set(
+    (state.selectedPlaylists || []).map((p: any) => p.id)
+  );
+  const ratioConfigIds = new Set(
+    Object.keys(state.ratioConfig || {}) as string[]
+  );
+
+  for (const ratioId of ratioConfigIds) {
+    if (!selectedPlaylistIds.has(ratioId)) {
+      issues.push(`Orphaned ratio config for playlist: ${ratioId}`);
     }
   }
 
-  // Add missing ratio configs
-  for (const playlist of state.selectedPlaylists) {
+  for (const playlistId of selectedPlaylistIds as Set<string>) {
+    if (!ratioConfigIds.has(playlistId)) {
+      issues.push(`Missing ratio config for selected playlist: ${playlistId}`);
+    }
+  }
+
+  return issues;
+};
+
+/**
+ * Pure helper: build a cleaned ratio config object from state (removes orphaned, adds defaults)
+ */
+export const buildCleanedRatioConfig = (state: any): RatioConfig => {
+  const cleanedRatioConfig: RatioConfig = {};
+  const selectedPlaylistIds = new Set(
+    (state.selectedPlaylists || []).map((p: any) => p.id)
+  );
+
+  for (const [playlistId, config] of Object.entries(state.ratioConfig || {})) {
+    if (selectedPlaylistIds.has(playlistId)) {
+      cleanedRatioConfig[playlistId] = config as any;
+    }
+  }
+
+  for (const playlist of state.selectedPlaylists || []) {
     if (!cleanedRatioConfig[playlist.id]) {
       cleanedRatioConfig[playlist.id] = {
         min: 1,
         max: 2,
         weight: 2,
         weightType: 'frequency' as const,
-      };
+      } as any;
     }
   }
 
+  return cleanedRatioConfig;
+};
+
+/**
+ * Helper to clean up inconsistent state
+ */
+export const cleanupStoreState = () => {
+  const state = useAppStore.getState();
+  const cleanedRatioConfig = buildCleanedRatioConfig(state);
   state.setRatioConfigBulk(cleanedRatioConfig);
 };
