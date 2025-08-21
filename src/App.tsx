@@ -16,7 +16,7 @@ import {
 } from './store';
 import styles from './App.module.css';
 
-function MainApp() {
+export function MainApp() {
   const { accessToken, isAuthenticated, setAccessToken } = useAuth();
   const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
     usePlaylistSelection();
@@ -106,7 +106,7 @@ function MainApp() {
 
 // intentionally unused helper container retained for manual testing / storybook
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function RatioConfigContainer() {
+export function RatioConfigContainer() {
   const { selectedPlaylists, togglePlaylistSelection } = usePlaylistSelection();
   const { ratioConfig, updateRatioConfig } = useRatioConfig();
 
@@ -129,7 +129,7 @@ function RatioConfigContainer() {
 
 // intentionally unused helper container retained for manual testing / storybook
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function PlaylistMixerContainer() {
+export function PlaylistMixerContainer() {
   const { accessToken } = useAuth();
   const { selectedPlaylists } = usePlaylistSelection();
   const { ratioConfig } = useRatioConfig();

@@ -156,6 +156,13 @@ describe('PlaylistMixer drag optimistic flows', () => {
       exceedsLimit: null,
       ratioImbalance: null,
     } as any);
+    // silence console.log during passing runs unless DEBUG_PLAYLIST_MIXER is set
+    const origLog = console.log;
+    (console as any).log = (...args: any[]) => {
+      if (process.env.DEBUG_PLAYLIST_MIXER) {
+        origLog(...args);
+      }
+    };
   });
 
   it('adds optimistic track on external drag start and removes it on cancel', async () => {

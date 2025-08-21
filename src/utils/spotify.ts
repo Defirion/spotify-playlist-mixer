@@ -9,7 +9,8 @@ export const getSpotifyApi = (accessToken: string): FetchInstance => {
     : accessToken;
 
   try {
-    if (process.env.NODE_ENV !== 'test') {
+    // Only emit debug logs during development (not in tests)
+    if (process.env.NODE_ENV === 'development') {
       const maskedToken = normalizedToken
         ? normalizedToken.length > 10
           ? `${normalizedToken.slice(0, 6)}...${normalizedToken.slice(-4)}`

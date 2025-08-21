@@ -5,6 +5,9 @@ describe('getSpotifyApi', () => {
   beforeEach(() => {
     jest.resetModules();
     process.env.NODE_ENV = 'development';
+    // Silence debug logs for the suite to avoid noisy test output; individual
+    // tests can still spy/restore console.debug if they assert on it.
+    jest.spyOn(console, 'debug').mockImplementation(() => {});
   });
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;

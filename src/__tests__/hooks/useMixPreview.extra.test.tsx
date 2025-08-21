@@ -51,11 +51,19 @@ const makeTrack = (id: string, sourcePlaylist: string, duration = 60000) => ({
 });
 
 describe('useMixPreview (extra cases)', () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetPlaylistTracks.mockImplementation(async (pid: string) => ({
       tracks: pid === 'p1' ? [makeTrack('t1', 'p1')] : [makeTrack('t2', 'p2')],
     }));
+    // silence console.error from the hook implementation during passing runs
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore?.();
   });
 
   test('handles object-form mixer result and recalculates stats', async () => {

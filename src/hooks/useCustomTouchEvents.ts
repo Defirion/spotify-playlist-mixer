@@ -33,12 +33,16 @@ export const useCustomTouchEvents = ({
     (e: CustomEvent<CustomTouchEventDetail>) => {
       const { clientY, draggedItem } = e.detail;
 
-      console.log('[CustomTouchEvents] Touch drag over:', {
-        clientY,
-        draggedItem: draggedItem?.type,
-        eventType: e.type,
-        timestamp: Date.now(),
-      });
+      // Only emit verbose debug logs during development to avoid noisy test output
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('[CustomTouchEvents] Touch drag over:', {
+          clientY,
+          draggedItem: draggedItem?.type,
+          eventType: e.type,
+          timestamp: Date.now(),
+        });
+      }
 
       onTouchDragOver?.(e.detail);
     },
@@ -49,11 +53,15 @@ export const useCustomTouchEvents = ({
     (e: CustomEvent<CustomTouchEventDetail>) => {
       const { clientY, draggedItem } = e.detail;
 
-      console.log('[CustomTouchEvents] Touch drop event received:', {
-        clientY,
-        draggedItem: draggedItem?.type,
-        timestamp: Date.now(),
-      });
+      // Only emit verbose debug logs during development to avoid noisy test output
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('[CustomTouchEvents] Touch drop event received:', {
+          clientY,
+          draggedItem: draggedItem?.type,
+          timestamp: Date.now(),
+        });
+      }
 
       if (!draggedItem) {
         console.warn(

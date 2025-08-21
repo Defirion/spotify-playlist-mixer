@@ -42,6 +42,13 @@ const defaultProps = {
 };
 
 describe('PlaylistMixer edge and error flows', () => {
+  let consoleErrorSpy: any;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore?.();
+  });
   test('create playlist uses mixGeneration.createPlaylist when no preview exists', async () => {
     const onMixedPlaylist = jest.fn();
     // Prepare the module-scoped mock implementation for this test

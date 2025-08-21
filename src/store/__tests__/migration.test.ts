@@ -8,6 +8,14 @@ describe('migration utilities', () => {
     jest.clearAllMocks();
   });
 
+  let consoleWarnSpy: any;
+  beforeEach(() => {
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleWarnSpy?.mockRestore?.();
+  });
+
   it('validateStoreState reports orphaned and missing configs', () => {
     const mockedState = {
       selectedPlaylists: [{ id: 'a' }],

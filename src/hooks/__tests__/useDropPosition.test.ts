@@ -3,6 +3,13 @@ import { useDropPosition } from '../../hooks/useDropPosition';
 import * as calc from '../../utils/dropPositionCalculator';
 
 describe('useDropPosition', () => {
+  let consoleErrorSpy: jest.SpyInstance<any, any>;
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore?.();
+  });
   it('returns null initially and updates on valid input', () => {
     const { result } = renderHook(() => useDropPosition({ tracksLength: 5 }));
 
