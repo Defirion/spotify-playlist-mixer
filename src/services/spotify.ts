@@ -428,21 +428,28 @@ class SpotifyService implements ISpotifyService {
 
     const { uris: trackUris, position } = request;
 
-    // DEBUG: Log the received trackUris directly at the function entry point
-    console.log(
-      'DEBUG (spotify.ts): addTracksToPlaylist received trackUris:',
-      trackUris
-    );
-    console.log(
-      'DEBUG (spotify.ts): addTracksToPlaylist received trackUris length:',
-      trackUris.length
-    );
-
-    if (!Array.isArray(trackUris) || trackUris.length === 0) {
-      console.error(
-        'DEBUG (spotify.ts): Validation failed: trackUris is not an array or is empty.',
+    // DEBUG: optionally log received trackUris (gated to keep tests quiet)
+    if (process.env.DEBUG_SPOTIFY === '1') {
+      // eslint-disable-next-line no-console
+      console.log(
+        'DEBUG (spotify.ts): addTracksToPlaylist received trackUris:',
         trackUris
       );
+      // eslint-disable-next-line no-console
+      console.log(
+        'DEBUG (spotify.ts): addTracksToPlaylist received trackUris length:',
+        trackUris.length
+      );
+    }
+
+    if (!Array.isArray(trackUris) || trackUris.length === 0) {
+      if (process.env.DEBUG_SPOTIFY === '1') {
+        // eslint-disable-next-line no-console
+        console.error(
+          'DEBUG (spotify.ts): Validation failed: trackUris is not an array or is empty.',
+          trackUris
+        );
+      }
       throw new ApiError(
         ERROR_TYPES.BAD_REQUEST,
         new Error('Track URIs array is required and cannot be empty'),

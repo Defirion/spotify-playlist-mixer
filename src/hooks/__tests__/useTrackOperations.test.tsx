@@ -1,10 +1,19 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
 import { useTrackOperations } from '../../hooks/useTrackOperations';
 
 afterEach(() => {
   cleanup();
+});
+
+// Silence Policy: suppress verbose scroll capture logs during passing runs
+let consoleLogSpy: jest.SpyInstance;
+beforeEach(() => {
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+});
+afterEach(() => {
+  consoleLogSpy?.mockRestore?.();
 });
 
 test('useTrackOperations handlers call onTrackOrderChange with expected arrays', () => {

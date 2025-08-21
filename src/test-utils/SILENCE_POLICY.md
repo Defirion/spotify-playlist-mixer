@@ -77,3 +77,22 @@ Contributing
 - If you find a noisy test, either add per-suite spies or wrap the noisy operation with `silenceIfPass` rather than changing global test behavior.
 
 If you're unsure which approach to use, open an issue or ask the maintainers with the test name and why it is noisy.
+
+Debug instrumentation category
+
+We differentiate between:
+
+- Assertion logs: Required for test expectations. DO NOT silence.
+- Domain/problem warnings: Useful signals (validation failures, edge-case warnings). Silence only if extremely noisy and unasserted.
+- Debug instrumentation (temporary tracing: playlist creation logs, SpotifyService "DEBUG (spotify.ts)" lines, haptics vibration traces, masked token debug). These MUST be either:
+  1. Gated behind an env flag (e.g. `if (process.env.DEBUG_SPOTIFY) console.log(...)`), or
+  2. Silenced in the invoking test via per-suite spies, if not asserted.
+- Focused diagnostic capture: wrap with `silenceIfPass` when only needed during failures.
+
+console.debug is treated the same as console.log for suppression decisions.
+
+Implementation guidance:
+
+- Prefer gating new debug logs: `if (process.env.DEBUG_PLAYLIST_MIXER) { console.log('...'); }`.
+- When cleaning existing noisy logs in tests, add per-suite spies for `log`, `debug`, and optionally `error` if the errors are expected.
+- Avoid adding permanent debug logs that are never gated.

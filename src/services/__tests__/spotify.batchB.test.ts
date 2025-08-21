@@ -52,43 +52,17 @@ const createService = (token: string) => {
 };
 
 describe('SpotifyService - Batch B (playlists & create/remove)', () => {
+  let consoleErrorSpy: jest.SpyInstance;
+  beforeEach(() => {
+    // Silence noisy debug errors unless the test fails.
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore?.();
+  });
+
   test('getUserPlaylists single page returns items', async () => {
     const service = createService('normal_token');
-    // debug: inspect mocked service instance
-    // eslint-disable-next-line no-console
-    // eslint-disable-next-line no-console
-    try {
-      // Inspect the imported constructor/value too
-      // eslint-disable-next-line no-console
-      console.error(
-        '[DEBUG spotify.batchB] imported SpotifyService:',
-        typeof SpotifyService,
-        Object.keys(SpotifyService || {})
-      );
-    } catch (e) {}
-    console.error(
-      '[DEBUG spotify.batchB] service shape:',
-      service && typeof service,
-      Object.keys(service || {})
-    );
-    try {
-      // show non-enumerable own property names
-      // eslint-disable-next-line no-console
-      console.error(
-        '[DEBUG spotify.batchB] own props:',
-        Object.getOwnPropertyNames(service || {})
-      );
-      // eslint-disable-next-line no-console
-      console.error(
-        '[DEBUG spotify.batchB] proto keys:',
-        Object.getOwnPropertyNames(Object.getPrototypeOf(service || {}))
-      );
-      // eslint-disable-next-line no-console
-      console.error(
-        '[DEBUG spotify.batchB] typeof.getUserPlaylists:',
-        service && typeof (service as any).getUserPlaylists
-      );
-    } catch (e) {}
     const res = await service.getUserPlaylists({ limit: 2, offset: 0 });
     expect(res).toHaveProperty('items');
     expect(Array.isArray(res.items)).toBe(true);

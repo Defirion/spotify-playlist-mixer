@@ -13,7 +13,7 @@ import {
   mockAuthToken,
 } from '../../mocks/fixtures';
 
-describe('MSW Fixture JSON Serializability Gate', () => {
+describe('Legacy JSON Serializability Gate (MSW removed)', () => {
   const testSerializability = (obj: any, name: string) => {
     it(`${name} should be JSON serializable`, () => {
       expect(() => {
@@ -116,66 +116,15 @@ describe('MSW Fixture JSON Serializability Gate', () => {
   testSerializability(mockTracks, 'mockTracks');
   testSerializability(mockAuthToken, 'mockAuthToken');
 
-  // Test handler responses by simulating MSW handler calls
-  describe('MSW Handler Response Serializability', () => {
-    it('search handler response should be JSON serializable', () => {
-      const searchResponse = {
-        playlists: {
-          items: mockPlaylists.slice(0, 2),
-          total: mockPlaylists.length,
-          limit: 20,
-          offset: 0,
-        },
-      };
-
-      expect(() => {
-        const serialized = JSON.stringify(searchResponse);
-        expect(serialized).toBeDefined();
-        JSON.parse(serialized);
-      }).not.toThrow();
-    });
-
-    it('playlist tracks response should be JSON serializable', () => {
-      const tracksResponse = {
-        items: mockTracks.map(track => ({ track })),
-        total: mockTracks.length,
-        limit: 100,
-        offset: 0,
-      };
-
-      expect(() => {
-        const serialized = JSON.stringify(tracksResponse);
-        expect(serialized).toBeDefined();
-        JSON.parse(serialized);
-      }).not.toThrow();
-    });
-
-    it('conflicting MSW handlers should be safe', () => {
-      // Test the conflicting handlers file for basic serializability
-      let handlers: any[] = [];
-
-      try {
-        const mswHandlers = require('../../test-utils/mocks/mswHandlers');
-        handlers = mswHandlers.handlers || [];
-
-        // Verify handlers array can be processed without circular references
-        expect(Array.isArray(handlers)).toBe(true);
-        expect(handlers.length).toBeGreaterThan(0);
-
-        // Test basic handler metadata serialization
-        const handlerInfo = handlers.map((h, i) => ({
-          index: i,
-          type: typeof h,
-          hasInfo: !!h.info,
-        }));
-
-        expect(() => {
-          JSON.stringify(handlerInfo);
-        }).not.toThrow();
-      } catch (error) {
-        // If MSW can't be imported, that's fine - we'll handle this in consolidation
-        console.warn('Conflicting MSW handlers could not be tested:', error);
-      }
-    });
+  // Placeholder assertion: confirm removed MSW handlers are absent
+  it('no MSW handlers module present (expected)', () => {
+    let threw = false;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('../../test-utils/mocks/mswHandlers');
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
   });
 });

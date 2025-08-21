@@ -52,10 +52,13 @@ export const createUISlice: StateCreator<
     set(state => {
       // Debug: log when addMixedPlaylist is called
       // eslint-disable-next-line no-console
-      console.log('uiSlice.addMixedPlaylist called', {
-        id: playlist?.id,
-        name: playlist?.name,
-      });
+      if (process.env.DEBUG_UI === '1') {
+        // eslint-disable-next-line no-console
+        console.log('uiSlice.addMixedPlaylist called', {
+          id: playlist?.id,
+          name: playlist?.name,
+        });
+      }
 
       const playlistWithId: MixedPlaylistToast = {
         ...playlist,

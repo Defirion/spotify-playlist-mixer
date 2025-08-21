@@ -48,11 +48,13 @@ function MainApp() {
               token.length > 10
                 ? `${token.slice(0, 6)}...${token.slice(-4)}`
                 : token;
-            // eslint-disable-next-line no-console
-            console.debug(
-              'DEV: setAccessToken called, maskedToken=',
-              maskedToken
-            );
+            if (process.env.DEBUG_AUTH === '1') {
+              // eslint-disable-next-line no-console
+              console.debug(
+                'DEV: setAccessToken called, maskedToken=',
+                maskedToken
+              );
+            }
           }
           window.location.hash = '';
         }
@@ -153,7 +155,12 @@ function PlaylistMixerContainer() {
 
 function App() {
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

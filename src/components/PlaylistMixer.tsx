@@ -248,14 +248,17 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
         t => getTrackDragId(t) === over.id
       );
 
-      console.log('Reorder debug:', {
-        activeId: active.id,
-        overId: over.id,
-        activeInPreview: !!activeInPreview,
-        overInPreview: !!overInPreview,
-        previewTrackDragIds: previewTracks.map(t => getTrackDragId(t)),
-        activeContext: active.data.current?.context,
-      });
+      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
+        // eslint-disable-next-line no-console
+        console.log('Reorder debug:', {
+          activeId: active.id,
+          overId: over.id,
+          activeInPreview: !!activeInPreview,
+          overInPreview: !!overInPreview,
+          previewTrackDragIds: previewTracks.map(t => getTrackDragId(t)),
+          activeContext: active.data.current?.context,
+        });
+      }
 
       if (activeInPreview && overInPreview) {
         const oldIndex = previewTracks.findIndex(
@@ -267,11 +270,17 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
         if (oldIndex !== newIndex) {
           const reorderedTracks = arrayMove(previewTracks, oldIndex, newIndex);
-          console.log('Reordering within preview:', oldIndex, '->', newIndex);
+          if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
+            // eslint-disable-next-line no-console
+            console.log('Reordering within preview:', oldIndex, '->', newIndex);
+          }
           mixPreview.updateTrackOrder(reorderedTracks);
         }
       } else {
-        console.log('Reorder failed - tracks not found in preview');
+        if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
+          // eslint-disable-next-line no-console
+          console.log('Reorder failed - tracks not found in preview');
+        }
       }
     },
     [mixPreview]
@@ -300,10 +309,13 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
       // Debug: log before creating playlist
       // eslint-disable-next-line no-console
-      console.log('handleCreatePlaylist: about to create playlist', {
-        name: mixOptions.playlistName,
-        finalTracksLength: finalTracks.length,
-      });
+      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
+        // eslint-disable-next-line no-console
+        console.log('handleCreatePlaylist: about to create playlist', {
+          name: mixOptions.playlistName,
+          finalTracksLength: finalTracks.length,
+        });
+      }
 
       // Create the Spotify playlist with the final track list
       const result = await mixGeneration.createPlaylist(
@@ -313,7 +325,10 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
       // Debug: log create result
       // eslint-disable-next-line no-console
-      console.log('handleCreatePlaylist: createPlaylist result', result);
+      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
+        // eslint-disable-next-line no-console
+        console.log('handleCreatePlaylist: createPlaylist result', result);
+      }
 
       if (onMixedPlaylist) {
         onMixedPlaylist(result);

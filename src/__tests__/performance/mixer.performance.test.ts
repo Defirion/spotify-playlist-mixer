@@ -25,6 +25,14 @@ function makeTracks(n: number, prefix = '') {
 }
 
 test('mixPlaylists performance — 1000 tracks', async () => {
+  let logSpy: jest.SpyInstance | undefined;
+  let errorSpy: jest.SpyInstance | undefined;
+  // Silence Policy: silence verbose logs for passing runs but allow opt-in via PERF_DEBUG
+  const debugEnabled = process.env.PERF_DEBUG === '1';
+  if (!debugEnabled) {
+    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  }
   await silenceIfPass(async () => {
     // Total desired tracks across all playlists (default 2000 for a stress test)
     const TOTAL = Number(process.env.PERF_TOTAL || 2000);
@@ -72,29 +80,35 @@ test('mixPlaylists performance — 1000 tracks', async () => {
       // Run validation to surface any input cleaning/errors
       try {
         const validation = validateInputs(playlistTracks, ratioConfig, options);
-        // eslint-disable-next-line no-console
-        console.log(
-          'validation.isValid:',
-          validation.isValid,
-          'errors:',
-          validation.errors
-        );
-        // eslint-disable-next-line no-console
-        console.log(
-          'cleaned playlist sizes:',
-          Object.keys(validation.cleanedPlaylistTracks).map(k => ({
-            id: k,
-            count: validation.cleanedPlaylistTracks[k].length,
-          }))
-        );
+        if (debugEnabled) {
+          // eslint-disable-next-line no-console
+          console.log(
+            'validation.isValid:',
+            validation.isValid,
+            'errors:',
+            validation.errors
+          );
+          // eslint-disable-next-line no-console
+          console.log(
+            'cleaned playlist sizes:',
+            Object.keys(validation.cleanedPlaylistTracks).map(k => ({
+              id: k,
+              count: validation.cleanedPlaylistTracks[k].length,
+            }))
+          );
+        }
         if (!validation.isValid) {
           // If validation fails, don't proceed to heavy mixing; let the test fail with context.
-          // eslint-disable-next-line no-console
-          console.log('Validation failed; aborting mix run');
+          if (debugEnabled) {
+            // eslint-disable-next-line no-console
+            console.log('Validation failed; aborting mix run');
+          }
         }
       } catch (vErr: any) {
-        // eslint-disable-next-line no-console
-        console.log('validation error', vErr && vErr.message);
+        if (debugEnabled) {
+          // eslint-disable-next-line no-console
+          console.log('validation error', vErr && vErr.message);
+        }
       }
       const playlistIds = Object.keys(ratioConfig).filter(
         id => playlistTracks[id] && playlistTracks[id].length > 0
@@ -111,12 +125,16 @@ test('mixPlaylists performance — 1000 tracks', async () => {
         totalWeight as any
       );
       estimatedSongsProbe = probe.estimatedTotalSongs || 0;
-      // eslint-disable-next-line no-console
-      console.log('probeEstimatedSongs:', estimatedSongsProbe);
+      if (debugEnabled) {
+        // eslint-disable-next-line no-console
+        console.log('probeEstimatedSongs:', estimatedSongsProbe);
+      }
     } catch (err: any) {
       // ignore probe failures
-      // eslint-disable-next-line no-console
-      console.log('probeEstimateError', err && err.message);
+      if (debugEnabled) {
+        // eslint-disable-next-line no-console
+        console.log('probeEstimateError', err && err.message);
+      }
     }
 
     // If probe reports zero estimated songs, fallback to explicit totalSongs mode
@@ -124,10 +142,12 @@ test('mixPlaylists performance — 1000 tracks', async () => {
       options.useAllSongs &&
       (!estimatedSongsProbe || estimatedSongsProbe <= 0)
     ) {
-      // eslint-disable-next-line no-console
-      console.log(
-        'Fallback: estimatedTotalSongs is zero; switching to explicit totalSongs mode'
-      );
+      if (debugEnabled) {
+        // eslint-disable-next-line no-console
+        console.log(
+          'Fallback: estimatedTotalSongs is zero; switching to explicit totalSongs mode'
+        );
+      }
       options.useAllSongs = false;
       options.totalSongs = Number(
         process.env.PERF_TOTAL_SONGS || Math.max(1500, Math.floor(TOTAL * 0.75))
@@ -169,11 +189,15 @@ test('mixPlaylists performance — 1000 tracks', async () => {
       const outPath = path.join(__dirname, 'baselines', 'current-run.json');
       fs.writeFileSync(outPath, JSON.stringify(metrics, null, 2));
     } catch (e: any) {
-      // eslint-disable-next-line no-console
-      console.log('Failed to write current-run.json', e && e.message);
+      if (debugEnabled) {
+        // eslint-disable-next-line no-console
+        console.log('Failed to write current-run.json', e && e.message);
+      }
     }
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(metrics));
+    if (debugEnabled) {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify(metrics));
+    }
 
     expect(Array.isArray(result)).toBe(true);
     // Fail the test if the mixer produced no tracks — indicates misconfiguration
@@ -184,4 +208,6 @@ test('mixPlaylists performance — 1000 tracks', async () => {
     expect(elapsedMs).toBeLessThan(120000);
     expect(heapDelta).toBeLessThan(1024 * 1024 * 1024); // 1GB
   });
+  logSpy?.mockRestore?.();
+  errorSpy?.mockRestore?.();
 }, 120000);

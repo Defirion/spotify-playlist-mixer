@@ -60,9 +60,9 @@ function readTestCounts() {
   if (fs.existsSync(OUTPUT_JSON)) {
     try {
       const data = JSON.parse(fs.readFileSync(OUTPUT_JSON, 'utf8'));
-      suites = data.numPassedTestSuites === data.numTotalTestSuites ? data.numTotalTestSuites : data.numTotalTestSuites;
-      tests = data.numPassedTests === data.numTotalTests ? data.numTotalTests : data.numTotalTests;
-      runtimeMs = typeof data.startTime === 'number' && typeof data.success === 'boolean' ? Date.now() - data.startTime : null;
+      if (typeof data.numTotalTestSuites === 'number') suites = data.numTotalTestSuites;
+      if (typeof data.numTotalTests === 'number') tests = data.numTotalTests;
+      runtimeMs = typeof data.startTime === 'number' ? Date.now() - data.startTime : null;
     } catch (e) {
       console.warn('Could not parse jest-output.json, fallback to text parsing', e.message);
     }
@@ -70,10 +70,68 @@ function readTestCounts() {
   if ((suites == null || tests == null) && fs.existsSync(OUTPUT_TXT)) {
     try {
       const txt = fs.readFileSync(OUTPUT_TXT, 'utf8');
-      const suiteMatch = txt.match(/Test suites: (\d+) passed, (\d+) total/);
-      const testMatch = txt.match(/Tests: (\d+) passed, (\d+) total/);
-      if (suiteMatch) suites = Number(suiteMatch[2]);
-      if (testMatch) tests = Number(testMatch[2]);
+      // Find the last occurrence of summary lines to reflect final aggregated result.
+      const suiteRegexes = [
+        /Test Suites:\s+(?:\d+ failed, \s*)?(?:\d+ skipped, \s*)?(?:\d+ todo, \s*)?(?:\d+ pending, \s*)?(\d+) passed, (\d+) total/gi,
+        /Test Suites:\s+(\d+) passed, (\d+) total/gi,
+        /Test Suites:\s+(\d+) total/gi
+      ];
+      const testRegexes = [
+        /Tests:\s+(?:\d+ failed, \s*)?(?:\d+ skipped, \s*)?(?:\d+ todo, \s*)?(?:\d+ pending, \s*)?(\d+) passed, (\d+) total/gi,
+        /Tests:\s+(\d+) passed, (\d+) total/gi,
+        /Tests:\s+(\d+) total/gi
+      ];
+      function extractLast(regexList, text) {
+        for (const re of regexList) {
+          let m; let last = null;
+          while ((m = re.exec(text)) !== null) {
+            last = m;
+          }
+          if (last) return last;
+        }
+        return null;
+      }
+      const suiteLast = extractLast(suiteRegexes, txt);
+      if (suiteLast) {
+        // Prefer total if provided at capture group 2 else group 1
+        suites = Number(suiteLast[suiteLast.length - 1]);
+      }
+      const testLast = extractLast(testRegexes, txt);
+      if (testLast) {
+        tests = Number(testLast[testLast.length - 1]);
+      }
+      // As a fallback, attempt simpler patterns for combined fail/pass counts (e.g., "30 failed, 77 passed, 107 total")
+      if (suites == null) {
+        const altSuites = /Test Suites:\s+(?:\d+ failed,\s*)?(?:\d+ passed,\s*)?(\d+) total/gi;
+        let m; while ((m = altSuites.exec(txt)) !== null) suites = Number(m[1]);
+      }
+      if (tests == null) {
+        const altTests = /Tests:\s+(?:\d+ failed,\s*)?(?:\d+ passed,\s*)?(\d+) total/gi;
+        let m; while ((m = altTests.exec(txt)) !== null) tests = Number(m[1]);
+      }
+
+      // If still missing or suspiciously low compared to other batch outputs, attempt aggregation.
+      if ((suites == null || tests == null) || (suites < 110 && fs.existsSync(path.join(__dirname,'..','test-results')))) {
+        try {
+          const dir = path.join(__dirname, '..', 'test-results');
+          const files = fs.readdirSync(dir).filter(f => /-stdout\.txt$/.test(f));
+          let aggSuites = 0; let aggTests = 0; let foundAny = false;
+            for (const f of files) {
+              const content = fs.readFileSync(path.join(dir, f), 'utf8');
+              const suiteLine = [...content.matchAll(/Test Suites:\s+(?:\d+ failed,\s*)?(?:\d+ passed,\s*)?(\d+) total/gi)].pop();
+              const testLine = [...content.matchAll(/Tests:\s+(?:\d+ failed,\s*)?(?:\d+ passed,\s*)?(\d+) total/gi)].pop();
+              if (suiteLine) { aggSuites += Number(suiteLine[1]); foundAny = true; }
+              if (testLine) { aggTests += Number(testLine[1]); foundAny = true; }
+            }
+          if (foundAny) {
+            // Only replace if aggregated counts are larger (indicating parallel batch collection).
+            if (aggSuites > (suites || 0)) suites = aggSuites;
+            if (aggTests > (tests || 0)) tests = aggTests;
+          }
+        } catch (aggErr) {
+          console.warn('Aggregation across batch stdout failed', aggErr.message);
+        }
+      }
     } catch (e) {
       console.warn('Failed to parse jest-latest-output.txt', e.message);
     }

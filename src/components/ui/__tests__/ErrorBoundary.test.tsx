@@ -2,14 +2,13 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Mock console.error to prevent test logs from cluttering the output
-const originalConsoleError = console.error;
-beforeAll(() => {
-  console.error = jest.fn();
+// Silence Policy compliance: prefer per-suite spies instead of module-scoped reassignment.
+let consoleErrorSpy: jest.SpyInstance;
+beforeEach(() => {
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-
-afterAll(() => {
-  console.error = originalConsoleError;
+afterEach(() => {
+  consoleErrorSpy?.mockRestore?.();
 });
 
 describe('ErrorBoundary', () => {
