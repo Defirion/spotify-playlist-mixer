@@ -21,8 +21,18 @@ const { setupServer } = require('msw/node');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { handlers } = require('../mocks/handlers');
 
+console.error('[msw.ts] Loaded handlers:', handlers?.length || 0);
+console.error('[msw.ts] First handler type:', typeof handlers?.[0]);
+console.error('[msw.ts] Handler is array:', Array.isArray(handlers));
+
 // Create server instance
 export const server = setupServer(...handlers);
+
+console.error(
+  '[msw.ts] Created server with',
+  handlers?.length || 0,
+  'handlers'
+);
 
 // Make server.listen idempotent so multiple calls (global setup + test-level)
 // don't attach duplicate interceptors and cause handlers to run twice.
@@ -54,16 +64,24 @@ export const server = setupServer(...handlers);
 
 // Simple setup function for tests that need MSW
 export function setupMSW() {
+  console.error('[msw.ts] setupMSW called');
   // If a global MSW server was already started by test setup, avoid
   // registering lifecycle hooks again. This prevents duplicate
   // interception and handlers running twice.
   // The global setup marks (global as any).__msw_server_started = true when it calls server.listen().
   if ((global as any).__msw_server_started) {
+    console.error(
+      '[msw.ts] MSW server already started, skipping lifecycle hooks'
+    );
     return server;
   }
 
+  console.error('[msw.ts] Registering MSW lifecycle hooks');
+
   beforeAll(() => {
+    console.error('[msw.ts] beforeAll: Starting MSW server');
     server.listen({ onUnhandledRequest: 'warn' });
+    console.error('[msw.ts] beforeAll: MSW server started');
     (global as any).__msw_server_started = true;
   });
 

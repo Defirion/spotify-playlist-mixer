@@ -309,9 +309,35 @@ export function makeMockSpotifyService() {
       // loop pages
       while (true) {
         const url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`;
+        console.error(
+          '[MockSpotifyService] About to call fetch:',
+          typeof (global as any).fetch
+        );
+        console.error(
+          '[MockSpotifyService] Fetch function is:',
+          (global as any).fetch
+        );
+        console.error(
+          '[MockSpotifyService] Is jest mock?',
+          (global as any).fetch && (global as any).fetch._isMockFunction
+        );
+        console.error(
+          '[MockSpotifyService] Mock calls before:',
+          (global as any).fetch?.mock?.calls?.length
+        );
         const res = await (global as any).fetch(url, {
           headers: { Authorization: `Bearer ${this.accessToken}` },
         });
+        console.error(
+          '[MockSpotifyService] Mock calls after:',
+          (global as any).fetch?.mock?.calls?.length
+        );
+        console.error(
+          '[MockSpotifyService] Fetch returned:',
+          res,
+          'type:',
+          typeof res
+        );
         const text = await res.text().catch(() => '');
         let data: any = {};
         try {

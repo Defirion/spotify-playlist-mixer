@@ -99,20 +99,35 @@ if (typeof global.Blob === 'undefined') {
 // Load MSW - try different entry points for compatibility
 let _msw = null;
 try {
-  // Try the main MSW export first
-  _msw = require('../../node_modules/msw');
+  // Prefer standard module resolution first
+  _msw = require('msw');
 } catch (e) {
   try {
-    // Fallback to core bundle
-    _msw = require('../../node_modules/msw/lib/core/index.js');
+    // Try package root by relative path (older setups)
+    _msw = require('../../node_modules/msw');
   } catch (e2) {
     try {
-      // Last resort: try node bundle
-      _msw = require('../../node_modules/msw/lib/node/index.js');
+      // Fallback to core bundle
+      _msw = require('../../node_modules/msw/lib/core/index.js');
     } catch (e3) {
-      // MSW not available
+      try {
+        // Last resort: try node bundle
+        _msw = require('../../node_modules/msw/lib/node/index.js');
+      } catch (e4) {
+        // MSW not available or failed to load
+      }
     }
   }
+}
+
+// Normalize ESM default export shape: some bundlers/exports put the real
+// exports under the `default` key when required from CommonJS.
+try {
+  if (_msw && _msw.default && Object.keys(_msw.default).length) {
+    _msw = _msw.default;
+  }
+} catch (e) {
+  // ignore
 }
 
 // Add setupServer if not present
@@ -135,6 +150,76 @@ if (_msw && !_msw.rest && _msw.http) {
 // Create compatibility layer for v2 API (http) if only v1 API (rest) is available
 if (_msw && !_msw.http && _msw.rest) {
   _msw.http = _msw.rest;
+}
+
+// Final validation - if we have MSW but no rest/http, create a basic fallback
+if (_msw && !_msw.rest && !_msw.http) {
+  // Fallback handlers for missing rest/http
+  const createHandler = method => (path, resolver) => {
+    // Return a proper handler function that can be used with setupServer
+    const handler = function (req, res, ctx) {
+      return resolver(req, res, ctx);
+    };
+
+    // Add properties that MSW expects
+    handler.info = {
+      header: `${method.toUpperCase()} ${path}`,
+      path,
+      method: method.toUpperCase(),
+    };
+
+    // For regex paths
+    if (path instanceof RegExp) {
+      handler.test = (url, reqMethod) => {
+        return (
+          path.test(url) &&
+          (method === 'all' || reqMethod.toLowerCase() === method.toLowerCase())
+        );
+      };
+    } else {
+      // For string paths
+      handler.test = (url, reqMethod) => {
+        return (
+          url.includes(path) &&
+          (method === 'all' || reqMethod.toLowerCase() === method.toLowerCase())
+        );
+      };
+    }
+
+    return handler;
+  };
+
+  _msw.rest = {
+    get: createHandler('get'),
+    post: createHandler('post'),
+    put: createHandler('put'),
+    patch: createHandler('patch'),
+    delete: createHandler('delete'),
+    head: createHandler('head'),
+    options: createHandler('options'),
+    all: createHandler('all'),
+  };
+  _msw.http = _msw.rest;
+}
+
+// Ensure setupServer is available from node submodule
+if (_msw && !_msw.setupServer) {
+  try {
+    const nodeExports = require('msw/node');
+    if (nodeExports && nodeExports.setupServer) {
+      _msw.setupServer = nodeExports.setupServer;
+    }
+  } catch (e) {
+    // Fallback: try direct path
+    try {
+      const nodeBundle = require('../../node_modules/msw/lib/node/index.js');
+      if (nodeBundle && nodeBundle.setupServer) {
+        _msw.setupServer = nodeBundle.setupServer;
+      }
+    } catch (e2) {
+      // ignore
+    }
+  }
 }
 
 // Debug logging for Jest environment

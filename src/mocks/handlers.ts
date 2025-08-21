@@ -1,9 +1,19 @@
-// Use the msw package entry so Jest's moduleNameMapper / shims control which
-// implementation is loaded. This ensures tests and handlers use the same
-// MSW runtime instance and avoids mismatches between compiled/source builds.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// Try to use real MSW directly first, fall back to shim if needed
 import { mockTracks, mockPlaylists, mockUserProfile } from './fixtures';
-const msw: any = require('msw');
+
+let msw: any;
+try {
+  // Try importing real MSW v2 directly
+  msw = require('msw');
+  console.error('[handlers] Using real MSW directly');
+  console.error('[handlers] MSW object keys:', Object.keys(msw || {}));
+  console.error('[handlers] MSW.http available:', !!msw.http);
+  console.error('[handlers] MSW.rest available:', !!msw.rest);
+} catch (e) {
+  console.error('[handlers] Failed to import real MSW, using shim:', e.message);
+  // Fall back to shim
+  msw = require('msw');
+}
 
 // Minimal typed shape for MSW resolver `info` param used in handlers.
 // We intentionally keep this small to avoid coupling to MSW internal types
@@ -104,6 +114,202 @@ const tokenScenario = (req: any) => {
 };
 
 export const handlers = [
+  // Simplest possible working handler - test if basic pattern works
+  (() => {
+    console.error('[handlers] Creating simple test handler...');
+
+    // Try using the setupServer-compatible handler format
+    const simpleHandler = {
+      predicate: (request: any) => {
+        const url = request.url?.toString() || request.url;
+        const matches = url.includes('api.spotify.com');
+        console.error(
+          '[SIMPLE-HANDLER] Testing predicate for:',
+          url,
+          'matches:',
+          matches
+        );
+        return matches;
+      },
+
+      resolver: (request: any) => {
+        console.error(
+          '[SIMPLE-HANDLER] Resolver invoked for:',
+          request.url?.toString() || request.url
+        );
+        return new Response(
+          JSON.stringify({ intercepted: true, simple: true }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      },
+    };
+
+    console.error('[handlers] Simple handler created:', simpleHandler);
+    return simpleHandler;
+  })(),
+
+  // Debug handler for the exact URL causing problems
+  msw.rest.get(
+    'https://api.spotify.com/v1/playlists/playlist_big/tracks',
+    (req: any, res: any, ctx: any) => {
+      const url = req.url?.toString() || req.url;
+      console.error('[EXACT HANDLER] Matched exact URL:', url);
+
+      // Parse query parameters from the URL
+      const urlObj = new URL(url);
+      const limit = parseInt(urlObj.searchParams.get('limit') || '100', 10);
+      const offset = parseInt(urlObj.searchParams.get('offset') || '0', 10);
+
+      console.error(
+        `[EXACT HANDLER] playlist_big: limit=${limit}, offset=${offset}`
+      );
+
+      const total = 250;
+      const extendedSlice = Array.from(
+        { length: Math.min(limit, total - offset) },
+        (_, i) => ({
+          id: `track_big_${offset + i}`,
+          name: `Big Track ${offset + i}`,
+          uri: `spotify:track:track_big_${offset + i}`,
+          artists: [{ id: 'artist_1', name: 'Mock Artist' }],
+          album: { id: 'album_1', name: 'Mock Album' },
+          duration_ms: 200000,
+        })
+      );
+
+      return res(
+        ctx.json({
+          items: extendedSlice.map(track => ({
+            track,
+            added_at: new Date().toISOString(),
+            added_by: { id: 'u' },
+          })),
+          total,
+          limit,
+          offset,
+          next:
+            offset + limit < total
+              ? `?limit=${limit}&offset=${offset + limit}`
+              : null,
+        })
+      );
+    }
+  ),
+
+  // Wildcard handler to catch and debug ALL requests
+  msw.rest.all('*', (req: any, res: any, ctx: any) => {
+    const url = req.url?.toString() || req.url;
+    const method = req.method;
+    console.error(`[WILDCARD] ${method} ${url}`);
+
+    // If this is a tracks request, handle it
+    if (
+      url.includes('/playlists/') &&
+      url.includes('/tracks') &&
+      method === 'GET'
+    ) {
+      console.error('[WILDCARD] Handling tracks request');
+
+      // Extract playlist ID from URL path
+      const match = url.match(/\/playlists\/([^\/]+)\/tracks/);
+      const playlistId = match ? match[1] : null;
+
+      if (!playlistId) {
+        console.error('[WILDCARD] No playlist ID found in URL:', url);
+        return res(ctx.status(400), ctx.json({ error: 'No playlist ID' }));
+      }
+
+      // Parse query parameters
+      const urlObj = new URL(url);
+      const limit = parseInt(urlObj.searchParams.get('limit') || '50', 10);
+      const offset = parseInt(urlObj.searchParams.get('offset') || '0', 10);
+
+      console.error(
+        `[WILDCARD] Tracks request: playlist=${playlistId}, limit=${limit}, offset=${offset}`
+      );
+
+      // Generate mock data based on playlist ID
+      if (playlistId === 'playlist_big') {
+        const total = 250;
+        const slice = mockTracks.slice(offset, offset + limit);
+        const extendedSlice = Array.from(
+          { length: Math.min(limit, total - offset) },
+          (_, i) => ({
+            ...mockTracks[i % mockTracks.length],
+            id: `track_big_${offset + i}`,
+            name: `Big Track ${offset + i}`,
+            uri: `spotify:track:track_big_${offset + i}`,
+          })
+        );
+
+        return res(
+          ctx.json({
+            items: extendedSlice.map(track => ({
+              track,
+              added_at: new Date().toISOString(),
+              added_by: { id: 'u' },
+            })),
+            total,
+            limit,
+            offset,
+            next:
+              offset + limit < total
+                ? `?limit=${limit}&offset=${offset + limit}`
+                : null,
+          })
+        );
+      }
+
+      // Default response for other playlists
+      return res(
+        ctx.json({
+          items: mockTracks.map(track => ({
+            track,
+            added_at: new Date().toISOString(),
+            added_by: { id: 'u' },
+          })),
+          total: mockTracks.length,
+          limit,
+          offset,
+          next: null,
+        })
+      );
+    }
+
+    // If this is an add tracks request, handle it
+    if (
+      url.includes('/playlists/') &&
+      url.includes('/tracks') &&
+      method === 'POST'
+    ) {
+      console.error('[WILDCARD] Handling add tracks request');
+      return res(ctx.json({ snapshot_id: 'mock_snapshot' }));
+    }
+
+    // For any other request, return a generic 404
+    console.error('[WILDCARD] Unhandled request, returning 404');
+    return res(ctx.status(404), ctx.json({ error: 'Not found' }));
+  }),
+
+  // Also for the POST request
+  msw.rest.post(
+    'https://api.spotify.com/v1/playlists/pl_1/tracks',
+    async (req: any, res: any, ctx: any) => {
+      console.error('[handler] POST exact match!');
+
+      if (typeof res === 'function' && ctx) {
+        return res(ctx.json({ snapshot_id: `snapshot_${Date.now()}` }));
+      }
+      return msw.HttpResponse.json(
+        { snapshot_id: `snapshot_${Date.now()}` },
+        { status: 201 }
+      );
+    }
+  ),
+
   // Get user profile
   msw.rest.get(
     'https://api.spotify.com/v1/me',
@@ -219,53 +425,12 @@ export const handlers = [
   ),
 
   // Get playlist tracks
-  msw.http.get(
+  msw.rest.get(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    (info: any) => {
-      const request = normalizeRequest(info.request);
-      const token = tokenScenario(request);
-      if (token === 'trigger_429') {
-        return new msw.HttpResponse(null, {
-          status: 429,
-          headers: { 'Retry-After': '1' },
-        });
-      }
-
-      if (token === 'trigger_500') {
-        return msw.HttpResponse.json(
-          { error: 'server_error' },
-          { status: 500 }
-        );
-      }
-
-      if (token === 'trigger_401') {
-        return new msw.HttpResponse(null, { status: 401 });
-      }
-
-      const url = new URL(
-        request && request.url
-          ? request.url.toString()
-          : String((request && request.url) || '')
-      );
-      const limit = parseInt(url.searchParams.get('limit') || '100');
-      const offset = parseInt(url.searchParams.get('offset') || '0');
-
-      const playlistTracks = mockTracks.slice(offset, offset + limit);
-
-      return msw.HttpResponse.json({
-        items: playlistTracks.map((track: any) => ({ track })),
-        total: mockTracks.length,
-        limit,
-        offset,
-        next:
-          offset + limit < mockTracks.length
-            ? `https://api.spotify.com/v1/playlists/${info.params.playlistId}/tracks?limit=${limit}&offset=${offset + limit}`
-            : null,
-        previous:
-          offset > 0
-            ? `https://api.spotify.com/v1/playlists/${info.params.playlistId}/tracks?limit=${limit}&offset=${Math.max(0, offset - limit)}`
-            : null,
-      });
+    (req: any, res: any, ctx: any) => {
+      // This handler should not be reached due to wildcard handler above
+      console.error('[handler] PARAMETERIZED tracks handler reached');
+      return new msw.HttpResponse(null, { status: 404 });
     }
   ),
 
@@ -436,12 +601,14 @@ export const handlers = [
   ),
 
   // Create playlist
-  msw.http.post(
+  msw.rest.post(
     'https://api.spotify.com/v1/users/:userId/playlists',
-    async (info: any) => {
-      const request = normalizeRequest(info.request);
+    async (req: any, res: any, ctx: any) => {
+      const request = normalizeRequest(req);
       const token = tokenScenario(request);
       if (token === 'trigger_429') {
+        if (typeof res === 'function' && ctx)
+          return res(ctx.status(429), ctx.set('Retry-After', '1'));
         return new msw.HttpResponse(null, {
           status: 429,
           headers: { 'Retry-After': '1' },
@@ -469,7 +636,7 @@ export const handlers = [
         public: _body.public || false,
         collaborative: false,
         owner: {
-          id: info.params.userId,
+          id: req.params.userId,
           display_name: mockUserProfile.display_name,
         },
         tracks: {
@@ -482,15 +649,23 @@ export const handlers = [
         },
       };
 
+      if (typeof res === 'function' && ctx) {
+        return res(ctx.status(201), ctx.json(newPlaylist));
+      }
       return msw.HttpResponse.json(newPlaylist, { status: 201 });
     }
   ),
 
   // Add tracks to playlist
-  msw.http.post(
-    'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    async (info: any) => {
-      const request = normalizeRequest(info.request);
+  msw.rest.post(
+    'https://api.spotify.com/v1/playlists/*/tracks',
+    async (req: any, res: any, ctx: any) => {
+      const request = normalizeRequest(req);
+      console.error(
+        '[handler] POST tracks handler matched! req.url:',
+        request?.url
+      );
+
       const token = tokenScenario(request);
       if (token === 'trigger_429') {
         return new msw.HttpResponse(null, {
@@ -500,6 +675,8 @@ export const handlers = [
       }
 
       if (token === 'trigger_500') {
+        if (typeof res === 'function' && ctx)
+          return res(ctx.status(500), ctx.json({ error: 'server_error' }));
         return msw.HttpResponse.json(
           { error: 'server_error' },
           { status: 500 }
@@ -507,9 +684,16 @@ export const handlers = [
       }
 
       if (token === 'trigger_401') {
+        if (typeof res === 'function' && ctx) return res(ctx.status(401));
         return new msw.HttpResponse(null, { status: 401 });
       }
 
+      if (typeof res === 'function' && ctx) {
+        return res(
+          ctx.status(201),
+          ctx.json({ snapshot_id: `snapshot_${Date.now()}` })
+        );
+      }
       return msw.HttpResponse.json(
         { snapshot_id: `snapshot_${Date.now()}` },
         { status: 201 }
@@ -518,12 +702,14 @@ export const handlers = [
   ),
 
   // Remove tracks from playlist
-  msw.http.delete(
+  msw.rest.delete(
     'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-    async (info: any) => {
-      const request = normalizeRequest(info.request);
+    async (req: any, res: any, ctx: any) => {
+      const request = normalizeRequest(req);
       const token = tokenScenario(request);
       if (token === 'trigger_429') {
+        if (typeof res === 'function' && ctx)
+          return res(ctx.status(429), ctx.set('Retry-After', '1'));
         return new msw.HttpResponse(null, {
           status: 429,
           headers: { 'Retry-After': '1' },
@@ -531,6 +717,8 @@ export const handlers = [
       }
 
       if (token === 'trigger_500') {
+        if (typeof res === 'function' && ctx)
+          return res(ctx.status(500), ctx.json({ error: 'server_error' }));
         return msw.HttpResponse.json(
           { error: 'server_error' },
           { status: 500 }
@@ -538,9 +726,13 @@ export const handlers = [
       }
 
       if (token === 'trigger_401') {
+        if (typeof res === 'function' && ctx) return res(ctx.status(401));
         return new msw.HttpResponse(null, { status: 401 });
       }
 
+      if (typeof res === 'function' && ctx) {
+        return res(ctx.json({ snapshot_id: `snapshot_${Date.now()}` }));
+      }
       return msw.HttpResponse.json({ snapshot_id: `snapshot_${Date.now()}` });
     }
   ),
@@ -657,3 +849,13 @@ export const handlers = [
     }
   ),
 ];
+
+console.error('[handlers] Created', handlers.length, 'handlers');
+console.error(
+  '[handlers] First handler:',
+  handlers[0] ? 'defined' : 'undefined'
+);
+console.error(
+  '[handlers] Handler types:',
+  handlers.map((h: any, i: number) => `${i}: ${typeof h}`).slice(0, 5)
+);

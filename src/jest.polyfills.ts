@@ -458,6 +458,112 @@ try {
   } catch (e) {
     // ignore
   }
+
+  // Minimal CookieStore polyfill for MSW v2+ compatibility
+  try {
+    if (typeof (global as any).CookieStore === 'undefined') {
+      (global as any).CookieStore = class CookieStore extends EventTarget {
+        async get() {
+          return null;
+        }
+        async getAll() {
+          return [];
+        }
+        async set() {
+          // no-op
+        }
+        async delete() {
+          // no-op
+        }
+      };
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Ensure tough-cookie Store class is available globally for MSW
+  try {
+    if (typeof (global as any).Store === 'undefined') {
+      const toughCookie = require('@bundled-es-modules/tough-cookie');
+      if (toughCookie && toughCookie.Store) {
+        (global as any).Store = toughCookie.Store;
+      } else {
+        // Fallback minimal Store class
+        (global as any).Store = class Store {
+          constructor() {}
+          findCookie() {
+            return null;
+          }
+          findCookies() {
+            return [];
+          }
+          putCookie() {}
+          updateCookie() {}
+          removeCookie() {}
+          removeCookies() {}
+          removeAllCookies() {}
+          getAllCookies() {
+            return [];
+          }
+        };
+      }
+    }
+  } catch (e) {
+    // Fallback minimal Store class
+    try {
+      if (typeof (global as any).Store === 'undefined') {
+        (global as any).Store = class Store {
+          constructor() {}
+          findCookie() {
+            return null;
+          }
+          findCookies() {
+            return [];
+          }
+          putCookie() {}
+          updateCookie() {}
+          removeCookie() {}
+          removeCookies() {}
+          removeAllCookies() {}
+          getAllCookies() {
+            return [];
+          }
+        };
+      }
+    } catch (e2) {
+      // ignore
+    }
+  }
+
+  // Minimal CacheStorage polyfill for MSW compatibility
+  try {
+    if (typeof (global as any).CacheStorage === 'undefined') {
+      (global as any).CacheStorage = class CacheStorage {
+        async open() {
+          return {
+            match: async () => undefined,
+            add: async () => {},
+            addAll: async () => {},
+            put: async () => {},
+            delete: async () => false,
+            keys: async () => [],
+          };
+        }
+        async has() {
+          return false;
+        }
+        async delete() {
+          return false;
+        }
+        async keys() {
+          return [];
+        }
+      };
+      (global as any).caches = new (global as any).CacheStorage();
+    }
+  } catch (e) {
+    // ignore
+  }
 } catch (err) {
   // If anything goes wrong at module load, surface the error so test startup fails loudly.
   // eslint-disable-next-line no-console

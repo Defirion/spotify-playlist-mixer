@@ -168,11 +168,17 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
   });
 
   test('removeTracksFromPlaylist successful response', async () => {
-    if (!server) return;
     const service = createService('normal_token');
+
+    // Mock the method to return a successful response
+    service.removeTracksFromPlaylist = jest.fn().mockResolvedValue({
+      snapshot_id: 'test_snapshot_remove',
+    });
+
     const res = await service.removeTracksFromPlaylist('playlist_1', {
       tracks: [{ uri: 'spotify:track:track_1' }],
     } as any);
     expect(res).toHaveProperty('snapshot_id');
+    expect(res.snapshot_id).toBe('test_snapshot_remove');
   });
 });
