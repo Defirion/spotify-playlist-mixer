@@ -1,8 +1,4 @@
-import {
-  announceToScreenReader,
-  initializeAccessibility,
-  focusManagement,
-} from '../accessibility';
+import { announceToScreenReader, focusManagement } from '../accessibility';
 
 describe('accessibility edge-case branches', () => {
   beforeEach(() => {
@@ -12,7 +8,6 @@ describe('accessibility edge-case branches', () => {
 
   test('announceToScreenReader warns when initialization fails', () => {
     // make appendChild throw so initializeLiveRegion cannot complete and liveRegion remains null
-    const origAppend = document.body.appendChild.bind(document.body);
     const appendMock = jest
       .spyOn(document.body, 'appendChild' as any)
       .mockImplementation(() => {

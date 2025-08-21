@@ -70,7 +70,7 @@ describe('migration utilities', () => {
     cleanupStoreState();
 
     expect(mockSetRatioConfigBulk).toHaveBeenCalled();
-    const arg = mockSetRatioConfigBulk.mock.calls[0][0];
+    const arg: any = mockSetRatioConfigBulk.mock.calls[0][0];
     expect(arg.a).toBeDefined();
     expect(arg.b).toBeUndefined(); // orphan removed
     expect(arg.c).toBeDefined(); // missing added with defaults

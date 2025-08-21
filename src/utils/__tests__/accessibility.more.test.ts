@@ -20,7 +20,7 @@ test('module auto-initializes immediately when document.readyState is complete',
 
   // require the module fresh so auto-init runs
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('../accessibility');
+  require('../accessibility');
 
   // initialization should have appended nodes
   expect(document.getElementById('sr-live-region-polite')).toBeTruthy();
@@ -37,7 +37,7 @@ test('module attaches DOMContentLoaded listener when readyState loading and hand
 
   // require the module fresh to let it attach the listener
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('../accessibility');
+  require('../accessibility');
 
   // nodes should not exist yet
   expect(document.getElementById('sr-live-region-polite')).toBeFalsy();
