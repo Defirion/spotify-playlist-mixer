@@ -17,8 +17,17 @@ let liveRegion: LiveRegion | null = null;
  * Initialize the live region for screen reader announcements
  */
 const initializeLiveRegion = (): void => {
-  if (liveRegion || typeof document === 'undefined') {
-    return;
+  if (typeof document === 'undefined') return;
+
+  // If we previously created a region but the DOM was reset (e.g. jsdom test between cases),
+  // the stored references may be detached. Detect and recreate in that scenario.
+  if (liveRegion) {
+    const stillAttached =
+      document.body.contains(liveRegion.polite) &&
+      document.body.contains(liveRegion.assertive);
+    if (stillAttached) return; // already good
+    // references stale -> reset so we can recreate
+    liveRegion = null;
   }
 
   // Create polite live region
@@ -63,10 +72,8 @@ export const announceToScreenReader = (
     return;
   }
 
-  // Initialize live region if not already done
-  if (!liveRegion) {
-    initializeLiveRegion();
-  }
+  // Always attempt initialization so stale references after DOM reset are repaired
+  initializeLiveRegion();
 
   if (!liveRegion) {
     console.warn('Failed to initialize live region for accessibility');
@@ -204,8 +211,12 @@ export const focusManagement = {
  */
 export const prefersReducedMotion = (): boolean => {
   if (typeof window === 'undefined') return false;
-
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (typeof window.matchMedia !== 'function') return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
 };
 
 /**

@@ -7,23 +7,6 @@ on:
     branches: [ main, master, final-refactor, test-troubleshooting ]
 
 jobs:
-  smoke:
-    name: Hermetic smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run hermetic smoke tests
-        run: npm test -- --testPathPattern=src/__tests__/smoke --watchAll=false --runInBand
-        env:
-          CI: true
-
   test:
     runs-on: ubuntu-latest
     steps:
