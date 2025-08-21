@@ -105,16 +105,10 @@ function main() {
   const { suites, tests, runtimeMs } = readTestCounts();
   const now = new Date();
   const iso = now.toISOString();
-  const dayKey = iso.slice(0, 10);
-
+  // Always append a new snapshot (retain multiple entries per day)
   const history = loadHistory();
-  const existingIndex = history.history.findIndex((h) => h.date.startsWith(dayKey));
   const entry = { date: iso, statementsPct: pct, suites: suites ?? 0, tests: tests ?? 0, runtimeMs };
-  if (existingIndex >= 0) {
-    history.history[existingIndex] = entry; // replace for the day
-  } else {
-    history.history.push(entry);
-  }
+  history.history.push(entry);
   // Keep only latest 50 entries to bound file size
   if (history.history.length > 50) {
     history.history.splice(0, history.history.length - 50);

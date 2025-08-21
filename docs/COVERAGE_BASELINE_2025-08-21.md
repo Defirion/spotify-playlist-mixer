@@ -50,7 +50,7 @@ A JSON history file `coverage-history.json` will accumulate snapshots with:
   runtimeMs: number | null // if metrics script was run in same pipeline
 }
 ```
-Script `scripts/update-coverage-history.js` appends entries (idempotent per date if rerun the same day).
+Script `scripts/update-coverage-history.js` appends a new entry every run (multiple snapshots per day allowed) and trims history to the latest 50 entries.
 
 ## Next Steps (Phase 1 Task 1)
 1. Run `npm test -- --coverage --watchAll=false` to refresh coverage.
