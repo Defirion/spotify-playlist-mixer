@@ -34,6 +34,25 @@
       "suites": 114,
       "tests": 892,
       "runtimeMs": 28668
+    },
+    {
+      "date": "2025-08-21T09:09:43.990Z",
+      "statementsPct": 72.89,
+      "suites": 114,
+      "tests": 890,
+      "runtimeMs": 67754
+    },
+    {
+      "date": "2025-08-21T09:25:34.703Z",
+      "statementsPct": 72.75,
+      "suites": 116,
+      "tests": 894,
+      "runtimeMs": 11208
+    },
+    {
+      "date": "2025-08-21T09:32:34.844Z",
+      "statementsPct": 72.75,
+      "snapshot": "coverage\\snapshots\\coverage-snapshot-2025-08-21T09-32-34-832Z.json"
     }
   ]
 }

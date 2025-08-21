@@ -24,6 +24,8 @@
     "test:gate": "node scripts/json-serializability-gate.js",
     "perf:compare": "node scripts/comparePerf.js",
   "coverage:history": "node scripts/update-coverage-history.js",
+  "coverage:record": "node scripts/record-coverage-snapshot.js",
+  "coverage:diff": "node scripts/coverage-diff.js",
     "ci:test": "npm run test:gate && npm test -- --coverage --watchAll=false && node scripts/check-coverage.js",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
@@ -57,27 +59,7 @@
       "last 1 safari version"
     ]
   },
-  "jest": {
-    "transform": {
-      "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(?:@bundled-es-modules|undici|whatwg-fetch)/)"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-      "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/src/__mocks__/fileMock.ts",
-      ".*@bundled-es-modules/statuses/index-esm\\.js$": "<rootDir>/src/test-utils/statuses-cjs-shim.js",
-      ".*@bundled-es-modules/statuses.*": "<rootDir>/src/test-utils/statuses-cjs-shim.js",
-      ".*@bundled-es-modules/tough-cookie/index-esm\\.js$": "<rootDir>/src/test-utils/tough-cookie-cjs-shim.js",
-      ".*@bundled-es-modules/tough-cookie.*": "<rootDir>/src/test-utils/tough-cookie-cjs-shim.js",
-      ".*@bundled-es-modules/cookie/index-esm\\.js$": "<rootDir>/src/test-utils/cookie-cjs-shim.js",
-      ".*@bundled-es-modules/cookie.*": "<rootDir>/src/test-utils/cookie-cjs-shim.js",
-      "^@bundled-es-modules/statuses$": "<rootDir>/src/test-utils/statuses-cjs-shim.js",
-      "^@bundled-es-modules/tough-cookie$": "<rootDir>/src/test-utils/tough-cookie-cjs-shim.js",
-      "^@bundled-es-modules/cookie$": "<rootDir>/src/test-utils/cookie-cjs-shim.js"
-    }
-  },
+
   "devDependencies": {
     "@babel/core": "^7.28.3",
     "@babel/preset-env": "^7.28.3",
