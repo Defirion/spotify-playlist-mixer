@@ -10,22 +10,13 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(?:@bundled-es-modules|@mswjs|undici|whatwg-fetch)/)'
+    'node_modules/(?!(?:@bundled-es-modules|undici|whatwg-fetch)/)'
   ],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/src/__mocks__/fileMock.ts',
-  // (MSW mappings removed)
-    // Bundled ESM -> CJS shims for MSW dependencies
-    '.*@bundled-es-modules/statuses/index-esm\\.js$': '<rootDir>/src/test-utils/statuses-cjs-shim.js',
-    '.*@bundled-es-modules/statuses.*': '<rootDir>/src/test-utils/statuses-cjs-shim.js',
-    '.*@bundled-es-modules/tough-cookie/index-esm\\.js$': '<rootDir>/src/test-utils/tough-cookie-cjs-shim.js',
-    '.*@bundled-es-modules/tough-cookie.*': '<rootDir>/src/test-utils/tough-cookie-cjs-shim.js',
-    '.*@bundled-es-modules/cookie/index-esm\\.js$': '<rootDir>/src/test-utils/cookie-cjs-shim.js',
-    '.*@bundled-es-modules/cookie.*': '<rootDir>/src/test-utils/cookie-cjs-shim.js',
-    // General bundled-es-modules shims
-    '^@bundled-es-modules/statuses$': '<rootDir>/src/test-utils/statuses-cjs-shim.js',
-    '^@bundled-es-modules/tough-cookie$': '<rootDir>/src/test-utils/tough-cookie-cjs-shim.js',
-    '^@bundled-es-modules/cookie$': '<rootDir>/src/test-utils/cookie-cjs-shim.js',
+  // (Legacy MSW mappings removed earlier)
+    // Bundled ESM -> CJS shims for a few bundled-es-modules
+
   },
 };

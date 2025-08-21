@@ -3,7 +3,7 @@
  */
 
 import '../../jest.polyfills';
-// MSW removed from this test file; use local mocks and capture sinks
+// Use local mocks and capture sinks for network simulation in tests
 import { ApiError } from '../../services/apiErrorHandler';
 
 // Test-local mock that uses fetch (no axios) and supports a global capture
@@ -21,8 +21,8 @@ class TestMockSpotifyService {
     // @ts-ignore
     (global as any).__TEST_CAPTURE_URL = url;
 
-    // If a fetch polyfill / MSW is active, prefer to perform the network
-    // request so test-installed MSW handlers observe it.
+    // If a fetch polyfill is available, prefer to perform the network
+    // request so installed test handlers can observe it.
     // @ts-ignore
     if (typeof (global as any).fetch === 'function') {
       try {

@@ -2,8 +2,7 @@
  * @jest-environment node
  */
 
-// Increase Jest default timeout for these integration-style tests
-
+// Increase Jest default timeout for integration-style tests
 import SpotifyService from '../../services/spotify';
 
 type MSWInfo = {

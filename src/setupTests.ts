@@ -4,13 +4,9 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
-// MSW setup is available but not automatically enabled
-// Individual tests can import and use the server as needed
-// Example:
-// import { server } from './mocks/server';
-// beforeAll(() => server.listen());
-// afterEach(() => server.resetHandlers());
-// afterAll(() => server.close());
+// NOTE: MSW has been removed from the repository. Tests should use local
+// mocks (files under `src/test-utils/mocks` or `src/__tests__/mocks`) or
+// stub `global.fetch` directly when network behavior needs to be simulated.
 
 // Provide a test helper that captures console output and only replays it when
 // a test fails. Tests can call `await silenceIfPass(() => { ... })` or rely on
@@ -74,8 +70,9 @@ if (typeof (globalThis as any).navigator === 'undefined') {
 
 // --- Integration test global setup: register centralized hook mocks ---
 // This keeps mock registration consistent and avoids duplication across
-// integration test files. Individual tests may still opt into MSW by
-// importing and calling `setupMSW()` from `src/test-utils/msw`.
+// integration test files. Tests should rely on local mocks under
+// `src/test-utils/mocks` or stub `global.fetch` when simulating network
+// behavior.
 // Provide default mock implementations for the mixing hooks. Each factory
 // uses `require` inside the module factory so Jest does not capture out-of-
 // scope variables (which is disallowed for mock factories).

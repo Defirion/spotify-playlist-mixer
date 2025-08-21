@@ -4,8 +4,7 @@
 
 import '../../jest.polyfills';
 
-// MSW removed from this test file; use local mocks and capture sinks
-
+// Use local mocks and capture sinks for network simulation in tests
 import SpotifyService from '../../services/spotify';
 
 type MSWInfo = {

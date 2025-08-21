@@ -1,9 +1,10 @@
 // Nuclear polyfill: force a CommonJS-friendly fetch and headers implementation
-// for Jest tests. This sets globals so MSW and tests can rely on stable APIs.
+// for Jest tests. This sets globals so test code and interceptors can rely on
+// stable APIs.
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 try {
   // Ensure TextEncoder/TextDecoder exist (some Node/Jest environments lack them,
-  // and MSW/@mswjs/interceptors buffer utilities rely on them).
+  // and interceptors or buffer utilities may rely on them).
   try {
     if (
       typeof (global as any).TextEncoder === 'undefined' ||
@@ -45,10 +46,10 @@ try {
   } catch (e) {
     // ignore polyfill failures
   }
-  // Minimal BroadcastChannel polyfill used by MSW's internal pub/sub when
-  // running in environments without a real BroadcastChannel (like older
-  // jsdom/node versions). Implements a process-global channel map so
-  // different channel names can communicate within the same test process.
+  // Minimal BroadcastChannel polyfill used in environments without a real
+  // BroadcastChannel (like older jsdom/node versions). Implements a
+  // process-global channel map so different channel names can communicate
+  // within the same test process.
   try {
     if (typeof (global as any).BroadcastChannel === 'undefined') {
       const channels: Record<string, Set<any>> = {};
@@ -165,8 +166,8 @@ try {
   }
 
   // Wrap global.fetch so that any Response returned has headers.all() available
-  // and plain response-like objects returned by MSW/interceptors are wrapped
-  // into a real Response instance that implements json()/text().
+  // and plain response-like objects are wrapped into a Response instance
+  // that implements json()/text().
   try {
     // capture the current fetch implementation
     // @ts-ignore
@@ -200,7 +201,7 @@ try {
           // ignore header normalization errors
         }
 
-        // If MSW/interceptors returned a plain response-like object (with
+        // If an interceptor returned a plain response-like object (with
         // `body` and/or `status`) but no `.json()` method, wrap it into the
         // global Response polyfill so callers can call res.json()/res.text().
         try {
@@ -289,7 +290,7 @@ try {
         }
 
         // Debug: if response lacks .json(), print available keys to help
-        // diagnose why tests see undefined json() on responses from MSW.
+        // diagnose why tests see undefined json() on responses from interceptors.
         try {
           if (res && typeof res.json !== 'function') {
             // eslint-disable-next-line no-console
@@ -313,7 +314,7 @@ try {
     // ignore
   }
 
-  // Minimal Blob polyfill used by MSW's HttpResponse.size calculations.
+  // Minimal Blob polyfill used by Response size calculations.
   try {
     if (typeof (global as any).Blob === 'undefined') {
       (global as any).Blob = class Blob {
@@ -459,7 +460,8 @@ try {
     // ignore
   }
 
-  // Minimal CookieStore polyfill for MSW v2+ compatibility
+  // Minimal CookieStore polyfill for compatibility in environments missing
+  // the CookieStore global.
   try {
     if (typeof (global as any).CookieStore === 'undefined') {
       (global as any).CookieStore = class CookieStore extends EventTarget {
@@ -481,7 +483,7 @@ try {
     // ignore
   }
 
-  // Ensure tough-cookie Store class is available globally for MSW
+  // Ensure tough-cookie Store class is available globally when present.
   try {
     if (typeof (global as any).Store === 'undefined') {
       const toughCookie = require('@bundled-es-modules/tough-cookie');
@@ -535,7 +537,7 @@ try {
     }
   }
 
-  // Minimal CacheStorage polyfill for MSW compatibility
+  // Minimal CacheStorage polyfill for environments without CacheStorage
   try {
     if (typeof (global as any).CacheStorage === 'undefined') {
       (global as any).CacheStorage = class CacheStorage {
