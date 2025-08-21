@@ -54,17 +54,31 @@ export const makeUseMixPreviewModule = (impl?: UseMixPreviewImpl) => {
       let setState: (updater: any) => void;
 
       try {
-        // Try to use hooks (works when called inside a component)
-        // This will throw when invoked outside hook rules, which we catch below.
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const tuple = React.useState<any>({
-          preview: null,
-          loading: false,
-          error: null,
-          customTrackOrder: null,
-        });
-        state = tuple[0];
-        setState = tuple[1];
+        // Try to use hooks (works when called inside a component).
+        // React prints an "Invalid hook call" warning to console.error when
+        // useState is invoked outside a component. Temporarily silence
+        // console.error so tests that intentionally call this factory
+        // directly don't pollute test output; we still catch the thrown
+        // error and fallback to a non-hook implementation below. Respect
+        // TEST_VERBOSE so developers can opt-in to seeing the React warning.
+        const shouldSilence = !String(
+          process.env.TEST_VERBOSE || ''
+        ).toLowerCase();
+        const originalConsoleError = console.error;
+        try {
+          if (shouldSilence) (console as any).error = (..._args: any[]) => {};
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const tuple = React.useState<any>({
+            preview: null,
+            loading: false,
+            error: null,
+            customTrackOrder: null,
+          });
+          state = tuple[0];
+          setState = tuple[1];
+        } finally {
+          console.error = originalConsoleError;
+        }
       } catch (err) {
         // Fallback non-hook state for direct invocation in tests.
         isHookContext = false;

@@ -23,6 +23,23 @@ if (typeof process !== 'undefined' && process.env) {
   process.env.TEST_VERBOSE = String(process.env.TEST_VERBOSE || 'false');
 }
 
+// Global quiet-mode for console.error: by default tests stay quiet unless
+// TEST_VERBOSE is explicitly enabled. Individual test suites can still
+// spyOn(console, 'error') to assert calls — jest.spyOn will replace this
+// wrapper during the test and capture calls as expected.
+(() => {
+  const orig = console.error.bind(console);
+  // install wrapper
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (console as any).error = (...args: any[]) => {
+    const v = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (v === '1' || v === 'true') {
+      orig(...args);
+    }
+    // otherwise noop to keep CI output clean
+  };
+})();
+
 // Extend Jest matchers with custom DOM matchers
 declare global {
   namespace jest {

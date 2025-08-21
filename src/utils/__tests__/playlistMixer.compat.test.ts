@@ -1,4 +1,4 @@
-import * as compat from '../playlistMixer';
+import * as compat from '../mixer';
 import * as mixer from '../mixer/playlistMixer';
 
 describe('playlistMixer compatibility re-exports', () => {

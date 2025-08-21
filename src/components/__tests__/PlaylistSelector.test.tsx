@@ -79,6 +79,23 @@ describe('PlaylistSelector', () => {
   const mockUseSpotifyUrlHandler =
     require('../../hooks/useSpotifyUrlHandler').useSpotifyUrlHandler;
 
+  // Per-suite console.error spy to keep passing test output quiet.
+  // Respects TEST_VERBOSE so developers can opt into seeing errors.
+  let consoleErrorSpy: jest.SpyInstance;
+  beforeAll(() => {
+    const shouldShow = String(process.env.TEST_VERBOSE || '').toLowerCase();
+    if (shouldShow !== '1' && shouldShow !== 'true') {
+      consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+    }
+  });
+  afterAll(() => {
+    if (consoleErrorSpy) {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 

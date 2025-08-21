@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, fireEvent, screen, waitFor } from '@testing-library/react';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import PlaylistSelector from '../../components/PlaylistSelector';
 import * as usePlaylistSearchModule from '../../hooks/usePlaylistSearch';
 import * as useSpotifyUrlHandlerModule from '../../hooks/useSpotifyUrlHandler';
@@ -470,7 +476,9 @@ describe('PlaylistSelector', () => {
     fireEvent.blur(input);
 
     // advance timers so the delayed setShowResults runs
-    jest.advanceTimersByTime(150);
+    act(() => {
+      jest.advanceTimersByTime(150);
+    });
     expect(setShowResults).toHaveBeenCalledWith(false);
 
     jest.useRealTimers();
@@ -685,7 +693,9 @@ describe('PlaylistSelector', () => {
     fireEvent.click(item);
 
     // Advance timers so the delayed focus runs
-    jest.advanceTimersByTime(150);
+    act(() => {
+      jest.advanceTimersByTime(150);
+    });
 
     // Last call should be the fallback (no args)
     const calls = (focusMock as jest.Mock).mock.calls;
@@ -761,14 +771,18 @@ describe('PlaylistSelector', () => {
     expect(screen.getByTestId('loading-overlay')).toBeTruthy();
 
     // Resolve the add
-    jest.advanceTimersByTime(50);
+    act(() => {
+      jest.advanceTimersByTime(50);
+    });
     // Let promises settle
     await waitFor(() =>
       expect(mockOnSelect).toHaveBeenCalledWith({ id: 'added', name: 'Added' })
     );
 
     // The autofocus scheduled by onPlaylistSelect should run after its 100ms timeout
-    jest.advanceTimersByTime(100);
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
     const calls = (focusMock as jest.Mock).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
 
@@ -956,7 +970,6 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const result = screen.getByText('H1');
     const container = screen
       .getAllByRole('button')
       .find(b => b.textContent?.includes('H1')) as HTMLElement;
@@ -1121,7 +1134,6 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const result = screen.getByText('HoverMe');
     // result is inside a role=button container; find it via role queries to avoid node access
     const container = screen
       .getAllByRole('button')

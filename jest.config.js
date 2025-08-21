@@ -19,4 +19,9 @@ module.exports = {
     // Bundled ESM -> CJS shims for a few bundled-es-modules
 
   },
+  coveragePathIgnorePatterns: [
+    '<rootDir>/src/jest.polyfills.ts',
+  '<rootDir>/src/types/.*\\.ts$',
+  '<rootDir>/tools/coverage_report.js',
+  ],
 };

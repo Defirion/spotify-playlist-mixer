@@ -43,5 +43,8 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Local tools and scripts (ignore coverage helper)
+tools/coverage_report.js
+
 # Spotify credentials (if we move them to env file)
 config.js

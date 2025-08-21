@@ -1,4 +1,4 @@
-import { mixPlaylists } from '../playlistMixer';
+import { mixPlaylists } from '../mixer';
 
 // Minimal fixture to exercise mixing behavior via compat layer
 const smallPlaylists = {

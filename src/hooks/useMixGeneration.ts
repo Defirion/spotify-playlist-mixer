@@ -8,6 +8,7 @@ import {
   RatioConfig,
   MixedTrack,
 } from '../types';
+import normalizeMixResult from '../utils/normalizeMixResult';
 
 interface MixGenerationState {
   loading: boolean;
@@ -20,6 +21,7 @@ interface MixGenerationState {
 interface UseMixGenerationOptions {
   onError?: (error: string) => void;
   onSuccess?: (tracks: MixedTrack[]) => void;
+  onEvent?: (event: MixGenerationEvent) => void;
 }
 
 interface UseMixGenerationReturn {
@@ -36,6 +38,40 @@ interface UseMixGenerationReturn {
   reset: () => void;
 }
 
+export type MixGenerationEvent =
+  | { type: 'playlistEmpty'; playlistId: string; name?: string }
+  | {
+      type: 'playlistFetchFailed';
+      playlistId: string;
+      name?: string;
+      error: string;
+    }
+  | {
+      type: 'mixingStoppedEarly';
+      exhaustedPlaylists: string[];
+      names: string[];
+    }
+  | { type: 'skippingTrackMissingUri'; track: any }
+  | { type: 'noValidTrackUris' };
+
+/**
+ * JSDoc - Events and staleness guarantees
+ *
+ * Events emitted via the optional `onEvent` callback have the discriminated
+ * union shape `MixGenerationEvent` (above). Consumers can switch on `event.type`
+ * and expect the listed properties to be present for each variant.
+ *
+ * Staleness / cancellation behavior:
+ * - Each call to `generateMix` increments an internal call id. If a newer
+ *   invocation starts before an earlier one finishes, the earlier call will
+ *   return its computed tracks but will NOT update hook state or call
+ *   `onSuccess`/`onError` (the latest call owns state updates). This prevents
+ *   racey setState from stale async work.
+ * - When the `accessToken` prop changes, an internal token version is bumped.
+ *   Any in-flight `generateMix` that started with a previous token version will
+ *   also be treated as stale and prevented from mutating hook state.
+ */
+
 /**
  * Custom hook for handling playlist mixing logic
  * Encapsulates the complex business logic for generating mixed playlists
@@ -44,7 +80,7 @@ export const useMixGeneration = (
   accessToken: string,
   options: UseMixGenerationOptions = {}
 ): UseMixGenerationReturn => {
-  const { onError, onSuccess } = options;
+  const { onError, onSuccess, onEvent } = options;
 
   const [state, setState] = useState<MixGenerationState>({
     loading: false,
@@ -55,6 +91,21 @@ export const useMixGeneration = (
   });
 
   const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const currentCallIdRef = useRef(0); // per-generateMix invocation guard
+  const tokenVersionRef = useRef(0); // increments when accessToken changes
+
+  const dispatchEvent = useCallback(
+    (e: MixGenerationEvent) => {
+      if (onEvent) {
+        try {
+          onEvent(e);
+        } catch {
+          /* swallow */
+        }
+      }
+    },
+    [onEvent]
+  );
 
   // Initialize Spotify service
   useEffect(() => {
@@ -63,6 +114,7 @@ export const useMixGeneration = (
     } else {
       spotifyServiceRef.current = null;
     }
+    tokenVersionRef.current++; // bump version so stale calls abort
   }, [accessToken]);
 
   const generateMix = useCallback(
@@ -71,6 +123,9 @@ export const useMixGeneration = (
       ratioConfig: RatioConfig,
       mixOptions: MixOptions
     ): Promise<MixedTrack[]> => {
+      // increment call id for this invocation
+      const callId = ++currentCallIdRef.current;
+      const startTokenVersion = tokenVersionRef.current;
       if (!spotifyServiceRef.current) {
         throw new Error('Spotify service not available');
       }
@@ -87,22 +142,47 @@ export const useMixGeneration = (
           throw new Error('Please select at least 2 playlists');
         }
 
-        // Fetch all tracks from selected playlists
+        // Fetch all tracks in parallel (Promise.allSettled for robust partial failure handling)
+        const fetchSpecs = selectedPlaylists.map(pl => ({
+          playlist: pl,
+          promise: spotifyServiceRef.current!.getPlaylistTracks(pl.id),
+        }));
+
+        const settledResults = await Promise.allSettled(
+          fetchSpecs.map(f => f.promise)
+        );
+
         const playlistTracks: Record<string, SpotifyTrack[]> = {};
-        for (const playlist of selectedPlaylists) {
-          try {
-            const result = await spotifyServiceRef.current.getPlaylistTracks(
-              playlist.id
-            );
+        settledResults.forEach((res, idx) => {
+          const { playlist } = fetchSpecs[idx];
+          if (res.status === 'fulfilled') {
+            const result = res.value;
             if (result.tracks.length === 0) {
               console.warn(`Playlist ${playlist.name} has no tracks`);
+              dispatchEvent({
+                type: 'playlistEmpty',
+                playlistId: playlist.id,
+                name: playlist.name,
+              });
             }
             playlistTracks[playlist.id] = result.tracks;
-          } catch (err) {
-            console.error(`Failed to fetch tracks from ${playlist.name}:`, err);
-            playlistTracks[playlist.id] = []; // Continue with empty array
+          } else {
+            console.error(
+              `Failed to fetch tracks from ${playlist.name}:`,
+              res.reason
+            );
+            dispatchEvent({
+              type: 'playlistFetchFailed',
+              playlistId: playlist.id,
+              name: playlist.name,
+              error:
+                res.reason instanceof Error
+                  ? res.reason.message
+                  : String(res.reason),
+            });
+            playlistTracks[playlist.id] = [];
           }
-        }
+        });
 
         // Check if we have any tracks
         const totalAvailableTracks = Object.values(playlistTracks).reduce(
@@ -116,45 +196,12 @@ export const useMixGeneration = (
         // Generate mix using the standard algorithm
         const mixResult = mixPlaylists(playlistTracks, ratioConfig, mixOptions);
 
-        // Handle different return types from mixPlaylists
-        let mixedTracks: MixedTrack[] = [];
-        let exhaustedPlaylists: string[] = [];
-        let stoppedEarly = false;
-
-        if (mixResult === null || mixResult === undefined) {
-          console.error('mixResult is null or undefined');
-          mixedTracks = [];
-        } else if (Array.isArray(mixResult)) {
-          mixedTracks = [...mixResult];
-          exhaustedPlaylists = (mixResult as any).exhaustedPlaylists || [];
-          stoppedEarly = (mixResult as any).stoppedEarly || false;
-        } else if (mixResult && typeof mixResult === 'object') {
-          const resultObj = mixResult as any;
-          if (Array.isArray(resultObj.tracks)) {
-            mixedTracks = [...resultObj.tracks];
-          } else {
-            console.error(
-              'mixResult.tracks is not an array:',
-              resultObj.tracks
-            );
-            mixedTracks = [];
-          }
-          exhaustedPlaylists = resultObj.exhaustedPlaylists || [];
-          stoppedEarly = resultObj.stoppedEarly || false;
-        } else {
-          console.error(
-            'mixResult is not an array or object:',
-            typeof mixResult,
-            mixResult
-          );
-          mixedTracks = [];
-        }
-
-        // Final safety check
-        if (!Array.isArray(mixedTracks)) {
-          console.error('mixedTracks is not an array after processing!');
-          mixedTracks = [];
-        }
+        // Normalize the mix result into a predictable shape
+        const {
+          tracks: mixedTracks,
+          exhaustedPlaylists,
+          stoppedEarly,
+        } = normalizeMixResult(mixResult);
 
         if (mixedTracks.length === 0) {
           throw new Error('Failed to mix playlists - no tracks generated');
@@ -168,6 +215,21 @@ export const useMixGeneration = (
           console.warn(
             `⚠️ Mixing stopped early because these playlists ran out of songs: ${exhaustedNames}`
           );
+          dispatchEvent({
+            type: 'mixingStoppedEarly',
+            exhaustedPlaylists,
+            names: exhaustedPlaylists.map(
+              id => selectedPlaylists.find(p => p.id === id)?.name || id
+            ),
+          });
+        }
+
+        // If this call is stale (a newer generateMix started), do not update state
+        if (
+          callId !== currentCallIdRef.current ||
+          startTokenVersion !== tokenVersionRef.current
+        ) {
+          return mixedTracks;
         }
 
         setState(prev => ({
@@ -186,20 +248,26 @@ export const useMixGeneration = (
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Unknown error occurred';
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: errorMessage,
-        }));
+        // Only update state / call onError for the latest invocation
+        if (
+          callId === currentCallIdRef.current &&
+          startTokenVersion === tokenVersionRef.current
+        ) {
+          setState(prev => ({
+            ...prev,
+            loading: false,
+            error: errorMessage,
+          }));
 
-        if (onError) {
-          onError(errorMessage);
+          if (onError) {
+            onError(errorMessage);
+          }
         }
 
         throw err;
       }
     },
-    [onError, onSuccess]
+    [onError, onSuccess, dispatchEvent]
   );
 
   const createPlaylist = useCallback(
@@ -242,6 +310,7 @@ export const useMixGeneration = (
           .filter(track => {
             if (!track || !track.uri) {
               console.warn('Skipping track due to missing URI:', track);
+              dispatchEvent({ type: 'skippingTrackMissingUri', track });
               return false;
             }
             return true;
@@ -249,6 +318,7 @@ export const useMixGeneration = (
           .map(track => track.uri);
 
         if (trackUris.length === 0) {
+          dispatchEvent({ type: 'noValidTrackUris' });
           throw new Error('No valid track URIs found');
         }
 
@@ -290,7 +360,7 @@ export const useMixGeneration = (
         throw err;
       }
     },
-    [onError]
+    [onError, dispatchEvent]
   );
 
   const reset = useCallback(() => {

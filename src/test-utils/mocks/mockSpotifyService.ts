@@ -79,8 +79,11 @@ export function makeMockSpotifyService() {
       });
       if (options.market) params.append('market', options.market);
       const url = `https://api.spotify.com/v1/search?${params.toString()}`;
-      // eslint-disable-next-line no-console
-      console.error('[mockSpotifyService] fetch search url', url);
+      // debug logging - only enabled when TEST_VERBOSE is set to avoid noisy tests
+      if (process.env.TEST_VERBOSE) {
+        // eslint-disable-next-line no-console
+        console.error('[mockSpotifyService] fetch search url', url);
+      }
 
       // Add retry logic for 429 responses (rate limits)
       let retryCount = 0;
@@ -309,35 +312,39 @@ export function makeMockSpotifyService() {
       // loop pages
       while (true) {
         const url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`;
-        console.error(
-          '[MockSpotifyService] About to call fetch:',
-          typeof (global as any).fetch
-        );
-        console.error(
-          '[MockSpotifyService] Fetch function is:',
-          (global as any).fetch
-        );
-        console.error(
-          '[MockSpotifyService] Is jest mock?',
-          (global as any).fetch && (global as any).fetch._isMockFunction
-        );
-        console.error(
-          '[MockSpotifyService] Mock calls before:',
-          (global as any).fetch?.mock?.calls?.length
-        );
+        if (process.env.TEST_VERBOSE) {
+          console.error(
+            '[MockSpotifyService] About to call fetch:',
+            typeof (global as any).fetch
+          );
+          console.error(
+            '[MockSpotifyService] Fetch function is:',
+            (global as any).fetch
+          );
+          console.error(
+            '[MockSpotifyService] Is jest mock?',
+            (global as any).fetch && (global as any).fetch._isMockFunction
+          );
+          console.error(
+            '[MockSpotifyService] Mock calls before:',
+            (global as any).fetch?.mock?.calls?.length
+          );
+        }
         const res = await (global as any).fetch(url, {
           headers: { Authorization: `Bearer ${this.accessToken}` },
         });
-        console.error(
-          '[MockSpotifyService] Mock calls after:',
-          (global as any).fetch?.mock?.calls?.length
-        );
-        console.error(
-          '[MockSpotifyService] Fetch returned:',
-          res,
-          'type:',
-          typeof res
-        );
+        if (process.env.TEST_VERBOSE) {
+          console.error(
+            '[MockSpotifyService] Mock calls after:',
+            (global as any).fetch?.mock?.calls?.length
+          );
+          console.error(
+            '[MockSpotifyService] Fetch returned:',
+            res,
+            'type:',
+            typeof res
+          );
+        }
         const text = await res.text().catch(() => '');
         let data: any = {};
         try {
@@ -345,16 +352,18 @@ export function makeMockSpotifyService() {
         } catch (e) {
           data = { __raw: text };
         }
-        // debug
-        // eslint-disable-next-line no-console
-        console.error(
-          '[mockSpotifyService] fetched',
-          url,
-          'status',
-          res && res.status,
-          'rawBody',
-          text ? text.slice(0, 200) : '<empty>'
-        );
+        if (process.env.TEST_VERBOSE) {
+          // debug
+          // eslint-disable-next-line no-console
+          console.error(
+            '[mockSpotifyService] fetched',
+            url,
+            'status',
+            res && res.status,
+            'rawBody',
+            text ? text.slice(0, 200) : '<empty>'
+          );
+        }
         const items = (data.items || []).map((it: any) => it.track || it);
         all = all.concat(items);
         total =

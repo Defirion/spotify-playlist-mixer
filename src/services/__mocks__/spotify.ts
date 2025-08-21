@@ -350,9 +350,9 @@ class MockSpotifyService {
 // Export a jest mock function that constructs the MockSpotifyService instance.
 // Tests expect the mocked module to be a Jest mock (have mockImplementation, mockRestore, etc.).
 // Use `as any` to avoid tight TypeScript types in the mock file.
-const MockSpotifyServiceFactory: any =
-  jest && typeof jest.fn === 'function'
-    ? jest.fn((accessToken: string) => new MockSpotifyService(accessToken))
-    : (accessToken: string) => new MockSpotifyService(accessToken);
+// Export a Jest mock factory so tests can spy/mock its behavior reliably.
+const MockSpotifyServiceFactory: any = jest.fn(
+  (accessToken: string) => new MockSpotifyService(accessToken)
+);
 
 export default MockSpotifyServiceFactory;

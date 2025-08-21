@@ -1,8 +1,4 @@
-import {
-  mixPlaylists,
-  validateInputs,
-  createMixingContext,
-} from '../playlistMixer';
+import { mixPlaylists, validateInputs, createMixingContext } from '../mixer';
 import { MixOptions, RatioConfig } from '../../types/mixer';
 
 // Minimal fake track including artists to satisfy logging in mixingCalculations

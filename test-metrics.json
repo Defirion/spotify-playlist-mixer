@@ -69,6 +69,20 @@
       "suites": null,
       "tests": null,
       "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T16:16:36.361Z",
+      "durationMs": 8423,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T23:05:12.952Z",
+      "durationMs": 12680,
+      "suites": null,
+      "tests": null,
+      "exitCode": 1
     }
   ]
 }

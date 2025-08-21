@@ -1,6 +1,7 @@
 import React from 'react';
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import { makePlaylistWithTracks } from '../../../src/test-utils/fixtures/playlistFactory';
+import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactory';
 
 import PlaylistMixer from '../../components/PlaylistMixer';
 

@@ -328,19 +328,26 @@ export class ApiErrorHandler {
     error: Error | AxiosError,
     context: ErrorContext = {}
   ): ApiError {
+    // Safely extract message for checks that may run on plain objects
+    // (some tests throw plain objects without a `message` property).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyErr: any = error as any;
+    const safeMessage =
+      typeof anyErr?.message === 'string' ? anyErr.message : '';
+
     // Network/connection errors
     if (
       !('response' in error) &&
-      (('code' in error && error.code === 'NETWORK_ERROR') ||
-        error.message.includes('Network Error'))
+      ((typeof anyErr?.code === 'string' && anyErr.code === 'NETWORK_ERROR') ||
+        safeMessage.includes('Network Error'))
     ) {
       return new ApiError(ERROR_TYPES.NETWORK, error, context);
     }
 
     // Timeout errors
     if (
-      ('code' in error && error.code === 'ECONNABORTED') ||
-      error.message.includes('timeout')
+      (typeof anyErr?.code === 'string' && anyErr.code === 'ECONNABORTED') ||
+      safeMessage.includes('timeout')
     ) {
       return new ApiError(ERROR_TYPES.TIMEOUT, error, context);
     }
@@ -351,7 +358,6 @@ export class ApiErrorHandler {
     // and user messaging behave correctly during tests and in CI.
     // Also catch common Node error codes that indicate network failures.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const anyErr: any = error as any;
     if (
       (anyErr && 'request' in anyErr && !('response' in anyErr)) ||
       (anyErr &&

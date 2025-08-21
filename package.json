@@ -60,6 +60,14 @@
     ]
   },
 
+  "jest": {
+    "coveragePathIgnorePatterns": [
+  "<rootDir>/src/jest.polyfills.ts",
+  "<rootDir>/src/types/.*\\.ts$",
+  "<rootDir>/src/index.tsx"
+    ]
+  },
+
   "devDependencies": {
     "@babel/core": "^7.28.3",
     "@babel/preset-env": "^7.28.3",
