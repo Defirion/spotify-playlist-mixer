@@ -69,8 +69,8 @@
 
 ## Phase 2: High Priority Files (50-70% coverage)
 
-- [ ] 6. Enhance main application component tests
-- [ ] 6.1 Improve App.tsx test coverage (currently 50%)
+- [x] 6. Enhance main application component tests
+- [x] 6.1 Improve App.tsx test coverage (currently 50%)
   - Add tests for authentication state management
   - Test route handling and navigation flows
   - Cover error boundary integration and global error handling
@@ -78,7 +78,7 @@
   - Create PR with coverage report comparison showing progress toward 88% target
   - _Requirements: 2.2, 3.1, 3.2, 4.1, 4.2_
 
-- [ ] 6.2 Enhance DndProvider.tsx test coverage (currently 55.55%)
+- [x] 6.2 Enhance DndProvider.tsx test coverage (currently 55.55%)
   - Add tests for drag and drop context initialization
   - Test sensor configuration and touch/mouse handling
   - Cover collision detection and drop zone management

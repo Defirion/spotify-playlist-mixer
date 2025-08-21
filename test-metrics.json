@@ -1,0 +1,25 @@
+{
+  "runs": [
+    {
+      "date": "2025-08-21T10:00:43.391Z",
+      "durationMs": 6018,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T10:02:35.862Z",
+      "durationMs": 5538,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    },
+    {
+      "date": "2025-08-21T10:26:25.517Z",
+      "durationMs": 5429,
+      "suites": null,
+      "tests": null,
+      "exitCode": 0
+    }
+  ]
+}
