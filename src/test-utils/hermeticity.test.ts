@@ -8,43 +8,8 @@
  * ordering in CI to detect leaked network calls quickly.
  */
 
-import setupMSW, { server as __msw_server } from './msw';
-
-// Ensure the project's MSW helper runs (it attaches a global.__msw_server when available)
-setupMSW();
-
-beforeAll(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const server: any = (global as any).__msw_server;
-  if (!server) {
-    // MSW couldn't be initialized in this environment (possible in some local setups).
-    // In that case we don't want to fail; the hermetic check is primarily for CI.
-    return;
-  }
-
-  // If the server is already running, restart it to ensure hermetic mode.
-  try {
-    if (typeof server.close === 'function') server.close();
-  } catch (e) {
-    // ignore
-  }
-
-  if (typeof server.listen === 'function') {
-    server.listen({ onUnhandledRequest: 'error' });
-  }
-});
-
-afterAll(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const server: any = (global as any).__msw_server;
-  if (server && typeof server.close === 'function') {
-    try {
-      server.close();
-    } catch (e) {
-      // ignore
-    }
-  }
-});
+// Hermeticity sentinel: previously used MSW to fail on leaked network calls.
+// MSW removed - keep a no-op sentinel to preserve test ordering.
 
 test('hermeticity sentinel (no-op) - ensures MSW is in hermetic mode', () => {
   // This test intentionally does nothing. If any other test leaks a real

@@ -3,12 +3,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // using inline mock factories below; legacy helpers omitted
-import setupMSW from '../../test-utils/msw';
-
-// MSW test setup helper
-// Avoid importing MSW in this test (MSW v2 pulls ESM deps that break Jest transform in this config).
-// Instead, mock the SpotifyService used by the mixing hook to provide deterministic fixtures.
-
+// MSW removed; use local mocks only
 // Component under test (use real hooks to exercise mixing logic)
 import {
   mockPlaylists,
@@ -18,8 +13,7 @@ import {
 
 import PlaylistMixer from '../../components/PlaylistMixer';
 
-// Start MSW server for network-style tests in this suite (handlers are lightweight)
-setupMSW();
+// MSW removed; no server started here
 
 // Mock the SpotifyService class used by hooks so mixing flow runs deterministically
 jest.mock('../../services/spotify', () => {

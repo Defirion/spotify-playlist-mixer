@@ -2,8 +2,7 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw';
-import * as msw from 'msw';
+// MSW removed from this test; use local mocks only
 import SpotifyService from '../../services/spotify';
 
 type MSWInfo = {
@@ -18,20 +17,18 @@ jest.mock('../../services/spotify', () => ({
     require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
 }));
 
-const server = setupMSW();
+// no-op: MSW removed
 
 // Tests rely on global.fetch + MSW; no axios adapter required.
 
 describe('SpotifyService - Batch C (search & audio features)', () => {
   test('searchTracks validation: empty query rejects', async () => {
-    if (!server) return;
     const service = new SpotifyService('normal_token');
     // @ts-ignore
     await expect(service.searchTracks('')).rejects.toBeDefined();
   });
 
   test('searchPlaylists validation: empty query rejects', async () => {
-    if (!server) return;
     const service = new SpotifyService('normal_token');
     // @ts-ignore
     await expect(service.searchPlaylists('')).rejects.toBeDefined();

@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import setupMSW from '../../test-utils/msw';
+// MSW removed: tests use local TestMockSpotifyService instead of network handlers
 import { ApiError, ERROR_TYPES } from '../../services/apiErrorHandler';
 
 // Test-local mock class to avoid axios and network in this suite. This keeps
@@ -93,9 +93,6 @@ class TestMockSpotifyService {
 
 const SpotifyService = TestMockSpotifyService;
 
-// Initialize MSW server
-const server = setupMSW();
-
 try {
   // Ensure axios uses the http adapter in node tests for consistent headers
   // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
@@ -111,7 +108,6 @@ describe('SpotifyService - Batch E (remove/create/playlists edge cases)', () => 
   const ACCESS_TOKEN = 'normal_token';
 
   test('removeTracksFromPlaylist returns snapshot_id for valid request', async () => {
-    if (!server) return;
     const service = new SpotifyService(ACCESS_TOKEN);
     const res = await service.removeTracksFromPlaylist('playlist_1', {
       tracks: [{ uri: 'spotify:track:track_1' }],

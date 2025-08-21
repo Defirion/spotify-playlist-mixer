@@ -3,7 +3,7 @@
  */
 
 import '../../jest.polyfills';
-import setupMSW from '../../test-utils/msw';
+// MSW removed from this test file; use local mocks and capture sinks
 import { ApiError } from '../../services/apiErrorHandler';
 
 // Test-local mock that uses fetch (no axios) and supports a global capture
@@ -471,7 +471,7 @@ class TestMockSpotifyService {
 
 const SpotifyService = TestMockSpotifyService;
 
-const server = setupMSW();
+// no-op: MSW removed
 
 describe('SpotifyService - Batch F (batching, params, search, audio features, retry)', () => {
   const ACCESS_TOKEN = 'normal_token';
@@ -482,43 +482,6 @@ describe('SpotifyService - Batch F (batching, params, search, audio features, re
     // deterministic and match MSW handler expectations.
     // @ts-ignore
     (global as any).__TEST_CAPTURE_BODIES = capturedBodies;
-
-    // override handler to capture request bodies and return predictable snapshot ids
-    server?.use(
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('msw').rest.post(
-        'https://api.spotify.com/v1/playlists/:playlistId/tracks',
-        async (req: any, res: any, ctx: any) => {
-          try {
-            const request = req && req.request ? req.request : req;
-            let body: any = {};
-            try {
-              if (request && typeof request.json === 'function') {
-                body = await request.json();
-              } else {
-                body = req && req.body ? req.body : {};
-              }
-            } catch (e) {
-              body = req && req.body ? req.body : {};
-            }
-            capturedBodies.push(body);
-            const id = `snap_${capturedBodies.length}`;
-            return res(ctx.status(201), ctx.json({ snapshot_id: id }));
-          } catch (e: any) {
-            // eslint-disable-next-line no-console
-            console.error(
-              '[msw handler error] playlists post',
-              e && e.stack ? e.stack : e
-            );
-            return res(
-              ctx.status(500),
-              ctx.json({ message: String(e), name: e && e.name })
-            );
-          }
-        }
-      )
-    );
-
     const service = new SpotifyService(ACCESS_TOKEN);
 
     const total = 205;

@@ -15,21 +15,7 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/src/__mocks__/fileMock.ts',
-    // Prefer our msw CJS shim so tests receive a consistent runtime and
-    // defensive wrappers (for request.json() etc.) are applied.
-    '^msw$': '<rootDir>/src/test-utils/msw-cjs-shim.js',
-    '^msw/node$': '<rootDir>/src/test-utils/msw-cjs-shim.js',
-    '^msw/(.*)$': '<rootDir>/src/test-utils/msw-cjs-shim.js',
-    // Ensure internal source imports (msw/src/...) resolve to compiled lib
-    '^msw/src/(.*)$': '<rootDir>/node_modules/msw/lib/core/$1.js',
-    // Ensure @mswjs/interceptors resolves to its node CJS build
-    '^@mswjs/interceptors$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/index.js',
-    '^@mswjs/interceptors/WebSocket$': '<rootDir>/node_modules/@mswjs/interceptors/lib/browser/interceptors/WebSocket/index.js',
-    '^@mswjs/interceptors/ClientRequest$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js',
-    '^@mswjs/interceptors/fetch$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/fetch/index.js',
-    '^@mswjs/interceptors/XMLHttpRequest$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/XMLHttpRequest/index.js',
-    '^@mswjs/interceptors/(.*)$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/$1/index.js',
-    '^@mswjs/interceptors/src/(.*)$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/$1/index.js',
+  // (MSW mappings removed)
     // Bundled ESM -> CJS shims for MSW dependencies
     '.*@bundled-es-modules/statuses/index-esm\\.js$': '<rootDir>/src/test-utils/statuses-cjs-shim.js',
     '.*@bundled-es-modules/statuses.*': '<rootDir>/src/test-utils/statuses-cjs-shim.js',

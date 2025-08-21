@@ -60,22 +60,11 @@
       "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(?:@bundled-es-modules|@mswjs|undici|whatwg-fetch)/)"
+      "node_modules/(?!(?:@bundled-es-modules|undici|whatwg-fetch)/)"
     ],
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy",
       "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/src/__mocks__/fileMock.ts",
-      "^msw$": "<rootDir>/src/test-utils/msw-cjs-shim.js",
-      "^msw/node$": "<rootDir>/node_modules/msw/lib/node/index.js",
-      "^msw/(.*)$": "<rootDir>/src/test-utils/msw-cjs-shim.js",
-      "^msw/src/(.*)$": "<rootDir>/node_modules/msw/lib/core/$1.js",
-      "^@mswjs/interceptors$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/index.js",
-      "^@mswjs/interceptors/WebSocket$": "<rootDir>/node_modules/@mswjs/interceptors/lib/browser/interceptors/WebSocket/index.js",
-      "^@mswjs/interceptors/ClientRequest$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js",
-      "^@mswjs/interceptors/fetch$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/fetch/index.js",
-      "^@mswjs/interceptors/XMLHttpRequest$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/XMLHttpRequest/index.js",
-      "^@mswjs/interceptors/(.*)$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/$1/index.js",
-      "^@mswjs/interceptors/src/(.*)$": "<rootDir>/node_modules/@mswjs/interceptors/lib/node/$1/index.js",
       ".*@bundled-es-modules/statuses/index-esm\\.js$": "<rootDir>/src/test-utils/statuses-cjs-shim.js",
       ".*@bundled-es-modules/statuses.*": "<rootDir>/src/test-utils/statuses-cjs-shim.js",
       ".*@bundled-es-modules/tough-cookie/index-esm\\.js$": "<rootDir>/src/test-utils/tough-cookie-cjs-shim.js",
@@ -105,12 +94,11 @@
     "husky": "^9.1.7",
     "identity-obj-proxy": "^3.0.0",
     "lint-staged": "^16.1.2",
-    "msw": "^2.10.5",
     "node-fetch": "^2.7.0",
     "prettier": "^3.6.2",
     "ts-prune": "^0.10.3",
-    "typescript": "^4.9.5",
-    "undici": "^5.22.0"
+  "typescript": "^4.9.5",
+  "undici": "^5.22.0"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
