@@ -9,8 +9,7 @@ jest.mock('../../utils/spotify', () => ({
 const { getSpotifyApi } = require('../../utils/spotify');
 
 describe('usePlaylistSearch Edge Cases and Error Handling', () => {
-  let consoleDebugSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  // suppress noisy console output during tests
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,8 +19,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
     // Per-suite suppression of noisy logs during passing runs
     // Tests that need to assert on console.error may still create their own spies
-    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'debug').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

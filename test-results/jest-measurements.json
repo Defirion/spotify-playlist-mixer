@@ -1,0 +1,1180 @@
+{
+  "measured": [
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistSelector.test.tsx",
+      "durationMs": 4026,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistSelector.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       17 passed, 17 total\nSnapshots:   0 total\nTime:        3.142 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useApiErrorHandler.test.ts",
+      "durationMs": 3785,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useApiErrorHandler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       12 passed, 12 total\nSnapshots:   0 total\nTime:        2.892 s, estimated 3 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\AddUnselectedModal.test.tsx",
+      "durationMs": 3425,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/AddUnselectedModal.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       17 passed, 17 total\nSnapshots:   0 total\nTime:        2.522 s, estimated 3 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\usePlaylistSearch.edge-cases.test.ts",
+      "durationMs": 3290,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/usePlaylistSearch.edge-cases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       16 passed, 16 total\nSnapshots:   0 total\nTime:        2.404 s, estimated 3 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\services\\spotify.service.test.ts",
+      "durationMs": 2902,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/services/spotify.service.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       31 passed, 31 total\nSnapshots:   0 total\nTime:        2.087 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useUserPlaylists.test.ts",
+      "durationMs": 3087,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useUserPlaylists.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       30 passed, 30 total\nSnapshots:   0 total\nTime:        2.197 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\PlaylistMixerWorkflow.test.tsx",
+      "durationMs": 2608,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/PlaylistMixerWorkflow.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       9 passed, 9 total\nSnapshots:   0 total\nTime:        1.717 s, estimated 2 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\SpotifyAuth.test.tsx",
+      "durationMs": 2482,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/SpotifyAuth.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       15 passed, 15 total\nSnapshots:   0 total\nTime:        1.596 s, estimated 2 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\usePlaylistTracks.test.ts",
+      "durationMs": 2485,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/usePlaylistTracks.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       24 passed, 24 total\nSnapshots:   0 total\nTime:        1.6 s, estimated 2 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\features\\mixer\\__tests__\\MixPreview.behavior.test.tsx",
+      "durationMs": 2289,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/features/mixer/__tests__/MixPreview.behavior.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       15 passed, 15 total\nSnapshots:   0 total\nTime:        1.4 s, estimated 2 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\PresetTemplates.test.tsx",
+      "durationMs": 2301,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/PresetTemplates.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       13 passed, 13 total\nSnapshots:   0 total\nTime:        1.401 s, estimated 2 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\SpotifySearchModal.test.tsx",
+      "durationMs": 2225,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/SpotifySearchModal.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       26 passed, 26 total\nSnapshots:   0 total\nTime:        1.34 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.behavior.test.tsx",
+      "durationMs": 2196,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.behavior.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       22 passed, 22 total\nSnapshots:   0 total\nTime:        1.304 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useMixGeneration.test.tsx",
+      "durationMs": 2100,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/useMixGeneration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       15 passed, 15 total\nSnapshots:   0 total\nTime:        1.222 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\ComponentInteractions.test.tsx",
+      "durationMs": 2068,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/ComponentInteractions.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        1.174 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\TrackList.test.tsx",
+      "durationMs": 2041,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/TrackList.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       12 passed, 12 total\nSnapshots:   0 total\nTime:        1.157 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\PlaylistSelector.test.tsx",
+      "durationMs": 1883,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/PlaylistSelector.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       23 passed, 23 total\nSnapshots:   0 total\nTime:        1.102 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\SpotifyAuth.integration.test.tsx",
+      "durationMs": 1915,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/SpotifyAuth.integration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        1.041 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\CompleteMixingWorkflow.test.tsx",
+      "durationMs": 1928,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/CompleteMixingWorkflow.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        1.1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\performance\\mixer.performance.test.ts",
+      "durationMs": 1736,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/performance/mixer.performance.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.943 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\RatioConfig.test.tsx",
+      "durationMs": 1932,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/RatioConfig.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       18 passed, 18 total\nSnapshots:   0 total\nTime:        1.041 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\DragErrorBoundary.test.tsx",
+      "durationMs": 1880,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/DragErrorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.992 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistForm.behavior.test.tsx",
+      "durationMs": 1766,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistForm.behavior.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       17 passed, 17 total\nSnapshots:   0 total\nTime:        0.982 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\usePlaylistSearch.test.tsx",
+      "durationMs": 1742,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/usePlaylistSearch.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.86 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.errorFlow.test.tsx",
+      "durationMs": 1832,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.errorFlow.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.946 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.errorAndForm.test.tsx",
+      "durationMs": 1834,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.errorAndForm.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.95 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.handlers.test.tsx",
+      "durationMs": 1696,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.handlers.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.915 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.test.tsx",
+      "durationMs": 1807,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.919 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\ApiErrorDisplay.test.tsx",
+      "durationMs": 1725,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/ApiErrorDisplay.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       28 passed, 28 total\nSnapshots:   0 total\nTime:        0.941 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\test-utils\\mocks\\mockSpotifyService.test.ts",
+      "durationMs": 1678,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/test-utils/mocks/mockSpotifyService.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       12 passed, 12 total\nSnapshots:   0 total\nTime:        0.799 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useSpotifySearch.test.tsx",
+      "durationMs": 1714,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useSpotifySearch.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       20 passed, 20 total\nSnapshots:   0 total\nTime:        0.823 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\SuccessToast.test.tsx",
+      "durationMs": 1697,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/SuccessToast.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       30 passed, 30 total\nSnapshots:   0 total\nTime:        0.906 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\TermsOfService.test.tsx",
+      "durationMs": 1677,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/TermsOfService.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       11 passed, 11 total\nSnapshots:   0 total\nTime:        0.896 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\ErrorBoundary.test.tsx",
+      "durationMs": 1756,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/ErrorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.869 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.integration.test.tsx",
+      "durationMs": 1739,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.integration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.866 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\TrackList.virtualization.test.tsx",
+      "durationMs": 1811,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/TrackList.virtualization.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.9 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\AppShell.test.tsx",
+      "durationMs": 1724,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/AppShell.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.94 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistMixer.drag.test.tsx",
+      "durationMs": 1819,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistMixer.drag.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.909 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistSelector.errorBoundary.test.tsx",
+      "durationMs": 1623,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistSelector.errorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.835 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchD.test.ts",
+      "durationMs": 1410,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchD.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.535 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\ErrorHandler.test.tsx",
+      "durationMs": 1660,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/ErrorHandler.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       27 passed, 27 total\nSnapshots:   0 total\nTime:        0.882 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\MixPreview.errorBoundary.test.tsx",
+      "durationMs": 1679,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/MixPreview.errorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.898 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\services\\spotify.retries.test.ts",
+      "durationMs": 1639,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/services/spotify.retries.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.742 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\_helpers\\retry.test.ts",
+      "durationMs": 1645,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/_helpers/retry.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.744 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useAutoScroll.test.tsx",
+      "durationMs": 1726,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useAutoScroll.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.818 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\PlaylistSizeVariants.test.tsx",
+      "durationMs": 1698,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/PlaylistSizeVariants.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.915 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\MainApp.integration.test.tsx",
+      "durationMs": 1726,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/MainApp.integration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.937 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\app.integration.test.tsx",
+      "durationMs": 1791,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/app.integration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.912 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\CompleteMixingWorkflow.LargePlaylists.test.tsx",
+      "durationMs": 1660,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/CompleteMixingWorkflow.LargePlaylists.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.883 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\accessibility.test.ts",
+      "durationMs": 1692,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/accessibility.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.797 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\ModalDragBehavior.test.tsx",
+      "durationMs": 1738,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/ModalDragBehavior.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.857 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useKeyboardNavigation.test.ts",
+      "durationMs": 1620,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useKeyboardNavigation.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       25 passed, 25 total\nSnapshots:   0 total\nTime:        0.825 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PlaylistForm.controls.test.tsx",
+      "durationMs": 1665,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PlaylistForm.controls.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.878 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useAutoScroll.edge-cases.test.ts",
+      "durationMs": 1609,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useAutoScroll.edge-cases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       24 passed, 24 total\nSnapshots:   0 total\nTime:        0.819 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.component.logic.test.tsx",
+      "durationMs": 1785,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.component.logic.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.921 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\CompleteMixingWorkflow.ErrorScenarios.test.tsx",
+      "durationMs": 1699,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/CompleteMixingWorkflow.ErrorScenarios.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.91 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.state.test.tsx",
+      "durationMs": 1724,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.state.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.938 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.containers.test.tsx",
+      "durationMs": 1653,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.containers.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.87 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\features\\mixer\\__tests__\\MixPreview.test.tsx",
+      "durationMs": 1686,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/features/mixer/__tests__/MixPreview.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.891 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\App.unit.test.tsx",
+      "durationMs": 1843,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/App.unit.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.926 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\usePlaylistSearch.test.ts",
+      "durationMs": 1697,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/usePlaylistSearch.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       13 passed, 13 total\nSnapshots:   0 total\nTime:        0.82 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.routes.test.tsx",
+      "durationMs": 1698,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.routes.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.913 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\store.test.ts",
+      "durationMs": 1605,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/store.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       12 passed, 12 total\nSnapshots:   0 total\nTime:        0.827 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useTrackOperations.comprehensive.test.tsx",
+      "durationMs": 1583,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useTrackOperations.comprehensive.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       21 passed, 21 total\nSnapshots:   0 total\nTime:        0.791 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\RatioConfig.errorBoundary.test.tsx",
+      "durationMs": 1626,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/RatioConfig.errorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.848 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useMixGeneration.unit.test.tsx",
+      "durationMs": 1689,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useMixGeneration.unit.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.81 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useSpotifyUrlHandler.test.ts",
+      "durationMs": 1681,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useSpotifyUrlHandler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       15 passed, 15 total\nSnapshots:   0 total\nTime:        0.798 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\TrackItem.test.tsx",
+      "durationMs": 1628,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/TrackItem.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.837 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\MixerErrorCases.test.tsx",
+      "durationMs": 1639,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/MixerErrorCases.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.863 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\EndToEndMixFlow.test.tsx",
+      "durationMs": 1690,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/EndToEndMixFlow.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.911 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useMixPreview.unit.test.tsx",
+      "durationMs": 1681,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useMixPreview.unit.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.806 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\SortableWrapper.test.tsx",
+      "durationMs": 1595,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/SortableWrapper.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.818 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\LoadingOverlay.test.tsx",
+      "durationMs": 1588,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/LoadingOverlay.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       13 passed, 13 total\nSnapshots:   0 total\nTime:        0.809 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useErrorHandler.test.ts",
+      "durationMs": 1689,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useErrorHandler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       13 passed, 13 total\nSnapshots:   0 total\nTime:        0.804 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\trackStore.test.ts",
+      "durationMs": 1583,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/trackStore.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       9 passed, 9 total\nSnapshots:   0 total\nTime:        0.806 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\PrivacyPolicy.test.tsx",
+      "durationMs": 1600,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/PrivacyPolicy.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.821 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\usePlaylistSelection.test.ts",
+      "durationMs": 1566,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/usePlaylistSelection.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       8 passed, 8 total\nSnapshots:   0 total\nTime:        0.782 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useRatioCalculation.test.ts",
+      "durationMs": 1575,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useRatioCalculation.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       11 passed, 11 total\nSnapshots:   0 total\nTime:        0.782 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useDropPosition.test.ts",
+      "durationMs": 1579,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useDropPosition.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.789 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\App.auth.test.tsx",
+      "durationMs": 1669,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/App.auth.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.89 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useMixPreview.extra.test.tsx",
+      "durationMs": 1675,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useMixPreview.extra.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.785 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\TrackList.test.tsx",
+      "durationMs": 1594,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/TrackList.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.796 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useMixGeneration.extra.test.tsx",
+      "durationMs": 1674,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useMixGeneration.extra.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.789 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\DndProvider.vibration.test.tsx",
+      "durationMs": 1587,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/DndProvider.vibration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.809 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\trackShuffler.test.ts",
+      "durationMs": 1532,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/trackShuffler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       34 passed, 34 total\nSnapshots:   0 total\nTime:        0.739 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\Modal.test.tsx",
+      "durationMs": 1586,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/Modal.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.812 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\haptics.test.ts",
+      "durationMs": 1532,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/haptics.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.74 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useVirtualization.test.ts",
+      "durationMs": 1579,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useVirtualization.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       10 passed, 10 total\nSnapshots:   0 total\nTime:        0.784 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useAppState.test.ts",
+      "durationMs": 1565,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useAppState.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.781 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useTrackOperations.test.tsx",
+      "durationMs": 1571,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useTrackOperations.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.779 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useCustomTouchEvents.test.tsx",
+      "durationMs": 1584,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useCustomTouchEvents.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.795 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\popularityCalculator.test.ts",
+      "durationMs": 1536,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/popularityCalculator.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       24 passed, 24 total\nSnapshots:   0 total\nTime:        0.745 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\ToastError.test.tsx",
+      "durationMs": 1587,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/ToastError.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.797 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useVirtualization.scroll.test.tsx",
+      "durationMs": 1673,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useVirtualization.scroll.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.792 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useVirtualization.branches.test.ts",
+      "durationMs": 1556,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useVirtualization.branches.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.773 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useRatioConfig.test.ts",
+      "durationMs": 1566,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useRatioConfig.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       11 passed, 11 total\nSnapshots:   0 total\nTime:        0.778 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useKeyboardNavigation.test.tsx",
+      "durationMs": 1594,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useKeyboardNavigation.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.785 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\__tests__\\withErrorBoundary.test.tsx",
+      "durationMs": 1569,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/ui/__tests__/withErrorBoundary.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.795 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\ScrollToBottom.keyboard.test.tsx",
+      "durationMs": 1666,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/ScrollToBottom.keyboard.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.79 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\DraggableTrackList.test.tsx",
+      "durationMs": 1589,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/DraggableTrackList.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.8 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixingStrategies.test.ts",
+      "durationMs": 1523,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixingStrategies.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       33 passed, 33 total\nSnapshots:   0 total\nTime:        0.733 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\components\\DndProvider.test.tsx",
+      "durationMs": 1565,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/components/DndProvider.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.78 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\trackStoreIntegration.test.ts",
+      "durationMs": 1588,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/trackStoreIntegration.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.806 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useMixGeneration.test.tsx",
+      "durationMs": 1569,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useMixGeneration.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.779 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useDragSensors.test.ts",
+      "durationMs": 1596,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useDragSensors.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.788 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\playlistMixer.edgecases.test.ts",
+      "durationMs": 1533,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/playlistMixer.edgecases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.742 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\__tests__\\DndProvider.unit.test.tsx",
+      "durationMs": 1592,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/components/__tests__/DndProvider.unit.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.791 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useTrackSelection.test.tsx",
+      "durationMs": 1558,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useTrackSelection.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.771 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useMixWarnings.test.ts",
+      "durationMs": 1575,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useMixWarnings.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.783 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useDropPosition.test.tsx",
+      "durationMs": 1571,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useDropPosition.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.779 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\hooks\\useTrackSelection.test.ts",
+      "durationMs": 1566,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/hooks/useTrackSelection.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.776 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useUnselectedTracks.test.tsx",
+      "durationMs": 1601,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useUnselectedTracks.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.775 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\__tests__\\useMixPreview.test.tsx",
+      "durationMs": 1583,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/hooks/__tests__/useMixPreview.test.tsx\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.796 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\apiErrorHandler.test.ts",
+      "durationMs": 1609,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/apiErrorHandler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.726 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\accessibility.unit.test.ts",
+      "durationMs": 1528,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/accessibility.unit.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       9 passed, 9 total\nSnapshots:   0 total\nTime:        0.739 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\test-utils\\silenceIfPass.test.ts",
+      "durationMs": 1554,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/test-utils/silenceIfPass.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       9 passed, 9 total\nSnapshots:   0 total\nTime:        0.757 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\migration.integration.test.ts",
+      "durationMs": 1566,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/migration.integration.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.776 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\popularityQuadrants.test.ts",
+      "durationMs": 1544,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/popularityQuadrants.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       19 passed, 19 total\nSnapshots:   0 total\nTime:        0.75 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.di.test.ts",
+      "durationMs": 1527,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.di.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.744 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixerUtils.test.ts",
+      "durationMs": 1544,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixerUtils.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       25 passed, 25 total\nSnapshots:   0 total\nTime:        0.735 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\migration.legacy.test.ts",
+      "durationMs": 1563,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/migration.legacy.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.765 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.validation.test.ts",
+      "durationMs": 1548,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.validation.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.754 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\apiErrorHandler.test.ts",
+      "durationMs": 1532,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/apiErrorHandler.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       10 passed, 10 total\nSnapshots:   0 total\nTime:        0.728 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\playlistMixer.test.ts",
+      "durationMs": 1534,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/playlistMixer.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       12 passed, 12 total\nSnapshots:   0 total\nTime:        0.749 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\accessibility.extra.test.ts",
+      "durationMs": 1529,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/accessibility.extra.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.74 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\migration.helpers.test.ts",
+      "durationMs": 1563,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/migration.helpers.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.78 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\_helpers\\batching.test.ts",
+      "durationMs": 1524,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/_helpers/batching.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.733 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\test-utils\\__tests__\\json-serializability.test.ts",
+      "durationMs": 1524,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/test-utils/__tests__/json-serializability.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       21 passed, 21 total\nSnapshots:   0 total\nTime:        0.732 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchF.test.ts",
+      "durationMs": 1152,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchF.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.381 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchE.test.ts",
+      "durationMs": 1167,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchE.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.386 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchC.test.ts",
+      "durationMs": 1162,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchC.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.385 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\_helpers\\errorNormalizer.test.ts",
+      "durationMs": 1518,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/_helpers/errorNormalizer.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.727 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\playlistMixer.test.ts",
+      "durationMs": 1532,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/playlistMixer.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.737 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\normalizeError.unit.test.ts",
+      "durationMs": 1543,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/normalizeError.unit.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.736 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\normalizeError.test.ts",
+      "durationMs": 1523,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/normalizeError.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.728 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\accessibility.more.test.ts",
+      "durationMs": 1514,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/accessibility.more.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.726 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.service.test.ts",
+      "durationMs": 1516,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.service.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.728 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixingCalculations.edgecases.test.ts",
+      "durationMs": 1519,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.727 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixerUtils.edgecases.test.ts",
+      "durationMs": 1507,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.72 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\store\\authSlice.test.ts",
+      "durationMs": 1522,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/store/authSlice.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.736 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\utils\\playlistResolvedTracks.test.ts",
+      "durationMs": 1511,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/utils/playlistResolvedTracks.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.721 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\integration\\MixerOutputDeterminism.test.ts",
+      "durationMs": 1516,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/integration/MixerOutputDeterminism.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.736 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\trackUtils.test.ts",
+      "durationMs": 1511,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/trackUtils.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       7 passed, 7 total\nSnapshots:   0 total\nTime:        0.723 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\spotify.unit.test.ts",
+      "durationMs": 1535,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/spotify.unit.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.729 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\playlistMixer.behavior.test.ts",
+      "durationMs": 1538,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/playlistMixer.behavior.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.736 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\dropPositionCalculator.test.ts",
+      "durationMs": 1514,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/dropPositionCalculator.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.728 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\test-utils\\mocks\\mixHooks.test.ts",
+      "durationMs": 1533,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/test-utils/mocks/mixHooks.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.742 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchI.test.ts",
+      "durationMs": 1161,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchI.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.38 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchB.test.ts",
+      "durationMs": 1159,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchB.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.386 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchA.test.ts",
+      "durationMs": 1166,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchA.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.386 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\normalizeMixResult.test.ts",
+      "durationMs": 1519,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/normalizeMixResult.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.736 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixingStrategies.logging.test.ts",
+      "durationMs": 1521,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixingStrategies.logging.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.731 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\mixingStrategies.edgecases.test.ts",
+      "durationMs": 1527,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/mixingStrategies.edgecases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        0.731 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\integration.test.ts",
+      "durationMs": 1522,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/integration.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.735 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\services\\fetchClient.test.ts",
+      "durationMs": 1505,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/services/fetchClient.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.723 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\migrateError.test.ts",
+      "durationMs": 1516,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/migrateError.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       4 passed, 4 total\nSnapshots:   0 total\nTime:        0.731 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\_helpers\\requestBody.test.ts",
+      "durationMs": 1514,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/_helpers/requestBody.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.724 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\_helpers\\pagination.test.ts",
+      "durationMs": 1533,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/_helpers/pagination.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.729 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\spotifyClient.test.ts",
+      "durationMs": 1529,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/spotifyClient.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.724 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\__tests__\\fixtures.ts",
+      "durationMs": 1507,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/mixer/__tests__/fixtures.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.724 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\accessibility.edgecases.test.ts",
+      "durationMs": 1535,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/accessibility.edgecases.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.745 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\__tests__\\migration.test.ts",
+      "durationMs": 1516,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/store/__tests__/migration.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.724 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\__tests__\\setupIntegrationTests.ts",
+      "durationMs": 1501,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/__tests__/setupIntegrationTests.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.716 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchH.test.ts",
+      "durationMs": 1155,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchH.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.383 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\haptics.unit.test.ts",
+      "durationMs": 1523,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/haptics.unit.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        0.729 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\diagnostics.headers.test.ts",
+      "durationMs": 1154,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/diagnostics.headers.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.382 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\__tests__\\spotify.batchG.test.ts",
+      "durationMs": 1161,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/services/__tests__/spotify.batchG.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       2 passed, 2 total\nSnapshots:   0 total\nTime:        0.386 s, estimated 1 s\n"
+    },
+    {
+      "path": "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\__tests__\\playlistMixer.compat.test.ts",
+      "durationMs": 1533,
+      "status": 0,
+      "stdout": "",
+      "stderr": "PASS src/utils/__tests__/playlistMixer.compat.test.ts\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.743 s, estimated 1 s\n"
+    }
+  ]
+}

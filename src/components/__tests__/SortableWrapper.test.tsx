@@ -1,80 +1,187 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { DndContext } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import '@testing-library/jest-dom';
+
+// Mocks for @dnd-kit/sortable and @dnd-kit/utilities
+/* eslint-disable import/first */
+const mockUseSortable = jest.fn();
+const mockDefaultAnimate = jest.fn();
+
+jest.mock('@dnd-kit/sortable', () => ({
+  useSortable: (opts: any) => mockUseSortable(opts),
+  defaultAnimateLayoutChanges: (...args: any[]) => mockDefaultAnimate(...args),
+}));
+
+jest.mock('@dnd-kit/utilities', () => ({
+  CSS: {
+    Transform: {
+      toString: (t: any) => `translate(${t?.x || 0}px,${t?.y || 0}px)`,
+    },
+  },
+}));
+
 import SortableWrapper from '../SortableWrapper';
+/* eslint-enable import/first */
 
 describe('SortableWrapper', () => {
-  const renderWithDndContext = (children: React.ReactNode) => {
-    return render(
-      <DndContext>
-        <SortableContext
-          items={['test-id']}
-          strategy={verticalListSortingStrategy}
-        >
-          {children}
-        </SortableContext>
-      </DndContext>
-    );
-  };
+  let capturedAnimate: any = null;
 
-  it('should render children unchanged', () => {
-    renderWithDndContext(
-      <SortableWrapper id="test-id">
-        <div data-testid="child-content">Test Content</div>
+  beforeEach(() => {
+    capturedAnimate = null;
+    mockDefaultAnimate.mockReset();
+    mockUseSortable.mockReset();
+  });
+
+  it('renders children and applies transform/transition/opacity when not dragging', () => {
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: { 'data-foo': 'bar' },
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: { x: 1, y: 2 },
+        transition: 'transform 200ms',
+        isDragging: false,
+      };
+    });
+
+    render(
+      <SortableWrapper id="item-1">
+        <span>child</span>
       </SortableWrapper>
     );
 
-    expect(screen.getByTestId('child-content')).toBeInTheDocument();
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
+    const el = screen.getByTestId('sortable-wrapper');
+    expect(el).toBeInTheDocument();
+    expect(el).toHaveTextContent('child');
+    // check inline styles applied by component
+    expect(el.style.transform).toBe('translate(1px,2px)');
+    expect(el.style.transition).toBe('transform 200ms');
+    expect(el.getAttribute('data-dragging')).toBe('false');
+    expect(el.style.opacity).toBe('1');
   });
 
-  it('should render wrapper with sortable-wrapper class', () => {
-    renderWithDndContext(
-      <SortableWrapper id="test-id">
-        <div>Test</div>
+  it('applies reduced opacity when dragging', () => {
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: {},
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: { x: 0, y: 0 },
+        transition: 'none',
+        isDragging: true,
+      };
+    });
+
+    render(
+      <SortableWrapper id="drag-item">
+        <div>drag</div>
       </SortableWrapper>
     );
 
-    const wrapper = screen.getByTestId('sortable-wrapper');
-    expect(wrapper).toBeInTheDocument();
+    const el = screen.getByTestId('sortable-wrapper');
+    expect(el.getAttribute('data-dragging')).toBe('true');
+    expect(el.style.opacity).toBe('0.5');
   });
 
-  it('should render children inside wrapper', () => {
-    renderWithDndContext(
-      <SortableWrapper id="test-id">
-        <div data-testid="child">Test Content</div>
-      </SortableWrapper>
-    );
+  it('animateLayoutChanges: delegates to defaultAnimateLayoutChanges when isSorting=true', () => {
+    mockDefaultAnimate.mockReturnValue('DEFAULT');
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: {},
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: null,
+        transition: '',
+        isDragging: false,
+      };
+    });
 
-    const child = screen.getByTestId('child');
-    expect(child).toBeInTheDocument();
-    expect(child.textContent).toBe('Test Content');
+    render(<SortableWrapper id="x">x</SortableWrapper>);
+    // call captured animate function
+    const args = { isSorting: true, items: [], previousItems: [], id: 'x' };
+    const result = capturedAnimate(args as any);
+    expect(result).toBe('DEFAULT');
+    expect(mockDefaultAnimate).toHaveBeenCalledWith(args);
   });
 
-  it('should accept id prop', () => {
-    // This test verifies the component accepts the id prop without errors
-    expect(() => {
-      renderWithDndContext(
-        <SortableWrapper id="test-id">
-          <div>Test</div>
-        </SortableWrapper>
-      );
-    }).not.toThrow();
+  it('animateLayoutChanges: returns true for new items', () => {
+    mockDefaultAnimate.mockReturnValue('NEVER_CALLED');
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: {},
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: null,
+        transition: '',
+        isDragging: false,
+      };
+    });
+
+    render(<SortableWrapper id="new-id">new</SortableWrapper>);
+    const args = {
+      isSorting: false,
+      items: ['a'],
+      previousItems: [],
+      id: 'new-id',
+    };
+    const result = capturedAnimate(args as any);
+    expect(result).toBe(true);
+    expect(mockDefaultAnimate).not.toHaveBeenCalled();
   });
 
-  it('should apply data-dragging attribute based on isDragging state', () => {
-    renderWithDndContext(
-      <SortableWrapper id="test-id">
-        <div>Test</div>
-      </SortableWrapper>
-    );
+  it('animateLayoutChanges: returns true when items length changed', () => {
+    mockDefaultAnimate.mockReturnValue('NEVER_CALLED');
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: {},
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: null,
+        transition: '',
+        isDragging: false,
+      };
+    });
 
-    const wrapper = screen.getByTestId('sortable-wrapper');
-    // When not dragging, data-dragging should be false
-    expect(wrapper).toHaveAttribute('data-dragging', 'false');
+    render(<SortableWrapper id="a">a</SortableWrapper>);
+    const args = {
+      isSorting: false,
+      items: ['a', 'b'],
+      previousItems: ['a'],
+      id: 'a',
+    };
+    const result = capturedAnimate(args as any);
+    expect(result).toBe(true);
+    expect(mockDefaultAnimate).not.toHaveBeenCalled();
+  });
+
+  it('animateLayoutChanges: falls back to default when no special case', () => {
+    mockDefaultAnimate.mockReturnValue('FALLBACK');
+    mockUseSortable.mockImplementation((opts: any) => {
+      capturedAnimate = opts.animateLayoutChanges;
+      return {
+        attributes: {},
+        listeners: {},
+        setNodeRef: jest.fn(),
+        transform: null,
+        transition: '',
+        isDragging: false,
+      };
+    });
+
+    render(<SortableWrapper id="b">b</SortableWrapper>);
+    const args = {
+      isSorting: false,
+      items: ['b'],
+      previousItems: ['b'],
+      id: 'b',
+    };
+    const result = capturedAnimate(args as any);
+    expect(result).toBe('FALLBACK');
+    expect(mockDefaultAnimate).toHaveBeenCalledWith(args);
   });
 });

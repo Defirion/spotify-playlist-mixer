@@ -45,6 +45,25 @@ describe('SpotifyService', () => {
       expect(svc.getAccessToken()).toBe('token123');
       expect(mockGetSpotifyApi).toHaveBeenCalledWith('token123');
     });
+
+    it('should accept a DI client and infer token from Authorization header', () => {
+      const api = makeApi({
+        defaults: { headers: { Authorization: 'Bearer abc' } },
+      });
+      // When passing a client directly, getSpotifyApi should not be used
+      const svc = new (SpotifyService as any)(api as any);
+      expect(svc.getAccessToken()).toBe('abc');
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
+    });
+
+    it('should infer token from lowercase authorization header when present', () => {
+      const api = makeApi({
+        defaults: { headers: { authorization: 'Bearer lower' } },
+      });
+      const svc = new (SpotifyService as any)(api as any);
+      expect(svc.getAccessToken()).toBe('lower');
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
+    });
   });
 
   describe('setAccessToken / getAccessToken', () => {
@@ -58,6 +77,15 @@ describe('SpotifyService', () => {
       svc.setAccessToken('t2');
       expect(svc.getAccessToken()).toBe('t2');
       expect(mockGetSpotifyApi).toHaveBeenLastCalledWith('t2');
+    });
+
+    it('should update DI client headers when constructed with a client', () => {
+      const api = makeApi({ defaults: { headers: {} } });
+      const svc = new (SpotifyService as any)(api as any);
+      svc.setAccessToken('t3');
+      expect(api.defaults.headers.Authorization).toBe('Bearer t3');
+      // Should not rebuild via getSpotifyApi when headers exist
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
     });
   });
 
@@ -122,6 +150,20 @@ describe('SpotifyService', () => {
       await expect(svc.searchTracks('q', { limit: 51 })).rejects.toMatchObject({
         type: ERROR_TYPES.BAD_REQUEST,
       });
+    });
+
+    it('should include market param when provided', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: {
+          tracks: { items: [{ id: 't1' }], total: 1, limit: 1, offset: 0 },
+        },
+      });
+      await svc.searchTracks('hello', { limit: 1, market: 'US' });
+      const calledUrl = api.get.mock.calls[0][0];
+      expect(calledUrl).toContain('market=US');
     });
   });
 

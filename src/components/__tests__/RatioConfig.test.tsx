@@ -300,4 +300,59 @@ describe('RatioConfig', () => {
     const timeButton = screen.getByText('Same Play Time');
     expect(timeButton).toHaveClass('active');
   });
+
+  it('displays correct priority descriptions at weight boundaries', () => {
+    // Map of weight -> expected label fragment
+    const cases: Array<[number, RegExp]> = [
+      [20, /Low \(20\)/],
+      [21, /Normal \(21\)/],
+      [40, /Normal \(40\)/],
+      [41, /High \(41\)/],
+      [60, /High \(60\)/],
+      [61, /Top \(61\)/],
+      [80, /Top \(80\)/],
+      [81, /Max \(81\)/],
+    ];
+
+    for (const [weight, regex] of cases) {
+      const cfg: RatioConfigType = {
+        '1': { min: 1, max: 2, weight, weightType: 'frequency' },
+      };
+
+      render(
+        <RatioConfig
+          {...defaultProps}
+          ratioConfig={cfg}
+          selectedPlaylists={[mockPlaylist]}
+        />
+      );
+
+      // The priority label should contain the expected fragment. We don't
+      // assert the exact percentage text because that comes from a helper
+      // hook; we only care about the human-facing description prefix.
+      expect(screen.getByText(regex)).toBeInTheDocument();
+
+      // cleanup between renders
+      // Unmount by clearing the document body so the next render is fresh
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('shows singular "song" when min and max are equal to 1, and plural otherwise', () => {
+    const cfgSingular: RatioConfigType = {
+      '1': { min: 1, max: 1, weight: 2, weightType: 'frequency' },
+    };
+
+    render(<RatioConfig {...defaultProps} ratioConfig={cfgSingular} />);
+    expect(screen.getByText(/Play together: 1 song/)).toBeInTheDocument();
+
+    document.body.innerHTML = '';
+
+    const cfgPlural: RatioConfigType = {
+      '1': { min: 3, max: 3, weight: 2, weightType: 'frequency' },
+    };
+
+    render(<RatioConfig {...defaultProps} ratioConfig={cfgPlural} />);
+    expect(screen.getByText(/Play together: 3 songs/)).toBeInTheDocument();
+  });
 });

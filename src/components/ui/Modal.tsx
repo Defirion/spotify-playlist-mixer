@@ -134,6 +134,7 @@ const Modal = memo<ModalProps>(
       <>
         {/* Backdrop */}
         <div
+          data-testid="modal-backdrop"
           className={backdropClasses}
           onClick={handleBackdropClick}
           aria-hidden="true"
@@ -143,6 +144,7 @@ const Modal = memo<ModalProps>(
 
         {/* Modal Container */}
         <div
+          data-testid="modal-dialog"
           ref={modalRef}
           role="dialog"
           aria-modal="true"
