@@ -31,6 +31,8 @@ module.exports = {
   },
   coveragePathIgnorePatterns: [
     '<rootDir>/src/jest.polyfills.ts',
+  // ignore test utilities and mocks which inflate file counts and show 0% branches
+  '<rootDir>/src/test-utils/',
     // entire types directory
     '<rootDir>/src/types/',
     // Type declaration files

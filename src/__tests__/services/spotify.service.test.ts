@@ -9,7 +9,7 @@ const mockGetSpotifyApi = getSpotifyApi as jest.MockedFunction<
 >;
 
 // Helper to build a fake API client shape the service expects
-function makeApi(overrides: Partial<Record<string, any>> = {}) {
+function makeApi(overrides: Partial<Record<string, any>> = {}): any {
   return {
     get: jest.fn(),
     post: jest.fn(),

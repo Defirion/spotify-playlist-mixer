@@ -176,4 +176,195 @@ describe('useMixPreview (extra cases)', () => {
     expect(utils.state.customTrackOrder).toEqual(reordered);
     expect(utils.getPreviewTracks()).toEqual(reordered);
   });
+
+  test('calculates search tracks stats when search tracks present', async () => {
+    // Make tracks with search sourcePlaylist to trigger lines 108-112
+    const searchTrack = { ...makeTrack('search1', 'search', 60000) };
+    mockMixPlaylists.mockReturnValue([
+      makeTrack('a', 'p1', 60000),
+      searchTrack,
+    ]);
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    // Should include search stats
+    expect(utils.state.preview!.stats['search']).toBeDefined();
+    expect(utils.state.preview!.stats['search'].name).toBe('🔍 Spotify Search');
+    expect(utils.state.preview!.stats['search'].count).toBe(1);
+  });
+
+  test('handles non-array and non-object mixResult types', async () => {
+    // Return a string instead of array/object to trigger lines 182-187
+    mockMixPlaylists.mockReturnValue('invalid-type' as any);
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    // Should result in empty tracks due to error handling
+    expect(utils.state.preview!.tracks).toEqual([]);
+  });
+
+  test('updateTrackOrder recalculates search stats when search tracks present', async () => {
+    // Setup with search track to trigger lines 262-266 in updateTrackOrder
+    const searchTrack = { ...makeTrack('search1', 'search', 60000) };
+    mockMixPlaylists.mockReturnValue([
+      makeTrack('a', 'p1', 60000),
+      searchTrack,
+    ]);
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    const reordered = [...utils.state.preview!.tracks].reverse();
+
+    act(() => {
+      utils.updateTrackOrder(reordered);
+    });
+
+    // Verify search stats were recalculated in updateTrackOrder
+    expect(utils.state.preview!.stats['search']).toBeDefined();
+    expect(utils.state.preview!.stats['search'].count).toBe(1);
+  });
+
+  test('clearPreview resets all state', async () => {
+    // Setup some preview state first
+    mockMixPlaylists.mockReturnValue([makeTrack('a', 'p1', 60000)]);
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    // Verify preview exists
+    expect(utils.state.preview).not.toBeNull();
+
+    // Clear preview to trigger line 296
+    act(() => {
+      utils.clearPreview();
+    });
+
+    expect(utils.state.preview).toBeNull();
+    expect(utils.state.customTrackOrder).toBeNull();
+    expect(utils.state.error).toBeNull();
+  });
+
+  test('getPreviewTracks returns original tracks when no custom order', async () => {
+    // Test line 309 - when customTrackOrder is null or empty
+    mockMixPlaylists.mockReturnValue([
+      makeTrack('a', 'p1', 60000),
+      makeTrack('b', 'p2', 60000),
+    ]);
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview(
+        [makePlaylist('p1'), makePlaylist('p2')] as any,
+        {},
+        { popularityStrategy: 'pop' } as any
+      );
+    });
+
+    // Test without custom order
+    const originalTracks = utils.state.preview!.tracks;
+    expect(utils.getPreviewTracks()).toEqual(originalTracks);
+
+    // Now set custom order and verify it's used instead
+    const customOrder = [...originalTracks].reverse();
+    act(() => {
+      utils.updateTrackOrder(customOrder);
+    });
+
+    // Should now return custom order
+    expect(utils.getPreviewTracks()).toEqual(customOrder);
+    expect(utils.getPreviewTracks()).not.toEqual(originalTracks);
+  });
+
+  test('handles edge case where previewTracks becomes non-array after processing', async () => {
+    // Create an object that has a tracks property that's not an array
+    // This should trigger the final safety check on lines 192-193
+    mockMixPlaylists.mockReturnValue({
+      tracks: null, // This will cause previewTracks to be null
+      exhaustedPlaylists: [],
+      stoppedEarly: false,
+    });
+    const utils = renderUseMixPreview('token');
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    // Should result in empty array due to safety check
+    expect(utils.state.preview!.tracks).toEqual([]);
+  });
+
+  test('handles missing onError callback in error scenarios', async () => {
+    // Test the branch where onError is not provided but error occurs
+    mockGetPlaylistTracks.mockImplementationOnce(async () => {
+      throw new Error('playlist fetch failed');
+    });
+
+    // Don't provide onError callback to test the conditional
+    const utils = renderUseMixPreview('token'); // No onError option
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
+        popularityStrategy: 'pop',
+      } as any);
+    });
+
+    // Should set error state even without onError callback
+    expect(utils.state.error).toBeTruthy();
+  });
+
+  test('handles empty accessToken case', () => {
+    // Test the else branch in useEffect when accessToken is falsy
+    const utils = renderUseMixPreview(''); // Empty accessToken
+
+    // Should not throw and handle gracefully
+    expect(utils.state.error).toBeNull();
+    expect(utils.state.preview).toBeNull();
+  });
+
+  test('covers error case without onError callback', async () => {
+    // Test missing spotify service without onError callback
+    const utils = renderUseMixPreview(''); // No accessToken
+
+    await act(async () => {
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {});
+    });
+
+    // Should set error state
+    expect(utils.state.error).toBe('Spotify service not available');
+  });
+
+  test('covers updateTrackOrder with no existing preview', () => {
+    // Test the early return when no preview exists
+    const utils = renderUseMixPreview('token');
+
+    // Try to update track order without any preview
+    act(() => {
+      utils.updateTrackOrder([makeTrack('test', 'p1')]);
+    });
+
+    // Should remain unchanged
+    expect(utils.state.preview).toBeNull();
+    expect(utils.state.customTrackOrder).toBeNull();
+  });
 });
