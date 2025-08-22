@@ -16,15 +16,13 @@ describe('FetchClient - request/response edge cases', () => {
       ok: true,
       status: 204,
       statusText: 'No Content',
-      headers: new Map([['content-type', 'text/plain']]),
+      // provide headers.get API used by fetchClient
+      // @ts-ignore
+      headers: {
+        get: (key: string) => (key === 'content-type' ? 'text/plain' : null),
+      },
       text: jest.fn().mockResolvedValue('no content'),
       json: jest.fn(),
-    };
-
-    // adapt headers.get API used by fetchClient
-    // @ts-ignore
-    mockResp.headers.get = key => {
-      return key === 'content-type' ? 'text/plain' : null;
     };
 
     // @ts-ignore
@@ -42,13 +40,15 @@ describe('FetchClient - request/response edge cases', () => {
       ok: false,
       status: 400,
       statusText: 'Bad Request',
-      headers: new Map([['content-type', 'application/json']]),
+      // provide headers.get API used by fetchClient
+      // @ts-ignore
+      headers: {
+        get: (key: string) =>
+          key === 'content-type' ? 'application/json' : null,
+      },
       json: jest.fn().mockResolvedValue(body),
       text: jest.fn(),
     };
-    // @ts-ignore
-    mockResp.headers.get = key =>
-      key === 'content-type' ? 'application/json' : null;
     // @ts-ignore
     global.fetch.mockResolvedValue(mockResp);
 
