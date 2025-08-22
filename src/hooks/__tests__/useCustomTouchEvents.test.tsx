@@ -13,6 +13,20 @@ function Harness({ onOver, onDrop }: any) {
 }
 
 describe('useCustomTouchEvents', () => {
+  let spyWarn: jest.SpyInstance | undefined;
+  let spyLog: jest.SpyInstance | undefined;
+
+  beforeEach(() => {
+    spyWarn = undefined;
+    spyLog = undefined;
+  });
+
+  afterEach(() => {
+    spyWarn?.mockRestore?.();
+    spyLog?.mockRestore?.();
+    jest.restoreAllMocks();
+  });
+
   test('calls onTouchDragOver when externalDragOver dispatched', () => {
     const onOver = jest.fn();
     render(<Harness onOver={onOver} onDrop={() => {}} />);
@@ -31,7 +45,7 @@ describe('useCustomTouchEvents', () => {
     render(<Harness onOver={() => {}} onDrop={onDrop} />);
     const container = screen.getByTestId('container');
 
-    const spyWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    spyWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Event without draggedItem should trigger the warning branch and not call onDrop
     const eventNoItem = new CustomEvent('internalDrop', {
@@ -49,5 +63,68 @@ describe('useCustomTouchEvents', () => {
     expect(onDrop).toHaveBeenCalledWith(eventWithItem.detail);
 
     spyWarn.mockRestore();
+  });
+
+  test('handles null container ref gracefully', () => {
+    const NullRefHarness = () => {
+      const nullRef = { current: null };
+      useCustomTouchEvents({
+        containerRef: nullRef,
+        onTouchDragOver: jest.fn(),
+        onTouchDrop: jest.fn(),
+      });
+      return <div data-testid="null-container" />;
+    };
+
+    // Should not throw when container ref is null
+    expect(() => {
+      render(<NullRefHarness />);
+    }).not.toThrow();
+  });
+
+  test('logs debug information in development mode', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
+    spyLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    try {
+      const onOver = jest.fn();
+      const onDrop = jest.fn();
+      render(<Harness onOver={onOver} onDrop={onDrop} />);
+      const container = screen.getByTestId('container');
+
+      // Test drag over logging
+      const dragEvent = new CustomEvent('externalDragOver', {
+        detail: { clientX: 10, clientY: 20, draggedItem: { type: 'track' } },
+      });
+      container.dispatchEvent(dragEvent);
+
+      expect(spyLog).toHaveBeenCalledWith(
+        '[CustomTouchEvents] Touch drag over:',
+        expect.objectContaining({
+          clientY: 20,
+          draggedItem: 'track',
+          eventType: 'externalDragOver',
+        })
+      );
+
+      // Test drop logging
+      const dropEvent = new CustomEvent('internalDrop', {
+        detail: { clientX: 30, clientY: 40, draggedItem: { type: 'playlist' } },
+      });
+      container.dispatchEvent(dropEvent);
+
+      expect(spyLog).toHaveBeenCalledWith(
+        '[CustomTouchEvents] Touch drop event received:',
+        expect.objectContaining({
+          clientY: 40,
+          draggedItem: 'playlist',
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      // actual restore happens in afterEach
+    }
   });
 });

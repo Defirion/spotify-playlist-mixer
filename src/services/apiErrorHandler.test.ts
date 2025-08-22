@@ -59,7 +59,9 @@ describe('ApiErrorHandler & ApiError', () => {
   it('wrapApiCall turns thrown errors into ApiError', async () => {
     const h = new ApiErrorHandler({ enableLogging: false });
     const bad = async () => {
-      throw new Error('Bad request');
+      const e: any = new Error('bad request');
+      e.response = { status: 400 };
+      throw e;
     };
     const wrapped = h.wrapApiCall(bad);
     await expect(wrapped()).rejects.toHaveProperty(

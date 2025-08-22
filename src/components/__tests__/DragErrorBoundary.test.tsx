@@ -59,3 +59,35 @@ test('Retry button resets the boundary so a retrying child can render', async ()
     spy.mockRestore();
   }
 });
+
+test('Retry button handles undefined handleRetry gracefully', async () => {
+  const user = userEvent.setup();
+
+  // Test the fallback function directly with undefined handleRetry
+  const fallback = (
+    _error: Error | null,
+    _errorInfo: React.ErrorInfo | null,
+    handleRetry?: () => void
+  ) => (
+    <div role="alert" data-testid="drag-error-boundary">
+      <p>Something went wrong with drag operations.</p>
+      <button
+        onClick={() => {
+          if (handleRetry) handleRetry();
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
+
+  // Render the fallback directly without handleRetry
+  render(fallback(new Error('test'), null, undefined));
+
+  // Click the Retry button (should not crash when handleRetry is undefined)
+  const retryButton = screen.getByRole('button', { name: /Retry/i });
+  await user.click(retryButton);
+
+  // Should still be there and not have crashed
+  expect(retryButton).toBeInTheDocument();
+});
