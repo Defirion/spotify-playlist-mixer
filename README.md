@@ -1,42 +1,28 @@
 # spotify-playlist-mixer
 
-## Development
 ## Testing
 
-### MSW (Mock Service Worker) — pin and fallback behavior
+Tests run on CRA's Jest setup. MSW has been removed from this repository —
+tests use local mocks (under `src/test-utils/mocks`) or stub `global.fetch`
+directly when network behavior needs to be simulated. Centralized hook mocks
+for the mixing hooks are registered in `src/setupTests.ts`.
 
-Note (important): this project pins `msw` to `0.49.3` in `devDependencies`. Recent MSW releases moved more code into ESM-only modules which can break Create React App's default Jest transform step (you may see a syntax error like "Unexpected token 'export'"). To keep the test runner stable across developer machines and CI we use a resilient pattern:
-
-- msw is pinned to `0.49.3` which is compatible with the project's Jest/CRA transform.
-- A test helper `src/__tests__/mocks/mswSetup.ts` exposes `setupMSW()`; it attempts to require and start MSW safely. If MSW cannot be required due to ESM transform issues, the helper logs a short warning and falls back to the existing hook-level mocks so tests still run deterministically.
-
-How this affects tests:
-- Integration tests rely on centralized hook mocks by default (registered in `src/setupTests.ts`). This keeps tests fast and deterministic.
-- Tests that need network-style behavior call `setupMSW()` at the top of the test file. If MSW loads, the in-repo handlers (in `src/__tests__/mocks/mswHandlers.ts`) will intercept network calls.
-- If MSW cannot load in the current environment, `setupMSW()` is a no-op and tests continue using the hook mocks. You may see a console warning like: "MSW setup skipped: Unexpected token 'export'" — that is expected in those environments.
-
-Quick commands
-- Run all tests:
+Quick commands:
 
 ```powershell
+# Run all tests
 npm test
-```
 
-- Run only integration tests (fast check):
-
-```powershell
+# Run only integration tests (fast check)
 npm test -- --testPathPattern=src/__tests__/integration --watchAll=false
 ```
-
-Recommended follow-up (tooling debt):
-- If you want to always run MSW-based network-style tests (no fallback), update the Jest transform to allow MSW's ESM deps to be transformed or move to a test runner/setup that supports ESM. That change affects the test toolchain and is best handled as a separate tech-debt ticket.
 
 # 🎵 Spotify Playlist Mixer v1.0
 
 **The Ultimate Spotify Playlist Mixing Tool** - Create perfectly balanced custom playlists with professional-grade controls, intelligent algorithms, and real-time preview capabilities.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen)
-![React](https://img.shields.io/badge/React-18.2.0-blue)
+![React](https://img.shields.io/badge/React-18.3.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🌟 What Makes This Special
@@ -91,7 +77,7 @@ Transform your music experience with **studio-quality playlist mixing** that riv
 
 **Full playlist preview with studio-grade controls:**
 
-- **Track Reordering**: Precise track positioning (drag & drop functionality being upgraded to dnd-kit)
+- **Track Reordering**: Drag & drop track positioning powered by dnd-kit
 - **Album Artwork Display**: 40x40px covers for easy track identification
 - **Real-Time Statistics**: Live updates as you modify tracks
 - **Track Removal**: One-click removal with red X buttons
@@ -192,7 +178,7 @@ Result: Epic finale with everyone singing along!
 
 ### **Architecture**
 
-- **React 18.2.0**: Modern hooks and concurrent features
+- **React 18.3.1**: Modern hooks and concurrent features
 - **Spotify Web API**: Full integration with official API
 - **Advanced Algorithms**: Custom playlist mixing logic
 - **CSS Grid**: Responsive, adaptive layouts
@@ -249,7 +235,7 @@ Result: Epic finale with everyone singing along!
 
 ### **Professional Controls**
 
-- **Track Reordering**: Precise track positioning (drag & drop being upgraded to dnd-kit)
+- **Track Reordering**: Drag & drop track positioning powered by dnd-kit
 - **Bulk Operations**: Multi-track selection and management
 - **Preview System**: Full playlist preview before creation
 - **Export Options**: Save configurations for future use
