@@ -1,14 +1,15 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import SpotifyService from '../../services/spotify';
 
 // Use shared mock helper to avoid importing axios-based implementation.
-jest.mock('../../services/spotify', () => ({
+vi.mock('../../services/spotify', async () => ({
   __esModule: true,
-  default:
-    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+  default: (
+    await import('../../test-utils/mocks/mockSpotifyService')
+  ).makeMockSpotifyService(),
 }));
 
 describe('SpotifyService - Batch A (pagination & batching)', () => {
@@ -16,12 +17,12 @@ describe('SpotifyService - Batch A (pagination & batching)', () => {
     const service = new SpotifyService('test_token');
 
     // Mock the specific method to return a simple result
-    service.getPlaylistTracks = jest.fn().mockResolvedValue({
+    service.getPlaylistTracks = vi.fn().mockResolvedValue({
       tracks: Array.from({ length: 250 }, (_, i) => ({ id: `track_${i}` })),
       total: 250,
     });
 
-    const onProgress = jest.fn();
+    const onProgress = vi.fn();
     const result = await service.getPlaylistTracks('test-playlist', {
       onProgress,
     });
@@ -39,7 +40,7 @@ describe('SpotifyService - Batch A (pagination & batching)', () => {
     expect(typeof service.addTracksToPlaylist).toBe('function');
 
     // Mock the method to return a result
-    service.addTracksToPlaylist = jest.fn().mockResolvedValue({
+    service.addTracksToPlaylist = vi.fn().mockResolvedValue({
       snapshot_id: 'test_snapshot',
     });
 

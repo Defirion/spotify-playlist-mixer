@@ -15,6 +15,13 @@ import {
 } from './mixerUtils';
 import { createPopularityPools } from './popularityQuadrants';
 import { createStrategyManager } from './mixingStrategies';
+import {
+  calculateTargetCounts,
+  shouldContinueMixing,
+  shouldStopDueToExhaustion,
+  getNextPlaylistId,
+  addSongsFromPlaylist,
+} from './mixingCalculations';
 
 // Mixing context interface for initialization
 export interface MixingContext {
@@ -68,8 +75,6 @@ export const createMixingContext = (
     0
   );
 
-  // Import and use calculation module
-  const { calculateTargetCounts } = require('./mixingCalculations');
   const { estimatedTotalSongs, targetCounts } = calculateTargetCounts(
     playlistTracks,
     ratioConfig,
@@ -216,13 +221,6 @@ const executeMixingLoop = (
   state: MixingState,
   strategy: any
 ): MixedTrack[] => {
-  const {
-    shouldContinueMixing,
-    shouldStopDueToExhaustion,
-    getNextPlaylistId,
-    addSongsFromPlaylist,
-  } = require('./mixingCalculations');
-
   const maxAttempts = context.options.useAllSongs
     ? context.estimatedTotalSongs * 2
     : (context.options.totalSongs || 100) * 10;

@@ -1,40 +1,49 @@
 import React from 'react';
-import { act } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import { useMixPreview } from '../../hooks/useMixPreview';
 
-const mockMixPlaylists = jest.fn();
-jest.mock('../../utils/mixer', () => ({
+// This file tests the real hook; the global setup mock must not apply.
+vi.unmock('../../hooks/useMixPreview');
+
+// vi.mock factories run during the import phase, so anything they close over
+// must come from vi.hoisted.
+const { mockMixPlaylists, mockGetPlaylistTracks, MockSpotifyService } =
+  vi.hoisted(() => {
+    const mockGetPlaylistTracks = vi.fn();
+    class MockSpotifyService {
+      accessToken: string;
+      constructor(token: string) {
+        this.accessToken = token;
+      }
+      getPlaylistTracks(...args: any[]) {
+        return mockGetPlaylistTracks(...args);
+      }
+    }
+    return {
+      mockMixPlaylists: vi.fn(),
+      mockGetPlaylistTracks,
+      MockSpotifyService,
+    };
+  });
+
+vi.mock('../../utils/mixer', () => ({
   mixPlaylists: (...args: any[]) => mockMixPlaylists(...args),
 }));
 
-const mockGetPlaylistTracks = jest.fn();
-class MockSpotifyService {
-  accessToken: string;
-  constructor(token: string) {
-    this.accessToken = token;
-  }
-  getPlaylistTracks(...args: any[]) {
-    return mockGetPlaylistTracks(...args);
-  }
-}
-jest.mock('../../services/spotify', () => ({
+vi.mock('../../services/spotify', () => ({
   __esModule: true,
   default: MockSpotifyService,
 }));
 
-const loadHook = () => jest.requireActual('../../hooks/useMixPreview');
-
 function renderUseMixPreview(accessToken: string, options: any = {}) {
   const results: any = {};
   function TestComp() {
-    const { useMixPreview } = loadHook();
     const hookReturn = useMixPreview(accessToken, options);
     Object.assign(results, hookReturn);
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { render } = require('@testing-library/react');
   render(<TestComp />);
-  return results as ReturnType<ReturnType<typeof loadHook>['useMixPreview']>;
+  return results as ReturnType<typeof useMixPreview>;
 }
 
 const makePlaylist = (id: string, name = id) => ({
@@ -51,15 +60,15 @@ const makeTrack = (id: string, sourcePlaylist: string, duration = 60000) => ({
 });
 
 describe('useMixPreview (extra cases)', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGetPlaylistTracks.mockImplementation(async (pid: string) => ({
       tracks: pid === 'p1' ? [makeTrack('t1', 'p1')] : [makeTrack('t2', 'p2')],
     }));
     // silence console.error from the hook implementation during passing runs
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -91,7 +100,7 @@ describe('useMixPreview (extra cases)', () => {
     });
 
     mockMixPlaylists.mockReturnValue([makeTrack('a', 'p1')]);
-    const onError = jest.fn();
+    const onError = vi.fn();
     const utils = renderUseMixPreview('token', { onError });
     await act(async () => {
       await utils.generatePreview(
@@ -106,7 +115,7 @@ describe('useMixPreview (extra cases)', () => {
   });
 
   test('missing spotify service sets error and calls onError', async () => {
-    const onError = jest.fn();
+    const onError = vi.fn();
     const utils = renderUseMixPreview('', { onError });
 
     await act(async () => {

@@ -2,13 +2,13 @@ import { renderHook, act } from '@testing-library/react';
 import useSpotifySearch from '../../hooks/useSpotifySearch';
 import SpotifyService from '../../services/spotify';
 
-jest.mock('../../services/spotify');
-const MockSpotifyService = SpotifyService as unknown as jest.Mock;
+vi.mock('../../services/spotify');
+const MockSpotifyService = SpotifyService as unknown as import('vitest').Mock;
 
 describe('useSpotifySearch (behavior)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useRealTimers();
+    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   it('sets error when spotify service not initialized and search is called', async () => {
@@ -25,15 +25,17 @@ describe('useSpotifySearch (behavior)', () => {
   });
 
   it('manual search updates results, total, hasMore and offset', async () => {
-    let searchTracksMock = jest.fn().mockResolvedValue({
+    let searchTracksMock = vi.fn().mockResolvedValue({
       tracks: [{ id: 't1' }],
       hasMore: true,
       total: 10,
     });
 
-    MockSpotifyService.mockImplementation(() => ({
-      searchTracks: searchTracksMock,
-    }));
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        searchTracks: searchTracksMock,
+      };
+    });
 
     const { result } = renderHook(() =>
       useSpotifySearch('tok', { autoSearch: false })
@@ -51,21 +53,23 @@ describe('useSpotifySearch (behavior)', () => {
   });
 
   it('loadMore appends new results when hasMore is true', async () => {
-    const first = jest
+    const first = vi
       .fn()
       .mockResolvedValue({ tracks: [{ id: 'a' }], hasMore: true, total: 3 });
-    const second = jest
+    const second = vi
       .fn()
       .mockResolvedValue({ tracks: [{ id: 'b' }], hasMore: false, total: 3 });
 
     // First instantiation returns object whose searchTracks will be first, then second
-    const calls: jest.Mock[] = [];
-    MockSpotifyService.mockImplementation(() => ({
-      searchTracks: (...args: any[]) => {
-        const fn = calls.shift();
-        return fn!(...args);
-      },
-    }));
+    const calls: import('vitest').Mock[] = [];
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        searchTracks: (...args: any[]) => {
+          const fn = calls.shift();
+          return fn!(...args);
+        },
+      };
+    });
     // prime the call queue
     calls.push(first, second);
 
@@ -97,8 +101,12 @@ describe('useSpotifySearch (behavior)', () => {
       resolveSearch = resolve;
     });
 
-    const delayed = jest.fn().mockImplementation(() => searchPromise);
-    MockSpotifyService.mockImplementation(() => ({ searchTracks: delayed }));
+    const delayed = vi.fn().mockImplementation(function (this: unknown) {
+      return searchPromise;
+    });
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return { searchTracks: delayed };
+    });
 
     const { result } = renderHook(() =>
       useSpotifySearch('tok', { autoSearch: false })
@@ -119,12 +127,14 @@ describe('useSpotifySearch (behavior)', () => {
   });
 
   it('retry triggers search when query exists', async () => {
-    const searchTracksMock = jest
+    const searchTracksMock = vi
       .fn()
       .mockResolvedValue({ tracks: [{ id: 'r1' }], hasMore: false, total: 1 });
-    MockSpotifyService.mockImplementation(() => ({
-      searchTracks: searchTracksMock,
-    }));
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        searchTracks: searchTracksMock,
+      };
+    });
 
     const { result } = renderHook(() =>
       useSpotifySearch('tok', { autoSearch: false })

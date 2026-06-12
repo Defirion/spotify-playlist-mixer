@@ -6,7 +6,7 @@ describe('paginate', () => {
       { items: [1, 2], next_cursor: 'a' },
       { items: [3], next_cursor: null },
     ];
-    const fetchPage = jest
+    const fetchPage = vi
       .fn()
       .mockImplementation(() => Promise.resolve(pages.shift() as any));
     const out: unknown[] = [];
@@ -16,7 +16,7 @@ describe('paginate', () => {
   });
 
   test('throws on malformed page', async () => {
-    const fetchPage = jest.fn().mockResolvedValue({} as any);
+    const fetchPage = vi.fn().mockResolvedValue({} as any);
     const it = paginate(fetchPage);
     await expect(async () => {
       // consume one value to trigger

@@ -79,7 +79,7 @@ describe('ApiErrorDisplay', () => {
 
       const errorContainer = screen.getByTestId('error-display');
       expect(errorContainer).toHaveClass('custom-class');
-      expect(errorContainer).toHaveStyle('background-color: red');
+      expect(errorContainer).toHaveStyle('background-color: rgb(255, 0, 0)');
     });
   });
 
@@ -150,7 +150,7 @@ describe('ApiErrorDisplay', () => {
 
   describe('Action Buttons', () => {
     it('renders retry button when error is retryable and onRetry is provided', () => {
-      const onRetry = jest.fn();
+      const onRetry = vi.fn();
       const error = createMockError({ retryable: true });
       render(<ApiErrorDisplay error={error} onRetry={onRetry} />);
 
@@ -162,7 +162,7 @@ describe('ApiErrorDisplay', () => {
     });
 
     it('does not render retry button when error is not retryable', () => {
-      const onRetry = jest.fn();
+      const onRetry = vi.fn();
       const error = createMockError({ retryable: false });
       render(<ApiErrorDisplay error={error} onRetry={onRetry} />);
 
@@ -177,7 +177,7 @@ describe('ApiErrorDisplay', () => {
     });
 
     it('renders dismiss button when onDismiss is provided', () => {
-      const onDismiss = jest.fn();
+      const onDismiss = vi.fn();
       const error = createMockError();
       render(<ApiErrorDisplay error={error} onDismiss={onDismiss} />);
 
@@ -189,7 +189,7 @@ describe('ApiErrorDisplay', () => {
     });
 
     it('renders close button when onDismiss is provided', () => {
-      const onDismiss = jest.fn();
+      const onDismiss = vi.fn();
       const error = createMockError();
       render(<ApiErrorDisplay error={error} onDismiss={onDismiss} />);
 
@@ -290,8 +290,8 @@ describe('ApiErrorDisplay', () => {
 
   describe('Accessibility', () => {
     it('has proper button roles and titles', () => {
-      const onRetry = jest.fn();
-      const onDismiss = jest.fn();
+      const onRetry = vi.fn();
+      const onDismiss = vi.fn();
       const error = createMockError({ retryable: true });
       render(
         <ApiErrorDisplay

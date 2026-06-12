@@ -40,11 +40,11 @@ const mockPlaylists: SpotifyPlaylist[] = [
   },
 ];
 
-const mockOnApplyPreset = jest.fn();
+const mockOnApplyPreset = vi.fn();
 
 describe('PresetTemplates', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders null when no playlists are selected', () => {
@@ -256,7 +256,7 @@ describe('PresetTemplates', () => {
   });
 
   it('shows alert when trying to apply preset with no playlists', () => {
-    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     render(
       <PresetTemplates

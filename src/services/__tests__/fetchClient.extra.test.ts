@@ -4,11 +4,11 @@ describe('FetchClient - request/response edge cases', () => {
   beforeEach(() => {
     // reset global fetch mock
     // @ts-ignore
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   test('handles non-JSON (text) 204 response', async () => {
@@ -21,8 +21,8 @@ describe('FetchClient - request/response edge cases', () => {
       headers: {
         get: (key: string) => (key === 'content-type' ? 'text/plain' : null),
       },
-      text: jest.fn().mockResolvedValue('no content'),
-      json: jest.fn(),
+      text: vi.fn().mockResolvedValue('no content'),
+      json: vi.fn(),
     };
 
     // @ts-ignore
@@ -46,8 +46,8 @@ describe('FetchClient - request/response edge cases', () => {
         get: (key: string) =>
           key === 'content-type' ? 'application/json' : null,
       },
-      json: jest.fn().mockResolvedValue(body),
-      text: jest.fn(),
+      json: vi.fn().mockResolvedValue(body),
+      text: vi.fn(),
     };
     // @ts-ignore
     global.fetch.mockResolvedValue(mockResp);
@@ -73,8 +73,8 @@ describe('FetchClient - request/response edge cases', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: jest.fn().mockResolvedValue({ ok: true }),
-        text: jest.fn(),
+        json: vi.fn().mockResolvedValue({ ok: true }),
+        text: vi.fn(),
         // provide headers.get API expected by fetchClient
         // @ts-ignore
         headers: { get: () => 'application/json' },

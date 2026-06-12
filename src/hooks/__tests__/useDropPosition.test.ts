@@ -3,9 +3,9 @@ import { useDropPosition } from '../../hooks/useDropPosition';
 import * as calc from '../../utils/dropPositionCalculator';
 
 describe('useDropPosition', () => {
-  let consoleErrorSpy: jest.SpyInstance<any, any>;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy?.mockRestore?.();
@@ -86,7 +86,7 @@ describe('useDropPosition', () => {
   });
 
   it('handles calculator errors by clearing position', () => {
-    const spy = jest
+    const spy = vi
       .spyOn(calc, 'calculateDropPosition')
       .mockImplementation(() => {
         throw new Error('boom');
@@ -104,7 +104,7 @@ describe('useDropPosition', () => {
 
   it('does not update state when new position equals previous', () => {
     let callCount = 0;
-    const stub = jest
+    const stub = vi
       .spyOn(calc, 'calculateDropPosition')
       .mockImplementation((_y, _c, _l) => {
         callCount += 1;

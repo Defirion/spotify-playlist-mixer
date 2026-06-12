@@ -4,15 +4,15 @@ import '@testing-library/jest-dom';
 
 // Mocks for @dnd-kit/sortable and @dnd-kit/utilities
 /* eslint-disable import/first */
-const mockUseSortable = jest.fn();
-const mockDefaultAnimate = jest.fn();
+const mockUseSortable = vi.fn();
+const mockDefaultAnimate = vi.fn();
 
-jest.mock('@dnd-kit/sortable', () => ({
+vi.mock('@dnd-kit/sortable', () => ({
   useSortable: (opts: any) => mockUseSortable(opts),
   defaultAnimateLayoutChanges: (...args: any[]) => mockDefaultAnimate(...args),
 }));
 
-jest.mock('@dnd-kit/utilities', () => ({
+vi.mock('@dnd-kit/utilities', () => ({
   CSS: {
     Transform: {
       toString: (t: any) => `translate(${t?.x || 0}px,${t?.y || 0}px)`,
@@ -38,7 +38,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: { 'data-foo': 'bar' },
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: { x: 1, y: 2 },
         transition: 'transform 200ms',
         isDragging: false,
@@ -67,7 +67,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: {},
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: { x: 0, y: 0 },
         transition: 'none',
         isDragging: true,
@@ -92,7 +92,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: {},
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: null,
         transition: '',
         isDragging: false,
@@ -114,7 +114,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: {},
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: null,
         transition: '',
         isDragging: false,
@@ -140,7 +140,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: {},
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: null,
         transition: '',
         isDragging: false,
@@ -166,7 +166,7 @@ describe('SortableWrapper', () => {
       return {
         attributes: {},
         listeners: {},
-        setNodeRef: jest.fn(),
+        setNodeRef: vi.fn(),
         transform: null,
         transition: '',
         isDragging: false,

@@ -65,12 +65,12 @@ const createSpotifyTrack = (
 
 describe('useTrackOperations', () => {
   let mockScrollContainer: HTMLElement;
-  let mockOnTrackOrderChange: jest.Mock;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
+  let mockOnTrackOrderChange: import('vitest').Mock;
+  let consoleLogSpy: import('vitest').MockInstance;
+  let consoleWarnSpy: import('vitest').MockInstance;
 
   beforeEach(() => {
-    mockOnTrackOrderChange = jest.fn();
+    mockOnTrackOrderChange = vi.fn();
 
     // Create mock scroll container
     mockScrollContainer = {
@@ -80,12 +80,12 @@ describe('useTrackOperations', () => {
     } as HTMLElement;
 
     // Spy on console methods
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('handleScrollPositionCapture', () => {

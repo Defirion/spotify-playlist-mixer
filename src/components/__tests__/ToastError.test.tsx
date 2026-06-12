@@ -3,15 +3,15 @@ import { render, fireEvent, screen } from '@testing-library/react';
 import ToastError from '../ToastError';
 
 describe('ToastError', () => {
-  const mockOnDismiss = jest.fn();
+  const mockOnDismiss = vi.fn();
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     mockOnDismiss.mockClear();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('does not render when error is null or undefined', () => {
@@ -48,7 +48,7 @@ describe('ToastError', () => {
     const errorMessage = 'Test error message';
     render(<ToastError error={errorMessage} onDismiss={mockOnDismiss} />);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(mockOnDismiss).toHaveBeenCalledTimes(1);
   });

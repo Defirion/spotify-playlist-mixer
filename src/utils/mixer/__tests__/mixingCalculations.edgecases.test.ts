@@ -6,12 +6,12 @@ import {
 
 describe('mixingCalculations edge cases', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
   test('calculateTargetCounts uses time-based path when weightType=time', () => {
     const playlistTracks: any = {
       p1: Array.from({ length: 5 }, (_, i) => ({

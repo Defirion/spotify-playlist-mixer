@@ -2,7 +2,7 @@ import retryWithBackoff from './retry';
 
 describe('retryWithBackoff', () => {
   test('succeeds without retry', async () => {
-    const fn = jest.fn().mockResolvedValue(42);
+    const fn = vi.fn().mockResolvedValue(42);
     const p = retryWithBackoff(fn, {
       maxRetries: 2,
       baseMs: 1,
@@ -14,7 +14,7 @@ describe('retryWithBackoff', () => {
 
   test('retries and then succeeds', async () => {
     let calls = 0;
-    const fn = jest.fn().mockImplementation(() => {
+    const fn = vi.fn().mockImplementation(() => {
       calls++;
       if (calls < 2) return Promise.reject(new Error('fail'));
       return Promise.resolve('ok');
@@ -31,7 +31,7 @@ describe('retryWithBackoff', () => {
 
   test('respects Retry-After when provided', async () => {
     let calls = 0;
-    const fn = jest.fn().mockImplementation(() => {
+    const fn = vi.fn().mockImplementation(() => {
       calls++;
       if (calls < 2) return Promise.reject(new Error('fail'));
       return Promise.resolve('ok');
@@ -47,7 +47,7 @@ describe('retryWithBackoff', () => {
   });
 
   test('deterministic backoff timing with recorded delays and fixed jitter', async () => {
-    const randSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5); // jitter => 0
+    const randSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5); // jitter => 0
     const origSetTimeout = global.setTimeout;
     const recorded: number[] = [];
     // Override setTimeout to record requested delay but execute callback immediately
@@ -61,7 +61,7 @@ describe('retryWithBackoff', () => {
 
     try {
       let calls = 0;
-      const fn = jest.fn().mockImplementation(() => {
+      const fn = vi.fn().mockImplementation(() => {
         calls++;
         if (calls < 2) return Promise.reject(new Error('fail'));
         return Promise.resolve('ok');

@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 // Mock the child TrackSourceModal so we can assert wiring/transforms at the
 // boundary without rendering the full track list UI.
 /* eslint-disable import/first */
-jest.mock('../TrackSourceModal', () => ({
+vi.mock('../TrackSourceModal', () => ({
   __esModule: true,
   default: (props: any) => (
     <div data-testid="mock-track-source">
@@ -23,18 +23,18 @@ import SpotifySearchModal from '../SpotifySearchModal';
 import * as useSpotifySearchHook from '../../hooks/useSpotifySearch';
 
 describe('SpotifySearchModal (integration wiring)', () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   test('enriches tracks with source metadata and calls onAddTracks', () => {
     const mockResults = [
       { id: 't1', name: 'Test Song', artists: [{ name: 'A' }] },
     ];
 
-    const setQuery = jest.fn();
-    const search = jest.fn();
-    const clear = jest.fn();
+    const setQuery = vi.fn();
+    const search = vi.fn();
+    const clear = vi.fn();
 
-    jest.spyOn(useSpotifySearchHook, 'default').mockImplementation((): any => ({
+    vi.spyOn(useSpotifySearchHook, 'default').mockImplementation((): any => ({
       query: 'beatles',
       results: mockResults,
       loading: false,
@@ -44,8 +44,8 @@ describe('SpotifySearchModal (integration wiring)', () => {
       clear,
     }));
 
-    const onAddTracks = jest.fn();
-    const onClose = jest.fn();
+    const onAddTracks = vi.fn();
+    const onClose = vi.fn();
 
     render(
       <SpotifySearchModal
@@ -70,11 +70,11 @@ describe('SpotifySearchModal (integration wiring)', () => {
   });
 
   test('calls clear() from hook when modal closes', () => {
-    const setQuery = jest.fn();
-    const search = jest.fn();
-    const clear = jest.fn();
+    const setQuery = vi.fn();
+    const search = vi.fn();
+    const clear = vi.fn();
 
-    jest.spyOn(useSpotifySearchHook, 'default').mockImplementation((): any => ({
+    vi.spyOn(useSpotifySearchHook, 'default').mockImplementation((): any => ({
       query: '',
       results: [],
       loading: false,
@@ -84,8 +84,8 @@ describe('SpotifySearchModal (integration wiring)', () => {
       clear,
     }));
 
-    const onAddTracks = jest.fn();
-    const onClose = jest.fn();
+    const onAddTracks = vi.fn();
+    const onClose = vi.fn();
 
     const { rerender } = render(
       <SpotifySearchModal

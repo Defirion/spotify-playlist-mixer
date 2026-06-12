@@ -5,34 +5,49 @@ import { SpotifyTrack } from '../../types/spotify';
 import { makeTrack } from '../../test-utils/mocks/spotify';
 
 // Mock SortableWrapper
-jest.mock('../SortableWrapper', () => {
-  return function MockSortableWrapper({
-    id,
-    children,
-  }: {
-    id: string;
-    children: React.ReactNode;
-  }) {
-    return <div data-testid={`sortable-wrapper-${id}`}>{children}</div>;
-  };
+vi.mock('../SortableWrapper', () => {
+  const __mod = (() => {
+    return function MockSortableWrapper({
+      id,
+      children,
+    }: {
+      id: string;
+      children: React.ReactNode;
+    }) {
+      return <div data-testid={`sortable-wrapper-${id}`}>{children}</div>;
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Mock TrackItem
-jest.mock('../ui/TrackItem', () => {
-  return function MockTrackItem({ track }: { track: SpotifyTrack }) {
-    return <div data-testid={`track-item-${track.id}`}>{track.name}</div>;
-  };
+vi.mock('../ui/TrackItem', () => {
+  const __mod = (() => {
+    return function MockTrackItem({ track }: { track: SpotifyTrack }) {
+      return <div data-testid={`track-item-${track.id}`}>{track.name}</div>;
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Mock DraggableTrackList
-jest.mock('../DraggableTrackList', () => {
-  return function MockDraggableTrackList({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) {
-    return <div data-testid="draggable-track-list">{children}</div>;
-  };
+vi.mock('../DraggableTrackList', () => {
+  const __mod = (() => {
+    return function MockDraggableTrackList({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) {
+      return <div data-testid="draggable-track-list">{children}</div>;
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 const mockTracks: SpotifyTrack[] = [

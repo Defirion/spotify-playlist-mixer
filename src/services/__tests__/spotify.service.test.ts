@@ -4,7 +4,7 @@
 // implementation.
 import SpotifyService from '../../services/spotify';
 
-jest.mock('../../services/spotify', () => {
+vi.mock('../../services/spotify', () => {
   class TestMockSpotifyService {
     accessToken: string;
     api: any;
@@ -88,7 +88,7 @@ describe('SpotifyService - service level behaviors', () => {
     // stub api.get to return expected shape
     // @ts-ignore
     service['api'] = {
-      get: jest.fn().mockResolvedValue({
+      get: vi.fn().mockResolvedValue({
         data: {
           tracks: { items: [mockTrack], total: 1, limit: 20, offset: 0 },
         },
@@ -107,7 +107,7 @@ describe('SpotifyService - service level behaviors', () => {
   test('getPlaylistTracks paginates and returns tracks', async () => {
     // @ts-ignore
     service['api'] = {
-      get: jest
+      get: vi
         .fn()
         .mockResolvedValue({ data: { items: [mockPlaylistTrack], total: 1 } }),
     };
@@ -121,7 +121,7 @@ describe('SpotifyService - service level behaviors', () => {
   test('handles 429 rate-limit by surfacing an error via withRetry', async () => {
     // @ts-ignore
     service['api'] = {
-      get: jest.fn().mockRejectedValue({
+      get: vi.fn().mockRejectedValue({
         response: { status: 429, headers: { 'retry-after': '1' } },
       }),
     };
@@ -132,7 +132,7 @@ describe('SpotifyService - service level behaviors', () => {
   test('handles 401 auth expiry by surfacing an error', async () => {
     // @ts-ignore
     service['api'] = {
-      get: jest.fn().mockRejectedValue({ response: { status: 401 } }),
+      get: vi.fn().mockRejectedValue({ response: { status: 401 } }),
     };
 
     await expect(service.getUserProfile()).rejects.toBeDefined();

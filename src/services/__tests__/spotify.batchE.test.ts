@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 // MSW removed: tests use local TestMockSpotifyService instead of network handlers
@@ -92,17 +92,6 @@ class TestMockSpotifyService {
 }
 
 const SpotifyService = TestMockSpotifyService;
-
-try {
-  // Ensure axios uses the http adapter in node tests for consistent headers
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-  const axios = require('axios');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-  const httpAdapter = require('axios/lib/adapters/http');
-  axios.defaults.adapter = (httpAdapter && httpAdapter.default) || httpAdapter;
-} catch (e) {
-  // ignore
-}
 
 describe('SpotifyService - Batch E (remove/create/playlists edge cases)', () => {
   const ACCESS_TOKEN = 'normal_token';

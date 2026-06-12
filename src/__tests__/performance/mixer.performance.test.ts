@@ -25,13 +25,13 @@ function makeTracks(n: number, prefix = '') {
 }
 
 test('mixPlaylists performance — 1000 tracks', async () => {
-  let logSpy: jest.SpyInstance | undefined;
-  let errorSpy: jest.SpyInstance | undefined;
+  let logSpy: import('vitest').MockInstance | undefined;
+  let errorSpy: import('vitest').MockInstance | undefined;
   // Silence Policy: silence verbose logs for passing runs but allow opt-in via PERF_DEBUG
   const debugEnabled = process.env.PERF_DEBUG === '1';
   if (!debugEnabled) {
-    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   }
   await silenceIfPass(async () => {
     // Total desired tracks across all playlists (default 2000 for a stress test)
@@ -184,8 +184,8 @@ test('mixPlaylists performance — 1000 tracks', async () => {
     };
     // Write current-run.json for comparisons
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       const outPath = path.join(__dirname, 'baselines', 'current-run.json');
       fs.writeFileSync(outPath, JSON.stringify(metrics, null, 2));
     } catch (e: any) {

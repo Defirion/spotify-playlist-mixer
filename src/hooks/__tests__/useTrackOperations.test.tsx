@@ -8,9 +8,9 @@ afterEach(() => {
 });
 
 // Silence Policy: suppress verbose scroll capture logs during passing runs
-let consoleLogSpy: jest.SpyInstance;
+let consoleLogSpy: import('vitest').MockInstance;
 beforeEach(() => {
-  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 afterEach(() => {
   consoleLogSpy?.mockRestore?.();
@@ -23,7 +23,7 @@ test('useTrackOperations handlers call onTrackOrderChange with expected arrays',
     { id: 't3', uri: 'u3', sourcePlaylist: 'p1' },
   ];
 
-  const onTrackOrderChange = jest.fn();
+  const onTrackOrderChange = vi.fn();
 
   const containerRef = React.createRef<HTMLDivElement>();
 

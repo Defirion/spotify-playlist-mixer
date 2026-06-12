@@ -3,13 +3,13 @@ import useUserPlaylists from '../useUserPlaylists';
 import SpotifyService from '../../services/spotify';
 import { SpotifyPlaylist } from '../../types/spotify';
 
-// Mock the SpotifyService as a jest.fn() so tests can call mockImplementation on the constructor
-jest.mock('../../services/spotify', () => ({
+// Mock the SpotifyService as a vi.fn() so tests can call mockImplementation on the constructor
+vi.mock('../../services/spotify', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
-const MockedSpotifyService = SpotifyService as jest.MockedClass<
+const MockedSpotifyService = SpotifyService as import('vitest').MockedClass<
   typeof SpotifyService
 >;
 
@@ -18,31 +18,33 @@ describe('useUserPlaylists', () => {
   const mockAccessToken = 'mock-access-token';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockSpotifyService = {
-      getUserPlaylists: jest.fn(),
-      setAccessToken: jest.fn(),
-      getAccessToken: jest.fn(),
-      getUserProfile: jest.fn(),
-      getPlaylistTracks: jest.fn(),
-      createPlaylist: jest.fn(),
-      addTracksToPlaylist: jest.fn(),
-      removeTracksFromPlaylist: jest.fn(),
-      searchTracks: jest.fn(),
+      getUserPlaylists: vi.fn(),
+      setAccessToken: vi.fn(),
+      getAccessToken: vi.fn(),
+      getUserProfile: vi.fn(),
+      getPlaylistTracks: vi.fn(),
+      createPlaylist: vi.fn(),
+      addTracksToPlaylist: vi.fn(),
+      removeTracksFromPlaylist: vi.fn(),
+      searchTracks: vi.fn(),
       // Additional methods expected by the mocked class
-      getPlaylist: jest.fn(),
-      searchPlaylists: jest.fn(),
+      getPlaylist: vi.fn(),
+      searchPlaylists: vi.fn(),
     } as any;
 
-    MockedSpotifyService.mockImplementation(() => mockSpotifyService);
+    MockedSpotifyService.mockImplementation(function (this: unknown) {
+      return mockSpotifyService;
+    });
   });
 
   // Silence console.error in this suite to avoid noisy logs from expected
   // errors that are part of negative tests.
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy.mockRestore();
@@ -420,7 +422,7 @@ describe('useUserPlaylists', () => {
 
     it('does not load more when hasMore is false', async () => {
       mockSpotifyService.getUserPlaylists.mockResolvedValue({
-        items: [
+        playlists: [
           {
             id: '1',
             name: 'Playlist 1',
@@ -439,11 +441,7 @@ describe('useUserPlaylists', () => {
           },
         ],
         total: 1,
-        limit: 1,
-        offset: 0,
-        next: null,
-        previous: null,
-        href: '',
+        hasMore: false,
       } as any);
 
       const { result } = renderHook(() => useUserPlaylists(mockAccessToken));
@@ -899,9 +897,9 @@ describe('useUserPlaylists', () => {
       const { unmount } = renderHook(() => useUserPlaylists(mockAccessToken));
 
       // Mock abort controller
-      const mockAbort = jest.fn();
+      const mockAbort = vi.fn();
       const originalAbortController = global.AbortController;
-      global.AbortController = jest.fn(() => ({
+      global.AbortController = vi.fn(() => ({
         signal: { aborted: false },
         abort: mockAbort,
       })) as any;

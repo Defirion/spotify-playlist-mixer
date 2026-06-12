@@ -11,31 +11,36 @@ import { mockTracks } from '../../mocks/fixtures';
 let _trackIdCounter = 0;
 const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
 
-jest.mock('../../utils/trackUtils', () => ({
-  formatDuration: jest.fn(
+vi.mock('../../utils/trackUtils', () => ({
+  formatDuration: vi.fn(
     (ms: number) =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
         .toString()
         .padStart(2, '0')}`
   ),
-  getTrackQuadrant: jest.fn(() => 'high-energy-high-valence'),
-  getPopularityStyle: jest.fn(() => ({
+  getTrackQuadrant: vi.fn(() => 'high-energy-high-valence'),
+  getPopularityStyle: vi.fn(() => ({
     background: '#4CAF50',
     color: '#fff',
     text: 'Popular',
   })),
-  generateTrackInstanceId: jest.fn(() => _genTrackId()),
+  generateTrackInstanceId: vi.fn(() => _genTrackId()),
 }));
 
 // Mock the virtualization hook
-jest.mock('../../hooks/useVirtualization', () => {
-  return jest.fn(() => ({
-    visibleItems: mockTracks,
-    startIndex: 0,
-    containerProps: {},
-    spacerProps: {},
-    getItemProps: () => ({}),
-  }));
+vi.mock('../../hooks/useVirtualization', () => {
+  const __mod = (() => {
+    return vi.fn(() => ({
+      visibleItems: mockTracks,
+      startIndex: 0,
+      containerProps: {},
+      spacerProps: {},
+      getItemProps: () => ({}),
+    }));
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Helper to collect track items rendered inside the track list using Testing Library queries
@@ -46,8 +51,8 @@ describe('Component Integration Tests', () => {
   describe('Modal and TrackList Integration', () => {
     it('displays track list inside modal with proper interactions', async () => {
       const user = userEvent.setup();
-      const onClose = jest.fn();
-      const onTrackSelect = jest.fn();
+      const onClose = vi.fn();
+      const onTrackSelect = vi.fn();
 
       render(
         <Modal isOpen={true} onClose={onClose} title="Select Tracks">
@@ -80,8 +85,8 @@ describe('Component Integration Tests', () => {
 
     it('handles keyboard navigation between modal and track list', async () => {
       const user = userEvent.setup();
-      const onClose = jest.fn();
-      const onTrackSelect = jest.fn();
+      const onClose = vi.fn();
+      const onTrackSelect = vi.fn();
 
       render(
         <Modal isOpen={true} onClose={onClose} title="Select Tracks">
@@ -114,8 +119,8 @@ describe('Component Integration Tests', () => {
 
   describe('TrackList and TrackItem Integration', () => {
     it('handles track selection and removal workflows', async () => {
-      const onClose = jest.fn();
-      const onTrackSelect = jest.fn();
+      const onClose = vi.fn();
+      const onTrackSelect = vi.fn();
 
       render(
         <Modal isOpen={true} onClose={onClose} title="Select Tracks">

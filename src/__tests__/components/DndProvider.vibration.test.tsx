@@ -7,16 +7,14 @@ describe('DndProvider - vibration interceptor (dev only)', () => {
   const originalNavigator = global.navigator;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     // ensure non-production behavior (dev/test)
     process.env.NODE_ENV = 'test';
 
     // mock useDragSensors to a stable value
-    jest
-      .spyOn(useDragSensorsModule, 'useDragSensors')
-      .mockReturnValue([] as any);
+    vi.spyOn(useDragSensorsModule, 'useDragSensors').mockReturnValue([] as any);
     // silence noisy dev-only haptics interceptor logs during tests
-    jest.spyOn(console, 'debug').mockImplementation(() => {});
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -26,11 +24,11 @@ describe('DndProvider - vibration interceptor (dev only)', () => {
       configurable: true,
       writable: false,
     });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('wraps navigator.vibrate and sets __vibrateWrapped when navigator.vibrate exists', () => {
-    const mockVibrate = jest.fn(() => 'ok');
+    const mockVibrate = vi.fn(() => 'ok');
     Object.defineProperty(global, 'navigator', {
       value: { ...originalNavigator, vibrate: mockVibrate },
       configurable: true,

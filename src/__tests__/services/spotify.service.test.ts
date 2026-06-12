@@ -3,24 +3,24 @@ import { ApiError, ERROR_TYPES } from '../../services/apiErrorHandler';
 import { getSpotifyApi } from '../../utils/spotify';
 
 // We stub the underlying API layer so tests focus on service behavior.
-jest.mock('../../utils/spotify');
-const mockGetSpotifyApi = getSpotifyApi as jest.MockedFunction<
+vi.mock('../../utils/spotify');
+const mockGetSpotifyApi = getSpotifyApi as import('vitest').MockedFunction<
   typeof getSpotifyApi
 >;
 
 // Helper to build a fake API client shape the service expects
 function makeApi(overrides: Partial<Record<string, any>> = {}): any {
   return {
-    get: jest.fn(),
-    post: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
     ...overrides,
   };
 }
 
 describe('SpotifyService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {

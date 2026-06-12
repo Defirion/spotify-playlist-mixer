@@ -11,12 +11,12 @@ import * as usePlaylistSearchModule from '../../hooks/usePlaylistSearch';
 import * as useSpotifyUrlHandlerModule from '../../hooks/useSpotifyUrlHandler';
 import * as normalizeErrorModule from '../../utils/normalizeError';
 
-const mockOnSelect = jest.fn();
-const mockOnClearAll = jest.fn();
-const mockOnError = jest.fn();
+const mockOnSelect = vi.fn();
+const mockOnClearAll = vi.fn();
+const mockOnError = vi.fn();
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('PlaylistSelector', () => {
@@ -43,25 +43,26 @@ describe('PlaylistSelector', () => {
 
   test('switches to url input type when paste looks like spotify link and adds via url handler', async () => {
     // mock hook behaviors
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    const handleAdd = jest.fn(() => Promise.resolve());
+    const handleAdd = vi.fn(() => Promise.resolve());
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: (v: string) => v.includes('spotify'),
-        isValidPlaylistUrl: (v: string) => v.includes('playlist'),
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: (v: string) => v.includes('spotify'),
+      isValidPlaylistUrl: (v: string) => v.includes('playlist'),
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -96,23 +97,24 @@ describe('PlaylistSelector', () => {
       tracks: { total: 3 },
     };
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -131,23 +133,24 @@ describe('PlaylistSelector', () => {
   });
 
   test('shows max playlists warning when >=10 playlists selected', async () => {
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     const selected = Array.from({ length: 10 }).map(
       (_, i) => ({ id: `p${i}` }) as any
@@ -175,25 +178,26 @@ describe('PlaylistSelector', () => {
       tracks: undefined,
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    const handleAdd = jest.fn(() => Promise.resolve());
+    const handleAdd = vi.fn(() => Promise.resolve());
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -217,30 +221,31 @@ describe('PlaylistSelector', () => {
   });
 
   test('calls onError with normalized details when searchError is an object', async () => {
-    const setQuery = jest.fn();
-    const setShowResults = jest.fn();
+    const setQuery = vi.fn();
+    const setShowResults = vi.fn();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
       setQuery,
       results: [],
       loading: false,
       error: { msg: 'boom' },
       showResults: false,
       setShowResults,
-      clearResults: jest.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(normalizeErrorModule, 'getDisplayErrorWithLabel')
-      .mockReturnValue({ details: 'normalized error' } as any);
+    vi.spyOn(normalizeErrorModule, 'getDisplayErrorWithLabel').mockReturnValue({
+      details: 'normalized error',
+    } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -258,25 +263,26 @@ describe('PlaylistSelector', () => {
   });
 
   test('focus shows results when input has text and inputType is search', async () => {
-    const setShowResults = jest.fn();
+    const setShowResults = vi.fn();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
       setShowResults,
-      clearResults: jest.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -296,25 +302,26 @@ describe('PlaylistSelector', () => {
   });
 
   test('calls onError when submitting non-url term with no results', async () => {
-    const setShowResults = jest.fn();
+    const setShowResults = vi.fn();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
       setShowResults,
-      clearResults: jest.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -341,23 +348,24 @@ describe('PlaylistSelector', () => {
   });
 
   test('calls onError unchanged when searchError is a string', async () => {
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: 'simple string error',
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -390,25 +398,26 @@ describe('PlaylistSelector', () => {
       tracks: { total: 2 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [p1, p2],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    const handleAdd = jest.fn(() => Promise.resolve());
+    const handleAdd = vi.fn(() => Promise.resolve());
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -430,7 +439,7 @@ describe('PlaylistSelector', () => {
   });
 
   test('renders Untitled Playlist when name missing and hide results on blur', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     const playlist = {
       id: 'u1',
@@ -440,25 +449,26 @@ describe('PlaylistSelector', () => {
       tracks: { total: 2 },
     } as any;
 
-    const setShowResults = jest.fn();
+    const setShowResults = vi.fn();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
       setShowResults,
-      clearResults: jest.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -477,11 +487,11 @@ describe('PlaylistSelector', () => {
 
     // advance timers so the delayed setShowResults runs
     act(() => {
-      jest.advanceTimersByTime(150);
+      vi.advanceTimersByTime(150);
     });
     expect(setShowResults).toHaveBeenCalledWith(false);
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('ArrowDown then Enter selects the highlighted (second) search result', async () => {
@@ -500,25 +510,26 @@ describe('PlaylistSelector', () => {
       tracks: { total: 2 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [p1, p2],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    const handleAdd = jest.fn(() => Promise.resolve());
+    const handleAdd = vi.fn(() => Promise.resolve());
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -555,23 +566,24 @@ describe('PlaylistSelector', () => {
       tracks: { total: 5 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [bad, missingFields, withImage],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -599,23 +611,24 @@ describe('PlaylistSelector', () => {
   });
 
   test('Add button disabled when inputType is url but playlist url invalid', async () => {
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => true,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => true,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -637,7 +650,7 @@ describe('PlaylistSelector', () => {
   });
 
   test('clicking a search result refocuses input using fallback when focus with options throws', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     const playlist = {
       id: 'pf',
@@ -647,32 +660,33 @@ describe('PlaylistSelector', () => {
       tracks: { total: 1 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     // Mock focus to throw when called with options, succeed when called without
-    const focusMock = jest.fn(function (this: any, ...args: any[]) {
+    const focusMock = vi.fn(function (this: any, ...args: any[]) {
       if (args.length) throw new Error('no options support');
       // no-op
     });
-    jest
-      .spyOn(HTMLInputElement.prototype, 'focus')
-      .mockImplementation(focusMock as any);
+    vi.spyOn(HTMLInputElement.prototype, 'focus').mockImplementation(
+      focusMock as any
+    );
 
     render(
       <PlaylistSelector
@@ -694,60 +708,61 @@ describe('PlaylistSelector', () => {
 
     // Advance timers so the delayed focus runs
     act(() => {
-      jest.advanceTimersByTime(150);
+      vi.advanceTimersByTime(150);
     });
 
     // Last call should be the fallback (no args)
-    const calls = (focusMock as jest.Mock).mock.calls;
+    const calls = (focusMock as import('vitest').Mock).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
     expect(calls[calls.length - 1].length).toBe(0);
 
-    (HTMLInputElement.prototype.focus as jest.Mock).mockRestore();
-    jest.useRealTimers();
+    (HTMLInputElement.prototype.focus as import('vitest').Mock).mockRestore();
+    vi.useRealTimers();
   });
 
   test('URL add shows loading overlay while pending and triggers autofocus via onPlaylistSelect', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
     // Capture the onPlaylistSelect passed into the hook and call it from the mock add
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockImplementation((opts: any) => {
-        return {
-          isValidSpotifyLink: () => true,
-          isValidPlaylistUrl: () => true,
-          handleAddPlaylistByUrl: (input: string) =>
-            new Promise<void>(resolve => {
-              // simulate async add, then call the component's onPlaylistSelect callback
-              setTimeout(() => {
-                try {
-                  opts.onPlaylistSelect({ id: 'added', name: 'Added' });
-                } catch (e) {
-                  // ignore
-                }
-                resolve();
-              }, 50);
-            }),
-        } as any;
-      });
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockImplementation((opts: any) => {
+      return {
+        isValidSpotifyLink: () => true,
+        isValidPlaylistUrl: () => true,
+        handleAddPlaylistByUrl: (input: string) =>
+          new Promise<void>(resolve => {
+            // simulate async add, then call the component's onPlaylistSelect callback
+            setTimeout(() => {
+              try {
+                opts.onPlaylistSelect({ id: 'added', name: 'Added' });
+              } catch (e) {
+                // ignore
+              }
+              resolve();
+            }, 50);
+          }),
+      } as any;
+    });
 
     // Spy focus to observe fallback behavior (throw on options)
-    const focusMock = jest.fn(function (this: any, ...args: any[]) {
+    const focusMock = vi.fn(function (this: any, ...args: any[]) {
       if (args.length) throw new Error('no options');
     });
-    jest
-      .spyOn(HTMLInputElement.prototype, 'focus')
-      .mockImplementation(focusMock as any);
+    vi.spyOn(HTMLInputElement.prototype, 'focus').mockImplementation(
+      focusMock as any
+    );
 
     render(
       <PlaylistSelector
@@ -772,7 +787,7 @@ describe('PlaylistSelector', () => {
 
     // Resolve the add
     act(() => {
-      jest.advanceTimersByTime(50);
+      vi.advanceTimersByTime(50);
     });
     // Let promises settle
     await waitFor(() =>
@@ -781,13 +796,13 @@ describe('PlaylistSelector', () => {
 
     // The autofocus scheduled by onPlaylistSelect should run after its 100ms timeout
     act(() => {
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
     });
-    const calls = (focusMock as jest.Mock).mock.calls;
+    const calls = (focusMock as import('vitest').Mock).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
 
-    (HTMLInputElement.prototype.focus as jest.Mock).mockRestore();
-    jest.useRealTimers();
+    (HTMLInputElement.prototype.focus as import('vitest').Mock).mockRestore();
+    vi.useRealTimers();
   });
 
   test('ArrowDown from -1 then Enter selects the first result (prevIndex -1 branch)', async () => {
@@ -806,25 +821,26 @@ describe('PlaylistSelector', () => {
       tracks: { total: 2 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [p1, p2],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    const handleAdd = jest.fn(() => Promise.resolve());
+    const handleAdd = vi.fn(() => Promise.resolve());
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -849,28 +865,29 @@ describe('PlaylistSelector', () => {
 
   test('input is auto-focused on mount using focus with options when supported', () => {
     // focus should be called with options { preventScroll: true }
-    const focusMock = jest.fn();
-    jest
-      .spyOn(HTMLInputElement.prototype, 'focus')
-      .mockImplementation(focusMock as any);
+    const focusMock = vi.fn();
+    vi.spyOn(HTMLInputElement.prototype, 'focus').mockImplementation(
+      focusMock as any
+    );
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -884,32 +901,33 @@ describe('PlaylistSelector', () => {
 
     expect(focusMock).toHaveBeenCalled();
     // ensure it was called with options at least once
-    const calledWithOptions = (focusMock as jest.Mock).mock.calls.some(
-      c => c.length && typeof c[0] === 'object'
-    );
+    const calledWithOptions = (
+      focusMock as import('vitest').Mock
+    ).mock.calls.some(c => c.length && typeof c[0] === 'object');
     expect(calledWithOptions).toBeTruthy();
 
-    (HTMLInputElement.prototype.focus as jest.Mock).mockRestore();
+    (HTMLInputElement.prototype.focus as import('vitest').Mock).mockRestore();
   });
 
   test('pressing Enter when there are no search results triggers handleInputSubmit (empty input path)', async () => {
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -940,25 +958,26 @@ describe('PlaylistSelector', () => {
       tracks: { total: 1 },
     } as any;
 
-    const setShowResults = jest.fn();
+    const setShowResults = vi.fn();
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [p1],
       loading: false,
       error: null,
       showResults: true,
       setShowResults,
-      clearResults: jest.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -995,23 +1014,24 @@ describe('PlaylistSelector', () => {
       tracks: { total: 4 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector
@@ -1053,25 +1073,26 @@ describe('PlaylistSelector', () => {
       resolveAdd = res;
     });
 
-    const handleAdd = jest.fn(() => addPromise);
+    const handleAdd = vi.fn(() => addPromise);
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [p1],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: handleAdd,
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: handleAdd,
+    } as any);
 
     render(
       <PlaylistSelector
@@ -1106,23 +1127,24 @@ describe('PlaylistSelector', () => {
       tracks: { total: 2 },
     } as any;
 
-    jest.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
-      setQuery: jest.fn(),
+    vi.spyOn(usePlaylistSearchModule, 'usePlaylistSearch').mockReturnValue({
+      setQuery: vi.fn(),
       results: [playlist],
       loading: false,
       error: null,
       showResults: true,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     } as any);
 
-    jest
-      .spyOn(useSpotifyUrlHandlerModule, 'useSpotifyUrlHandler')
-      .mockReturnValue({
-        isValidSpotifyLink: () => false,
-        isValidPlaylistUrl: () => false,
-        handleAddPlaylistByUrl: jest.fn(),
-      } as any);
+    vi.spyOn(
+      useSpotifyUrlHandlerModule,
+      'useSpotifyUrlHandler'
+    ).mockReturnValue({
+      isValidSpotifyLink: () => false,
+      isValidPlaylistUrl: () => false,
+      handleAddPlaylistByUrl: vi.fn(),
+    } as any);
 
     render(
       <PlaylistSelector

@@ -79,7 +79,7 @@ describe('cleanPlaylistTracks and logging', () => {
     process.env.NODE_ENV = 'development';
     process.env.TEST_VERBOSE = 'true';
 
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     cleanPlaylistTracks({ playlist1: [validTrack, invalidTrack] } as any);
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
@@ -88,16 +88,16 @@ describe('cleanPlaylistTracks and logging', () => {
 
 describe('logDebugInfo', () => {
   beforeEach(() => {
-    jest
-      .spyOn(Date.prototype, 'toISOString')
-      .mockReturnValue('2025-08-22T12:34:56.789Z');
+    vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(
+      '2025-08-22T12:34:56.789Z'
+    );
   });
 
   it('does not log in production environment', () => {
     process.env.NODE_ENV = 'production';
     process.env.TEST_VERBOSE = 'true';
 
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     logDebugInfo('info' as any, 'test message');
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
@@ -107,7 +107,7 @@ describe('logDebugInfo', () => {
     process.env.NODE_ENV = 'development';
     delete process.env.TEST_VERBOSE;
 
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     logDebugInfo('info' as any, 'test message');
     expect(spy).toHaveBeenCalledWith('ℹ️ [12:34:56] test message');
     spy.mockRestore();
@@ -117,7 +117,7 @@ describe('logDebugInfo', () => {
     delete process.env.NODE_ENV;
     process.env.TEST_VERBOSE = 'true';
 
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     logDebugInfo('info' as any, 'test message');
     expect(spy).toHaveBeenCalledWith('ℹ️ [12:34:56] test message');
     spy.mockRestore();

@@ -18,19 +18,19 @@ describe('mixingStrategies development logging and fallback coverage', () => {
   const OLD_ENV = process.env.NODE_ENV;
 
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     process.env.NODE_ENV = OLD_ENV;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('development logs are called across strategies', () => {
     process.env.NODE_ENV = 'development';
-    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     const pools = { pid: makePools() } as any;
 

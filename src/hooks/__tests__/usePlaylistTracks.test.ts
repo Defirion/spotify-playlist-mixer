@@ -4,36 +4,38 @@ import SpotifyService from '../../services/spotify';
 import type { SpotifyTrack } from '../../types';
 import { makeTrack } from '../../test-utils/mocks/spotify';
 
-// Mock the SpotifyService as a jest.fn() so tests can call mockImplementation on the constructor
-jest.mock('../../services/spotify', () => ({
+// Mock the SpotifyService as a vi.fn() so tests can call mockImplementation on the constructor
+vi.mock('../../services/spotify', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
-const MockedSpotifyService = SpotifyService as jest.MockedClass<
+const MockedSpotifyService = SpotifyService as import('vitest').MockedClass<
   typeof SpotifyService
 >;
 
 describe('usePlaylistTracks', () => {
-  let mockSpotifyService: jest.Mocked<SpotifyService>;
+  let mockSpotifyService: import('vitest').Mocked<SpotifyService>;
   const mockAccessToken = 'mock-access-token';
   const mockPlaylistId = 'playlist-123';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockSpotifyService = {
-      getPlaylistTracks: jest.fn(),
+      getPlaylistTracks: vi.fn(),
     } as any;
 
-    MockedSpotifyService.mockImplementation(() => mockSpotifyService);
+    MockedSpotifyService.mockImplementation(function (this: unknown) {
+      return mockSpotifyService;
+    });
   });
 
   // Silence console.error in this suite to avoid noisy logs from intentional
   // errors during negative tests. Restored after each test.
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy.mockRestore();
@@ -281,7 +283,7 @@ describe('usePlaylistTracks', () => {
 
   describe('Progress tracking', () => {
     it('calls onProgress callback during fetch', async () => {
-      const onProgress = jest.fn();
+      const onProgress = vi.fn();
       const mockProgressData = { loaded: 50, total: 100, percentage: 50 };
 
       mockSpotifyService.getPlaylistTracks.mockImplementation(
@@ -785,9 +787,9 @@ describe('usePlaylistTracks', () => {
       );
 
       // Mock abort controller
-      const mockAbort = jest.fn();
+      const mockAbort = vi.fn();
       const originalAbortController = global.AbortController;
-      global.AbortController = jest.fn(() => ({
+      global.AbortController = vi.fn(() => ({
         signal: { aborted: false },
         abort: mockAbort,
       })) as any;

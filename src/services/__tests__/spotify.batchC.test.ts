@@ -1,14 +1,15 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 // MSW removed from this test; use local mocks only
 import SpotifyService from '../../services/spotify';
 
-jest.mock('../../services/spotify', () => ({
+vi.mock('../../services/spotify', async () => ({
   __esModule: true,
-  default:
-    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+  default: (
+    await import('../../test-utils/mocks/mockSpotifyService')
+  ).makeMockSpotifyService(),
 }));
 
 // no-op: MSW removed
@@ -32,7 +33,7 @@ describe('SpotifyService - Batch C (search & audio features)', () => {
     const service = new SpotifyService('normal_token');
 
     // Mock the method to return test data
-    service.getUserProfile = jest.fn().mockResolvedValue({
+    service.getUserProfile = vi.fn().mockResolvedValue({
       id: 'test_user',
       display_name: 'Test User',
     });

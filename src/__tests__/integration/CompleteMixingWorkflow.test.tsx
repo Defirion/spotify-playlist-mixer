@@ -16,37 +16,42 @@ import PlaylistMixer from '../../components/PlaylistMixer';
 // MSW removed; no server started here
 
 // Mock the SpotifyService class used by hooks so mixing flow runs deterministically
-jest.mock('../../services/spotify', () => {
-  return {
-    __esModule: true,
-    default: class MockSpotifyService {
-      accessToken: string;
-      constructor(token: string) {
-        this.accessToken = token;
-      }
+vi.mock('../../services/spotify', () => {
+  const __mod = (() => {
+    return {
+      __esModule: true,
+      default: class MockSpotifyService {
+        accessToken: string;
+        constructor(token: string) {
+          this.accessToken = token;
+        }
 
-      async getPlaylistTracks(playlistId: string) {
-        return { tracks: mockTracks };
-      }
+        async getPlaylistTracks(playlistId: string) {
+          return { tracks: mockTracks };
+        }
 
-      async getUserProfile() {
-        return mockUserProfile;
-      }
+        async getUserProfile() {
+          return mockUserProfile;
+        }
 
-      async createPlaylist(userId: string, data: any) {
-        return { id: 'created_playlist_1', name: data.name || 'created' };
-      }
+        async createPlaylist(userId: string, data: any) {
+          return { id: 'created_playlist_1', name: data.name || 'created' };
+        }
 
-      async addTracksToPlaylist(playlistId: string, request: any) {
-        return { snapshot_id: 'snapshot_123' };
-      }
-    },
-  };
+        async addTracksToPlaylist(playlistId: string, request: any) {
+          return { snapshot_id: 'snapshot_123' };
+        }
+      },
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Provide hook mocks via centralized helpers using inline factories
-jest.mock('../../hooks/useMixPreview', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixPreviewModule(
+vi.mock('../../hooks/useMixPreview', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixPreviewModule(
     async (cfg: any) => {
       const tracks = (mockTracks || [])
         .slice(0, cfg.mixOptions?.totalSongs || 4)
@@ -64,8 +69,8 @@ jest.mock('../../hooks/useMixPreview', () =>
   )
 );
 
-jest.mock('../../hooks/useMixGeneration', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule(
+vi.mock('../../hooks/useMixGeneration', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule(
     async (cfg: any) => {
       const tracks = (mockTracks || [])
         .slice(0, cfg.mixOptions?.totalSongs || 4)
@@ -95,7 +100,7 @@ describe('Complete mixing workflow (integration with MSW)', () => {
 
   it('generates a preview then creates a playlist successfully', async () => {
     const user = userEvent.setup();
-    const onMixedPlaylist = jest.fn();
+    const onMixedPlaylist = vi.fn();
 
     render(
       <PlaylistMixer {...defaultProps} onMixedPlaylist={onMixedPlaylist} />

@@ -6,9 +6,9 @@ import { mockTracks } from '../../../mocks/fixtures';
 import useVirtualization from '../../../hooks/useVirtualization';
 
 // Mock the virtualization hook so we can exercise the virtualized path
-jest.mock('../../../hooks/useVirtualization', () => ({
+vi.mock('../../../hooks/useVirtualization', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 describe('TrackList', () => {
@@ -26,7 +26,7 @@ describe('TrackList', () => {
 
   it('calls onTrackClick with correct args when track clicked', async () => {
     const user = userEvent.setup();
-    const onTrackClick = jest.fn();
+    const onTrackClick = vi.fn();
 
     render(
       (<TrackList tracks={mockTracks} onTrackClick={onTrackClick} />) as any
@@ -43,7 +43,7 @@ describe('TrackList', () => {
 
   it('calls onTrackSelect when selectable and item clicked', async () => {
     const user = userEvent.setup();
-    const onTrackSelect = jest.fn();
+    const onTrackSelect = vi.fn();
 
     render(
       (
@@ -82,7 +82,7 @@ describe('TrackList', () => {
 
   it('supports keyboard activation (Enter) to trigger click handler', async () => {
     const user = userEvent.setup();
-    const onTrackClick = jest.fn();
+    const onTrackClick = vi.fn();
 
     render(
       (<TrackList tracks={mockTracks} onTrackClick={onTrackClick} />) as any
@@ -98,7 +98,7 @@ describe('TrackList', () => {
   it('renders virtualized items and supports renderTrackActions + containerProps', () => {
     // Prepare virtualization mock return
     const visible = mockTracks.slice(0, 2);
-    (useVirtualization as jest.Mock).mockReturnValue({
+    (useVirtualization as import('vitest').Mock).mockReturnValue({
       visibleItems: visible,
       startIndex: 10,
       containerProps: { 'data-virt': '1', style: { height: '200px' } },
@@ -106,7 +106,7 @@ describe('TrackList', () => {
       getItemProps: (i: number) => ({ 'data-index': i }),
     });
 
-    const renderActions = jest.fn(track => (
+    const renderActions = vi.fn(track => (
       <button data-testid={`action-${track.id}`}>A</button>
     ));
 
@@ -133,8 +133,8 @@ describe('TrackList', () => {
 
   it('wires up touch/mouse handlers when provided', async () => {
     const user = userEvent.setup();
-    const onTouchStart = jest.fn();
-    const onMouseEnter = jest.fn();
+    const onTouchStart = vi.fn();
+    const onMouseEnter = vi.fn();
 
     render(
       (
@@ -158,7 +158,7 @@ describe('TrackList', () => {
 
   it('calls onTrackRemove when remove button clicked', async () => {
     const user = userEvent.setup();
-    const onTrackRemove = jest.fn();
+    const onTrackRemove = vi.fn();
 
     render(
       (<TrackList tracks={mockTracks} onTrackRemove={onTrackRemove} />) as any
@@ -174,7 +174,7 @@ describe('TrackList', () => {
 
   it('forwards onTrackClick args (event, track, index)', async () => {
     const user = userEvent.setup();
-    const onTrackClick = jest.fn();
+    const onTrackClick = vi.fn();
 
     render(
       (<TrackList tracks={mockTracks} onTrackClick={onTrackClick} />) as any
@@ -191,9 +191,9 @@ describe('TrackList', () => {
     expect(callArgs[1].id).toBe(mockTracks[0].id);
   });
 
-  it('invokes mouseDown and mouseUp handlers when provided', () => {
-    const onMouseDown = jest.fn();
-    const onMouseUp = jest.fn();
+  it('invokes mouseDown and mouseUp handlers when provided', async () => {
+    const onMouseDown = vi.fn();
+    const onMouseUp = vi.fn();
 
     render(
       (
@@ -208,7 +208,7 @@ describe('TrackList', () => {
     const firstItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
     // Simulate mouse down/up
     import('@testing-library/user-event');
-    const { fireEvent } = require('@testing-library/react');
+    const { fireEvent } = await import('@testing-library/react');
     fireEvent.mouseDown(firstItem);
     fireEvent.mouseUp(firstItem);
 
@@ -216,11 +216,11 @@ describe('TrackList', () => {
     expect(onMouseUp).toHaveBeenCalled();
   });
 
-  it('invokes touchMove and touchEnd handlers when provided', () => {
-    const onTouchMove = jest.fn();
-    const onTouchEnd = jest.fn();
+  it('invokes touchMove and touchEnd handlers when provided', async () => {
+    const onTouchMove = vi.fn();
+    const onTouchEnd = vi.fn();
 
-    const { fireEvent } = require('@testing-library/react');
+    const { fireEvent } = await import('@testing-library/react');
 
     render(
       (

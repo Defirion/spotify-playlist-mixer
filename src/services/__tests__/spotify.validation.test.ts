@@ -4,11 +4,11 @@ import { ApiError, ERROR_TYPES } from '../apiErrorHandler';
 describe('SpotifyService validation errors', () => {
   // Silence noisy console output in this suite to keep passing test runs quiet.
   // See src/test-utils/SILENCE_POLICY.md for preferred patterns.
-  let logSpy: jest.SpyInstance;
-  let errorSpy: jest.SpyInstance;
+  let logSpy: import('vitest').MockInstance;
+  let errorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     logSpy?.mockRestore?.();

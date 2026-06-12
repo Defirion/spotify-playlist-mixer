@@ -1,25 +1,27 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import SpotifyService from '../../services/spotify';
 
 // Mock SpotifyService with Jest method mocks
-jest.mock('../../services/spotify', () => {
+vi.mock('../../services/spotify', () => {
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      getPlaylistTracks: jest.fn(),
-      getPlaylists: jest.fn(),
-      getUserProfile: jest.fn(),
-      createPlaylist: jest.fn(),
-      addTracksToPlaylist: jest.fn(),
-      removeTracksFromPlaylist: jest.fn(),
-      getPlaylist: jest.fn(),
-      getTrack: jest.fn(),
-      searchTracks: jest.fn(),
-      getRecommendations: jest.fn(),
-    })),
+    default: vi.fn().mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: vi.fn(),
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: vi.fn(),
+        removeTracksFromPlaylist: vi.fn(),
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      };
+    }),
   };
 });
 
@@ -33,28 +35,27 @@ describe('SpotifyService - Batch G (getPlaylistTracks edge cases)', () => {
       },
     ];
 
-    const mockGetPlaylistTracks = jest.fn();
-    const MockSpotifyService = SpotifyService as jest.MockedClass<
+    const mockGetPlaylistTracks = vi.fn();
+    const MockSpotifyService = SpotifyService as import('vitest').MockedClass<
       typeof SpotifyService
     >;
-    MockSpotifyService.mockImplementation(
-      () =>
-        ({
-          getPlaylistTracks: mockGetPlaylistTracks,
-          getPlaylists: jest.fn(),
-          getUserProfile: jest.fn(),
-          createPlaylist: jest.fn(),
-          addTracksToPlaylist: jest.fn(),
-          removeTracksFromPlaylist: jest.fn(),
-          getPlaylist: jest.fn(),
-          getTrack: jest.fn(),
-          searchTracks: jest.fn(),
-          getRecommendations: jest.fn(),
-        }) as any
-    );
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: mockGetPlaylistTracks,
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: vi.fn(),
+        removeTracksFromPlaylist: vi.fn(),
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      } as any;
+    });
 
     // Mock the method to simulate progressive loading behavior
-    const progressCallback = jest.fn();
+    const progressCallback = vi.fn();
     mockGetPlaylistTracks.mockResolvedValue({
       total: 3,
       tracks: itemsPage1,
@@ -75,25 +76,24 @@ describe('SpotifyService - Batch G (getPlaylistTracks edge cases)', () => {
   });
 
   test('handles total zero and returns hasMore false and zero percentage', async () => {
-    const mockGetPlaylistTracks = jest.fn();
-    const MockSpotifyService = SpotifyService as jest.MockedClass<
+    const mockGetPlaylistTracks = vi.fn();
+    const MockSpotifyService = SpotifyService as import('vitest').MockedClass<
       typeof SpotifyService
     >;
-    MockSpotifyService.mockImplementation(
-      () =>
-        ({
-          getPlaylistTracks: mockGetPlaylistTracks,
-          getPlaylists: jest.fn(),
-          getUserProfile: jest.fn(),
-          createPlaylist: jest.fn(),
-          addTracksToPlaylist: jest.fn(),
-          removeTracksFromPlaylist: jest.fn(),
-          getPlaylist: jest.fn(),
-          getTrack: jest.fn(),
-          searchTracks: jest.fn(),
-          getRecommendations: jest.fn(),
-        }) as any
-    );
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: mockGetPlaylistTracks,
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: vi.fn(),
+        removeTracksFromPlaylist: vi.fn(),
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      } as any;
+    });
 
     mockGetPlaylistTracks.mockResolvedValue({
       total: 0,
@@ -101,7 +101,7 @@ describe('SpotifyService - Batch G (getPlaylistTracks edge cases)', () => {
       hasMore: false,
     });
 
-    const progressCallback = jest.fn();
+    const progressCallback = vi.fn();
     const service = new SpotifyService('normal_token');
     const res = await service.getPlaylistTracks('empty_pl', {
       onProgress: progressCallback,

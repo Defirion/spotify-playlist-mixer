@@ -1,8 +1,6 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
-
-import '../../jest.polyfills';
 
 // Use local mocks and capture sinks for network simulation in tests
 import SpotifyService from '../../services/spotify';
@@ -10,7 +8,7 @@ import SpotifyService from '../../services/spotify';
 // Use a focused test-local mock class so this file can be run in isolation.
 // The class delegates network calls to `global.fetch` (so MSW can intercept)
 // and implements validations and batching expected by these tests.
-jest.mock('../../services/spotify', () => {
+vi.mock('../../services/spotify', () => {
   class TestMockSpotifyService {
     accessToken: string;
     constructor(accessToken: string) {
@@ -173,7 +171,7 @@ describe('SpotifyService - Batch D (validation & position batching)', () => {
     // Provide a direct mock on the instance to return some invalid items
     const service = new SpotifyService('normal_token');
     if (service) {
-      (service as any).getPlaylistTracks = jest.fn().mockResolvedValue({
+      (service as any).getPlaylistTracks = vi.fn().mockResolvedValue({
         total: 4,
         tracks: [
           {

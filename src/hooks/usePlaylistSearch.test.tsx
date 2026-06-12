@@ -2,11 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { usePlaylistSearch } from './usePlaylistSearch';
 
-jest.mock('../utils/spotify', () => ({
-  getSpotifyApi: jest.fn(),
-}));
+import { getSpotifyApi } from '../utils/spotify';
 
-const { getSpotifyApi } = require('../utils/spotify');
+vi.mock('../utils/spotify', () => ({
+  getSpotifyApi: vi.fn(),
+}));
 
 function HookTestHarness({
   accessToken,
@@ -36,12 +36,12 @@ function HookTestHarness({
 }
 
 describe('usePlaylistSearch', () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('clears results when query is empty or looks like a spotify link', async () => {
-    (getSpotifyApi as jest.Mock).mockImplementation(() => ({
+    (getSpotifyApi as import('vitest').Mock).mockImplementation(() => ({
       defaults: { headers: {} },
-      get: jest.fn(),
+      get: vi.fn(),
     }));
     render(<HookTestHarness accessToken={null} />);
     const input = screen.getByTestId('q') as HTMLInputElement;
@@ -63,10 +63,10 @@ describe('usePlaylistSearch', () => {
   });
 
   it('sets results when api returns playlists.items', async () => {
-    const mockGet = jest.fn().mockResolvedValue({
+    const mockGet = vi.fn().mockResolvedValue({
       data: { playlists: { items: [{ id: 'p1', name: 'P1' }] } },
     });
-    (getSpotifyApi as jest.Mock).mockImplementation(() => ({
+    (getSpotifyApi as import('vitest').Mock).mockImplementation(() => ({
       defaults: { headers: {} },
       get: mockGet,
     }));
@@ -82,14 +82,14 @@ describe('usePlaylistSearch', () => {
   });
 
   it('handles alternative tracks.items shape and errors from api.get', async () => {
-    const mockGet = jest
+    const mockGet = vi
       .fn()
       .mockResolvedValueOnce({ data: { tracks: { items: [{ id: 't1' }] } } })
       .mockRejectedValueOnce({
         response: { status: 500, data: { msg: 'bad' } },
       });
 
-    (getSpotifyApi as jest.Mock).mockImplementation(() => ({
+    (getSpotifyApi as import('vitest').Mock).mockImplementation(() => ({
       defaults: { headers: {} },
       get: mockGet,
     }));

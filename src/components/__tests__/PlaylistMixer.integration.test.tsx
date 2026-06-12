@@ -7,65 +7,82 @@ import { useMixGeneration } from '../../hooks/useMixGeneration';
 import { useMixPreview } from '../../hooks/useMixPreview';
 import { useMixWarnings } from '../../hooks/useMixWarnings';
 // Mock child components to expose test hooks and buttons
-jest.mock('../features/mixer/PlaylistForm', () => {
-  return function MockPlaylistForm({ mixOptions, onMixOptionsChange }: any) {
-    return (
-      <div data-testid="playlist-form">
-        <input
-          data-testid="playlist-name-input"
-          value={mixOptions.playlistName}
-          onChange={e => onMixOptionsChange({ playlistName: e.target.value })}
-        />
-      </div>
-    );
-  };
+vi.mock('../features/mixer/PlaylistForm', () => {
+  const __mod = (() => {
+    return function MockPlaylistForm({ mixOptions, onMixOptionsChange }: any) {
+      return (
+        <div data-testid="playlist-form">
+          <input
+            data-testid="playlist-name-input"
+            value={mixOptions.playlistName}
+            onChange={e => onMixOptionsChange({ playlistName: e.target.value })}
+          />
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
-jest.mock('../features/mixer/MixPreview', () => {
-  return function MockMixPreview({ tracks }: any) {
-    return (
-      <div data-testid="mix-preview">{tracks.length} tracks in preview</div>
-    );
-  };
+vi.mock('../features/mixer/MixPreview', () => {
+  const __mod = (() => {
+    return function MockMixPreview({ tracks }: any) {
+      return (
+        <div data-testid="mix-preview">{tracks.length} tracks in preview</div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
-jest.mock('../features/mixer/MixControls', () => {
-  return function MockMixControls({
-    onGeneratePreview,
-    onCreatePlaylist,
-  }: any) {
-    return (
-      <div data-testid="mix-controls">
-        <button data-testid="generate-preview-btn" onClick={onGeneratePreview}>
-          Generate Preview
-        </button>
-        <button data-testid="create-playlist-btn" onClick={onCreatePlaylist}>
-          Create Playlist
-        </button>
-      </div>
-    );
-  };
+vi.mock('../features/mixer/MixControls', () => {
+  const __mod = (() => {
+    return function MockMixControls({
+      onGeneratePreview,
+      onCreatePlaylist,
+    }: any) {
+      return (
+        <div data-testid="mix-controls">
+          <button
+            data-testid="generate-preview-btn"
+            onClick={onGeneratePreview}
+          >
+            Generate Preview
+          </button>
+          <button data-testid="create-playlist-btn" onClick={onCreatePlaylist}>
+            Create Playlist
+          </button>
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
-jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(),
+vi.mock('../../hooks/useMixGeneration', () => ({
+  useMixGeneration: vi.fn(),
 }));
 
-jest.mock('../../hooks/useMixPreview', () => ({
-  useMixPreview: jest.fn(),
+vi.mock('../../hooks/useMixPreview', () => ({
+  useMixPreview: vi.fn(),
 }));
 
-jest.mock('../../hooks/useMixWarnings', () => ({
-  useMixWarnings: jest.fn(),
+vi.mock('../../hooks/useMixWarnings', () => ({
+  useMixWarnings: vi.fn(),
 }));
 
-const mockUseMixGeneration = useMixGeneration as jest.MockedFunction<
-  typeof useMixGeneration
->;
-const mockUseMixPreview = useMixPreview as jest.MockedFunction<
+const mockUseMixGeneration =
+  useMixGeneration as import('vitest').MockedFunction<typeof useMixGeneration>;
+const mockUseMixPreview = useMixPreview as import('vitest').MockedFunction<
   typeof useMixPreview
 >;
-const mockUseMixWarnings = useMixWarnings as jest.MockedFunction<
+const mockUseMixWarnings = useMixWarnings as import('vitest').MockedFunction<
   typeof useMixWarnings
 >;
 
@@ -108,16 +125,16 @@ const baseRatio = {
 };
 
 describe('PlaylistMixer integration-style flow', () => {
-  let mockGeneratePreview: jest.Mock;
-  let mockUpdateTrackOrder: jest.Mock;
-  let mockCreatePlaylist: jest.Mock;
-  let mockGenerateMix: jest.Mock;
+  let mockGeneratePreview: import('vitest').Mock;
+  let mockUpdateTrackOrder: import('vitest').Mock;
+  let mockCreatePlaylist: import('vitest').Mock;
+  let mockGenerateMix: import('vitest').Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    mockCreatePlaylist = jest.fn().mockResolvedValue({ id: 'new-playlist' });
-    mockGenerateMix = jest
+    mockCreatePlaylist = vi.fn().mockResolvedValue({ id: 'new-playlist' });
+    mockGenerateMix = vi
       .fn()
       .mockResolvedValue([sampleTrack(1), sampleTrack(2)]);
 
@@ -131,7 +148,7 @@ describe('PlaylistMixer integration-style flow', () => {
       },
       generateMix: mockGenerateMix,
       createPlaylist: mockCreatePlaylist,
-      reset: jest.fn(),
+      reset: vi.fn(),
     } as any);
 
     const previewState = {
@@ -141,15 +158,15 @@ describe('PlaylistMixer integration-style flow', () => {
       customTrackOrder: null,
     };
 
-    mockUpdateTrackOrder = jest.fn();
-    mockGeneratePreview = jest.fn().mockResolvedValue(undefined);
+    mockUpdateTrackOrder = vi.fn();
+    mockGeneratePreview = vi.fn().mockResolvedValue(undefined);
 
     mockUseMixPreview.mockReturnValue({
       state: previewState,
       generatePreview: mockGeneratePreview,
       updateTrackOrder: mockUpdateTrackOrder,
-      clearPreview: jest.fn(),
-      getPreviewTracks: jest.fn(() => previewState.preview!.tracks),
+      clearPreview: vi.fn(),
+      getPreviewTracks: vi.fn(() => previewState.preview!.tracks),
     } as any);
 
     mockUseMixWarnings.mockReturnValue({
@@ -159,7 +176,7 @@ describe('PlaylistMixer integration-style flow', () => {
   });
 
   it('generates a preview and creates playlist using preview tracks', async () => {
-    const onMixedPlaylist = jest.fn();
+    const onMixedPlaylist = vi.fn();
 
     render(
       <PlaylistMixer
@@ -167,9 +184,9 @@ describe('PlaylistMixer integration-style flow', () => {
         selectedPlaylists={mockSelectedPlaylists as any}
         ratioConfig={baseRatio as any}
         mixOptions={baseMixOptions as any}
-        updateMixOptions={jest.fn()}
+        updateMixOptions={vi.fn()}
         onMixedPlaylist={onMixedPlaylist}
-        onError={jest.fn()}
+        onError={vi.fn()}
       />
     );
 

@@ -47,7 +47,7 @@ const mockStats = {
 
 describe('MixPreview Drag Integration', () => {
   it('should render TrackListContainer with tracks', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview
@@ -67,7 +67,7 @@ describe('MixPreview Drag Integration', () => {
   });
 
   it('should call onTrackOrderChange when tracks are reordered', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview
@@ -87,7 +87,7 @@ describe('MixPreview Drag Integration', () => {
   });
 
   it('should not call onTrackOrderChange when reordering to same position', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview

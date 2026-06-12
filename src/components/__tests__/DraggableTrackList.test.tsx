@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import DraggableTrackList from '../DraggableTrackList';
 
-jest.mock('@dnd-kit/sortable', () => ({
+vi.mock('@dnd-kit/sortable', () => ({
   SortableContext: ({ children, items, strategy }: any) => (
     <div
       data-testid="sortable-context"

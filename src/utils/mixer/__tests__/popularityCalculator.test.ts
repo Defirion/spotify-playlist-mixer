@@ -57,12 +57,12 @@ describe('popularityCalculator', () => {
   describe('calculateRecencyBonus', () => {
     beforeEach(() => {
       // Mock current date to 2024-01-01 for consistent testing
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2024-01-01'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-01'));
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should return 0 for tracks older than 2 years', () => {
@@ -108,12 +108,12 @@ describe('popularityCalculator', () => {
 
   describe('calculateAdjustedPopularity', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2024-01-01'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-01'));
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should return base popularity when recency boost is disabled', () => {

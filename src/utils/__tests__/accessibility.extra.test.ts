@@ -66,7 +66,7 @@ describe('accessibility extra behaviors', () => {
     };
 
     const evt = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true });
-    const pdSpy = jest.spyOn(evt, 'preventDefault');
+    const pdSpy = vi.spyOn(evt, 'preventDefault');
 
     focusManagement.trapFocus(evt as any, container);
 

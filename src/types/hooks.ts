@@ -31,8 +31,7 @@ export interface AsyncHookActions {
 }
 
 export interface AsyncHookReturn<T>
-  extends AsyncHookState<T>,
-    AsyncHookActions {}
+  extends AsyncHookState<T>, AsyncHookActions {}
 
 // Authentication hooks
 export interface UseAuthReturn {

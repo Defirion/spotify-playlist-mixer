@@ -25,7 +25,7 @@ const defaultMixOptions = {
 
 describe('PlaylistForm controls', () => {
   it('reports playlist name changes and toggles', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm

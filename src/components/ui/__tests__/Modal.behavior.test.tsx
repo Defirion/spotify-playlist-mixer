@@ -5,7 +5,7 @@ import Modal from '../Modal';
 
 describe('Modal behavior', () => {
   test('calls onClose when Escape key pressed', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<Modal isOpen={true} onClose={onClose} title="T" />);
 
     fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
@@ -14,7 +14,7 @@ describe('Modal behavior', () => {
   });
 
   test('calls onClose when backdrop clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<Modal isOpen={true} onClose={onClose} title="T" />);
 
     const backdrop = screen.getByTestId('modal-backdrop');
@@ -24,7 +24,7 @@ describe('Modal behavior', () => {
   });
 
   test('focus trap cycles tabbable elements inside modal', async () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="T">
         <button>First</button>
@@ -50,7 +50,7 @@ describe('Modal behavior', () => {
   });
 
   test('restores focus to previously focused element without scrolling', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
 
     // Create an element to focus before opening modal
     const before = document.createElement('button');
@@ -59,7 +59,7 @@ describe('Modal behavior', () => {
     before.focus();
 
     // Spy on focus to ensure preventScroll option is used where available
-    const focusSpy = jest.spyOn(before, 'focus');
+    const focusSpy = vi.spyOn(before, 'focus');
 
     const { rerender } = render(
       <Modal isOpen={true} onClose={onClose} title="T" />
@@ -74,7 +74,7 @@ describe('Modal behavior', () => {
   });
 
   test('does not close on backdrop click when closeOnBackdropClick is false', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal
         isOpen={true}
@@ -91,7 +91,7 @@ describe('Modal behavior', () => {
   });
 
   test('does not close on Escape when closeOnEscape is false', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="T" closeOnEscape={false} />
     );

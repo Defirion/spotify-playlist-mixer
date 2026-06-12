@@ -18,24 +18,26 @@ import { conditionalShuffleQuadrants } from '../trackShuffler';
 import { safeObjectKeys, logDebugInfo } from '../mixerUtils';
 
 // Mock the dependencies
-jest.mock('../popularityCalculator');
-jest.mock('../trackShuffler');
-jest.mock('../mixerUtils');
+vi.mock('../popularityCalculator');
+vi.mock('../trackShuffler');
+vi.mock('../mixerUtils');
 
 const mockCalculateAdjustedPopularity =
-  calculateAdjustedPopularity as jest.MockedFunction<
+  calculateAdjustedPopularity as import('vitest').MockedFunction<
     typeof calculateAdjustedPopularity
   >;
 const mockSortTracksByPopularity =
-  sortTracksByPopularity as jest.MockedFunction<typeof sortTracksByPopularity>;
+  sortTracksByPopularity as import('vitest').MockedFunction<
+    typeof sortTracksByPopularity
+  >;
 const mockConditionalShuffleQuadrants =
-  conditionalShuffleQuadrants as jest.MockedFunction<
+  conditionalShuffleQuadrants as import('vitest').MockedFunction<
     typeof conditionalShuffleQuadrants
   >;
-const mockSafeObjectKeys = safeObjectKeys as jest.MockedFunction<
+const mockSafeObjectKeys = safeObjectKeys as import('vitest').MockedFunction<
   typeof safeObjectKeys
 >;
-const mockLogDebugInfo = logDebugInfo as jest.MockedFunction<
+const mockLogDebugInfo = logDebugInfo as import('vitest').MockedFunction<
   typeof logDebugInfo
 >;
 
@@ -92,7 +94,7 @@ const createMockTrackWithPopularity = (
 
 describe('popularityQuadrants', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default mock implementations
     mockSafeObjectKeys.mockImplementation(obj => Object.keys(obj || {}));

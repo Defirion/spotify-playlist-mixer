@@ -1,24 +1,25 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 // Increase Jest default timeout for integration-style tests
 import SpotifyService from '../../services/spotify';
 
-jest.setTimeout(30000);
+vi.setConfig({ testTimeout: 30000 });
 
 // Use shared mock factory for SpotifyService to ensure consistent behavior
-jest.mock('../../services/spotify', () => ({
+vi.mock('../../services/spotify', async () => ({
   __esModule: true,
-  default:
-    require('../../test-utils/mocks/mockSpotifyService').makeMockSpotifyService(),
+  default: (
+    await import('../../test-utils/mocks/mockSpotifyService')
+  ).makeMockSpotifyService(),
 }));
 
-// Robust instantiation helper: some tests mock the module as a jest.fn factory
+// Robust instantiation helper: some tests mock the module as a vi.fn factory
 // (callable) while others mock the class constructor. Try `new` first and
 // fall back to calling the function directly when needed.
 const createService = (token: string) => {
-  // Try calling as a factory first (jest.fn mock implementations often expect this)
+  // Try calling as a factory first (vi.fn mock implementations often expect this)
   try {
     // If the imported value is a jest mock with an implementation, invoke it
     // via getMockImplementation() to get the concrete instance.
@@ -52,10 +53,10 @@ const createService = (token: string) => {
 };
 
 describe('SpotifyService - Batch B (playlists & create/remove)', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
     // Silence noisy debug errors unless the test fails.
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy?.mockRestore?.();
@@ -78,7 +79,7 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
     const service = createService('normal_token');
     // stub the instance method to return paginated data
     if (service) {
-      (service as any).getUserPlaylists = jest
+      (service as any).getUserPlaylists = vi
         .fn()
         .mockImplementation(async (opts: any = {}) => {
           const limit = opts?.limit ?? 50;
@@ -103,7 +104,7 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
     // Provide a direct mock on the service instance
     const service = createService('normal_token');
     if (service) {
-      (service as any).getPlaylist = jest
+      (service as any).getPlaylist = vi
         .fn()
         .mockResolvedValue({ id: 'playlist_1', name: 'My Awesome Playlist' });
     }
@@ -125,7 +126,7 @@ describe('SpotifyService - Batch B (playlists & create/remove)', () => {
     const service = createService('normal_token');
 
     // Mock the method to return a successful response
-    service.removeTracksFromPlaylist = jest.fn().mockResolvedValue({
+    service.removeTracksFromPlaylist = vi.fn().mockResolvedValue({
       snapshot_id: 'test_snapshot_remove',
     });
 

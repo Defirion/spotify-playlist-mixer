@@ -8,9 +8,9 @@ import {
 // We patch ApiError.prototype.getRetryDelay to return 0 so retries execute immediately.
 
 describe('ApiErrorHandler retry & classification', () => {
-  let delaySpy: jest.SpyInstance;
+  let delaySpy: import('vitest').MockInstance;
   beforeAll(() => {
-    delaySpy = jest
+    delaySpy = vi
       .spyOn(ApiError.prototype as any, 'getRetryDelay')
       .mockReturnValue(0);
   });
@@ -18,9 +18,9 @@ describe('ApiErrorHandler retry & classification', () => {
     delaySpy.mockRestore();
   });
 
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
   afterEach(() => {
     warnSpy.mockRestore();

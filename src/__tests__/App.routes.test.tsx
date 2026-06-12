@@ -5,11 +5,11 @@ import App from '../App';
 import * as store from '../store';
 
 // Mock store hooks to simulate auth states and playlists
-jest.spyOn(store, 'useAuth') as any;
-jest.spyOn(store, 'usePlaylistSelection') as any;
-jest.spyOn(store, 'useRatioConfig') as any;
-jest.spyOn(store, 'useMixOptions') as any;
-jest.spyOn(store, 'useUI') as any;
+vi.spyOn(store, 'useAuth') as any;
+vi.spyOn(store, 'usePlaylistSelection') as any;
+vi.spyOn(store, 'useRatioConfig') as any;
+vi.spyOn(store, 'useMixOptions') as any;
+vi.spyOn(store, 'useUI') as any;
 
 describe('App routing and auth states', () => {
   beforeEach(() => {
@@ -17,29 +17,29 @@ describe('App routing and auth states', () => {
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: { playlistName: 'x' },
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
   });
 

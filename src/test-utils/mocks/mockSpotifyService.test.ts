@@ -5,9 +5,9 @@ describe('MockSpotifyService (unit)', () => {
   const originalFetch = (global as any).fetch;
 
   // Keep passing test output quiet; tests can still assert explicit logs.
-  let consoleErrorSpy: jest.SpyInstance | undefined;
+  let consoleErrorSpy: import('vitest').MockInstance | undefined;
   beforeAll(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterAll(() => {
     if (consoleErrorSpy) consoleErrorSpy.mockRestore();
@@ -15,7 +15,7 @@ describe('MockSpotifyService (unit)', () => {
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('getUserPlaylists returns all when options.all is true', async () => {
@@ -34,7 +34,7 @@ describe('MockSpotifyService (unit)', () => {
     // success JSON + non-json handled quietly for passing tests
     await silenceIfPass(async () => {
       // success JSON
-      (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      (global as any).fetch = vi.fn().mockResolvedValueOnce({
         status: 200,
         text: async () => JSON.stringify({ id: 'me', display_name: 'Me' }),
       });
@@ -42,7 +42,7 @@ describe('MockSpotifyService (unit)', () => {
       expect(profile.id).toBe('me');
 
       // non-json body
-      (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      (global as any).fetch = vi.fn().mockResolvedValueOnce({
         status: 200,
         text: async () => 'not-json',
       });
@@ -51,7 +51,7 @@ describe('MockSpotifyService (unit)', () => {
     });
 
     // error status remains unwrapped so the expectation behaves the same
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       text: async () => JSON.stringify({ error: 'boom' }),
     });
@@ -85,7 +85,7 @@ describe('MockSpotifyService (unit)', () => {
         text: async () => JSON.stringify(okPayload),
       };
 
-      (global as any).fetch = jest
+      (global as any).fetch = vi
         .fn()
         .mockResolvedValueOnce(first)
         .mockResolvedValueOnce(second);
@@ -120,7 +120,7 @@ describe('MockSpotifyService (unit)', () => {
 
     // mock a 400 response
     const bad = { status: 400, json: async () => ({ error: 'bad' }) };
-    (global as any).fetch = jest.fn().mockResolvedValueOnce(bad);
+    (global as any).fetch = vi.fn().mockResolvedValueOnce(bad);
 
     await expect(
       svc.addTracksToPlaylist('p1', { uris: ['u1'] })
@@ -132,7 +132,7 @@ describe('MockSpotifyService (unit)', () => {
     const svc = new Mock('token');
 
     // HTTP 500
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       text: async () => JSON.stringify({ error: 'boom' }),
       headers: {},
@@ -141,7 +141,7 @@ describe('MockSpotifyService (unit)', () => {
     await expect(svc.searchTracks('x')).rejects.toThrow('HTTP 500');
 
     // non-json success body
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 200,
       text: async () => 'not-json',
     });
@@ -161,7 +161,7 @@ describe('MockSpotifyService (unit)', () => {
     const payload = {
       playlists: { items: [{ id: 'pl1' }], total: 1, limit: 20, offset: 0 },
     };
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 200,
       text: async () => JSON.stringify(payload),
     });
@@ -181,7 +181,7 @@ describe('MockSpotifyService (unit)', () => {
       status: 200,
       json: async () => ({ snapshot_id: 's1' }),
     };
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce(first)
       .mockResolvedValueOnce(second);
@@ -191,7 +191,7 @@ describe('MockSpotifyService (unit)', () => {
     });
 
     // simulate server error
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       json: async () => ({ error: 'x' }),
     });
@@ -211,7 +211,7 @@ describe('MockSpotifyService (unit)', () => {
     };
     const page2 = { items: [{ track: { id: 't3' } }], total: 3, next: false };
 
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce({
         status: 200,
@@ -223,7 +223,7 @@ describe('MockSpotifyService (unit)', () => {
       });
 
     const progressCalls: any[] = [];
-    const onProgress = jest.fn((p: any) => {
+    const onProgress = vi.fn((p: any) => {
       progressCalls.push(p);
       if (progressCalls.length === 1) throw new Error('boom'); // ensure handler exceptions are caught
     });
@@ -243,7 +243,7 @@ describe('MockSpotifyService (unit)', () => {
     );
 
     // two POST responses
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce({
         status: 200,

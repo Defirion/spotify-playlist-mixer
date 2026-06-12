@@ -16,7 +16,7 @@ describe('accessibility utilities', () => {
     // mock matchMedia if not present
     if (typeof window.matchMedia !== 'function') {
       // @ts-ignore
-      window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      window.matchMedia = vi.fn().mockImplementation((query: string) => ({
         matches: false,
         media: query,
         onchange: null,

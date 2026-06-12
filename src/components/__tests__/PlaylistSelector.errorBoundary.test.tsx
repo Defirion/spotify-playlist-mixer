@@ -4,10 +4,10 @@ import '@testing-library/jest-dom';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
 describe('PlaylistSelector ErrorBoundary (unit)', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

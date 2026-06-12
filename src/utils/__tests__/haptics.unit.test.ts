@@ -21,7 +21,7 @@ describe('haptics', () => {
     }
 
     process.env.DEBUG_HAPTICS = originalDebug;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('isVibrationSupported returns false when navigator is undefined', () => {
@@ -44,7 +44,7 @@ describe('haptics', () => {
   });
 
   it('vibrate calls navigator.vibrate when supported', () => {
-    const vibrateMock = jest.fn();
+    const vibrateMock = vi.fn();
     Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
       value: { vibrate: vibrateMock },
@@ -63,12 +63,12 @@ describe('haptics', () => {
 
   it('vibrate logs debug info when DEBUG_HAPTICS=1', () => {
     process.env.DEBUG_HAPTICS = '1';
-    const vibrateMock = jest.fn();
+    const vibrateMock = vi.fn();
     Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
       value: { vibrate: vibrateMock },
     });
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     vibrate([10, 20]);
     expect(vibrateMock).toHaveBeenCalled();
     expect(debugSpy).toHaveBeenCalled();

@@ -5,18 +5,23 @@ import PlaylistSelector from '../PlaylistSelector';
 import { SpotifyPlaylist } from '../../types';
 
 // Mock the custom hooks
-jest.mock('../../hooks/usePlaylistSearch');
-jest.mock('../../hooks/useSpotifyUrlHandler');
-jest.mock('../LoadingOverlay', () => {
-  return function MockLoadingOverlay() {
-    return <div data-testid="loading-overlay">Loading...</div>;
-  };
+vi.mock('../../hooks/usePlaylistSearch');
+vi.mock('../../hooks/useSpotifyUrlHandler');
+vi.mock('../LoadingOverlay', () => {
+  const __mod = (() => {
+    return function MockLoadingOverlay() {
+      return <div data-testid="loading-overlay">Loading...</div>;
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Mock Spotify API utility
-jest.mock('../../utils/spotify', () => ({
-  getSpotifyApi: jest.fn(() => ({
-    get: jest.fn(),
+vi.mock('../../utils/spotify', () => ({
+  getSpotifyApi: vi.fn(() => ({
+    get: vi.fn(),
   })),
 }));
 
@@ -68,26 +73,26 @@ const mockPlaylists: SpotifyPlaylist[] = [
 const defaultProps = {
   accessToken: 'test-token',
   selectedPlaylists: [],
-  onPlaylistSelect: jest.fn(),
-  onClearAll: jest.fn(),
-  onError: jest.fn(),
+  onPlaylistSelect: vi.fn(),
+  onClearAll: vi.fn(),
+  onError: vi.fn(),
 };
 
-describe('PlaylistSelector', () => {
-  const mockUsePlaylistSearch =
-    require('../../hooks/usePlaylistSearch').usePlaylistSearch;
-  const mockUseSpotifyUrlHandler =
-    require('../../hooks/useSpotifyUrlHandler').useSpotifyUrlHandler;
+// top-level await: modules are mocked above, these resolve to the mocks
+const mockUsePlaylistSearch = (await import('../../hooks/usePlaylistSearch'))
+  .usePlaylistSearch as import('vitest').Mock;
+const mockUseSpotifyUrlHandler = (
+  await import('../../hooks/useSpotifyUrlHandler')
+).useSpotifyUrlHandler as import('vitest').Mock;
 
+describe('PlaylistSelector', () => {
   // Per-suite console.error spy to keep passing test output quiet.
   // Respects TEST_VERBOSE so developers can opt into seeing errors.
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeAll(() => {
     const shouldShow = String(process.env.TEST_VERBOSE || '').toLowerCase();
     if (shouldShow !== '1' && shouldShow !== 'true') {
-      consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     }
   });
   afterAll(() => {
@@ -97,25 +102,25 @@ describe('PlaylistSelector', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Default mock implementations
     mockUsePlaylistSearch.mockReturnValue({
       query: '',
-      setQuery: jest.fn(),
+      setQuery: vi.fn(),
       results: [],
       loading: false,
       error: null,
       showResults: false,
-      setShowResults: jest.fn(),
-      clearResults: jest.fn(),
+      setShowResults: vi.fn(),
+      clearResults: vi.fn(),
     });
 
     mockUseSpotifyUrlHandler.mockReturnValue({
-      isValidSpotifyLink: jest.fn(() => false),
-      isValidPlaylistUrl: jest.fn(() => false),
-      extractPlaylistId: jest.fn(() => null),
-      handleAddPlaylistByUrl: jest.fn().mockResolvedValue(undefined),
+      isValidSpotifyLink: vi.fn(() => false),
+      isValidPlaylistUrl: vi.fn(() => false),
+      extractPlaylistId: vi.fn(() => null),
+      handleAddPlaylistByUrl: vi.fn().mockResolvedValue(undefined),
     });
   });
 
@@ -181,13 +186,13 @@ describe('PlaylistSelector', () => {
     it('displays search results when available', () => {
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: mockPlaylists,
         loading: false,
         error: null,
         showResults: true,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       render(<PlaylistSelector {...defaultProps} />);
@@ -203,13 +208,13 @@ describe('PlaylistSelector', () => {
     it('shows checkmark for already selected playlists', () => {
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: mockPlaylists,
         loading: false,
         error: null,
         showResults: true,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       render(
@@ -229,24 +234,24 @@ describe('PlaylistSelector', () => {
 
     it('handles search result clicks', async () => {
       const user = userEvent.setup();
-      const mockOnPlaylistSelect = jest.fn();
+      const mockOnPlaylistSelect = vi.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: mockPlaylists,
         loading: false,
         error: null,
         showResults: true,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       mockUseSpotifyUrlHandler.mockReturnValue({
-        isValidSpotifyLink: jest.fn(() => false),
-        isValidPlaylistUrl: jest.fn(() => false),
-        extractPlaylistId: jest.fn(() => null),
-        handleAddPlaylistByUrl: jest.fn(),
+        isValidSpotifyLink: vi.fn(() => false),
+        isValidPlaylistUrl: vi.fn(() => false),
+        extractPlaylistId: vi.fn(() => null),
+        handleAddPlaylistByUrl: vi.fn(),
       });
 
       render(
@@ -266,7 +271,7 @@ describe('PlaylistSelector', () => {
   describe('URL Handling', () => {
     it('changes button text to "Add" for valid URLs', async () => {
       const user = userEvent.setup();
-      const mockSetQuery = jest.fn();
+      const mockSetQuery = vi.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: '',
@@ -275,15 +280,15 @@ describe('PlaylistSelector', () => {
         loading: false,
         error: null,
         showResults: false,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       mockUseSpotifyUrlHandler.mockReturnValue({
-        isValidSpotifyLink: jest.fn(input => input.includes('spotify.com')),
-        isValidPlaylistUrl: jest.fn(input => input.includes('spotify.com')),
-        extractPlaylistId: jest.fn(() => 'test'),
-        handleAddPlaylistByUrl: jest.fn(),
+        isValidSpotifyLink: vi.fn(input => input.includes('spotify.com')),
+        isValidPlaylistUrl: vi.fn(input => input.includes('spotify.com')),
+        extractPlaylistId: vi.fn(() => 'test'),
+        handleAddPlaylistByUrl: vi.fn(),
       });
 
       render(<PlaylistSelector {...defaultProps} />);
@@ -296,12 +301,12 @@ describe('PlaylistSelector', () => {
 
     it('handles URL submission', async () => {
       const user = userEvent.setup();
-      const mockHandleAddPlaylistByUrl = jest.fn().mockResolvedValue(undefined);
+      const mockHandleAddPlaylistByUrl = vi.fn().mockResolvedValue(undefined);
 
       mockUseSpotifyUrlHandler.mockReturnValue({
-        isValidSpotifyLink: jest.fn(() => true),
-        isValidPlaylistUrl: jest.fn(() => true),
-        extractPlaylistId: jest.fn(() => 'test'),
+        isValidSpotifyLink: vi.fn(() => true),
+        isValidPlaylistUrl: vi.fn(() => true),
+        extractPlaylistId: vi.fn(() => 'test'),
         handleAddPlaylistByUrl: mockHandleAddPlaylistByUrl,
       });
 
@@ -325,13 +330,13 @@ describe('PlaylistSelector', () => {
 
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: mockPlaylists,
         loading: false,
         error: null,
         showResults: true,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       render(<PlaylistSelector {...defaultProps} />);
@@ -348,23 +353,23 @@ describe('PlaylistSelector', () => {
 
     it('handles Enter key to select highlighted result', async () => {
       const user = userEvent.setup();
-      const mockHandleAddPlaylistByUrl = jest.fn().mockResolvedValue(undefined);
+      const mockHandleAddPlaylistByUrl = vi.fn().mockResolvedValue(undefined);
 
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: mockPlaylists,
         loading: false,
         error: null,
         showResults: true,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       mockUseSpotifyUrlHandler.mockReturnValue({
-        isValidSpotifyLink: jest.fn(() => false),
-        isValidPlaylistUrl: jest.fn(() => false),
-        extractPlaylistId: jest.fn(() => null),
+        isValidSpotifyLink: vi.fn(() => false),
+        isValidPlaylistUrl: vi.fn(() => false),
+        extractPlaylistId: vi.fn(() => null),
         handleAddPlaylistByUrl: mockHandleAddPlaylistByUrl,
       });
 
@@ -382,17 +387,17 @@ describe('PlaylistSelector', () => {
 
   describe('Error Handling', () => {
     it('displays search errors', () => {
-      const mockOnError = jest.fn();
+      const mockOnError = vi.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: 'test',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: [],
         loading: false,
         error: 'Search failed',
         showResults: false,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       render(<PlaylistSelector {...defaultProps} onError={mockOnError} />);
@@ -402,7 +407,7 @@ describe('PlaylistSelector', () => {
 
     it('shows error for empty input submission', async () => {
       const user = userEvent.setup();
-      const mockOnError = jest.fn();
+      const mockOnError = vi.fn();
 
       render(<PlaylistSelector {...defaultProps} onError={mockOnError} />);
 
@@ -454,7 +459,7 @@ describe('PlaylistSelector', () => {
   describe('Integration with Custom Hooks', () => {
     it('calls setQuery when input changes', async () => {
       const user = userEvent.setup();
-      const mockSetQuery = jest.fn();
+      const mockSetQuery = vi.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: '',
@@ -463,8 +468,8 @@ describe('PlaylistSelector', () => {
         loading: false,
         error: null,
         showResults: false,
-        setShowResults: jest.fn(),
-        clearResults: jest.fn(),
+        setShowResults: vi.fn(),
+        clearResults: vi.fn(),
       });
 
       render(<PlaylistSelector {...defaultProps} />);
@@ -476,26 +481,26 @@ describe('PlaylistSelector', () => {
     });
 
     it('calls clearResults when playlist is added', () => {
-      const mockClearResults = jest.fn();
-      const mockOnPlaylistSelect = jest.fn();
+      const mockClearResults = vi.fn();
+      const mockOnPlaylistSelect = vi.fn();
 
       mockUsePlaylistSearch.mockReturnValue({
         query: '',
-        setQuery: jest.fn(),
+        setQuery: vi.fn(),
         results: [],
         loading: false,
         error: null,
         showResults: false,
-        setShowResults: jest.fn(),
+        setShowResults: vi.fn(),
         clearResults: mockClearResults,
       });
 
       // Mock the URL handler to simulate successful playlist addition
       mockUseSpotifyUrlHandler.mockReturnValue({
-        isValidSpotifyLink: jest.fn(() => false),
-        isValidPlaylistUrl: jest.fn(() => false),
-        extractPlaylistId: jest.fn(() => null),
-        handleAddPlaylistByUrl: jest.fn(),
+        isValidSpotifyLink: vi.fn(() => false),
+        isValidPlaylistUrl: vi.fn(() => false),
+        extractPlaylistId: vi.fn(() => null),
+        handleAddPlaylistByUrl: vi.fn(),
       });
 
       render(

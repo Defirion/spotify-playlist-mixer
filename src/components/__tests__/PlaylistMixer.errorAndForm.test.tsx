@@ -1,66 +1,69 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { useMixGeneration } from '../../hooks/useMixGeneration';
 
 // Minimal mocks for hooks used inside PlaylistMixer
-const mockGenerateMix = jest.fn().mockResolvedValue([]);
-const mockCreatePlaylist = jest.fn().mockResolvedValue({ id: 'new-playlist' });
+const mockGenerateMix = vi.fn().mockResolvedValue([]);
+const mockCreatePlaylist = vi.fn().mockResolvedValue({ id: 'new-playlist' });
 
 // We'll mock useMixGeneration per-test after resetting modules. This avoids
 // cross-test module cache interactions where the component may be imported
 // before a test-level mock is applied.
 
-jest.mock('../../hooks/useMixPreview', () => ({
+vi.mock('../../hooks/useMixPreview', () => ({
   useMixPreview: (token: string, opts: any) => ({
     state: { preview: null, loading: false },
-    generatePreview: jest.fn().mockResolvedValue(null),
-    clearPreview: jest.fn(),
-    updateTrackOrder: jest.fn(),
-    getPreviewTracks: jest.fn().mockReturnValue([]),
+    generatePreview: vi.fn().mockResolvedValue(null),
+    clearPreview: vi.fn(),
+    updateTrackOrder: vi.fn(),
+    getPreviewTracks: vi.fn().mockReturnValue([]),
   }),
 }));
 
-jest.mock('../../hooks/useMixWarnings', () => ({
+vi.mock('../../hooks/useMixWarnings', () => ({
   useMixWarnings: () => ({ exceedsLimit: false, ratioImbalance: false }),
 }));
 
 // Mock useMixGeneration at module scope; tests will set the implementation per-test
-jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(),
+vi.mock('../../hooks/useMixGeneration', () => ({
+  useMixGeneration: vi.fn(),
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { useMixGeneration } = require('../../hooks/useMixGeneration');
 
-const defaultProps = {
+const defaultProps: any = {
   accessToken: 'TOK',
   selectedPlaylists: [
     { id: 'a', name: 'A', tracks: { total: 5 } },
     { id: 'b', name: 'B', tracks: { total: 7 } },
-  ],
+  ] as any,
   ratioConfig: {},
   mixOptions: { playlistName: 'My Mix', totalSongs: 10 },
-  updateMixOptions: jest.fn(),
+  updateMixOptions: vi.fn(),
 };
 
 describe('PlaylistMixer edge and error flows', () => {
   let consoleErrorSpy: any;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy?.mockRestore?.();
   });
   test('create playlist uses mixGeneration.createPlaylist when no preview exists', async () => {
-    const onMixedPlaylist = jest.fn();
+    const onMixedPlaylist = vi.fn();
     // Prepare the module-scoped mock implementation for this test
-    useMixGeneration.mockImplementation(() => ({
-      state: { loading: false },
-      generateMix: mockGenerateMix,
-      createPlaylist: mockCreatePlaylist,
-    }));
+    vi.mocked(useMixGeneration).mockImplementation(
+      () =>
+        ({
+          state: { loading: false },
+          generateMix: mockGenerateMix,
+          createPlaylist: mockCreatePlaylist,
+        }) as any
+    );
 
     // Now import the component (it will use the mocked hook)
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const PlaylistMixer = require('../PlaylistMixer').default;
+    const PlaylistMixer = (await import('../PlaylistMixer')).default;
 
     render(
       <PlaylistMixer {...defaultProps} onMixedPlaylist={onMixedPlaylist} />
@@ -76,14 +79,17 @@ describe('PlaylistMixer edge and error flows', () => {
   test('handles mix generation error gracefully', async () => {
     // Replace generateMix to throw
     mockGenerateMix.mockRejectedValueOnce(new Error('boom'));
-    useMixGeneration.mockImplementation(() => ({
-      state: { loading: false },
-      generateMix: mockGenerateMix,
-      createPlaylist: mockCreatePlaylist,
-    }));
+    vi.mocked(useMixGeneration).mockImplementation(
+      () =>
+        ({
+          state: { loading: false },
+          generateMix: mockGenerateMix,
+          createPlaylist: mockCreatePlaylist,
+        }) as any
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const PlaylistMixer = require('../PlaylistMixer').default;
+    const PlaylistMixer = (await import('../PlaylistMixer')).default;
 
     render(<PlaylistMixer {...defaultProps} />);
 

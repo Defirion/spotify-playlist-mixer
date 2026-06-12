@@ -13,7 +13,7 @@ const Flakey: React.FC<{ fail?: boolean }> = ({ fail = false }) => {
 };
 
 test('DragErrorBoundary catches rendering errors and shows fallback', () => {
-  const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
   try {
     render(
       <DragErrorBoundary>
@@ -29,7 +29,7 @@ test('DragErrorBoundary catches rendering errors and shows fallback', () => {
 
 test('Retry button resets the boundary so a retrying child can render', async () => {
   const user = userEvent.setup();
-  const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
   try {
     // First render throws

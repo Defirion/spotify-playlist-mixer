@@ -2,7 +2,7 @@ import { silenceIfPass } from './silenceIfPass';
 
 describe('silenceIfPass', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('success with non-mock console: swallows calls and restores original', async () => {
@@ -48,7 +48,7 @@ describe('silenceIfPass', () => {
   });
 
   test('preserves jest mock identity and replays mock.calls on failure', async () => {
-    const mockLog = jest.fn();
+    const mockLog = vi.fn();
     const orig = console.log;
     (console as any).log = mockLog;
 
@@ -138,10 +138,10 @@ describe('silenceIfPass', () => {
   });
 
   test('failure replays mock.calls for multiple mocked console methods', async () => {
-    const mockError = jest.fn();
-    const mockWarn = jest.fn();
-    const mockInfo = jest.fn();
-    const mockLog = jest.fn();
+    const mockError = vi.fn();
+    const mockWarn = vi.fn();
+    const mockInfo = vi.fn();
+    const mockLog = vi.fn();
 
     const origs = {
       error: console.error,
@@ -201,8 +201,8 @@ describe('silenceIfPass', () => {
       counts.warn++;
     };
     // make info/log jest mocks (should be recorded in mockCaptures)
-    const mockInfo = jest.fn();
-    const mockLog = jest.fn();
+    const mockInfo = vi.fn();
+    const mockLog = vi.fn();
     (console as any).info = mockInfo;
     (console as any).log = mockLog;
 
@@ -240,11 +240,11 @@ describe('silenceIfPass', () => {
     // backup any existing global.jest
     const originalGlobalJest = (global as any).jest;
     try {
-      // make global.jest delegate to real jest.isMockFunction so jest.fn() is detected
-      (global as any).jest = { isMockFunction: jest.isMockFunction };
+      // make global.jest delegate to real vi.isMockFunction so vi.fn() is detected
+      (global as any).jest = { isMockFunction: vi.isMockFunction };
 
       // create a real jest mock function that also pushes to our spy when invoked
-      const fakeMock = jest.fn((...args: unknown[]) => calls.push(args));
+      const fakeMock = vi.fn((...args: unknown[]) => calls.push(args));
       // Pre-populate mock.calls so silenceIfPass will replay them
       fakeMock.mock.calls = [['replayed', 'value']];
       (console as any).log = fakeMock;

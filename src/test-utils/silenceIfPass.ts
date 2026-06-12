@@ -23,14 +23,17 @@ export async function silenceIfPass<T>(fn: () => T | Promise<T>): Promise<T> {
   // Jest mock identity).
   const mockCaptures: Partial<Record<keyof typeof buffer, unknown>> = {};
 
-  // Helper to determine if a function is a Jest mock (if running under Jest)
+  // Helper to determine if a function is a runner-created mock. Prefer an
+  // injected `jest` shim (some tests install their own detector) and fall
+  // back to Vitest's global `vi`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isJestMock = (fn: any): boolean => {
-    // jest.isMockFunction is available in test runtime
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const runner = (global as any).jest ?? (global as any).vi;
     return (
-      typeof (global as any).jest !== 'undefined' &&
-      (global as any).jest.isMockFunction(fn)
+      typeof runner !== 'undefined' &&
+      typeof runner.isMockFunction === 'function' &&
+      runner.isMockFunction(fn)
     );
   };
 

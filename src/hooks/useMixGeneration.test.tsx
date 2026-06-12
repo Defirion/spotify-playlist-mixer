@@ -1,16 +1,16 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
+import * as mixer from '../utils/mixer';
+import { useMixGeneration as realUseMixGeneration } from './useMixGeneration';
 
 // Mocks
-jest.mock('../utils/mixer');
-jest.mock('../services/spotify');
-const mixer = require('../utils/mixer');
+vi.mock('../utils/mixer');
+vi.mock('../services/spotify');
+// This file tests the real hook; the global setup mock must not apply.
+vi.unmock('./useMixGeneration');
 
 // Helper host to capture the hook return value
 function HookHost({ token, capture, options = {} as any }: any) {
-  // Use the real hook implementation (bypass global mock from setupTests)
-  const { useMixGeneration: realUseMixGeneration } =
-    jest.requireActual('./useMixGeneration');
   const hook = realUseMixGeneration(token, options);
   // Capture the hook after every render so tests observe updated state and methods
   React.useEffect(() => {
@@ -21,9 +21,9 @@ function HookHost({ token, capture, options = {} as any }: any) {
 
 describe('useMixGeneration', () => {
   let spotifyInstance: any;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: import('vitest').MockInstance;
+  let consoleWarnSpy: import('vitest').MockInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
 
   const flush = () => new Promise(res => setTimeout(res, 0));
 
@@ -50,27 +50,28 @@ describe('useMixGeneration', () => {
     }
   }
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
     // Silence benign console output for passing test runs per SILENCE_POLICY
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Mock SpotifyService class constructor to return an instance with stubbed methods
     spotifyInstance = {
-      getPlaylistTracks: jest.fn(),
-      getUserProfile: jest.fn(),
-      createPlaylist: jest.fn(),
-      addTracksToPlaylist: jest.fn(),
+      getPlaylistTracks: vi.fn(),
+      getUserProfile: vi.fn(),
+      createPlaylist: vi.fn(),
+      addTracksToPlaylist: vi.fn(),
     };
 
     // The project provides a manual mock at src/services/__mocks__/spotify.ts
     // It exports a Jest factory function as the default export. Require the mocked
     // module and set its implementation to return our spotifyInstance so the
     // hook's `new SpotifyService(token)` will yield spotifyInstance.
-    const SpotifyFactory = require('../services/spotify').default as jest.Mock;
+    const SpotifyFactory = (await import('../services/spotify'))
+      .default as import('vitest').Mock;
     SpotifyFactory.mockImplementation(function (this: any, token: string) {
       this.token = token;
       return spotifyInstance;
@@ -127,7 +128,7 @@ describe('useMixGeneration', () => {
   test('throws when no tracks found across playlists', async () => {
     spotifyInstance.getPlaylistTracks.mockResolvedValue({ tracks: [] });
 
-    const onError = jest.fn();
+    const onError = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -167,9 +168,9 @@ describe('useMixGeneration', () => {
       });
 
     const mixed = [{ uri: 'u1', duration_ms: 1000 }];
-    mixer.mixPlaylists.mockReturnValue(mixed);
+    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixed as any);
 
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -217,12 +218,14 @@ describe('useMixGeneration', () => {
     const mixA = [{ uri: 'u1' }];
     const mixB = [{ uri: 'u2' }];
     // Make mixer return depend on supplied playlistTracks so results follow the call inputs
-    mixer.mixPlaylists.mockImplementation((playlistTracks: any) => {
-      const allTracks = Object.values(playlistTracks).flat();
-      return allTracks.find((t: any) => t && t.uri === 'u2') ? mixB : mixA;
-    });
+    (mixer.mixPlaylists as import('vitest').Mock).mockImplementation(
+      (playlistTracks: any) => {
+        const allTracks = Object.values(playlistTracks).flat();
+        return allTracks.find((t: any) => t && t.uri === 'u2') ? mixB : mixA;
+      }
+    );
 
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -274,7 +277,7 @@ describe('useMixGeneration', () => {
       exhaustedPlaylists: ['p1'],
       stoppedEarly: true,
     };
-    mixer.mixPlaylists.mockReturnValue(mixObj);
+    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixObj as any);
 
     const ref: any = { current: null };
     render(<HookHost token="t" capture={(h: any) => (ref.current = h)} />);
@@ -296,7 +299,7 @@ describe('useMixGeneration', () => {
       expect(result).toEqual(mixObj.tracks);
       // The hook logs a warning when mixing stopped early; assert it was called
       // capture console.warn
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       // trigger the warning path by calling generateMix again (it will log)
       await ref.current.generateMix(
         [
@@ -364,7 +367,7 @@ describe('useMixGeneration', () => {
       new Error('add-fail')
     );
 
-    const onError = jest.fn();
+    const onError = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -400,7 +403,7 @@ describe('useMixGeneration', () => {
       exhaustedPlaylists: ['p1'],
       stoppedEarly: true,
     };
-    mixer.mixPlaylists.mockReturnValue(mixObj);
+    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixObj as any);
 
     const events: any[] = [];
     const ref: any = { current: null };
@@ -467,9 +470,9 @@ describe('useMixGeneration', () => {
 
     // mixer returns a plain array (old behavior)
     const plainMix = [{ uri: 'plain1', duration_ms: 1000 }];
-    mixer.mixPlaylists.mockReturnValue(plainMix);
+    vi.mocked(mixer.mixPlaylists).mockReturnValue(plainMix as any);
 
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -542,9 +545,9 @@ describe('useMixGeneration', () => {
     });
 
     // mixer returns an empty tracks shape
-    mixer.mixPlaylists.mockReturnValue({ tracks: [] });
+    vi.mocked(mixer.mixPlaylists).mockReturnValue({ tracks: [] } as any);
 
-    const onError = jest.fn();
+    const onError = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -590,12 +593,14 @@ describe('useMixGeneration', () => {
 
     const mixA = [{ uri: 'u1' }];
     const mixB = [{ uri: 'u2' }];
-    mixer.mixPlaylists.mockImplementation((playlistTracks: any) => {
-      const allTracks = Object.values(playlistTracks).flat();
-      return allTracks.find((t: any) => t && t.uri === 'u2') ? mixB : mixA;
-    });
+    (mixer.mixPlaylists as import('vitest').Mock).mockImplementation(
+      (playlistTracks: any) => {
+        const allTracks = Object.values(playlistTracks).flat();
+        return allTracks.find((t: any) => t && t.uri === 'u2') ? mixB : mixA;
+      }
+    );
 
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const ref: any = { current: null };
     render(
       <HookHost
@@ -648,7 +653,7 @@ describe('useMixGeneration', () => {
           )
         )
     );
-    mixer.mixPlaylists.mockReturnValue([{ uri: 'u' }]);
+    vi.mocked(mixer.mixPlaylists).mockReturnValue([{ uri: 'u' }] as any);
     const events: any[] = [];
     const ref: any = { current: null };
     // We simulate token change by re-rendering HookHost with different token before first finishes

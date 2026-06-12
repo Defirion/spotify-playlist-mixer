@@ -8,15 +8,15 @@ import {
 describe('mixHooks mocks', () => {
   // Silence console.error in this suite to avoid invalid-hook warnings
   // from the non-hook fallbacks during passing test runs.
-  let consoleErrorSpy: jest.SpyInstance | undefined;
+  let consoleErrorSpy: import('vitest').MockInstance | undefined;
   beforeAll(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterAll(() => {
     if (consoleErrorSpy) consoleErrorSpy.mockRestore();
   });
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('useMixPreview fallback (non-hook) works when called outside React', async () => {
@@ -52,7 +52,7 @@ describe('mixHooks mocks', () => {
     expect(out).toBeDefined();
 
     // Ensure createPlaylist returns created id and logs only when verbose
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     process.env.TEST_VERBOSE = 'true';
     const created = await api.createPlaylist('my', [] as any);
     expect(created.id).toBe('created');

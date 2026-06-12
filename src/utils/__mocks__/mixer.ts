@@ -1,2 +1,2 @@
 // Manual mock for utils/mixer
-export const mixPlaylists = jest.fn();
+export const mixPlaylists = vi.fn();

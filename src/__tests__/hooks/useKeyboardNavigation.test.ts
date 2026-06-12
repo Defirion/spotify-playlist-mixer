@@ -11,10 +11,10 @@ const mockItems = [
 ];
 
 // Mock functions
-const mockOnSelect = jest.fn();
-const mockOnMove = jest.fn();
-const mockOnDrop = jest.fn();
-const mockAnnounceToScreenReader = jest.fn();
+const mockOnSelect = vi.fn();
+const mockOnMove = vi.fn();
+const mockOnDrop = vi.fn();
+const mockAnnounceToScreenReader = vi.fn();
 
 // Helper to create keyboard event
 const createKeyboardEvent = (
@@ -23,7 +23,7 @@ const createKeyboardEvent = (
 ) =>
   ({
     key,
-    preventDefault: jest.fn(),
+    preventDefault: vi.fn(),
     shiftKey: false,
     ctrlKey: false,
     metaKey: false,
@@ -32,14 +32,14 @@ const createKeyboardEvent = (
 
 describe('useKeyboardNavigation', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   describe('initialization', () => {
@@ -523,7 +523,7 @@ describe('useKeyboardNavigation', () => {
 
       // Fast-forward timers to trigger announcement
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       expect(mockAnnounceToScreenReader).toHaveBeenCalledWith(
@@ -551,7 +551,7 @@ describe('useKeyboardNavigation', () => {
 
       // Fast-forward timers to trigger focus announcement
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       // Clear the focus announcement
@@ -563,7 +563,7 @@ describe('useKeyboardNavigation', () => {
 
       // Fast-forward timers to trigger drag start announcement
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       expect(mockAnnounceToScreenReader).toHaveBeenCalledWith(
@@ -607,7 +607,7 @@ describe('useKeyboardNavigation', () => {
 
       // Fast-forward timers to trigger announcement
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       expect(mockAnnounceToScreenReader).toHaveBeenCalledWith(
@@ -633,7 +633,7 @@ describe('useKeyboardNavigation', () => {
 
       // Fast-forward timers
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       // Should only announce the last message
@@ -729,7 +729,7 @@ describe('useKeyboardNavigation', () => {
     });
 
     it('should cleanup timeouts on unmount', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       const { result, unmount } = renderHook(() =>
         useKeyboardNavigation({

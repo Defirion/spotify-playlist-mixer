@@ -3,16 +3,14 @@ import { ERROR_TYPES } from '../../../services/apiErrorHandler';
 
 describe('MockSpotifyService behavior', () => {
   let MockClass: any;
-  let _consoleErrorSpy: jest.SpyInstance | undefined;
+  let _consoleErrorSpy: import('vitest').MockInstance | undefined;
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     MockClass = makeMockSpotifyService();
-    (global as any).fetch = jest.fn();
+    (global as any).fetch = vi.fn();
     delete process.env.TEST_VERBOSE;
     // suppress mock service verbose logs during passing runs
-    _consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    _consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     _consoleErrorSpy?.mockRestore?.();

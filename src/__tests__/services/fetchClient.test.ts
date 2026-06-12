@@ -7,11 +7,11 @@ describe('fetchClient', () => {
 
   afterEach(() => {
     (global.fetch as any) = originalFetch;
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   function mockFetchImpl(impl: any) {
-    (global as any).fetch = jest.fn(impl);
+    (global as any).fetch = vi.fn(impl);
   }
 
   it('should build absolute URL from baseURL when relative path used', async () => {

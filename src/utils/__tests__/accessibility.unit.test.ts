@@ -32,7 +32,7 @@ describe('accessibility utilities', () => {
   });
 
   it('announceToScreenReader sets region text after a small delay', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     initializeAccessibility();
     announceToScreenReader('Hello world', 'polite');
     const polite = document.getElementById(
@@ -40,9 +40,9 @@ describe('accessibility utilities', () => {
     ) as HTMLElement;
     // initially cleared
     expect(polite.textContent).toBe('');
-    jest.advanceTimersByTime(20);
+    vi.advanceTimersByTime(20);
     expect(polite.textContent).toBe('Hello world');
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('re-initializes live region if DOM nodes were removed', () => {
@@ -81,7 +81,7 @@ describe('accessibility utilities', () => {
     btn1.focus();
     const evt = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true });
     // spy on preventDefault
-    const pdSpy = jest.spyOn(evt, 'preventDefault');
+    const pdSpy = vi.spyOn(evt, 'preventDefault');
     focusManagement.trapFocus(evt as any, container);
     // after trapping, focus should be on last element
     expect(pdSpy).toHaveBeenCalled();

@@ -2,10 +2,10 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import useSpotifySearch from '../useSpotifySearch';
 import SpotifyService from '../../services/spotify';
 
-// Mock the SpotifyService as a jest.fn() so tests can call mockImplementation on the constructor
-jest.mock('../../services/spotify', () => ({
+// Mock the SpotifyService as a vi.fn() so tests can call mockImplementation on the constructor
+vi.mock('../../services/spotify', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 describe('useSpotifySearch', () => {
@@ -13,25 +13,27 @@ describe('useSpotifySearch', () => {
   const mockAccessToken = 'mock-access-token';
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
 
     mockSpotifyService = {
-      searchTracks: jest.fn(),
+      searchTracks: vi.fn(),
     };
 
-    (SpotifyService as any).mockImplementation(() => mockSpotifyService);
+    (SpotifyService as any).mockImplementation(function (this: unknown) {
+      return mockSpotifyService;
+    });
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   // Silence console.error for this suite to reduce noisy output from
   // expected errors and React act warnings printed as console.error.
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy.mockRestore();
@@ -90,7 +92,7 @@ describe('useSpotifySearch', () => {
 
       // Fast-forward past debounce delay
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         // allow microtasks from resolved promises to flush so state updates happen inside act
         await Promise.resolve();
       });
@@ -121,7 +123,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
         await Promise.resolve();
       });
 
@@ -130,7 +132,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -173,7 +175,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -195,7 +197,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -221,7 +223,7 @@ describe('useSpotifySearch', () => {
 
       await act(async () => {
         result.current.search('manual query');
-        jest.runAllTimers();
+        vi.runAllTimers();
         await Promise.resolve();
       });
 
@@ -244,7 +246,7 @@ describe('useSpotifySearch', () => {
       // Set some offset first
       await act(async () => {
         result.current.setQuery('test');
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -291,7 +293,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -328,7 +330,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -357,7 +359,7 @@ describe('useSpotifySearch', () => {
       });
 
       await act(async () => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
         await Promise.resolve();
       });
 
@@ -406,7 +408,7 @@ describe('useSpotifySearch', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       await waitFor(() => {
@@ -441,13 +443,13 @@ describe('useSpotifySearch', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       expect(mockSpotifyService.searchTracks).not.toHaveBeenCalled();
 
       act(() => {
-        jest.advanceTimersByTime(200);
+        vi.advanceTimersByTime(200);
       });
 
       await waitFor(() => {
@@ -465,7 +467,7 @@ describe('useSpotifySearch', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       expect(mockSpotifyService.searchTracks).not.toHaveBeenCalled();
@@ -486,7 +488,7 @@ describe('useSpotifySearch', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       await waitFor(() => {
@@ -524,7 +526,7 @@ describe('useSpotifySearch', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       await waitFor(() => {

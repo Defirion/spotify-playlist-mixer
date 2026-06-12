@@ -13,8 +13,8 @@ function Harness({ onOver, onDrop }: any) {
 }
 
 describe('useCustomTouchEvents', () => {
-  let spyWarn: jest.SpyInstance | undefined;
-  let spyLog: jest.SpyInstance | undefined;
+  let spyWarn: import('vitest').MockInstance | undefined;
+  let spyLog: import('vitest').MockInstance | undefined;
 
   beforeEach(() => {
     spyWarn = undefined;
@@ -24,11 +24,11 @@ describe('useCustomTouchEvents', () => {
   afterEach(() => {
     spyWarn?.mockRestore?.();
     spyLog?.mockRestore?.();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('calls onTouchDragOver when externalDragOver dispatched', () => {
-    const onOver = jest.fn();
+    const onOver = vi.fn();
     render(<Harness onOver={onOver} onDrop={() => {}} />);
     const container = screen.getByTestId('container');
 
@@ -41,11 +41,11 @@ describe('useCustomTouchEvents', () => {
   });
 
   test('calls onTouchDrop and warns when draggedItem missing', () => {
-    const onDrop = jest.fn();
+    const onDrop = vi.fn();
     render(<Harness onOver={() => {}} onDrop={onDrop} />);
     const container = screen.getByTestId('container');
 
-    spyWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    spyWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Event without draggedItem should trigger the warning branch and not call onDrop
     const eventNoItem = new CustomEvent('internalDrop', {
@@ -70,8 +70,8 @@ describe('useCustomTouchEvents', () => {
       const nullRef = { current: null };
       useCustomTouchEvents({
         containerRef: nullRef,
-        onTouchDragOver: jest.fn(),
-        onTouchDrop: jest.fn(),
+        onTouchDragOver: vi.fn(),
+        onTouchDrop: vi.fn(),
       });
       return <div data-testid="null-container" />;
     };
@@ -86,11 +86,11 @@ describe('useCustomTouchEvents', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
-    spyLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+    spyLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     try {
-      const onOver = jest.fn();
-      const onDrop = jest.fn();
+      const onOver = vi.fn();
+      const onDrop = vi.fn();
       render(<Harness onOver={onOver} onDrop={onDrop} />);
       const container = screen.getByTestId('container');
 

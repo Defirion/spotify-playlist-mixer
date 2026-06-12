@@ -2,16 +2,16 @@ import createFetchClient from '../fetchClient';
 
 describe('FetchInstance', () => {
   beforeEach(() => {
-    (global as any).fetch = jest.fn();
+    (global as any).fetch = vi.fn();
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete (global as any).fetch;
   });
 
   test('GET returns JSON when content-type is application/json', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
@@ -34,7 +34,7 @@ describe('FetchInstance', () => {
   });
 
   test('GET returns text when content-type is not json', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
@@ -62,7 +62,7 @@ describe('FetchInstance', () => {
 
   test('POST merges headers and stringifies JSON body', async () => {
     let capturedInit: any = null;
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockImplementation(async (_url: string, init: any) => {
         capturedInit = init;
@@ -103,7 +103,7 @@ describe('FetchInstance', () => {
   });
 
   test('throws an error with response attached when response is not ok', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 400,
       statusText: 'Bad Request',

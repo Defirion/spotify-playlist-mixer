@@ -16,14 +16,14 @@ import { PopularityPools, TrackWithPopularity } from '../types';
 (globalThis as any).__NO_SILENCE = true;
 // SpotifyTrack type imported previously but not used in these tests
 
-// Use jest.spyOn so the mocks are recognized by Jest even when the global
+// Use vi.spyOn so the mocks are recognized by Jest even when the global
 // test wrapper replaces console functions for silence-on-pass behavior.
 let logSpy: any;
 let warnSpy: any;
 
 beforeEach(() => {
-  logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-  warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {

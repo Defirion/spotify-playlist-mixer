@@ -17,14 +17,14 @@ describe('haptics', () => {
     delete (global as any).navigator;
     (global as any).navigator = { userAgent: 'jest' };
     Object.defineProperty((global as any).navigator, 'vibrate', {
-      value: jest.fn(),
+      value: vi.fn(),
       configurable: true,
     });
     expect(isVibrationSupported()).toBe(true);
   });
 
   test('vibrate calls underlying navigator.vibrate when supported', () => {
-    const spy = jest.fn();
+    const spy = vi.fn();
     delete (global as any).navigator;
     (global as any).navigator = { userAgent: 'jest' };
     Object.defineProperty((global as any).navigator, 'vibrate', {
@@ -36,7 +36,7 @@ describe('haptics', () => {
   });
 
   test('vibrate swallows errors', () => {
-    const spy = jest.fn(() => {
+    const spy = vi.fn(() => {
       throw new Error('boom');
     });
     delete (global as any).navigator;

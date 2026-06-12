@@ -3,18 +3,18 @@ import { announceToScreenReader, focusManagement } from '../accessibility';
 describe('accessibility edge-case branches', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('announceToScreenReader warns when initialization fails', () => {
     // make appendChild throw so initializeLiveRegion cannot complete and liveRegion remains null
-    const appendMock = jest
+    const appendMock = vi
       .spyOn(document.body, 'appendChild' as any)
       .mockImplementation(() => {
         throw new Error('append failed');
       });
 
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // calling announce should not throw, but should trigger warn
     expect(() => announceToScreenReader('test', 'polite')).not.toThrow();
@@ -46,7 +46,7 @@ describe('accessibility edge-case branches', () => {
     };
 
     const evt = new KeyboardEvent('keydown', { key: 'Tab' });
-    const pdSpy = jest.spyOn(evt, 'preventDefault');
+    const pdSpy = vi.spyOn(evt, 'preventDefault');
 
     focusManagement.trapFocus(evt as any, container);
 

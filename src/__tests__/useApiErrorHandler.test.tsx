@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import useApiErrorHandler from '../hooks/useApiErrorHandler';
 
 // Small helper component to exercise the hook in a component tree
@@ -30,7 +30,7 @@ describe('useApiErrorHandler (skeleton)', () => {
     render(<Harness onReady={a => (api = a)} />);
 
     let attempts = 0;
-    const flaky = jest.fn().mockImplementation(async () => {
+    const flaky = vi.fn().mockImplementation(async () => {
       attempts++;
       if (attempts < 2) throw new Error('transient');
       return 'ok';

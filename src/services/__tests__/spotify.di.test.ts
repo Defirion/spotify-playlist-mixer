@@ -4,9 +4,9 @@ import { ApiError } from '../apiErrorHandler';
 
 // Simple mock FetchInstance implementing just get/post needed for this test
 class MockFetch extends FetchInstance {
-  get = jest.fn();
-  post = jest.fn();
-  delete = jest.fn();
+  get = vi.fn();
+  post = vi.fn();
+  delete = vi.fn();
 }
 
 describe('SpotifyService Dependency Injection constructor', () => {
@@ -15,7 +15,7 @@ describe('SpotifyService Dependency Injection constructor', () => {
       baseURL: 'https://api.spotify.com/v1',
       headers: { Authorization: 'Bearer injected_token' },
     });
-    (mock.get as jest.Mock).mockResolvedValue({
+    (mock.get as import('vitest').Mock).mockResolvedValue({
       data: { items: [], total: 0, limit: 50, offset: 0 },
     });
 

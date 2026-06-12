@@ -5,9 +5,13 @@ import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactor
 
 import PlaylistMixer from '../../components/PlaylistMixer';
 
+// static imports resolve to the mocked modules registered above
+import { useMixPreview } from '../../hooks/useMixPreview';
+import { useMixGeneration } from '../../hooks/useMixGeneration';
+
 // Register mocks before importing PlaylistMixer using inline factories
-jest.mock('../../hooks/useMixPreview', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixPreviewModule(
+vi.mock('../../hooks/useMixPreview', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixPreviewModule(
     async (cfg: any) => {
       const tracks = cfg.playlists
         .flatMap((p: any) => p._resolvedTracks || [])
@@ -17,8 +21,8 @@ jest.mock('../../hooks/useMixPreview', () =>
   )
 );
 
-jest.mock('../../hooks/useMixGeneration', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule(
+vi.mock('../../hooks/useMixGeneration', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule(
     async (cfg: any) => {
       const tracks = cfg.playlists.flatMap((p: any) => p._resolvedTracks || []);
       return { tracks };
@@ -26,12 +30,13 @@ jest.mock('../../hooks/useMixGeneration', () =>
   )
 );
 
+// The hooks are mocked above; calling them here just reaches into the mock.
 const previewFn = () =>
-  (require('../../hooks/useMixPreview') as any).useMixPreview()
-    ._previewFn as jest.Mock;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  (useMixPreview() as any)._previewFn as import('vitest').Mock;
 const mixFn = () =>
-  (require('../../hooks/useMixGeneration') as any).useMixGeneration()
-    ._mixFn as jest.Mock;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  (useMixGeneration() as any)._mixFn as import('vitest').Mock;
 
 describe('Playlist size variants (hook-mocked)', () => {
   test('small playlists (few tracks) render and expose hooks', () => {

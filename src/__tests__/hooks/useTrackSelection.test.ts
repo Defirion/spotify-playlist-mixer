@@ -6,7 +6,7 @@ const makeTrack = (id: string) => ({ id, name: `Track ${id}` });
 describe('useTrackSelection', () => {
   it('toggles selection when handleTrackSelect called and clears on add', () => {
     const available = [makeTrack('1'), makeTrack('2')];
-    const onAdd = jest.fn();
+    const onAdd = vi.fn();
 
     const { result } = renderHook(() =>
       useTrackSelection({ availableTracks: available, onAddTracks: onAdd })
@@ -44,7 +44,7 @@ describe('useTrackSelection', () => {
 
   it('clearSelection empties the selected set', () => {
     const available = [makeTrack('a')];
-    const onAdd = jest.fn();
+    const onAdd = vi.fn();
     const { result } = renderHook(() =>
       useTrackSelection({ availableTracks: available, onAddTracks: onAdd })
     );

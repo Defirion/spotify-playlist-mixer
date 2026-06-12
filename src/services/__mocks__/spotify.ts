@@ -1,7 +1,7 @@
 // Manual mock for services/spotify - simplified for testing
-const mockGetPlaylistTracks = jest.fn();
+const mockGetPlaylistTracks = vi.fn();
 
-export default jest.fn().mockImplementation(function (
+export default vi.fn().mockImplementation(function (
   this: any,
   accessToken: string
 ) {

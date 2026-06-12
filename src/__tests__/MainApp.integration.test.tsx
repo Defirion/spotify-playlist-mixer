@@ -5,78 +5,81 @@ import * as store from '../store';
 
 import { MainApp } from '../App';
 
-jest.spyOn(store, 'useAuth') as any;
-jest.spyOn(store, 'usePlaylistSelection') as any;
-jest.spyOn(store, 'useRatioConfig') as any;
-jest.spyOn(store, 'useMixOptions') as any;
-jest.spyOn(store, 'useUI') as any;
-jest.spyOn(store, 'setUIError') as any;
+vi.spyOn(store, 'useAuth') as any;
+vi.spyOn(store, 'usePlaylistSelection') as any;
+vi.spyOn(store, 'useRatioConfig') as any;
+vi.spyOn(store, 'useMixOptions') as any;
+vi.spyOn(store, 'useUI') as any;
+vi.spyOn(store, 'setUIError') as any;
 
 // Mock AppShell to capture props and render buttons that call them
-jest.mock('../AppShell', () => (props: any) => {
-  return (
-    <div>
-      <button
-        onClick={() =>
-          props.onPlaylistSelect && props.onPlaylistSelect({ id: 'x' })
-        }
-      >
-        Call onPlaylistSelect
-      </button>
-      <button onClick={() => props.onClearAll && props.onClearAll()}>
-        Call onClearAll
-      </button>
-      <button
-        onClick={() =>
-          props.onApplyPreset &&
-          props.onApplyPreset({
-            ratioConfig: { x: { min: 1 } },
-            strategy: 's',
-            settings: {},
-            presetName: 'p',
-          })
-        }
-      >
-        Call onApplyPreset
-      </button>
-      <button onClick={() => props.onDismissError && props.onDismissError()}>
-        Call onDismissError
-      </button>
-      <button
-        onClick={() => props.onDismissSuccess && props.onDismissSuccess()}
-      >
-        Call onDismissSuccess
-      </button>
-      <button
-        onClick={() =>
-          props.onMixedPlaylist && props.onMixedPlaylist({ id: 'm' })
-        }
-      >
-        Call onMixedPlaylist
-      </button>
-    </div>
-  );
-});
+vi.mock('../AppShell', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <button
+          onClick={() =>
+            props.onPlaylistSelect && props.onPlaylistSelect({ id: 'x' })
+          }
+        >
+          Call onPlaylistSelect
+        </button>
+        <button onClick={() => props.onClearAll && props.onClearAll()}>
+          Call onClearAll
+        </button>
+        <button
+          onClick={() =>
+            props.onApplyPreset &&
+            props.onApplyPreset({
+              ratioConfig: { x: { min: 1 } },
+              strategy: 's',
+              settings: {},
+              presetName: 'p',
+            })
+          }
+        >
+          Call onApplyPreset
+        </button>
+        <button onClick={() => props.onDismissError && props.onDismissError()}>
+          Call onDismissError
+        </button>
+        <button
+          onClick={() => props.onDismissSuccess && props.onDismissSuccess()}
+        >
+          Call onDismissSuccess
+        </button>
+        <button
+          onClick={() =>
+            props.onMixedPlaylist && props.onMixedPlaylist({ id: 'm' })
+          }
+        >
+          Call onMixedPlaylist
+        </button>
+      </div>
+    );
+  },
+}));
 
 describe('MainApp integration surface', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('invokes all handlers and exercises handler branches', () => {
-    const setAccessToken = jest.fn();
-    const togglePlaylistSelection = jest.fn();
-    const clearAllPlaylists = jest.fn();
-    const setRatioConfigBulk = jest.fn();
-    const applyPresetOptions = jest.fn();
-    const dismissError = jest.fn();
-    const dismissSuccessToast = jest.fn();
-    const addMixedPlaylist = jest.fn();
-    const updateMixOptions = jest.fn();
+    const setAccessToken = vi.fn();
+    const togglePlaylistSelection = vi.fn();
+    const clearAllPlaylists = vi.fn();
+    const setRatioConfigBulk = vi.fn();
+    const applyPresetOptions = vi.fn();
+    const dismissError = vi.fn();
+    const dismissSuccessToast = vi.fn();
+    const addMixedPlaylist = vi.fn();
+    const updateMixOptions = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
       setAccessToken,
-      clearAuth: jest.fn(),
+      clearAuth: vi.fn(),
     });
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [{ id: 'p1', name: 'P1', tracks: { total: 1 } }],

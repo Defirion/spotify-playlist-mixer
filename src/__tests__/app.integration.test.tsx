@@ -23,7 +23,7 @@ describe('App integration (happy path) - template', () => {
     // is covered by the App auth callback tests.)
     const token = 'test_access_token_123';
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { useAppStore } = require('../store');
+    const { useAppStore } = await import('../store');
     useAppStore.getState().setAccessToken(token);
 
     render(

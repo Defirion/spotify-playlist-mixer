@@ -4,15 +4,15 @@ import TrackItem from '../TrackItem';
 import { mockTracks } from '../../../mocks/fixtures';
 
 // Mock the utility functions
-jest.mock('../../../utils/trackUtils', () => ({
-  formatDuration: jest.fn(
+vi.mock('../../../utils/trackUtils', () => ({
+  formatDuration: vi.fn(
     (ms: number) =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
         .toString()
         .padStart(2, '0')}`
   ),
-  getTrackQuadrant: jest.fn(() => 'high-energy-high-valence'),
-  getPopularityStyle: jest.fn((_quadrant: any, popularity: any) => {
+  getTrackQuadrant: vi.fn(() => 'high-energy-high-valence'),
+  getPopularityStyle: vi.fn((_quadrant: any, popularity: any) => {
     if (popularity !== undefined) {
       return {
         background: '#4CAF50',
@@ -27,12 +27,12 @@ jest.mock('../../../utils/trackUtils', () => ({
 describe('TrackItem', () => {
   const defaultProps = {
     track: mockTracks[0],
-    onSelect: jest.fn(),
-    onRemove: jest.fn(),
+    onSelect: vi.fn(),
+    onRemove: vi.fn(),
   } as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
@@ -85,7 +85,7 @@ describe('TrackItem', () => {
       render(<TrackItem {...defaultProps} style={customStyle} />);
 
       const trackItem = screen.getByTestId(`track-item-${mockTracks[0].id}`);
-      expect(trackItem).toHaveStyle('background-color: red');
+      expect(trackItem).toHaveStyle('background-color: rgb(255, 0, 0)');
     });
   });
 

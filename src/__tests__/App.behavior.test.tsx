@@ -6,29 +6,34 @@ import * as store from '../store';
 import * as spotifyAuth from '../services/spotifyAuth';
 
 // Mock the store hooks
-jest.mock('../store', () => ({
-  useAuth: jest.fn(),
-  usePlaylistSelection: jest.fn(),
-  useRatioConfig: jest.fn(),
-  useMixOptions: jest.fn(),
-  useUI: jest.fn(),
-  setUIError: jest.fn(),
+vi.mock('../store', () => ({
+  useAuth: vi.fn(),
+  usePlaylistSelection: vi.fn(),
+  useRatioConfig: vi.fn(),
+  useMixOptions: vi.fn(),
+  useUI: vi.fn(),
+  setUIError: vi.fn(),
 }));
 
 // Mock the auth service so no real token exchange happens
-jest.mock('../services/spotifyAuth', () => ({
-  ...jest.requireActual('../services/spotifyAuth'),
-  completeAuthorization: jest.fn(),
-  refreshAccessToken: jest.fn(),
+vi.mock('../services/spotifyAuth', async () => ({
+  ...(await vi.importActual('../services/spotifyAuth')),
+  completeAuthorization: vi.fn(),
+  refreshAccessToken: vi.fn(),
 }));
 
 // Mock AppShell to capture and expose handler props
 let mockAppShellProps: any = {};
-jest.mock('../AppShell', () => {
-  return function MockAppShell(props: any) {
-    mockAppShellProps = props;
-    return <div data-testid="app-shell" />;
-  };
+vi.mock('../AppShell', () => {
+  const __mod = (() => {
+    return function MockAppShell(props: any) {
+      mockAppShellProps = props;
+      return <div data-testid="app-shell" />;
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 describe('MainApp behavioral coverage', () => {
@@ -38,50 +43,54 @@ describe('MainApp behavioral coverage', () => {
       refreshToken: null,
       tokenExpiresAt: null,
       isAuthenticated: false,
-      setAccessToken: jest.fn(),
-      setTokens: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      setTokens: vi.fn(),
+      clearAuth: vi.fn(),
     },
     usePlaylistSelection: {
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     },
     useRatioConfig: {
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
-      updateRatioConfig: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
+      updateRatioConfig: vi.fn(),
     },
     useMixOptions: {
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     },
     useUI: {
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      dismissSuccessToast: jest.fn(),
-      addMixedPlaylist: jest.fn(),
+      dismissError: vi.fn(),
+      dismissSuccessToast: vi.fn(),
+      addMixedPlaylist: vi.fn(),
     },
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockAppShellProps = {}; // Reset mock props
 
     // Setup default mock returns
-    (store.useAuth as jest.Mock).mockReturnValue(mockStoreReturns.useAuth);
-    (store.usePlaylistSelection as jest.Mock).mockReturnValue(
+    (store.useAuth as import('vitest').Mock).mockReturnValue(
+      mockStoreReturns.useAuth
+    );
+    (store.usePlaylistSelection as import('vitest').Mock).mockReturnValue(
       mockStoreReturns.usePlaylistSelection
     );
-    (store.useRatioConfig as jest.Mock).mockReturnValue(
+    (store.useRatioConfig as import('vitest').Mock).mockReturnValue(
       mockStoreReturns.useRatioConfig
     );
-    (store.useMixOptions as jest.Mock).mockReturnValue(
+    (store.useMixOptions as import('vitest').Mock).mockReturnValue(
       mockStoreReturns.useMixOptions
     );
-    (store.useUI as jest.Mock).mockReturnValue(mockStoreReturns.useUI);
+    (store.useUI as import('vitest').Mock).mockReturnValue(
+      mockStoreReturns.useUI
+    );
   });
 
   afterEach(() => {
@@ -92,7 +101,9 @@ describe('MainApp behavioral coverage', () => {
   describe('authorization code callback behavior', () => {
     beforeEach(() => {
       process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
-      (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue({
+      (
+        spotifyAuth.completeAuthorization as import('vitest').Mock
+      ).mockResolvedValue({
         accessToken: 'FAKE_TOKEN',
         refreshToken: 'FAKE_REFRESH',
         expiresAt: Date.now() + 3600_000,
@@ -100,7 +111,7 @@ describe('MainApp behavioral coverage', () => {
     });
 
     it('does not exchange a code when user is already authenticated', () => {
-      (store.useAuth as jest.Mock).mockReturnValue({
+      (store.useAuth as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.useAuth,
         isAuthenticated: true,
       });
@@ -124,8 +135,8 @@ describe('MainApp behavioral coverage', () => {
     });
 
     it('exchanges the code and stores tokens on success', async () => {
-      const setTokens = jest.fn();
-      (store.useAuth as jest.Mock).mockReturnValue({
+      const setTokens = vi.fn();
+      (store.useAuth as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.useAuth,
         setTokens,
       });
@@ -158,7 +169,9 @@ describe('MainApp behavioral coverage', () => {
     });
 
     it('surfaces an error when the token exchange fails', async () => {
-      (spotifyAuth.completeAuthorization as jest.Mock).mockRejectedValue(
+      (
+        spotifyAuth.completeAuthorization as import('vitest').Mock
+      ).mockRejectedValue(
         new Error('State mismatch in Spotify authorization response')
       );
 
@@ -203,10 +216,12 @@ describe('MainApp behavioral coverage', () => {
 
   describe('preset application behavior', () => {
     it('clears UI error when applying preset and error exists', () => {
-      const setUIError = jest.fn();
-      (store.setUIError as jest.Mock).mockImplementation(setUIError);
+      const setUIError = vi.fn();
+      (store.setUIError as import('vitest').Mock).mockImplementation(
+        setUIError
+      );
 
-      (store.useUI as jest.Mock).mockReturnValue({
+      (store.useUI as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.useUI,
         error: 'Some existing error',
       });
@@ -225,10 +240,12 @@ describe('MainApp behavioral coverage', () => {
     });
 
     it('does not clear UI error when applying preset and no error exists', () => {
-      const setUIError = jest.fn();
-      (store.setUIError as jest.Mock).mockImplementation(setUIError);
+      const setUIError = vi.fn();
+      (store.setUIError as import('vitest').Mock).mockImplementation(
+        setUIError
+      );
 
-      (store.useUI as jest.Mock).mockReturnValue({
+      (store.useUI as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.useUI,
         error: null,
       });
@@ -250,9 +267,9 @@ describe('MainApp behavioral coverage', () => {
   describe('playlist removal behavior', () => {
     it('removes playlist when it exists in selectedPlaylists', () => {
       const mockPlaylist = { id: 'playlist1', name: 'Test Playlist' };
-      const togglePlaylistSelection = jest.fn();
+      const togglePlaylistSelection = vi.fn();
 
-      (store.usePlaylistSelection as jest.Mock).mockReturnValue({
+      (store.usePlaylistSelection as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.usePlaylistSelection,
         selectedPlaylists: [mockPlaylist],
         togglePlaylistSelection,
@@ -267,9 +284,9 @@ describe('MainApp behavioral coverage', () => {
     });
 
     it('does not remove playlist when it does not exist in selectedPlaylists', () => {
-      const togglePlaylistSelection = jest.fn();
+      const togglePlaylistSelection = vi.fn();
 
-      (store.usePlaylistSelection as jest.Mock).mockReturnValue({
+      (store.usePlaylistSelection as import('vitest').Mock).mockReturnValue({
         ...mockStoreReturns.usePlaylistSelection,
         selectedPlaylists: [],
         togglePlaylistSelection,

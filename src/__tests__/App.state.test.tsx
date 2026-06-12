@@ -4,50 +4,50 @@ import '@testing-library/jest-dom';
 import App from '../App';
 import * as store from '../store';
 
-jest.spyOn(store, 'useAuth') as any;
-jest.spyOn(store, 'usePlaylistSelection') as any;
-jest.spyOn(store, 'useRatioConfig') as any;
-jest.spyOn(store, 'useMixOptions') as any;
-jest.spyOn(store, 'useUI') as any;
+vi.spyOn(store, 'useAuth') as any;
+vi.spyOn(store, 'usePlaylistSelection') as any;
+vi.spyOn(store, 'useRatioConfig') as any;
+vi.spyOn(store, 'useMixOptions') as any;
+vi.spyOn(store, 'useUI') as any;
 
 describe('App state handlers (integration surface)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('calls clearAllPlaylists when user clicks Clear All in PlaylistSelector', () => {
-    const clearAllPlaylists = jest.fn();
+    const clearAllPlaylists = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [{ id: 'p1', name: 'P1', tracks: { total: 1 } }],
-      togglePlaylistSelection: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
       clearAllPlaylists,
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: { playlistName: 'x' },
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);

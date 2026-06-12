@@ -1,54 +1,74 @@
 import React from 'react';
-import { act } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 
-// Reuse same mocking approach as the main unit tests
-const mockMixPlaylists = jest.fn();
-jest.mock('../../utils/mixer', () => ({
+import { useMixGeneration } from '../../hooks/useMixGeneration';
+
+// This file tests the real hook; the global setup mock must not apply.
+vi.unmock('../../hooks/useMixGeneration');
+
+// Reuse same mocking approach as the main unit tests. vi.mock factories run
+// during the import phase, so anything they close over must come from
+// vi.hoisted.
+const {
+  mockMixPlaylists,
+  mockGetPlaylistTracks,
+  mockGetUserProfile,
+  mockCreatePlaylist,
+  mockAddTracks,
+  MockSpotifyService,
+} = vi.hoisted(() => {
+  const mockGetPlaylistTracks = vi.fn();
+  const mockGetUserProfile = vi.fn();
+  const mockCreatePlaylist = vi.fn();
+  const mockAddTracks = vi.fn();
+
+  class MockSpotifyService {
+    accessToken: string;
+    constructor(token: string) {
+      this.accessToken = token;
+    }
+    getPlaylistTracks(...args: any[]) {
+      return mockGetPlaylistTracks(...args);
+    }
+    getUserProfile(...args: any[]) {
+      return mockGetUserProfile(...args);
+    }
+    createPlaylist(...args: any[]) {
+      return mockCreatePlaylist(...args);
+    }
+    addTracksToPlaylist(...args: any[]) {
+      return mockAddTracks(...args);
+    }
+  }
+
+  return {
+    mockMixPlaylists: vi.fn(),
+    mockGetPlaylistTracks,
+    mockGetUserProfile,
+    mockCreatePlaylist,
+    mockAddTracks,
+    MockSpotifyService,
+  };
+});
+
+vi.mock('../../utils/mixer', () => ({
   mixPlaylists: (...args: any[]) => mockMixPlaylists(...args),
 }));
 
-const mockGetPlaylistTracks = jest.fn();
-const mockGetUserProfile = jest.fn();
-const mockCreatePlaylist = jest.fn();
-const mockAddTracks = jest.fn();
-
-class MockSpotifyService {
-  accessToken: string;
-  constructor(token: string) {
-    this.accessToken = token;
-  }
-  getPlaylistTracks(...args: any[]) {
-    return mockGetPlaylistTracks(...args);
-  }
-  getUserProfile(...args: any[]) {
-    return mockGetUserProfile(...args);
-  }
-  createPlaylist(...args: any[]) {
-    return mockCreatePlaylist(...args);
-  }
-  addTracksToPlaylist(...args: any[]) {
-    return mockAddTracks(...args);
-  }
-}
-jest.mock('../../services/spotify', () => ({
+vi.mock('../../services/spotify', () => ({
   __esModule: true,
   default: MockSpotifyService,
 }));
 
-const loadHook = () => jest.requireActual('../../hooks/useMixGeneration');
-
 function renderUseMixGeneration(accessToken: string, options: any = {}) {
   const results: any = {};
   function TestComp() {
-    const { useMixGeneration } = loadHook();
     const hookReturn = useMixGeneration(accessToken, options);
     Object.assign(results, hookReturn);
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { render } = require('@testing-library/react');
   render(<TestComp />);
-  return results as ReturnType<ReturnType<typeof loadHook>['useMixGeneration']>;
+  return results as ReturnType<typeof useMixGeneration>;
 }
 
 const makePlaylist = (id: string, name = id) => ({
@@ -66,7 +86,7 @@ const makeTrack = (id: string, sourcePlaylist: string, duration = 180000) => ({
 
 describe('useMixGeneration (extra error cases)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGetPlaylistTracks.mockImplementation(async (pid: string) => ({
       tracks:
         pid === 'p1'
@@ -81,7 +101,7 @@ describe('useMixGeneration (extra error cases)', () => {
     mockCreatePlaylist.mockImplementation(async () => {
       throw new Error('create failed');
     });
-    const onError = jest.fn();
+    const onError = vi.fn();
     const utils = renderUseMixGeneration('token', { onError });
 
     let generated: any = [];
@@ -105,7 +125,7 @@ describe('useMixGeneration (extra error cases)', () => {
     mockAddTracks.mockImplementation(async () => {
       throw new Error('add tracks failed');
     });
-    const onError = jest.fn();
+    const onError = vi.fn();
     const utils = renderUseMixGeneration('token', { onError });
 
     const generated = await act(async () =>

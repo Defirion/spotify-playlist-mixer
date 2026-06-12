@@ -20,7 +20,7 @@ const waitForRedirect = async (): Promise<URL> => {
 
 describe('SpotifyAuth', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     sessionStorage.clear();
     // Mock window.location
     delete (window as any).location;
@@ -158,7 +158,7 @@ describe('SpotifyAuth', () => {
 
   it('calls onError when client ID is not configured', async () => {
     const user = userEvent.setup();
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
 
     // Temporarily set process.env.REACT_APP_SPOTIFY_CLIENT_ID to undefined
     // for this specific test case
@@ -186,10 +186,10 @@ describe('SpotifyAuth', () => {
 
   it('calls onError when an exception occurs during login', async () => {
     const user = userEvent.setup();
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
 
     // Make PKCE generation fail
-    const getRandomValuesSpy = jest
+    const getRandomValuesSpy = vi
       .spyOn(crypto, 'getRandomValues')
       .mockImplementation(() => {
         throw new Error('Crypto failed');
@@ -198,9 +198,7 @@ describe('SpotifyAuth', () => {
     render(<SpotifyAuth onError={mockOnError} />);
 
     // Suppress console errors for this test
-    const consoleSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await user.click(
       screen.getByRole('button', { name: 'Connect Spotify Account' })
@@ -221,7 +219,7 @@ describe('SpotifyAuth', () => {
 
   it('calls onAuth callback when provided (integration test)', async () => {
     const user = userEvent.setup();
-    const mockOnAuth = jest.fn();
+    const mockOnAuth = vi.fn();
 
     render(<SpotifyAuth onAuth={mockOnAuth} />);
 
@@ -320,10 +318,10 @@ describe('SpotifyAuth', () => {
 
   it('handles non-Error objects in catch block', async () => {
     const user = userEvent.setup();
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
 
     // Make PKCE generation throw a non-Error object
-    const getRandomValuesSpy = jest
+    const getRandomValuesSpy = vi
       .spyOn(crypto, 'getRandomValues')
       .mockImplementation(() => {
         // eslint-disable-next-line no-throw-literal
@@ -333,9 +331,7 @@ describe('SpotifyAuth', () => {
     render(<SpotifyAuth onError={mockOnError} />);
 
     // Suppress console errors for this test
-    const consoleSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await user.click(
       screen.getByRole('button', { name: 'Connect Spotify Account' })

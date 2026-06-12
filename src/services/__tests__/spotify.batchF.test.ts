@@ -1,8 +1,7 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import '../../jest.polyfills';
 // Use local mocks and capture sinks for network simulation in tests
 import { ApiError } from '../../services/apiErrorHandler';
 
@@ -39,7 +38,7 @@ class TestMockSpotifyService {
             res && typeof res,
             res && Object.keys(res),
             typeof res === 'object'
-              ? require('util').inspect(res, { depth: 1 })
+              ? (await import('util')).inspect(res, { depth: 1 })
               : res
           );
         } catch (e) {
@@ -484,7 +483,7 @@ describe('SpotifyService - Batch F (batching, params, search, audio features, re
     const service = new SpotifyService(ACCESS_TOKEN);
 
     // Mock the method to return expected result
-    service.getPlaylist = jest.fn().mockResolvedValue({
+    service.getPlaylist = vi.fn().mockResolvedValue({
       id: 'playlist_1',
       name: 'PL Name',
       description: 'desc',
@@ -513,7 +512,7 @@ describe('SpotifyService - Batch F (batching, params, search, audio features, re
     ).rejects.toBeInstanceOf(ApiError);
 
     // Then mock successful response
-    service.searchPlaylists = jest.fn().mockResolvedValue({
+    service.searchPlaylists = vi.fn().mockResolvedValue({
       playlists: [{ id: 'p1', name: 'p' }],
       total: 1,
       limit: 20,
@@ -529,7 +528,7 @@ describe('SpotifyService - Batch F (batching, params, search, audio features, re
     // Stub global.fetch directly for this retry test to avoid MSW interop errors
     const originalFetch = (global as any).fetch;
     // @ts-ignore
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockImplementation(async (_url: string, _opts: any) => {
         calls++;

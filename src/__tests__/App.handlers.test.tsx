@@ -7,114 +7,134 @@ import * as store from '../store';
 import * as spotifyAuth from '../services/spotifyAuth';
 
 // Mock the auth service so no real token exchange happens
-jest.mock('../services/spotifyAuth', () => ({
-  ...jest.requireActual('../services/spotifyAuth'),
-  completeAuthorization: jest.fn(),
-  refreshAccessToken: jest.fn(),
+vi.mock('../services/spotifyAuth', async () => ({
+  ...(await vi.importActual('../services/spotifyAuth')),
+  completeAuthorization: vi.fn(),
+  refreshAccessToken: vi.fn(),
 }));
 
 // Mock the heavy child components so we can trigger the callbacks provided by App
-jest.mock('../components/PlaylistSelector', () => (props: any) => {
-  return (
-    <div>
-      <button
-        onClick={() => props.onPlaylistSelect({ id: 'p-mock', name: 'Mock' })}
-      >
-        Select Mock Playlist
-      </button>
-      <button onClick={() => props.onClearAll && props.onClearAll()}>
-        Clear All Mock
-      </button>
-    </div>
-  );
-});
+vi.mock('../components/PlaylistSelector', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <button
+          onClick={() => props.onPlaylistSelect({ id: 'p-mock', name: 'Mock' })}
+        >
+          Select Mock Playlist
+        </button>
+        <button onClick={() => props.onClearAll && props.onClearAll()}>
+          Clear All Mock
+        </button>
+      </div>
+    );
+  },
+}));
 
-jest.mock('../components/PresetTemplates', () => (props: any) => {
-  return (
-    <div>
-      <button
-        aria-label="Apply Mock preset"
-        onClick={() =>
-          props.onApplyPreset &&
-          props.onApplyPreset({
-            ratioConfig: {
-              'p-mock': { min: 1, max: 2, weight: 1, weightType: 'frequency' },
-            },
-            strategy: 'mid-peak',
-            settings: { recencyBoost: true },
-            presetName: 'Mock Preset',
-          })
-        }
-      >
-        Apply Mock Preset
-      </button>
-    </div>
-  );
-});
+vi.mock('../components/PresetTemplates', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <button
+          aria-label="Apply Mock preset"
+          onClick={() =>
+            props.onApplyPreset &&
+            props.onApplyPreset({
+              ratioConfig: {
+                'p-mock': {
+                  min: 1,
+                  max: 2,
+                  weight: 1,
+                  weightType: 'frequency',
+                },
+              },
+              strategy: 'mid-peak',
+              settings: { recencyBoost: true },
+              presetName: 'Mock Preset',
+            })
+          }
+        >
+          Apply Mock Preset
+        </button>
+      </div>
+    );
+  },
+}));
 
 // Mock ToastError to expose a dismiss button that calls provided onDismiss
-jest.mock('../components/ToastError', () => (props: any) => {
-  return (
-    <div>
-      {props.error && (
-        <button onClick={() => props.onDismiss && props.onDismiss()}>
-          Dismiss Error
-        </button>
-      )}
-    </div>
-  );
-});
+vi.mock('../components/ToastError', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        {props.error && (
+          <button onClick={() => props.onDismiss && props.onDismiss()}>
+            Dismiss Error
+          </button>
+        )}
+      </div>
+    );
+  },
+}));
 
 // Mock SuccessToast to expose a dismiss action
-jest.mock('../components/SuccessToast', () => (props: any) => {
-  return (
-    <div>
-      {props.mixedPlaylists && (
-        <button onClick={() => props.onDismiss && props.onDismiss('id')}>
-          Dismiss Success
-        </button>
-      )}
-    </div>
-  );
-});
+vi.mock('../components/SuccessToast', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        {props.mixedPlaylists && (
+          <button onClick={() => props.onDismiss && props.onDismiss('id')}>
+            Dismiss Success
+          </button>
+        )}
+      </div>
+    );
+  },
+}));
 
 // Mock PlaylistMixer to call onMixedPlaylist when its mock button is clicked
-jest.mock('../components/PlaylistMixer', () => (props: any) => {
-  return (
-    <div>
-      <button
-        onClick={() =>
-          props.onMixedPlaylist && props.onMixedPlaylist({ id: 'mixed-1' })
-        }
-      >
-        Trigger Mixed
-      </button>
-    </div>
-  );
-});
+vi.mock('../components/PlaylistMixer', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <button
+          onClick={() =>
+            props.onMixedPlaylist && props.onMixedPlaylist({ id: 'mixed-1' })
+          }
+        >
+          Trigger Mixed
+        </button>
+      </div>
+    );
+  },
+}));
 
-jest.spyOn(store, 'useAuth') as any;
-jest.spyOn(store, 'usePlaylistSelection') as any;
-jest.spyOn(store, 'useRatioConfig') as any;
-jest.spyOn(store, 'useMixOptions') as any;
-jest.spyOn(store, 'useUI') as any;
-jest.spyOn(store, 'setUIError') as any;
+vi.spyOn(store, 'useAuth') as any;
+vi.spyOn(store, 'usePlaylistSelection') as any;
+vi.spyOn(store, 'useRatioConfig') as any;
+vi.spyOn(store, 'useMixOptions') as any;
+vi.spyOn(store, 'useUI') as any;
+vi.spyOn(store, 'setUIError') as any;
 
 describe('App handlers (direct callback surface)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('exchanges ?code= from window.location.search and calls setTokens', async () => {
-    const setTokens = jest.fn();
+    const setTokens = vi.fn();
     const fakeTokens = {
       accessToken: 'devtoken123',
       refreshToken: 'devrefresh',
       expiresAt: Date.now() + 3600_000,
     };
-    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue(
-      fakeTokens
-    );
+    (
+      spotifyAuth.completeAuthorization as import('vitest').Mock
+    ).mockResolvedValue(fakeTokens);
 
     // simulate OAuth redirect query params
     window.history.replaceState({}, '', '/?code=devcode123&state=devstate');
@@ -124,34 +144,34 @@ describe('App handlers (direct callback surface)', () => {
       refreshToken: null,
       tokenExpiresAt: null,
       isAuthenticated: false,
-      setAccessToken: jest.fn(),
+      setAccessToken: vi.fn(),
       setTokens,
-      clearAuth: jest.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     const prevClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
@@ -173,38 +193,38 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('calls togglePlaylistSelection when PlaylistSelector triggers selection', () => {
-    const togglePlaylistSelection = jest.fn();
+    const togglePlaylistSelection = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
       togglePlaylistSelection,
-      clearAllPlaylists: jest.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);
@@ -221,20 +241,20 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('applies preset: calls setRatioConfigBulk and applyPresetOptions and clears UI error when present', () => {
-    const setRatioConfigBulk = jest.fn();
-    const applyPresetOptions = jest.fn();
+    const setRatioConfigBulk = vi.fn();
+    const applyPresetOptions = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [{ id: 'p-mock', name: 'Mock', tracks: { total: 1 } }],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
@@ -244,16 +264,16 @@ describe('App handlers (direct callback surface)', () => {
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
       applyPresetOptions,
     });
 
     (store.useUI as any).mockReturnValue({
       error: { message: 'previous error' },
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);
@@ -273,38 +293,38 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('dismisses error when ToastError dismiss is triggered', () => {
-    const dismissError = jest.fn();
+    const dismissError = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: { message: 'err' },
       mixedPlaylists: [],
       dismissError,
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);
@@ -316,37 +336,37 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('dismisses success toast when SuccessToast dismiss is triggered', () => {
-    const dismissSuccessToast = jest.fn();
+    const dismissSuccessToast = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [{ id: 'p1', name: 'P1', tracks: { total: 1 } }],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: ['m1'],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
       dismissSuccessToast,
     });
 
@@ -359,13 +379,13 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('forwards onMixedPlaylist from PlaylistMixer to addMixedPlaylist', () => {
-    const addMixedPlaylist = jest.fn();
+    const addMixedPlaylist = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
@@ -373,27 +393,27 @@ describe('App handlers (direct callback surface)', () => {
         { id: 'p1', name: 'P1', tracks: { total: 1 } },
         { id: 'p2', name: 'P2', tracks: { total: 1 } },
       ],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
+      dismissError: vi.fn(),
       addMixedPlaylist,
-      dismissSuccessToast: jest.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);
@@ -405,20 +425,20 @@ describe('App handlers (direct callback surface)', () => {
   });
 
   it('does NOT call setUIError when applying a preset and there is no UI error', () => {
-    const setRatioConfigBulk = jest.fn();
-    const applyPresetOptions = jest.fn();
+    const setRatioConfigBulk = vi.fn();
+    const applyPresetOptions = vi.fn();
 
     (store.useAuth as any).mockReturnValue({
       accessToken: 't',
       isAuthenticated: true,
-      setAccessToken: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [{ id: 'p-mock', name: 'Mock', tracks: { total: 1 } }],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
@@ -428,16 +448,16 @@ describe('App handlers (direct callback surface)', () => {
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
       applyPresetOptions,
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);
@@ -457,34 +477,34 @@ describe('App handlers (direct callback surface)', () => {
       refreshToken: null,
       tokenExpiresAt: null,
       isAuthenticated: false,
-      setAccessToken: jest.fn(),
-      setTokens: jest.fn(),
-      clearAuth: jest.fn(),
+      setAccessToken: vi.fn(),
+      setTokens: vi.fn(),
+      clearAuth: vi.fn(),
     });
 
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
 
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
 
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
 
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
-      dismissSuccessToast: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
+      dismissSuccessToast: vi.fn(),
     });
 
     render(<App />);

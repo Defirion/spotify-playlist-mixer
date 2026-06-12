@@ -9,7 +9,7 @@ describe('End-to-end mixing flow (integration)', () => {
     // Ensure app is authenticated so PlaylistSelector is shown.
     // Use the store API to set an access token before mounting the App.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const store = require('../../store');
+    const store = await import('../../store');
     if (store && store.useAppStore && store.useAppStore.getState) {
       store.useAppStore.getState().setAccessToken('mock_access_token');
     }

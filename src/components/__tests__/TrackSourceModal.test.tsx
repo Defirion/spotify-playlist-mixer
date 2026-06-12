@@ -5,17 +5,17 @@ import '@testing-library/jest-dom';
 
 // Mock Modal and DnD wrapper components to keep tests focused
 /* eslint-disable import/first */
-jest.mock('../ui/Modal', () => ({
+vi.mock('../ui/Modal', () => ({
   __esModule: true,
   default: ({ children }: any) => <div>{children}</div>,
 }));
 
-jest.mock('../SortableWrapper', () => ({
+vi.mock('../SortableWrapper', () => ({
   __esModule: true,
   default: ({ children }: any) => <div>{children}</div>,
 }));
 
-jest.mock('../ui/TrackItem', () => ({
+vi.mock('../ui/TrackItem', () => ({
   __esModule: true,
   default: ({ track, onSelect }: any) => (
     <div
@@ -32,19 +32,19 @@ jest.mock('../ui/TrackItem', () => ({
   ),
 }));
 
-const mockUseTrackSelection = jest.fn();
-jest.mock('../../hooks/useTrackSelection', () => ({
+const mockUseTrackSelection = vi.fn();
+vi.mock('../../hooks/useTrackSelection', () => ({
   useTrackSelection: (opts: any) => mockUseTrackSelection(opts),
 }));
 
 import TrackSourceModal from '../TrackSourceModal';
 
 describe('TrackSourceModal', () => {
-  let _consoleLogSpy: jest.SpyInstance | undefined;
+  let _consoleLogSpy: import('vitest').MockInstance | undefined;
   beforeEach(() => {
     mockUseTrackSelection.mockReset();
     // suppress noisy debug logs during passing runs
-    _consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    _consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
   afterEach(() => {
     _consoleLogSpy?.mockRestore?.();
@@ -53,9 +53,9 @@ describe('TrackSourceModal', () => {
   it('shows empty message when no tracks', () => {
     mockUseTrackSelection.mockReturnValue({
       selectedTracksToAdd: new Set(),
-      handleTrackSelect: jest.fn(),
-      handleAddSelected: jest.fn(),
-      clearSelection: jest.fn(),
+      handleTrackSelect: vi.fn(),
+      handleAddSelected: vi.fn(),
+      clearSelection: vi.fn(),
     });
 
     render(
@@ -78,9 +78,9 @@ describe('TrackSourceModal', () => {
   it('shows simple error message for Error instance', () => {
     mockUseTrackSelection.mockReturnValue({
       selectedTracksToAdd: new Set(),
-      handleTrackSelect: jest.fn(),
-      handleAddSelected: jest.fn(),
-      clearSelection: jest.fn(),
+      handleTrackSelect: vi.fn(),
+      handleAddSelected: vi.fn(),
+      clearSelection: vi.fn(),
     });
 
     render(
@@ -103,14 +103,14 @@ describe('TrackSourceModal', () => {
   });
 
   it('calls onSearchQueryChange and onManualSearch when appropriate', () => {
-    const onSearchQueryChange = jest.fn();
-    const onManualSearch = jest.fn();
+    const onSearchQueryChange = vi.fn();
+    const onManualSearch = vi.fn();
 
     mockUseTrackSelection.mockReturnValue({
       selectedTracksToAdd: new Set(),
-      handleTrackSelect: jest.fn(),
-      handleAddSelected: jest.fn(),
-      clearSelection: jest.fn(),
+      handleTrackSelect: vi.fn(),
+      handleAddSelected: vi.fn(),
+      clearSelection: vi.fn(),
     });
 
     render(
@@ -192,8 +192,8 @@ describe('TrackSourceModal', () => {
       external_urls: { spotify: '' },
     };
 
-    const handleAddSelected = jest.fn();
-    const handleTrackSelect = jest.fn((track: any) => {
+    const handleAddSelected = vi.fn();
+    const handleTrackSelect = vi.fn((track: any) => {
       // simulate selection by mutating the set
     });
 
@@ -201,7 +201,7 @@ describe('TrackSourceModal', () => {
       selectedTracksToAdd: new Set(['t1']),
       handleTrackSelect,
       handleAddSelected,
-      clearSelection: jest.fn(),
+      clearSelection: vi.fn(),
     });
 
     render(
@@ -260,9 +260,9 @@ describe('TrackSourceModal', () => {
 
     mockUseTrackSelection.mockReturnValue({
       selectedTracksToAdd: new Set(),
-      handleTrackSelect: jest.fn(),
-      handleAddSelected: jest.fn(),
-      clearSelection: jest.fn(),
+      handleTrackSelect: vi.fn(),
+      handleAddSelected: vi.fn(),
+      clearSelection: vi.fn(),
     });
 
     render(

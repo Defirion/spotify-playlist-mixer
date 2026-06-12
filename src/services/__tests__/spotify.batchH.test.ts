@@ -1,50 +1,51 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import SpotifyService from '../../services/spotify';
 import { ApiError, ERROR_TYPES } from '../../services/apiErrorHandler';
 
 // Mock SpotifyService with Jest method mocks
-jest.mock('../../services/spotify', () => {
+vi.mock('../../services/spotify', () => {
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      getPlaylistTracks: jest.fn(),
-      getPlaylists: jest.fn(),
-      getUserProfile: jest.fn(),
-      createPlaylist: jest.fn(),
-      addTracksToPlaylist: jest.fn(),
-      removeTracksFromPlaylist: jest.fn(),
-      getPlaylist: jest.fn(),
-      getTrack: jest.fn(),
-      searchTracks: jest.fn(),
-      getRecommendations: jest.fn(),
-    })),
+    default: vi.fn().mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: vi.fn(),
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: vi.fn(),
+        removeTracksFromPlaylist: vi.fn(),
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      };
+    }),
   };
 });
 
 describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
   test('addTracksToPlaylist fails when second batch returns 500 and no retry available', async () => {
-    const mockAddTracksToPlaylist = jest.fn();
-    const MockSpotifyService = SpotifyService as jest.MockedClass<
+    const mockAddTracksToPlaylist = vi.fn();
+    const MockSpotifyService = SpotifyService as import('vitest').MockedClass<
       typeof SpotifyService
     >;
-    MockSpotifyService.mockImplementation(
-      () =>
-        ({
-          getPlaylistTracks: jest.fn(),
-          getPlaylists: jest.fn(),
-          getUserProfile: jest.fn(),
-          createPlaylist: jest.fn(),
-          addTracksToPlaylist: mockAddTracksToPlaylist,
-          removeTracksFromPlaylist: jest.fn(),
-          getPlaylist: jest.fn(),
-          getTrack: jest.fn(),
-          searchTracks: jest.fn(),
-          getRecommendations: jest.fn(),
-        }) as any
-    );
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: vi.fn(),
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: mockAddTracksToPlaylist,
+        removeTracksFromPlaylist: vi.fn(),
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      } as any;
+    });
 
     // Mock to simulate batch failure with ApiError
     const errorObj = new Error('Server error');
@@ -66,25 +67,24 @@ describe('SpotifyService - Batch H (multi-batch errors & retry)', () => {
   });
 
   test('removeTracksFromPlaylist retries on transient 429 then succeeds', async () => {
-    const mockRemoveTracksFromPlaylist = jest.fn();
-    const MockSpotifyService = SpotifyService as jest.MockedClass<
+    const mockRemoveTracksFromPlaylist = vi.fn();
+    const MockSpotifyService = SpotifyService as import('vitest').MockedClass<
       typeof SpotifyService
     >;
-    MockSpotifyService.mockImplementation(
-      () =>
-        ({
-          getPlaylistTracks: jest.fn(),
-          getPlaylists: jest.fn(),
-          getUserProfile: jest.fn(),
-          createPlaylist: jest.fn(),
-          addTracksToPlaylist: jest.fn(),
-          removeTracksFromPlaylist: mockRemoveTracksFromPlaylist,
-          getPlaylist: jest.fn(),
-          getTrack: jest.fn(),
-          searchTracks: jest.fn(),
-          getRecommendations: jest.fn(),
-        }) as any
-    );
+    MockSpotifyService.mockImplementation(function (this: unknown) {
+      return {
+        getPlaylistTracks: vi.fn(),
+        getPlaylists: vi.fn(),
+        getUserProfile: vi.fn(),
+        createPlaylist: vi.fn(),
+        addTracksToPlaylist: vi.fn(),
+        removeTracksFromPlaylist: mockRemoveTracksFromPlaylist,
+        getPlaylist: vi.fn(),
+        getTrack: vi.fn(),
+        searchTracks: vi.fn(),
+        getRecommendations: vi.fn(),
+      } as any;
+    });
 
     // Mock successful response after retry logic
     mockRemoveTracksFromPlaylist.mockResolvedValue({

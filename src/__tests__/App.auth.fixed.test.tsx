@@ -5,35 +5,35 @@ import App from '../App';
 import * as store from '../store';
 import * as spotifyAuth from '../services/spotifyAuth';
 
-jest.spyOn(store, 'useAuth') as any;
-jest.spyOn(store, 'usePlaylistSelection') as any;
-jest.spyOn(store, 'useRatioConfig') as any;
-jest.spyOn(store, 'useMixOptions') as any;
-jest.spyOn(store, 'useUI') as any;
+vi.spyOn(store, 'useAuth') as any;
+vi.spyOn(store, 'usePlaylistSelection') as any;
+vi.spyOn(store, 'useRatioConfig') as any;
+vi.spyOn(store, 'useMixOptions') as any;
+vi.spyOn(store, 'useUI') as any;
 
-jest.mock('../services/spotifyAuth', () => ({
-  ...jest.requireActual('../services/spotifyAuth'),
-  completeAuthorization: jest.fn(),
+vi.mock('../services/spotifyAuth', async () => ({
+  ...(await vi.importActual('../services/spotifyAuth')),
+  completeAuthorization: vi.fn(),
 }));
 
 describe('App auth code callback handling (fixed file)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
     window.history.replaceState({}, '', '/');
   });
 
   it('exchanges the authorization code and stores the tokens when not authenticated', async () => {
-    const setAccessToken = jest.fn();
-    const setTokens = jest.fn();
+    const setAccessToken = vi.fn();
+    const setTokens = vi.fn();
     const fakeTokens = {
       accessToken: 'FAKE_TOKEN',
       refreshToken: 'FAKE_REFRESH',
       expiresAt: Date.now() + 3600_000,
     };
-    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue(
-      fakeTokens
-    );
+    (
+      spotifyAuth.completeAuthorization as import('vitest').Mock
+    ).mockResolvedValue(fakeTokens);
 
     (store.useAuth as any).mockReturnValue({
       accessToken: null,
@@ -42,27 +42,27 @@ describe('App auth code callback handling (fixed file)', () => {
       isAuthenticated: false,
       setAccessToken,
       setTokens,
-      clearAuth: jest.fn(),
+      clearAuth: vi.fn(),
     });
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
-      togglePlaylistSelection: jest.fn(),
-      clearAllPlaylists: jest.fn(),
+      togglePlaylistSelection: vi.fn(),
+      clearAllPlaylists: vi.fn(),
     });
     (store.useRatioConfig as any).mockReturnValue({
       ratioConfig: {},
-      setRatioConfigBulk: jest.fn(),
+      setRatioConfigBulk: vi.fn(),
     });
     (store.useMixOptions as any).mockReturnValue({
       mixOptions: {},
-      updateMixOptions: jest.fn(),
-      applyPresetOptions: jest.fn(),
+      updateMixOptions: vi.fn(),
+      applyPresetOptions: vi.fn(),
     });
     (store.useUI as any).mockReturnValue({
       error: null,
       mixedPlaylists: [],
-      dismissError: jest.fn(),
-      addMixedPlaylist: jest.fn(),
+      dismissError: vi.fn(),
+      addMixedPlaylist: vi.fn(),
     });
 
     window.history.replaceState({}, '', '/?code=FAKE_CODE&state=FAKE_STATE');

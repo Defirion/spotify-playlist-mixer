@@ -5,22 +5,24 @@ import AppProviders from '../../AppProviders';
 import * as spotifyAuth from '../../services/spotifyAuth';
 
 // Mock the auth service so no real token exchange happens
-jest.mock('../../services/spotifyAuth', () => ({
-  ...jest.requireActual('../../services/spotifyAuth'),
-  completeAuthorization: jest.fn(),
-  refreshAccessToken: jest.fn(),
+vi.mock('../../services/spotifyAuth', async () => ({
+  ...(await vi.importActual('../../services/spotifyAuth')),
+  completeAuthorization: vi.fn(),
+  refreshAccessToken: vi.fn(),
 }));
 
 describe('App (unit) - routes and auth handling', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Ensure no leftover auth params between tests
     window.history.replaceState({}, '', '/');
   });
 
   it('exchanges ?code= from the redirect and sets auth state', async () => {
     process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
-    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue({
+    (
+      spotifyAuth.completeAuthorization as import('vitest').Mock
+    ).mockResolvedValue({
       accessToken: 'unit_test_token_abc123',
       refreshToken: null,
       expiresAt: Date.now() + 3600_000,

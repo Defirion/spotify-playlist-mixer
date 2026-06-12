@@ -2,7 +2,7 @@ import { ApiError, ApiErrorHandler, ERROR_TYPES } from './apiErrorHandler';
 
 describe('ApiErrorHandler & ApiError', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('classifies network-like errors and timeout', () => {
@@ -158,7 +158,7 @@ describe('ApiErrorHandler & ApiError', () => {
     };
 
     // speed up delays by stubbing getRetryDelay to 0
-    jest.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
+    vi.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
 
     const res = await h.withRetry(apiCall);
     expect(res).toBe('ok');
@@ -174,7 +174,7 @@ describe('ApiErrorHandler & ApiError', () => {
       throw e;
     };
 
-    jest.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
+    vi.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
 
     await expect(h.withRetry(apiCall)).rejects.toBeInstanceOf(ApiError);
     expect(calls).toBeGreaterThan(1); // should have retried
@@ -220,7 +220,7 @@ describe('ApiErrorHandler & ApiError', () => {
       return 'success';
     };
 
-    jest.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
+    vi.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
 
     const wrapped = h.wrapApiCallWithRetry(flaky);
     const result = await wrapped();
@@ -229,7 +229,7 @@ describe('ApiErrorHandler & ApiError', () => {
   });
 
   it('handleError calls onError callback and returns ApiError', () => {
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
     const h = new ApiErrorHandler({
       onError: mockOnError,
       enableLogging: false,
@@ -260,7 +260,7 @@ describe('ApiErrorHandler & ApiError', () => {
   });
 
   it('logs network messages with deduplication', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const h = new ApiErrorHandler({ enableLogging: true });
 
     const networkErr1: any = {
@@ -291,7 +291,7 @@ describe('ApiErrorHandler & ApiError', () => {
   });
 
   it('uses default error handler when none provided', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const h = new ApiErrorHandler({ enableLogging: true });
 
     const err: any = { response: { status: 500 } };

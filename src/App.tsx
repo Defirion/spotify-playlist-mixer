@@ -15,6 +15,7 @@ import {
   useUI,
   setUIError,
 } from './store';
+import { getSpotifyClientId } from './config';
 import styles from './App.module.css';
 
 export function MainApp() {
@@ -63,7 +64,7 @@ export function MainApp() {
       return;
     }
 
-    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const clientId = getSpotifyClientId();
     if (!clientId) {
       setUIError(new Error('Spotify Client ID is not configured'));
       return;
@@ -84,7 +85,7 @@ export function MainApp() {
   useEffect(() => {
     if (!refreshToken || !tokenExpiresAt) return;
 
-    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const clientId = getSpotifyClientId();
     if (!clientId) return;
 
     const refreshIn = Math.max(tokenExpiresAt - Date.now() - 60_000, 0);

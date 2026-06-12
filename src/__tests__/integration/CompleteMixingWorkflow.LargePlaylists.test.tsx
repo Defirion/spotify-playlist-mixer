@@ -6,8 +6,8 @@ import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactor
 import PlaylistMixer from '../../components/PlaylistMixer';
 
 // Large playlists should still run quickly in tests using lightweight tracks
-jest.mock('../../hooks/useMixPreview', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixPreviewModule(
+vi.mock('../../hooks/useMixPreview', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixPreviewModule(
     async (cfg: any) => {
       const tracks = cfg.playlists
         .flatMap((p: any) => p._resolvedTracks || [])
@@ -17,8 +17,8 @@ jest.mock('../../hooks/useMixPreview', () =>
   )
 );
 
-jest.mock('../../hooks/useMixGeneration', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule(
+vi.mock('../../hooks/useMixGeneration', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule(
     async (cfg: any) => {
       const tracks = cfg.playlists
         .flatMap((p: any) => p._resolvedTracks || [])
@@ -29,7 +29,7 @@ jest.mock('../../hooks/useMixGeneration', () =>
 );
 
 describe('Complete mixing workflow - large playlists (hook-mocked)', () => {
-  test('handles large playlist sets quickly', () => {
+  test('handles large playlist sets quickly', async () => {
     // Create a couple of 'large' playlists but with lightweight track objects
     const p1 = makePlaylistWithTracks({ id: 'large1', name: 'Large 1' }, 500);
     const p2 = makePlaylistWithTracks({ id: 'large2', name: 'Large 2' }, 400);
@@ -51,12 +51,14 @@ describe('Complete mixing workflow - large playlists (hook-mocked)', () => {
       screen.getByRole('button', { name: /generate preview/i })
     ).toBeInTheDocument();
     expect(
-      typeof (require('../../hooks/useMixPreview') as any).useMixPreview()
-        ._previewFn
+      typeof (
+        (await import('../../hooks/useMixPreview')) as any
+      ).useMixPreview()._previewFn
     ).toBe('function');
     expect(
-      typeof (require('../../hooks/useMixGeneration') as any).useMixGeneration()
-        ._mixFn
+      typeof (
+        (await import('../../hooks/useMixGeneration')) as any
+      ).useMixGeneration()._mixFn
     ).toBe('function');
   });
 });

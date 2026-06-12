@@ -10,8 +10,10 @@ interface ProgressData {
 }
 
 // Hook options interface
-interface UsePlaylistTracksOptions
-  extends Omit<GetPlaylistTracksOptions, 'onProgress'> {
+interface UsePlaylistTracksOptions extends Omit<
+  GetPlaylistTracksOptions,
+  'onProgress'
+> {
   autoFetch?: boolean;
   onProgress?: (progress: ProgressData) => void;
 }

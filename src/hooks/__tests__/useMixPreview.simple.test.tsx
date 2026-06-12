@@ -5,18 +5,15 @@ import { render, waitFor } from '@testing-library/react';
 import { useMixPreview } from '../../hooks/useMixPreview';
 
 // Mock mixer first
-const mockMixPlaylists = jest.fn();
-jest.mock('../../utils/mixer', () => ({
+const mockMixPlaylists = vi.fn();
+vi.mock('../../utils/mixer', () => ({
   mixPlaylists: (...args: any[]) => mockMixPlaylists(...args),
 }));
 
 // Mock SpotifyService
-const mockGetPlaylistTracks = jest.fn();
-jest.mock('../../services/spotify', () => {
-  return jest.fn().mockImplementation(function (
-    this: any,
-    accessToken: string
-  ) {
+const mockGetPlaylistTracks = vi.fn();
+vi.mock('../../services/spotify', () => {
+  return vi.fn().mockImplementation(function (this: any, accessToken: string) {
     console.log(
       'SpotifyService constructor called with accessToken:',
       accessToken
@@ -32,7 +29,7 @@ jest.mock('../../services/spotify', () => {
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 function makePlaylist(id: string, name = 'pl') {
@@ -58,11 +55,11 @@ function Harness({ accessToken, onHookReady, onError }: any) {
 
 test('mocks work correctly', async () => {
   // Verify mock is set up
-  const { mixPlaylists } = require('../../utils/mixer');
+  const { mixPlaylists } = await import('../../utils/mixer');
   expect(typeof mixPlaylists).toBe('function');
 
   mockMixPlaylists.mockReturnValueOnce([]);
-  const result = mixPlaylists({}, {}, {});
+  const result = mixPlaylists({}, {}, {} as any);
   expect(mockMixPlaylists).toHaveBeenCalled();
   expect(result).toEqual([]);
 });

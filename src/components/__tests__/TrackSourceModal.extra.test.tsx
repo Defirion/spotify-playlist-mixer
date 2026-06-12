@@ -12,25 +12,25 @@ import TrackSourceModal from '../TrackSourceModal';
 
 // Mock generateTrackInstanceId to control and observe calls while preserving other utilities
 const seq: string[] = ['init-1', 'init-2', 'regen-1'];
-jest.mock('../../utils/trackUtils', () => {
-  const actual = jest.requireActual('../../utils/trackUtils');
+vi.mock('../../utils/trackUtils', async () => {
+  const actual = await vi.importActual('../../utils/trackUtils');
   return {
     ...actual,
-    generateTrackInstanceId: jest.fn(() => seq.shift()),
+    generateTrackInstanceId: vi.fn(() => seq.shift()),
   };
 });
 
 const baseProps = {
   isOpen: true,
-  onClose: jest.fn(),
+  onClose: vi.fn(),
   title: 'Choose',
   className: '',
   tracks: [],
   loading: false,
   error: null,
-  onAddTracks: jest.fn(),
+  onAddTracks: vi.fn(),
   searchQuery: '',
-  onSearchQueryChange: jest.fn(),
+  onSearchQueryChange: vi.fn(),
   searchPlaceholder: 'Search tracks, artists, or albums...',
   showSearchButton: false,
   onManualSearch: undefined,
@@ -48,7 +48,7 @@ describe('TrackSourceModal branches', () => {
   });
 
   test('pressing Enter triggers onManualSearch when provided', () => {
-    const onManual = jest.fn();
+    const onManual = vi.fn();
     const props = {
       ...baseProps,
       onManualSearch: onManual,
@@ -68,7 +68,7 @@ describe('TrackSourceModal branches', () => {
     ];
 
     // spy on console.log so we can assert the handler ran
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     render(<TrackSourceModal {...baseProps} tracks={tracks} />);
 

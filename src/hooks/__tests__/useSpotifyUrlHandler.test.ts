@@ -4,8 +4,8 @@ import { getSpotifyApi } from '../../utils/spotify';
 import { SpotifyPlaylist } from '../../types';
 
 // Mock the Spotify API utility
-jest.mock('../../utils/spotify');
-const mockGetSpotifyApi = getSpotifyApi as jest.MockedFunction<
+vi.mock('../../utils/spotify');
+const mockGetSpotifyApi = getSpotifyApi as import('vitest').MockedFunction<
   typeof getSpotifyApi
 >;
 
@@ -53,9 +53,9 @@ const mockTracksResponse = {
 };
 
 describe('useSpotifyUrlHandler', () => {
-  const mockGet = jest.fn();
-  const mockOnPlaylistSelect = jest.fn();
-  const mockOnError = jest.fn();
+  const mockGet = vi.fn();
+  const mockOnPlaylistSelect = vi.fn();
+  const mockOnError = vi.fn();
 
   const defaultProps: {
     accessToken: string | null;
@@ -70,7 +70,7 @@ describe('useSpotifyUrlHandler', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockGetSpotifyApi.mockReturnValue({
       get: mockGet,
@@ -81,9 +81,9 @@ describe('useSpotifyUrlHandler', () => {
   });
 
   // Silence console.error for tests that intentionally trigger errors.
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy.mockRestore();
@@ -371,7 +371,9 @@ describe('useSpotifyUrlHandler', () => {
     });
 
     it('handles generic errors', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
       const genericError = new Error('Network error');
       mockGet.mockRejectedValue(genericError);
 
@@ -432,7 +434,7 @@ describe('useSpotifyUrlHandler', () => {
       });
 
       expect(mockOnPlaylistSelect).toHaveBeenCalled();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // Update props with the playlist now selected
       rerender({
@@ -467,7 +469,7 @@ describe('useSpotifyUrlHandler', () => {
       });
 
       expect(mockOnError).toHaveBeenCalledWith('No access token available');
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // Update with access token
       rerender({ ...defaultProps, accessToken: 'new-token' } as any);
