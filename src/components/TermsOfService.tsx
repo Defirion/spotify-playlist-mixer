@@ -7,7 +7,7 @@ const TermsOfService: React.FC = () => {
       <div className={styles.card}>
         <h1 className={styles.title}>Terms of Service</h1>
         <p className={styles.lastUpdated}>
-          <strong>Last updated:</strong> {new Date().toLocaleDateString()}
+          <strong>Last updated:</strong> August 22, 2025
         </p>
 
         <section className={styles.section}>

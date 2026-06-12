@@ -43,8 +43,11 @@ export const useAuth = () =>
   useAppStore(
     useShallow((state: AppStore) => ({
       accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      tokenExpiresAt: state.tokenExpiresAt,
       isAuthenticated: state.isAuthenticated,
       setAccessToken: state.setAccessToken,
+      setTokens: state.setTokens,
       clearAuth: state.clearAuth,
     }))
   );

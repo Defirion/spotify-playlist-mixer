@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SpotifyAuth from '../../components/SpotifyAuth';
 
@@ -7,9 +7,21 @@ import SpotifyAuth from '../../components/SpotifyAuth';
 const mockClientId = 'test-client-id';
 const originalEnv = process.env;
 
+const DEFAULT_SCOPE =
+  'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
+
+/** Waits for the redirect and returns the parsed authorize URL. */
+const waitForRedirect = async (): Promise<URL> => {
+  await waitFor(() => {
+    expect(window.location.href).not.toBe('');
+  });
+  return new URL(window.location.href as string);
+};
+
 describe('SpotifyAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
     // Mock window.location
     delete (window as any).location;
     window.location = {
@@ -60,23 +72,44 @@ describe('SpotifyAuth', () => {
     expect(component).toHaveClass('custom-auth-class');
   });
 
-  it('redirects to Spotify authorization URL when login button is clicked', async () => {
+  it('redirects to the Spotify authorize URL using the PKCE code flow', async () => {
     const user = userEvent.setup();
     render(<SpotifyAuth />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
+    const url = await waitForRedirect();
+    expect(url.origin).toBe('https://accounts.spotify.com');
+    expect(url.pathname).toBe('/authorize');
+    expect(url.searchParams.get('client_id')).toBe(mockClientId);
+    expect(url.searchParams.get('response_type')).toBe('code');
+    expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3000/');
+    expect(url.searchParams.get('scope')).toBe(DEFAULT_SCOPE);
+    expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+    // 43-char base64url SHA-256 digest
+    expect(url.searchParams.get('code_challenge')).toMatch(
+      /^[A-Za-z0-9\-_]{43}$/
+    );
+    expect(url.searchParams.get('state')).toBeTruthy();
+  });
 
-    expect(window.location.href).toBe(expectedUrl);
+  it('stashes the PKCE verifier and state in sessionStorage for the redirect back', async () => {
+    const user = userEvent.setup();
+    render(<SpotifyAuth />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
+
+    const url = await waitForRedirect();
+    expect(sessionStorage.getItem('spotify_pkce_code_verifier')).toMatch(
+      /^[A-Za-z0-9\-._~]{64}$/
+    );
+    expect(sessionStorage.getItem('spotify_auth_state')).toBe(
+      url.searchParams.get('state')
+    );
   });
 
   it('uses custom redirect URI when provided', async () => {
@@ -85,19 +118,12 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth redirectUri={customRedirectUri} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent(customRedirectUri)}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('redirect_uri')).toBe(customRedirectUri);
   });
 
   it('uses custom scopes when provided', async () => {
@@ -106,19 +132,14 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth scopes={customScopes} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private user-read-email')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('scope')).toBe(
+      'playlist-read-private user-read-email'
+    );
   });
 
   it('uses custom client ID when provided', async () => {
@@ -127,19 +148,12 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth clientId={customClientId} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${customClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('client_id')).toBe(customClientId);
   });
 
   it('calls onError when client ID is not configured', async () => {
@@ -155,10 +169,9 @@ describe('SpotifyAuth', () => {
     // Render the component without a clientId prop, so it relies on the environment variable
     render(<SpotifyAuth onError={mockOnError} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
     expect(mockOnError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -175,33 +188,34 @@ describe('SpotifyAuth', () => {
     const user = userEvent.setup();
     const mockOnError = jest.fn();
 
-    // Mock encodeURIComponent to throw an error
-    const originalEncodeURIComponent = global.encodeURIComponent;
-    global.encodeURIComponent = jest.fn(() => {
-      throw new Error('Encoding failed');
-    });
+    // Make PKCE generation fail
+    const getRandomValuesSpy = jest
+      .spyOn(crypto, 'getRandomValues')
+      .mockImplementation(() => {
+        throw new Error('Crypto failed');
+      });
 
     render(<SpotifyAuth onError={mockOnError} />);
-
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
 
     // Suppress console errors for this test
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    await user.click(loginButton);
-
-    expect(mockOnError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Encoding failed',
-      })
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
     );
 
-    // Restore original functions
-    global.encodeURIComponent = originalEncodeURIComponent;
+    await waitFor(() => {
+      expect(mockOnError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Crypto failed',
+        })
+      );
+    });
+    expect(window.location.href).toBe('');
+
+    getRandomValuesSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 
@@ -211,10 +225,10 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth onAuth={mockOnAuth} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
+    await waitForRedirect();
 
     // Note: onAuth would typically be called after successful redirect and token parsing
     // This test verifies the prop is accepted, actual token handling would be in parent component
@@ -246,14 +260,9 @@ describe('SpotifyAuth', () => {
     await user.keyboard('{Enter}');
 
     // Should redirect (same as click)
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('response_type')).toBe('code');
+    expect(url.searchParams.get('client_id')).toBe(mockClientId);
   });
 
   it('handles space key activation', async () => {
@@ -270,34 +279,21 @@ describe('SpotifyAuth', () => {
     await user.keyboard(' ');
 
     // Should redirect (same as click)
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('response_type')).toBe('code');
   });
 
-  it('uses default scopes when scopes array is empty', async () => {
+  it('sends an empty scope when scopes array is empty', async () => {
     const user = userEvent.setup();
 
     render(<SpotifyAuth scopes={[]} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('scope')).toBe('');
   });
 
   it('properly encodes special characters in redirect URI', async () => {
@@ -307,53 +303,53 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth redirectUri={redirectUriWithSpecialChars} />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent(redirectUriWithSpecialChars)}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    // URLSearchParams round-trips the encoded value back to the original
+    expect(url.searchParams.get('redirect_uri')).toBe(
+      redirectUriWithSpecialChars
+    );
+    // and the raw URL contains the encoded form
+    expect(url.search).toContain(
+      encodeURIComponent(redirectUriWithSpecialChars)
+    );
   });
 
   it('handles non-Error objects in catch block', async () => {
     const user = userEvent.setup();
     const mockOnError = jest.fn();
 
-    // Mock encodeURIComponent to throw a non-Error object
-    const originalEncodeURIComponent = global.encodeURIComponent;
-    global.encodeURIComponent = jest.fn(() => {
-      // eslint-disable-next-line no-throw-literal
-      throw 'String error';
-    });
+    // Make PKCE generation throw a non-Error object
+    const getRandomValuesSpy = jest
+      .spyOn(crypto, 'getRandomValues')
+      .mockImplementation(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 'String error';
+      });
 
     render(<SpotifyAuth onError={mockOnError} />);
-
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
 
     // Suppress console errors for this test
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    await user.click(loginButton);
-
-    expect(mockOnError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Authentication failed',
-      })
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
     );
 
-    // Restore original functions
-    global.encodeURIComponent = originalEncodeURIComponent;
+    await waitFor(() => {
+      expect(mockOnError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Authentication failed',
+        })
+      );
+    });
+
+    getRandomValuesSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 });

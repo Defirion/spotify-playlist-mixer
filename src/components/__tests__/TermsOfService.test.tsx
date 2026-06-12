@@ -14,9 +14,10 @@ describe('TermsOfService', () => {
 
   it('displays the last updated date', () => {
     renderComponent();
-    const today = new Date().toLocaleDateString();
+    // Fixed date — showing the current date would falsely claim the terms
+    // change every day.
     expect(screen.getByText(/last updated:/i)).toBeInTheDocument();
-    expect(screen.getByText(today)).toBeInTheDocument();
+    expect(screen.getByText(/August 22, 2025/)).toBeInTheDocument();
   });
 
   it('renders all required sections', () => {

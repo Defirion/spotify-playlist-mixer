@@ -4,6 +4,13 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// jsdom does not provide TextEncoder or WebCrypto (crypto.subtle), both of
+// which the PKCE auth flow needs. Bridge them in from Node.
+import {
+  TextEncoder as NodeTextEncoder,
+  TextDecoder as NodeTextDecoder,
+} from 'util';
+
 // NOTE: MSW has been removed from the repository. Tests should use local
 // mocks (files under `src/test-utils/mocks` or `src/__tests__/mocks`) or
 // stub `global.fetch` directly when network behavior needs to be simulated.
@@ -12,6 +19,21 @@ import '@testing-library/jest-dom';
 // a test fails. Tests can call `await silenceIfPass(() => { ... })` or rely on
 // the global `silenceIfPass` made available here.
 import { silenceIfPass as _silenceIfPass } from './test-utils/silenceIfPass';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { webcrypto } = require('crypto');
+
+if (typeof globalThis.TextEncoder === 'undefined') {
+  (globalThis as any).TextEncoder = NodeTextEncoder;
+}
+if (typeof globalThis.TextDecoder === 'undefined') {
+  (globalThis as any).TextDecoder = NodeTextDecoder;
+}
+if (!globalThis.crypto || !(globalThis.crypto as any).subtle) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+  });
+}
 
 // Enable verbose test logging for handlers that conditionally emit errors.
 // Some code paths only call `console.error` when TEST_VERBOSE is truthy. Set it

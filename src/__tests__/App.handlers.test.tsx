@@ -1,9 +1,17 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import App from '../App';
 import * as store from '../store';
+import * as spotifyAuth from '../services/spotifyAuth';
+
+// Mock the auth service so no real token exchange happens
+jest.mock('../services/spotifyAuth', () => ({
+  ...jest.requireActual('../services/spotifyAuth'),
+  completeAuthorization: jest.fn(),
+  refreshAccessToken: jest.fn(),
+}));
 
 // Mock the heavy child components so we can trigger the callbacks provided by App
 jest.mock('../components/PlaylistSelector', () => (props: any) => {
@@ -97,17 +105,27 @@ describe('App handlers (direct callback surface)', () => {
     jest.clearAllMocks();
   });
 
-  it('parses access_token from window.location.hash and calls setAccessToken (dev logging path)', () => {
-    const setAccessToken = jest.fn();
+  it('exchanges ?code= from window.location.search and calls setTokens', async () => {
+    const setTokens = jest.fn();
+    const fakeTokens = {
+      accessToken: 'devtoken123',
+      refreshToken: 'devrefresh',
+      expiresAt: Date.now() + 3600_000,
+    };
+    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue(
+      fakeTokens
+    );
 
-    // simulate OAuth redirect hash
-    const originalHash = window.location.hash;
-    window.location.hash = '#access_token=devtoken123&other=1';
+    // simulate OAuth redirect query params
+    window.history.replaceState({}, '', '/?code=devcode123&state=devstate');
 
     (store.useAuth as any).mockReturnValue({
       accessToken: null,
+      refreshToken: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
-      setAccessToken,
+      setAccessToken: jest.fn(),
+      setTokens,
       clearAuth: jest.fn(),
     });
 
@@ -136,25 +154,22 @@ describe('App handlers (direct callback surface)', () => {
       dismissSuccessToast: jest.fn(),
     });
 
-    // enable dev debug branch
-    const prevNodeEnv = process.env.NODE_ENV;
-    const prevDebug = process.env.DEBUG_AUTH;
-    process.env.NODE_ENV = 'development';
-    process.env.DEBUG_AUTH = '1';
-
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const prevClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
 
     render(<App />);
 
-    expect(setAccessToken).toHaveBeenCalledWith('devtoken123');
-    expect(window.location.hash).toBe('');
-    expect(debugSpy).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(setTokens).toHaveBeenCalledWith(fakeTokens);
+    });
+    expect(spotifyAuth.completeAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'devcode123', state: 'devstate' })
+    );
+    expect(window.location.search).toBe('');
 
     // restore
-    window.location.hash = originalHash;
-    process.env.NODE_ENV = prevNodeEnv;
-    process.env.DEBUG_AUTH = prevDebug;
-    debugSpy.mockRestore();
+    window.history.replaceState({}, '', '/');
+    process.env.REACT_APP_SPOTIFY_CLIENT_ID = prevClientId;
   });
 
   it('calls togglePlaylistSelection when PlaylistSelector triggers selection', () => {
@@ -434,17 +449,16 @@ describe('App handlers (direct callback surface)', () => {
     expect(store.setUIError).not.toHaveBeenCalled();
   });
 
-  it('parses short access_token from window.location.hash (no masking) and calls setAccessToken', () => {
-    const setAccessToken = jest.fn();
-
-    // simulate OAuth redirect hash with short token
-    const originalHash = window.location.hash;
-    window.location.hash = '#access_token=short&other=1';
+  it('surfaces an error via setUIError when Spotify redirects back with ?error=', () => {
+    window.history.replaceState({}, '', '/?error=access_denied');
 
     (store.useAuth as any).mockReturnValue({
       accessToken: null,
+      refreshToken: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
-      setAccessToken,
+      setAccessToken: jest.fn(),
+      setTokens: jest.fn(),
       clearAuth: jest.fn(),
     });
 
@@ -473,24 +487,17 @@ describe('App handlers (direct callback surface)', () => {
       dismissSuccessToast: jest.fn(),
     });
 
-    // enable dev debug branch
-    const prevNodeEnv = process.env.NODE_ENV;
-    const prevDebug = process.env.DEBUG_AUTH;
-    process.env.NODE_ENV = 'development';
-    process.env.DEBUG_AUTH = '1';
-
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-
     render(<App />);
 
-    expect(setAccessToken).toHaveBeenCalledWith('short');
-    expect(window.location.hash).toBe('');
-    expect(debugSpy).toHaveBeenCalled();
+    expect(store.setUIError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Spotify authorization failed: access_denied',
+      })
+    );
+    expect(spotifyAuth.completeAuthorization).not.toHaveBeenCalled();
+    expect(window.location.search).toBe('');
 
     // restore
-    window.location.hash = originalHash;
-    process.env.NODE_ENV = prevNodeEnv;
-    process.env.DEBUG_AUTH = prevDebug;
-    debugSpy.mockRestore();
+    window.history.replaceState({}, '', '/');
   });
 });

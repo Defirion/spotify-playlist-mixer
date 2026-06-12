@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SpotifyAuth from '../../components/SpotifyAuth';
 
@@ -8,9 +8,18 @@ const mockClientId = 'test-client-id';
 const originalEnv = process.env;
 let originalLocation: Location | undefined;
 
+/** Waits for the redirect and returns the parsed authorize URL. */
+const waitForRedirect = async (): Promise<URL> => {
+  await waitFor(() => {
+    expect(window.location.href).not.toBe('');
+  });
+  return new URL(window.location.href as string);
+};
+
 describe('SpotifyAuth Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
     // Mock window.location
     // capture original so we can restore it later
     originalLocation = window.location;
@@ -83,20 +92,18 @@ describe('SpotifyAuth Integration Tests', () => {
     ).not.toBeInTheDocument();
 
     // Click the login button
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    // Should redirect to Spotify (in real app, this would trigger OAuth flow)
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${mockClientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:3000/')}&` +
-      `scope=${encodeURIComponent('playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private')}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    // Should redirect to Spotify's authorize endpoint using the PKCE code flow
+    const url = await waitForRedirect();
+    expect(url.origin).toBe('https://accounts.spotify.com');
+    expect(url.pathname).toBe('/authorize');
+    expect(url.searchParams.get('client_id')).toBe(mockClientId);
+    expect(url.searchParams.get('response_type')).toBe('code');
+    expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3000/');
+    expect(url.searchParams.get('code_challenge_method')).toBe('S256');
     expect(authError).toBeNull();
   });
 
@@ -169,19 +176,14 @@ describe('SpotifyAuth Integration Tests', () => {
 
     render(<MockParentComponent />);
 
-    const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
-    });
-    await user.click(loginButton);
+    await user.click(
+      screen.getByRole('button', { name: 'Connect Spotify Account' })
+    );
 
-    const expectedUrl =
-      `https://accounts.spotify.com/authorize?` +
-      `client_id=${customConfig.clientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent(customConfig.redirectUri)}&` +
-      `scope=${encodeURIComponent(customConfig.scopes.join(' '))}`;
-
-    expect(window.location.href).toBe(expectedUrl);
+    const url = await waitForRedirect();
+    expect(url.searchParams.get('client_id')).toBe(customConfig.clientId);
+    expect(url.searchParams.get('redirect_uri')).toBe(customConfig.redirectUri);
+    expect(url.searchParams.get('scope')).toBe(customConfig.scopes.join(' '));
   });
 
   it('maintains consistent styling with application theme', () => {

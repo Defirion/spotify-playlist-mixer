@@ -2,17 +2,32 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
 import AppProviders from '../../AppProviders';
+import * as spotifyAuth from '../../services/spotifyAuth';
+
+// Mock the auth service so no real token exchange happens
+jest.mock('../../services/spotifyAuth', () => ({
+  ...jest.requireActual('../../services/spotifyAuth'),
+  completeAuthorization: jest.fn(),
+  refreshAccessToken: jest.fn(),
+}));
 
 describe('App (unit) - routes and auth handling', () => {
   beforeEach(() => {
-    // Ensure no leftover hash between tests
-    window.location.hash = '';
+    jest.clearAllMocks();
+    // Ensure no leftover auth params between tests
+    window.history.replaceState({}, '', '/');
   });
 
-  it('parses access_token from location.hash and sets auth state', async () => {
-    const token = 'unit_test_token_abc123';
-    // set hash as after Spotify redirect
-    window.location.hash = `#access_token=${token}&token_type=Bearer`;
+  it('exchanges ?code= from the redirect and sets auth state', async () => {
+    process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
+    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue({
+      accessToken: 'unit_test_token_abc123',
+      refreshToken: null,
+      expiresAt: Date.now() + 3600_000,
+    });
+
+    // set query params as after Spotify redirect
+    window.history.replaceState({}, '', '/?code=unit_code&state=unit_state');
 
     render(
       <AppProviders>
@@ -20,10 +35,13 @@ describe('App (unit) - routes and auth handling', () => {
       </AppProviders>
     );
 
-    // The MainApp should clear the hash after processing
+    // The MainApp should clean the query string after processing
     await waitFor(() => {
-      expect(window.location.hash).toBe('');
+      expect(window.location.search).toBe('');
     });
+    expect(spotifyAuth.completeAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'unit_code', state: 'unit_state' })
+    );
 
     // The app header should render
     expect(screen.getByText(/Spotify Playlist Mixer/i)).toBeInTheDocument();

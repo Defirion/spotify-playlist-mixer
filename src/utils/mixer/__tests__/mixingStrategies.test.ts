@@ -119,18 +119,21 @@ describe('MixedStrategy', () => {
     expect(strategy.name).toBe('mixed');
   });
 
-  test('should return all tracks from all quadrants', () => {
+  test('should return all tracks from all quadrants, interleaved evenly', () => {
     const result = strategy.getTracksForPosition(mockPools, 'playlist1', 5, 20);
 
     expect(result).toHaveLength(8); // 2 + 2 + 2 + 2
+    // Quadrants are interleaved round-robin so all popularity tiers are
+    // evenly represented (concatenating them would degrade 'mixed' into
+    // 'hits first' because the mixer consumes tracks front-to-back).
     expect(result.map(t => t.id)).toEqual([
       'top1',
-      'top2',
       'pop1',
-      'pop2',
       'mod1',
-      'mod2',
       'deep1',
+      'top2',
+      'pop2',
+      'mod2',
       'deep2',
     ]);
   });

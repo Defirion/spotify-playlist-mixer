@@ -1,19 +1,15 @@
 import React from 'react';
 import { SpotifyAuthProps } from '../types/components';
+import { beginAuthorization, DEFAULT_SCOPES } from '../services/spotifyAuth';
 import styles from './SpotifyAuth.module.css';
 
 const SpotifyAuth: React.FC<SpotifyAuthProps> = props => {
   const { onError, redirectUri, scopes, clientId, className, testId } = props;
   const CLIENT_ID = clientId || process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const REDIRECT_URI = redirectUri || window.location.origin + '/';
-  const SCOPES = scopes || [
-    'playlist-read-private',
-    'playlist-read-collaborative',
-    'playlist-modify-public',
-    'playlist-modify-private',
-  ];
+  const SCOPES = scopes || DEFAULT_SCOPES;
 
-  const handleLogin = (): void => {
+  const handleLogin = async (): Promise<void> => {
     try {
       if (!CLIENT_ID || CLIENT_ID.trim() === '') {
         const error = new Error('Spotify Client ID is not configured');
@@ -21,12 +17,11 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = props => {
         return;
       }
 
-      const authUrl =
-        `https://accounts.spotify.com/authorize?` +
-        `client_id=${CLIENT_ID}&` +
-        `response_type=token&` +
-        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-        `scope=${encodeURIComponent(SCOPES.join(' '))}`;
+      const authUrl = await beginAuthorization({
+        clientId: CLIENT_ID,
+        redirectUri: REDIRECT_URI,
+        scopes: SCOPES,
+      });
 
       window.location.href = authUrl;
     } catch (error) {

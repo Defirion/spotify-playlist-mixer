@@ -5,7 +5,7 @@ import App from '../App';
 
 describe('App root component logic', () => {
   beforeEach(() => {
-    window.location.hash = '';
+    window.history.replaceState({}, '', '/');
   });
 
   test('renders footer links and routes', () => {
@@ -16,13 +16,13 @@ describe('App root component logic', () => {
     expect(screen.getByText(/Back to Mixer/i)).toBeInTheDocument();
   });
 
-  test('parses access_token from hash and clears hash when not authenticated', () => {
-    // Simulate redirect hash containing token
-    window.location.hash = '#access_token=TEST_TOKEN_123&token_type=bearer';
+  test('removes one-time auth params from the URL when not authenticated', () => {
+    // Simulate redirect query params from Spotify's authorization code flow
+    window.history.replaceState({}, '', '/?error=access_denied&state=abc');
 
     render(<App />);
 
-    // Effect should clear the hash after processing
-    expect(window.location.hash).toBe('');
+    // Effect should clean the query string after processing
+    expect(window.location.search).toBe('');
   });
 });

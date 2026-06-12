@@ -1,8 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App';
 import * as store from '../store';
+import * as spotifyAuth from '../services/spotifyAuth';
 
 jest.spyOn(store, 'useAuth') as any;
 jest.spyOn(store, 'usePlaylistSelection') as any;
@@ -10,15 +11,38 @@ jest.spyOn(store, 'useRatioConfig') as any;
 jest.spyOn(store, 'useMixOptions') as any;
 jest.spyOn(store, 'useUI') as any;
 
-describe('App auth hash handling (fixed file)', () => {
-  beforeEach(() => jest.clearAllMocks());
+jest.mock('../services/spotifyAuth', () => ({
+  ...jest.requireActual('../services/spotifyAuth'),
+  completeAuthorization: jest.fn(),
+}));
 
-  it('parses access token from hash and calls setAccessToken when not authenticated', () => {
+describe('App auth code callback handling (fixed file)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('exchanges the authorization code and stores the tokens when not authenticated', async () => {
     const setAccessToken = jest.fn();
+    const setTokens = jest.fn();
+    const fakeTokens = {
+      accessToken: 'FAKE_TOKEN',
+      refreshToken: 'FAKE_REFRESH',
+      expiresAt: Date.now() + 3600_000,
+    };
+    (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue(
+      fakeTokens
+    );
+
     (store.useAuth as any).mockReturnValue({
       accessToken: null,
+      refreshToken: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
       setAccessToken,
+      setTokens,
+      clearAuth: jest.fn(),
     });
     (store.usePlaylistSelection as any).mockReturnValue({
       selectedPlaylists: [],
@@ -41,13 +65,21 @@ describe('App auth hash handling (fixed file)', () => {
       addMixedPlaylist: jest.fn(),
     });
 
-    const originalHash = window.location.hash;
-    window.location.hash = '#access_token=FAKE_TOKEN';
+    window.history.replaceState({}, '', '/?code=FAKE_CODE&state=FAKE_STATE');
 
     render(<App />);
 
-    expect(setAccessToken).toHaveBeenCalledWith('FAKE_TOKEN');
-
-    window.location.hash = originalHash;
+    await waitFor(() => {
+      expect(setTokens).toHaveBeenCalledWith(fakeTokens);
+    });
+    expect(spotifyAuth.completeAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'test-client-id',
+        code: 'FAKE_CODE',
+        state: 'FAKE_STATE',
+      })
+    );
+    // one-time code is removed from the address bar
+    expect(window.location.search).toBe('');
   });
 });

@@ -7,6 +7,10 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import { SpotifyPlaylist } from './types/spotify';
 import {
+  completeAuthorization,
+  refreshAccessToken,
+} from './services/spotifyAuth';
+import {
   useAuth,
   usePlaylistSelection,
   useRatioConfig,
@@ -17,7 +21,15 @@ import {
 import styles from './App.module.css';
 
 export function MainApp() {
-  const { accessToken, isAuthenticated, setAccessToken } = useAuth();
+  const {
+    accessToken,
+    refreshToken,
+    tokenExpiresAt,
+    isAuthenticated,
+    setAccessToken,
+    setTokens,
+    clearAuth,
+  } = useAuth();
   const { selectedPlaylists, togglePlaylistSelection, clearAllPlaylists } =
     usePlaylistSelection();
   const { setRatioConfigBulk, ratioConfig, updateRatioConfig } =
@@ -32,36 +44,64 @@ export function MainApp() {
   } = useUI();
   const { mixOptions, updateMixOptions } = useMixOptions();
 
+  // Handle the redirect back from Spotify's Authorization Code (PKCE) flow:
+  // the URL contains ?code=...&state=... (or ?error=... if the user denied).
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && !isAuthenticated) {
-      const tokenParam = hash
-        .substring(1)
-        .split('&')
-        .find(elem => elem.startsWith('access_token'));
-      if (tokenParam) {
-        const token = tokenParam.split('=')[1];
-        if (token) {
-          setAccessToken(token);
-          // Development-only: log masked token so we can confirm it's set after redirect
-          if (process.env.NODE_ENV !== 'production') {
-            const maskedToken =
-              token.length > 10
-                ? `${token.slice(0, 6)}...${token.slice(-4)}`
-                : token;
-            if (process.env.DEBUG_AUTH === '1') {
-              // eslint-disable-next-line no-console
-              console.debug(
-                'DEV: setAccessToken called, maskedToken=',
-                maskedToken
-              );
-            }
-          }
-          window.location.hash = '';
-        }
-      }
+    if (isAuthenticated) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const authError = params.get('error');
+
+    if (!code && !authError) return;
+
+    // Remove the one-time code/state/error params from the address bar so a
+    // reload doesn't retry a consumed authorization code.
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    if (authError) {
+      setUIError(new Error(`Spotify authorization failed: ${authError}`));
+      return;
     }
-  }, [setAccessToken, isAuthenticated]);
+
+    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    if (!clientId) {
+      setUIError(new Error('Spotify Client ID is not configured'));
+      return;
+    }
+
+    completeAuthorization({
+      clientId,
+      redirectUri: window.location.origin + '/',
+      code: code as string,
+      state,
+    })
+      .then(tokens => setTokens(tokens))
+      .catch(err => setUIError(err));
+  }, [setTokens, isAuthenticated]);
+
+  // Proactively refresh the access token shortly before it expires so a
+  // long mixing session doesn't start failing with 401s mid-flow.
+  useEffect(() => {
+    if (!refreshToken || !tokenExpiresAt) return;
+
+    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    if (!clientId) return;
+
+    const refreshIn = Math.max(tokenExpiresAt - Date.now() - 60_000, 0);
+    const timer = window.setTimeout(() => {
+      refreshAccessToken(clientId, refreshToken)
+        .then(tokens => setTokens(tokens))
+        .catch(() => {
+          // Refresh failed (revoked/expired) — drop back to the connect screen.
+          clearAuth();
+        });
+    }, refreshIn);
+
+    return () => window.clearTimeout(timer);
+  }, [refreshToken, tokenExpiresAt, setTokens, clearAuth]);
 
   const handlePlaylistSelection = (playlist: any) => {
     togglePlaylistSelection(playlist);

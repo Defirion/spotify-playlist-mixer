@@ -32,6 +32,30 @@ describe('authSlice', () => {
     expect(set).toHaveBeenCalledWith({
       accessToken: null,
       isAuthenticated: false,
+      refreshToken: null,
+      tokenExpiresAt: null,
+    });
+  });
+
+  it('setTokens stores the full token response', () => {
+    const slice = createAuthSlice(
+      set as any,
+      undefined as any,
+      undefined as any
+    );
+
+    const expiresAt = Date.now() + 3600_000;
+    slice.setTokens({
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      expiresAt,
+    });
+
+    expect(set).toHaveBeenCalledWith({
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      tokenExpiresAt: expiresAt,
+      isAuthenticated: true,
     });
   });
 

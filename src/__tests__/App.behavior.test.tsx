@@ -1,8 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MainApp } from '../App';
 import * as store from '../store';
+import * as spotifyAuth from '../services/spotifyAuth';
 
 // Mock the store hooks
 jest.mock('../store', () => ({
@@ -12,6 +13,13 @@ jest.mock('../store', () => ({
   useMixOptions: jest.fn(),
   useUI: jest.fn(),
   setUIError: jest.fn(),
+}));
+
+// Mock the auth service so no real token exchange happens
+jest.mock('../services/spotifyAuth', () => ({
+  ...jest.requireActual('../services/spotifyAuth'),
+  completeAuthorization: jest.fn(),
+  refreshAccessToken: jest.fn(),
 }));
 
 // Mock AppShell to capture and expose handler props
@@ -27,8 +35,12 @@ describe('MainApp behavioral coverage', () => {
   const mockStoreReturns = {
     useAuth: {
       accessToken: null,
+      refreshToken: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
       setAccessToken: jest.fn(),
+      setTokens: jest.fn(),
+      clearAuth: jest.fn(),
     },
     usePlaylistSelection: {
       selectedPlaylists: [],
@@ -73,138 +85,119 @@ describe('MainApp behavioral coverage', () => {
   });
 
   afterEach(() => {
-    // Clean up environment variables
-    delete process.env.DEBUG_AUTH;
-    // Restore window.location.hash
-    window.location.hash = '';
+    // Restore a clean URL between tests
+    window.history.replaceState({}, '', '/');
   });
 
-  describe('token parsing behavior', () => {
-    it('does not parse token when user is already authenticated', () => {
-      const setAccessToken = jest.fn();
+  describe('authorization code callback behavior', () => {
+    beforeEach(() => {
+      process.env.REACT_APP_SPOTIFY_CLIENT_ID = 'test-client-id';
+      (spotifyAuth.completeAuthorization as jest.Mock).mockResolvedValue({
+        accessToken: 'FAKE_TOKEN',
+        refreshToken: 'FAKE_REFRESH',
+        expiresAt: Date.now() + 3600_000,
+      });
+    });
+
+    it('does not exchange a code when user is already authenticated', () => {
       (store.useAuth as jest.Mock).mockReturnValue({
         ...mockStoreReturns.useAuth,
         isAuthenticated: true,
-        setAccessToken,
       });
 
-      window.location.hash = '#access_token=FAKE_TOKEN';
+      window.history.replaceState({}, '', '/?code=FAKE_CODE&state=STATE');
 
       render(<MainApp />);
 
-      expect(setAccessToken).not.toHaveBeenCalled();
+      expect(spotifyAuth.completeAuthorization).not.toHaveBeenCalled();
     });
 
-    it('does not parse token when hash exists but no access_token param', () => {
-      const setAccessToken = jest.fn();
-      (store.useAuth as jest.Mock).mockReturnValue({
-        ...mockStoreReturns.useAuth,
-        setAccessToken,
-      });
-
-      window.location.hash = '#other_param=value';
+    it('does nothing when there is no code or error param', () => {
+      window.history.replaceState({}, '', '/?other_param=value');
 
       render(<MainApp />);
 
-      expect(setAccessToken).not.toHaveBeenCalled();
+      expect(spotifyAuth.completeAuthorization).not.toHaveBeenCalled();
+      expect(store.setUIError).not.toHaveBeenCalled();
+      // unrelated params are left alone
+      expect(window.location.search).toBe('?other_param=value');
     });
 
-    it('does not parse token when access_token param has no value', () => {
-      const setAccessToken = jest.fn();
+    it('exchanges the code and stores tokens on success', async () => {
+      const setTokens = jest.fn();
       (store.useAuth as jest.Mock).mockReturnValue({
         ...mockStoreReturns.useAuth,
-        setAccessToken,
+        setTokens,
       });
 
-      window.location.hash = '#access_token=';
+      window.history.replaceState({}, '', '/?code=FAKE_CODE&state=STATE');
 
       render(<MainApp />);
 
-      expect(setAccessToken).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(setTokens).toHaveBeenCalledWith(
+          expect.objectContaining({ accessToken: 'FAKE_TOKEN' })
+        );
+      });
+      expect(spotifyAuth.completeAuthorization).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'FAKE_CODE', state: 'STATE' })
+      );
     });
 
-    it('logs debug info when DEBUG_AUTH is enabled and token is long', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.DEBUG_AUTH = '1';
-
-      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
-      const setAccessToken = jest.fn();
-
-      (store.useAuth as jest.Mock).mockReturnValue({
-        ...mockStoreReturns.useAuth,
-        setAccessToken,
-      });
-
-      window.location.hash =
-        '#access_token=very_long_token_that_is_more_than_10_chars';
+    it('surfaces an error when Spotify redirects back with ?error=', () => {
+      window.history.replaceState({}, '', '/?error=access_denied');
 
       render(<MainApp />);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'DEV: setAccessToken called, maskedToken=',
-        'very_l...hars'
+      expect(store.setUIError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Spotify authorization failed: access_denied',
+        })
+      );
+      expect(spotifyAuth.completeAuthorization).not.toHaveBeenCalled();
+    });
+
+    it('surfaces an error when the token exchange fails', async () => {
+      (spotifyAuth.completeAuthorization as jest.Mock).mockRejectedValue(
+        new Error('State mismatch in Spotify authorization response')
       );
 
-      consoleSpy.mockRestore();
-    });
-
-    it('logs debug info when DEBUG_AUTH is enabled and token is short', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.DEBUG_AUTH = '1';
-
-      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
-      const setAccessToken = jest.fn();
-
-      (store.useAuth as jest.Mock).mockReturnValue({
-        ...mockStoreReturns.useAuth,
-        setAccessToken,
-      });
-
-      window.location.hash = '#access_token=shorttkn';
+      window.history.replaceState({}, '', '/?code=FAKE_CODE&state=BAD');
 
       render(<MainApp />);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'DEV: setAccessToken called, maskedToken=',
-        'shorttkn'
+      await waitFor(() => {
+        expect(store.setUIError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: 'State mismatch in Spotify authorization response',
+          })
+        );
+      });
+    });
+
+    it('surfaces an error when the client ID is not configured', () => {
+      delete process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+
+      window.history.replaceState({}, '', '/?code=FAKE_CODE&state=STATE');
+
+      render(<MainApp />);
+
+      expect(store.setUIError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Spotify Client ID is not configured',
+        })
       );
-
-      consoleSpy.mockRestore();
+      expect(spotifyAuth.completeAuthorization).not.toHaveBeenCalled();
     });
 
-    it('does not log debug info when DEBUG_AUTH is not set', () => {
-      process.env.NODE_ENV = 'development';
-      // DEBUG_AUTH not set
-
-      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
-      const setAccessToken = jest.fn();
-
-      (store.useAuth as jest.Mock).mockReturnValue({
-        ...mockStoreReturns.useAuth,
-        setAccessToken,
-      });
-
-      window.location.hash = '#access_token=some_token';
+    it('removes the one-time code and state params from the URL', async () => {
+      window.history.replaceState({}, '', '/?code=FAKE_CODE&state=STATE');
 
       render(<MainApp />);
 
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
-    });
-
-    it('clears hash after successful token parsing', () => {
-      const setAccessToken = jest.fn();
-      (store.useAuth as jest.Mock).mockReturnValue({
-        ...mockStoreReturns.useAuth,
-        setAccessToken,
+      await waitFor(() => {
+        expect(window.location.search).toBe('');
       });
-
-      window.location.hash = '#access_token=FAKE_TOKEN';
-
-      render(<MainApp />);
-
-      expect(window.location.hash).toBe('');
     });
   });
 

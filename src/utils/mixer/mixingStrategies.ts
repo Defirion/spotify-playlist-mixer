@@ -25,13 +25,25 @@ export class MixedStrategy implements MixingStrategy {
     const pools = popularityPools[playlistId];
     if (!pools) return [];
 
-    // Random mix of all quadrants
-    const selectedPools = [
-      ...pools.topHits,
-      ...pools.popular,
-      ...pools.moderate,
-      ...pools.deepCuts,
+    // Interleave the quadrants round-robin so all popularity tiers are
+    // evenly represented. Plain concatenation would put every top hit ahead
+    // of every deep cut, and since the mixer always takes the first unused
+    // track this would silently turn "mixed" into "hits first".
+    const quadrants = [
+      pools.topHits,
+      pools.popular,
+      pools.moderate,
+      pools.deepCuts,
     ];
+    const longest = Math.max(...quadrants.map(q => q.length));
+    const selectedPools: TrackWithPopularity[] = [];
+    for (let i = 0; i < longest; i++) {
+      for (const quadrant of quadrants) {
+        if (i < quadrant.length) {
+          selectedPools.push(quadrant[i]);
+        }
+      }
+    }
 
     if (process.env.NODE_ENV === 'development') {
       const positionRatio = position / totalLength;

@@ -18,9 +18,13 @@ describe('App integration (happy path) - template', () => {
   });
 
   test('app renders correctly when authenticated', async () => {
-    // Set auth hash before mount so MainApp picks up token on initial render
+    // Seed the auth store before mount so the app renders authenticated.
+    // (The real flow exchanges an authorization code via PKCE; that exchange
+    // is covered by the App auth callback tests.)
     const token = 'test_access_token_123';
-    window.location.hash = `#access_token=${token}&token_type=Bearer`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useAppStore } = require('../store');
+    useAppStore.getState().setAccessToken(token);
 
     render(
       <AppProviders>

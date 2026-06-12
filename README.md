@@ -127,11 +127,19 @@ cd spotify-playlist-mixer
 npm install
 
 # Configure Spotify credentials
-# Edit src/config.js with your Client ID
+# Create a .env file with: REACT_APP_SPOTIFY_CLIENT_ID=your_client_id
 
 # Start the application
 npm start
 ```
+
+### Authentication
+
+The app uses Spotify's **Authorization Code with PKCE** flow (the Implicit
+Grant flow was removed by Spotify). Make sure your Spotify app's Redirect URI
+exactly matches the app origin with a trailing slash, e.g.
+`http://127.0.0.1:3000/` for local development. Tokens are kept in memory
+only and refreshed automatically before they expire.
 
 ### First Mix in 60 Seconds
 
