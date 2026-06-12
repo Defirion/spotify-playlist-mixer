@@ -1,25 +1,34 @@
 # Modernization Plan — branch `modernization`
 
 > Handoff document. Written 2026-06-12 for a fresh session with no prior
-> context. Everything you need to know is in this file; verify claims against
-> the code before acting on them, but they were accurate when written.
+> context; updated 2026-06-13 after Phases A and B landed. Everything you
+> need to know is in this file; verify claims against the code before acting
+> on them, but they were accurate when written.
+>
+> **Status: Phases A (`93114be9`) and B (`377abe09`) are COMMITTED. Resume
+> at Phase C.** The only uncommitted change in the tree is the deletion of
+> `big_idea.txt`, which predates this work — keep it out of commits.
 
 ## Project snapshot
 
 - **App**: Spotify Playlist Mixer — React 18.3 + TypeScript 4.9 SPA, built
-  with Create React App (`react-scripts` 5), zustand store, dnd-kit drag &
-  drop. Deployed to Netlify (https://spotify-mixer.netlify.app/) from
-  `master`.
-- **State**: all 189 test suites / 1322 tests pass; production build works.
-  Auth was just migrated to Spotify Authorization Code + PKCE
-  (`src/services/spotifyAuth.ts`); don't disturb it.
-- **Commands**: `npm test` (CRA jest, watchAll=false), `npm start`,
-  `npm run build`, `npm run lint`. Node pinned 22.18.0 via Volta.
+  with **Vite 8 / Vitest** (migrated from CRA in Phase B), zustand store,
+  dnd-kit drag & drop. Deployed to Netlify
+  (https://spotify-mixer.netlify.app/) from `master`.
+- **State**: 178 test files / 1276 tests pass (`npx vitest run`, ~50 s);
+  `npm run build` (= `tsc --noEmit && vite build`) and `npm run lint` are
+  clean; `npm audit` reports 0 vulnerabilities. Auth is Spotify
+  Authorization Code + PKCE (`src/services/spotifyAuth.ts`); don't disturb
+  it.
+- **Commands**: `npm test` (vitest watch) / `npx vitest run` (one-shot),
+  `npm start` (dev server on http://127.0.0.1:3000/ — host/port are pinned
+  in vite.config.ts to match the Spotify app's registered redirect URI),
+  `npm run build`, `npm run lint`, `npm run test:coverage`. Node pinned
+  22.18.0 via Volta.
 - **Branches**: `master` = production; this branch (`modernization`) was cut
   from it. Commit per phase; do NOT push to `master` (Netlify auto-deploys).
 - **Windows machine**: PowerShell default; in Git Bash, `npx` args containing
-  `|` get mangled by cmd.exe — pass test files as positional args instead of
-  `--testPathPattern` with alternation.
+  `|` get mangled by cmd.exe — pass test files as positional args.
 
 ## Goal
 
@@ -39,7 +48,7 @@ with a commit (end commit messages with
 
 ---
 
-## Phase A — delete dead code
+## Phase A — delete dead code ✅ DONE (`93114be9`)
 
 Confirmed dead (only imported by their own tests):
 
@@ -68,9 +77,27 @@ Confirmed dead (only imported by their own tests):
 
 ---
 
-## Phase B — migrate CRA → Vite + Vitest
+## Phase B — migrate CRA → Vite + Vitest ✅ DONE (`377abe09`)
 
-The big one. Recommended approach:
+Completed as planned. Lessons that matter for later phases:
+
+- **Vitest gotchas** (relevant when touching tests in Phase C):
+  `vi.mock` factories are hoisted, so closures need `vi.hoisted`;
+  `vi.importActual` is async-only — prefer `vi.unmock` + static import;
+  tinyspy mocks aren't constructable with arrow impls (use
+  `function (this: unknown) {...}`); the `globalThis.jest = vi` shim in
+  `src/setupTests.ts` is REQUIRED for RTL fake-timer detection — never
+  remove it.
+- **Canonical mock template** for Phase C consolidation:
+  `src/__tests__/hooks/useMixGeneration.{unit,extra}.test.tsx` and
+  `useMixPreview.{unit,extra}.test.tsx` (vi.unmock + static import +
+  vi.hoisted for factory closures).
+- `define: { 'process.env': {} }` in vite.config.ts is required (shipped
+  code reads `process.env.TEST_VERBOSE` / `DEBUG_*` at runtime).
+- The global `vi.mock('./hooks/useMix*')` calls live in setupTests.ts;
+  Phase C may convert them to per-file mocks (original plan suggestion).
+
+Original plan kept below for reference:
 
 ### Build (Vite)
 

@@ -24,6 +24,13 @@ export default defineConfig({
     // Netlify publishes build/ — keep CRA's output dir.
     outDir: 'build',
   },
+  server: {
+    // Dev-only (ignored by `vite build`/Netlify). Must match the Spotify
+    // app's registered redirect URI: http://127.0.0.1:3000/ — bind IPv4
+    // explicitly because `localhost` resolves to ::1 on Windows.
+    host: '127.0.0.1',
+    port: 3000,
+  },
   test: {
     environment: 'jsdom',
     globals: true,
