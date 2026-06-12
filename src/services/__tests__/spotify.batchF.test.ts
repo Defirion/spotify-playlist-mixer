@@ -154,17 +154,6 @@ class TestMockSpotifyService {
             }
             return {};
           }
-          if (url.startsWith(`${base}/audio-features`)) {
-            const u = new URL(url);
-            const ids = u.searchParams.get('ids') || '';
-            const arr = ids ? ids.split(',') : [];
-            const features = arr.map((id: string) => ({
-              id,
-              danceability: 0.5,
-              energy: 0.5,
-            }));
-            return { audio_features: features };
-          }
           if (url === `${base}/me`) {
             return { id: 'me_1' };
           }
@@ -266,17 +255,6 @@ class TestMockSpotifyService {
         return { tracks: { items: [], total: 0, limit: 20, offset: 0 } };
       }
       return {};
-    }
-    if (url.startsWith(`${base}/audio-features`)) {
-      const u = new URL(url);
-      const ids = u.searchParams.get('ids') || '';
-      const arr = ids ? ids.split(',') : [];
-      const features = arr.map((id: string) => ({
-        id,
-        danceability: 0.5,
-        energy: 0.5,
-      }));
-      return { audio_features: features };
     }
     if (url === `${base}/me`) {
       // default profile for tests that don't rely on retry behavior
@@ -398,14 +376,6 @@ class TestMockSpotifyService {
       return { playlists: data.playlists };
     }
     return { playlists: [] };
-  }
-
-  async getMultipleTrackAudioFeatures(ids: string[]) {
-    if (!ids || !Array.isArray(ids) || ids.length === 0)
-      throw new ApiError('BAD_REQUEST' as any, new Error('IDs are required'));
-    const params = new URLSearchParams({ ids: ids.join(',') });
-    const data = await this.request(`/audio-features?${params.toString()}`);
-    return data.audio_features || [];
   }
 
   async getUserProfile() {
@@ -552,27 +522,6 @@ describe('SpotifyService - Batch F (batching, params, search, audio features, re
 
     const out = await service.searchPlaylists('Chill', { limit: 20 });
     expect(out.playlists.length).toBe(1);
-  });
-
-  test('getMultipleTrackAudioFeatures validates input and returns features array', async () => {
-    const service = new SpotifyService(ACCESS_TOKEN);
-    await expect(
-      service.getMultipleTrackAudioFeatures([])
-    ).rejects.toBeInstanceOf(ApiError);
-
-    // Mock the method to return expected features
-    service.getMultipleTrackAudioFeatures = jest.fn().mockResolvedValue([
-      { id: 'track_1', danceability: 0.5, energy: 0.5 },
-      { id: 'track_2', danceability: 0.5, energy: 0.5 },
-    ]);
-
-    const features = await service.getMultipleTrackAudioFeatures([
-      'track_1',
-      'track_2',
-    ]);
-    expect(Array.isArray(features)).toBe(true);
-    // Should return 2 items
-    expect(features.length).toBe(2);
   });
 
   test('withRetry will retry on transient 429 then succeed', async () => {

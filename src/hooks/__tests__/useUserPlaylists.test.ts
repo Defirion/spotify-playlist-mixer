@@ -30,8 +30,6 @@ describe('useUserPlaylists', () => {
       addTracksToPlaylist: jest.fn(),
       removeTracksFromPlaylist: jest.fn(),
       searchTracks: jest.fn(),
-      getTrackAudioFeatures: jest.fn(),
-      getMultipleTrackAudioFeatures: jest.fn(),
       // Additional methods expected by the mocked class
       getPlaylist: jest.fn(),
       searchPlaylists: jest.fn(),

@@ -1,11 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import AppShell from './AppShell';
-import RatioConfig from './components/RatioConfig';
-import PlaylistMixer from './components/PlaylistMixer';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { SpotifyPlaylist } from './types/spotify';
 import {
   completeAuthorization,
   refreshAccessToken,
@@ -152,55 +149,6 @@ export function MainApp() {
       onDismissError={dismissError}
       onDismissSuccess={() => dismissSuccessToast('')}
       onMixedPlaylist={addMixedPlaylist}
-    />
-  );
-}
-
-// intentionally unused helper container retained for manual testing / storybook
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function RatioConfigContainer() {
-  const { selectedPlaylists, togglePlaylistSelection } = usePlaylistSelection();
-  const { ratioConfig, updateRatioConfig } = useRatioConfig();
-
-  const handlePlaylistRemove = (playlistId: string) => {
-    const playlist = selectedPlaylists.find(p => p.id === playlistId);
-    if (playlist) {
-      togglePlaylistSelection(playlist);
-    }
-  };
-
-  return (
-    <RatioConfig
-      selectedPlaylists={selectedPlaylists}
-      ratioConfig={ratioConfig}
-      onRatioUpdate={updateRatioConfig}
-      onPlaylistRemove={handlePlaylistRemove}
-    />
-  );
-}
-
-// intentionally unused helper container retained for manual testing / storybook
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function PlaylistMixerContainer() {
-  const { accessToken } = useAuth();
-  const { selectedPlaylists } = usePlaylistSelection();
-  const { ratioConfig } = useRatioConfig();
-  const { mixOptions, updateMixOptions } = useMixOptions();
-  const { addMixedPlaylist } = useUI();
-
-  const handleMixedPlaylist = (result: SpotifyPlaylist) => {
-    addMixedPlaylist(result);
-  };
-
-  return (
-    <PlaylistMixer
-      accessToken={(accessToken ?? '') as string}
-      selectedPlaylists={selectedPlaylists}
-      ratioConfig={ratioConfig}
-      mixOptions={mixOptions}
-      updateMixOptions={updateMixOptions}
-      onMixedPlaylist={handleMixedPlaylist}
-      onError={err => setUIError(err)}
     />
   );
 }

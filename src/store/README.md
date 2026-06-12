@@ -23,7 +23,6 @@ src/store/
 │   ├── playlistSlice.ts  # Playlist selection and ratio configuration
 │   ├── mixingSlice.ts    # Mix options and settings
 │   └── uiSlice.ts        # UI state (errors, toasts)
-├── migration.ts          # Legacy hook compatibility and migration utilities
 ├── StoreProvider.tsx     # Store provider with persistence
 └── __tests__/
     └── store.test.ts     # Comprehensive store tests
@@ -63,7 +62,7 @@ import { useAppStore } from './store';
 
 // Direct store access
 const accessToken = useAppStore(state => state.accessToken);
-// To set UI-visible errors from arbitrary error shapes, prefer the migration
+// To set UI-visible errors from arbitrary error shapes, prefer the setUIError
 // helper which normalizes the input to the DisplayError shape:
 //
 // import { setUIError } from '../store';
@@ -123,24 +122,6 @@ const mixingState = useMixingState();
 - Modular slice-based architecture
 - Easy to test individual state domains
 - Clear action patterns
-
-## Migration from Legacy Hooks
-
-The store provides backward compatibility through migration utilities:
-
-```typescript
-import { useLegacyAppState } from './store/migration';
-
-// Legacy hook (deprecated)
-const legacyState = useLegacyAppState();
-
-// New approach
-const { accessToken, error } = useAuth();
-const { mixedPlaylists } = useUI();
-// To set UI-visible errors, use the migration helper:
-// import { setUIError } from './store';
-// setUIError(err);
-```
 
 ## Testing
 

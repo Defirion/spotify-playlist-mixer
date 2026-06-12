@@ -192,57 +192,6 @@ export function makeMockSpotifyService() {
       };
     }
 
-    async getTrackAudioFeatures(trackId: string) {
-      if (!trackId) {
-        const err: any = new Error('Track ID required');
-        err.response = { status: 400 };
-        throw err;
-      }
-      const url = `https://api.spotify.com/v1/audio-features/${encodeURIComponent(trackId)}`;
-      const res = await (global as any).fetch(url, {
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-      });
-      const text = await res.text().catch(() => '');
-      let data: any = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (e) {
-        data = { __raw: text };
-      }
-      if (res.status >= 400) {
-        const err: any = new Error(`HTTP ${res.status}`);
-        err.response = { status: res.status, body: data };
-        throw err;
-      }
-      return data;
-    }
-
-    async getMultipleTrackAudioFeatures(trackIds: string[]) {
-      if (!Array.isArray(trackIds) || trackIds.length === 0) {
-        const err: any = new Error('Track IDs required');
-        err.response = { status: 400 };
-        throw err;
-      }
-      const ids = trackIds.join(',');
-      const url = `https://api.spotify.com/v1/audio-features?ids=${encodeURIComponent(ids)}`;
-      const res = await (global as any).fetch(url, {
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-      });
-      const text = await res.text().catch(() => '');
-      let data: any = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (e) {
-        data = { __raw: text };
-      }
-      if (res.status >= 400) {
-        const err: any = new Error(`HTTP ${res.status}`);
-        err.response = { status: res.status, body: data };
-        throw err;
-      }
-      return data.audio_features || [];
-    }
-
     async createPlaylist(userId: string, body: any) {
       // Basic validation to mirror production behavior
       if (!userId) {

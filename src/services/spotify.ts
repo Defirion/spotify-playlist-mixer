@@ -649,43 +649,6 @@ class SpotifyService implements ISpotifyService {
       };
     });
   }
-
-  /**
-   * Get audio features for a track
-   */
-  async getTrackAudioFeatures(trackId: string): Promise<any> {
-    if (!trackId) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Track ID is required'),
-        { operation: 'getTrackAudioFeatures' }
-      );
-    }
-
-    return this.withRetry(async () => {
-      const response = await this.api.get(`/audio-features/${trackId}`);
-      return response.data;
-    });
-  }
-
-  /**
-   * Get audio features for multiple tracks
-   */
-  async getMultipleTrackAudioFeatures(trackIds: string[]): Promise<any[]> {
-    if (!Array.isArray(trackIds) || trackIds.length === 0) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Track IDs array is required and cannot be empty'),
-        { operation: 'getMultipleTrackAudioFeatures' }
-      );
-    }
-
-    return this.withRetry(async () => {
-      const ids = trackIds.join(',');
-      const response = await this.api.get(`/audio-features?ids=${ids}`);
-      return response.data.audio_features;
-    });
-  }
 }
 
 export default SpotifyService;

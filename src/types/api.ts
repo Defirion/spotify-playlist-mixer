@@ -10,7 +10,6 @@ import {
   SpotifyAddTracksResponse,
   SpotifyRemoveTracksRequest,
   SpotifyRemoveTracksResponse,
-  SpotifyAudioFeatures,
 } from './spotify';
 
 import { SearchOptions, SearchResult } from './mixer';
@@ -118,12 +117,6 @@ export interface ISpotifyService {
     query: string,
     options?: SearchTracksOptions
   ): Promise<SpotifyServiceSearchResult>;
-
-  // Track methods
-  getTrackAudioFeatures(trackId: string): Promise<SpotifyAudioFeatures>;
-  getMultipleTrackAudioFeatures(
-    trackIds: string[]
-  ): Promise<SpotifyAudioFeatures[]>;
 }
 
 // HTTP client types

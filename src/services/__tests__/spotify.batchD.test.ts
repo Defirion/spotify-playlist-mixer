@@ -100,22 +100,6 @@ jest.mock('../../services/spotify', () => {
       };
     }
 
-    async getTrackAudioFeatures(id: string) {
-      if (!id) throw new Error('Track ID is required');
-      const resp = await this.request('GET', `/audio-features/${id}`);
-      return resp.data;
-    }
-
-    async getMultipleTrackAudioFeatures(ids: string[]) {
-      if (!ids || !Array.isArray(ids) || ids.length === 0)
-        throw new Error('IDs are required');
-      const resp = await this.request(
-        'GET',
-        `/audio-features?ids=${ids.join(',')}`
-      );
-      return resp.data;
-    }
-
     async getPlaylist(id: string) {
       if (!id) throw new Error('Playlist ID is required');
       const resp = await this.request('GET', `/playlists/${id}`);
@@ -210,20 +194,6 @@ describe('SpotifyService - Batch D (validation & position batching)', () => {
     }
     const res = await service.getPlaylistTracks('playlist_some');
     expect(res.tracks.every((t: any) => t && t.id)).toBe(true);
-  });
-
-  test('getTrackAudioFeatures rejects on empty id', async () => {
-    const service = new SpotifyService('normal_token');
-    // @ts-ignore
-    await expect(service.getTrackAudioFeatures('')).rejects.toBeDefined();
-  });
-
-  test('getMultipleTrackAudioFeatures rejects on empty array', async () => {
-    const service = new SpotifyService('normal_token');
-    // @ts-ignore
-    await expect(
-      service.getMultipleTrackAudioFeatures([])
-    ).rejects.toBeDefined();
   });
 
   test('getPlaylist rejects on empty id', async () => {

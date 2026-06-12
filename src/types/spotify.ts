@@ -119,27 +119,6 @@ export interface SpotifyUserProfile {
   uri?: string;
 }
 
-export interface SpotifyAudioFeatures {
-  id: string;
-  danceability: number;
-  energy: number;
-  key: number;
-  loudness: number;
-  mode: number;
-  speechiness: number;
-  acousticness: number;
-  instrumentalness: number;
-  liveness: number;
-  valence: number;
-  tempo: number;
-  duration_ms: number;
-  time_signature: number;
-  uri: string;
-  track_href: string;
-  analysis_url: string;
-  type: 'audio_features';
-}
-
 // API Response types
 export interface SpotifyPaginatedResponse<T> {
   items: T[];
@@ -158,11 +137,9 @@ export interface SpotifySearchResponse {
   playlists?: SpotifyPaginatedResponse<SpotifyPlaylist>;
 }
 
-export interface SpotifyPlaylistTracksResponse
-  extends SpotifyPaginatedResponse<SpotifyPlaylistTrackItem> {}
+export interface SpotifyPlaylistTracksResponse extends SpotifyPaginatedResponse<SpotifyPlaylistTrackItem> {}
 
-export interface SpotifyUserPlaylistsResponse
-  extends SpotifyPaginatedResponse<SpotifyPlaylist> {}
+export interface SpotifyUserPlaylistsResponse extends SpotifyPaginatedResponse<SpotifyPlaylist> {}
 
 export interface SpotifyCreatePlaylistRequest {
   name: string;

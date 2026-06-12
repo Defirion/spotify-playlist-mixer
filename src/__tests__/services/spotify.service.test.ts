@@ -460,46 +460,4 @@ describe('SpotifyService', () => {
       ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
     });
   });
-
-  describe('getTrackAudioFeatures', () => {
-    it('should validate trackId', async () => {
-      const api = makeApi();
-      mockGetSpotifyApi.mockReturnValue(api as any);
-      const svc = new (SpotifyService as any)('tok');
-      await expect(svc.getTrackAudioFeatures('')).rejects.toMatchObject({
-        type: ERROR_TYPES.BAD_REQUEST,
-      });
-    });
-
-    it('should return audio features', async () => {
-      const api = makeApi();
-      mockGetSpotifyApi.mockReturnValue(api as any);
-      const svc = new (SpotifyService as any)('tok');
-      api.get.mockResolvedValue({ data: { id: 't1', danceability: 0.5 } });
-      const res = await svc.getTrackAudioFeatures('t1');
-      expect(res.danceability).toBe(0.5);
-    });
-  });
-
-  describe('getMultipleTrackAudioFeatures', () => {
-    it('should validate trackIds array', async () => {
-      const api = makeApi();
-      mockGetSpotifyApi.mockReturnValue(api as any);
-      const svc = new (SpotifyService as any)('tok');
-      await expect(
-        svc.getMultipleTrackAudioFeatures([] as any)
-      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
-    });
-
-    it('should return features array', async () => {
-      const api = makeApi();
-      mockGetSpotifyApi.mockReturnValue(api as any);
-      const svc = new (SpotifyService as any)('tok');
-      api.get.mockResolvedValue({
-        data: { audio_features: [{ id: 'a' }, { id: 'b' }] },
-      });
-      const res = await svc.getMultipleTrackAudioFeatures(['a', 'b']);
-      expect(res.length).toBe(2);
-    });
-  });
 });

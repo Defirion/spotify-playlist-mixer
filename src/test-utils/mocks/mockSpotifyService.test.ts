@@ -96,41 +96,6 @@ describe('MockSpotifyService (unit)', () => {
     });
   });
 
-  it('getTrackAudioFeatures validates id and handles non-json body', async () => {
-    const Mock = makeMockSpotifyService();
-    const svc = new Mock('token');
-    await expect(svc.getTrackAudioFeatures('')).rejects.toThrow(
-      'Track ID required'
-    );
-
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      status: 200,
-      text: async () => 'raw',
-    });
-    await silenceIfPass(async () => {
-      const res = await svc.getTrackAudioFeatures('abc');
-      expect(res.__raw).toBe('raw');
-    });
-  });
-
-  it('getMultipleTrackAudioFeatures validates input and returns audio_features array', async () => {
-    const Mock = makeMockSpotifyService();
-    const svc = new Mock('token');
-    await expect(svc.getMultipleTrackAudioFeatures([])).rejects.toThrow(
-      'Track IDs required'
-    );
-
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      status: 200,
-      text: async () => JSON.stringify({ audio_features: [{ id: 'a1' }] }),
-    });
-    await silenceIfPass(async () => {
-      const res = await svc.getMultipleTrackAudioFeatures(['a1']);
-      expect(Array.isArray(res)).toBe(true);
-      expect(res[0].id).toBe('a1');
-    });
-  });
-
   it('createPlaylist validates inputs', async () => {
     const Mock = makeMockSpotifyService();
     const svc = new Mock('token');
