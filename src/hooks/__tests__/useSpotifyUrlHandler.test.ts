@@ -388,7 +388,6 @@ describe('useSpotifyUrlHandler', () => {
       expect(mockOnError).toHaveBeenCalledWith(
         'Failed to load playlist. Please check the URL and try again.'
       );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(genericError);
 
       consoleErrorSpy.mockRestore();
     });

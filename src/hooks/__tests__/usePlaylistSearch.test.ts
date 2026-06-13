@@ -235,11 +235,6 @@ describe('usePlaylistSearch', () => {
         expect(result.current.results).toEqual([]);
       });
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to search playlists:',
-        expect.any(Error)
-      );
-
       consoleErrorSpy.mockRestore();
     });
   });

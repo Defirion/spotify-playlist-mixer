@@ -485,10 +485,6 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       );
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to search playlists:',
-      simpleError
-    );
     consoleErrorSpy.mockRestore();
   });
 

@@ -8,11 +8,6 @@ import { vi } from 'vitest';
 // mocks (files under `src/test-utils/mocks` or `src/__tests__/mocks`) or
 // stub `global.fetch` directly when network behavior needs to be simulated.
 
-// Provide a test helper that captures console output and only replays it when
-// a test fails. Tests can call `await silenceIfPass(() => { ... })` or rely on
-// the global `silenceIfPass` made available here.
-import { silenceIfPass as _silenceIfPass } from './test-utils/silenceIfPass';
-
 // @testing-library/dom only detects fake timers (waitFor polling) when a
 // global `jest` object exists. vi is API-compatible for the methods it uses
 // (advanceTimersByTime, isMockFunction, ...).
@@ -44,24 +39,6 @@ if (typeof process !== 'undefined' && process.env) {
     // otherwise noop to keep CI output clean
   };
 })();
-
-declare global {
-  // Allow tests to call the helper without importing it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function silenceIfPass<T>(fn: () => T | Promise<T>): Promise<T>;
-}
-
-// Attach to global so tests can use it directly.
-// Note: keep the global assignment non-enumerable and stable.
-Object.defineProperty(globalThis, 'silenceIfPass', {
-  value: _silenceIfPass,
-  writable: false,
-  configurable: false,
-});
-
-// Note: we intentionally do NOT wrap global `test`/`it` anymore.
-// The `silenceIfPass` helper is available for tests to use directly when
-// they want captured console output to be replayed only on failure.
 
 // --- Integration test global setup: register centralized hook mocks ---
 // This keeps mock registration consistent and avoids duplication across

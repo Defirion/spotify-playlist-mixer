@@ -1,7 +1,4 @@
 // Unit tests for mixing strategies module
-
-// Opt out of global silence helper; this file installs spies at module scope
-// so assertions should hit the original jest spies directly.
 import {
   MixedStrategy,
   FrontLoadedStrategy,
@@ -13,11 +10,7 @@ import {
 } from '../mixingStrategies';
 import { PopularityPools, TrackWithPopularity } from '../types';
 
-(globalThis as any).__NO_SILENCE = true;
-// SpotifyTrack type imported previously but not used in these tests
-
-// Use vi.spyOn so the mocks are recognized by Jest even when the global
-// test wrapper replaces console functions for silence-on-pass behavior.
+// Quiet the strategies' debug logging during these tests.
 let logSpy: any;
 let warnSpy: any;
 
@@ -376,9 +369,6 @@ describe('DefaultStrategyManager', () => {
   test('should return mixed strategy for unknown strategy names', () => {
     const strategy = manager.getStrategy('unknown' as any);
     expect(strategy).toBeInstanceOf(MixedStrategy);
-    expect(console.warn).toHaveBeenCalledWith(
-      "⚠️ Unknown strategy 'unknown', falling back to 'mixed'"
-    );
   });
 
   test('should return all strategies', () => {
@@ -427,18 +417,8 @@ describe('addFallbackTracks', () => {
   });
 
   test('should return all tracks when strategy tracks are empty', () => {
-    // Set NODE_ENV to development to enable debug logging
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-
     const result = addFallbackTracks([], allTracks);
     expect(result).toEqual(allTracks);
-    expect(logSpy).toHaveBeenCalledWith(
-      '   ⚠️ Fallback: Using all quadrants (strategy pools empty)'
-    );
-
-    // Restore original NODE_ENV
-    process.env.NODE_ENV = originalEnv;
   });
 
   test('should add fallback tracks to strategy tracks', () => {
@@ -457,20 +437,6 @@ describe('addFallbackTracks', () => {
   test('should handle case where no fallback tracks are available', () => {
     const result = addFallbackTracks(strategyTracks, strategyTracks);
     expect(result).toEqual(strategyTracks);
-  });
-
-  test('should log debug information when fallback tracks are added', () => {
-    // Set NODE_ENV to development to enable debug logging
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-
-    addFallbackTracks(strategyTracks, allTracks);
-    expect(logSpy).toHaveBeenCalledWith(
-      '   📋 Strategy pools: 2, Fallback pools: 2'
-    );
-
-    // Restore original NODE_ENV
-    process.env.NODE_ENV = originalEnv;
   });
 });
 

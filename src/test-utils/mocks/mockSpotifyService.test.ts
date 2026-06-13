@@ -1,16 +1,21 @@
 import { makeMockSpotifyService } from './mockSpotifyService';
-import { silenceIfPass } from '../silenceIfPass';
+
+// Invoke an async block and await it (call sites kept from the old silenceIfPass helper).
+const run = <T>(fn: () => Promise<T>) => fn();
 
 describe('MockSpotifyService (unit)', () => {
   const originalFetch = (global as any).fetch;
 
   // Keep passing test output quiet; tests can still assert explicit logs.
   let consoleErrorSpy: import('vitest').MockInstance | undefined;
+  let consoleLogSpy: import('vitest').MockInstance | undefined;
   beforeAll(() => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
   afterAll(() => {
-    if (consoleErrorSpy) consoleErrorSpy.mockRestore();
+    consoleErrorSpy?.mockRestore();
+    consoleLogSpy?.mockRestore();
   });
 
   afterEach(() => {
@@ -19,7 +24,7 @@ describe('MockSpotifyService (unit)', () => {
   });
 
   it('getUserPlaylists returns all when options.all is true', async () => {
-    await silenceIfPass(async () => {
+    await run(async () => {
       const Mock = makeMockSpotifyService();
       const svc = new Mock('token');
       const res = await svc.getUserPlaylists({ all: true });
@@ -32,7 +37,7 @@ describe('MockSpotifyService (unit)', () => {
     const Mock = makeMockSpotifyService();
     const svc = new Mock('token');
     // success JSON + non-json handled quietly for passing tests
-    await silenceIfPass(async () => {
+    await run(async () => {
       // success JSON
       (global as any).fetch = vi.fn().mockResolvedValueOnce({
         status: 200,
@@ -66,9 +71,9 @@ describe('MockSpotifyService (unit)', () => {
       'Search query cannot be empty'
     );
 
-    // simulate one 429 then a successful response — keep the successful
+    // simulate one 429 then a successful response - keep the successful
     // portion quiet for passing tests
-    await silenceIfPass(async () => {
+    await run(async () => {
       const okPayload = {
         tracks: { items: [{ id: 't1' }], total: 1, limit: 20, offset: 0 },
       };
@@ -105,7 +110,7 @@ describe('MockSpotifyService (unit)', () => {
     await expect(svc.createPlaylist('u1', {})).rejects.toThrow(
       'Playlist name is required'
     );
-    await silenceIfPass(async () => {
+    await run(async () => {
       const ok = await svc.createPlaylist('u1', { name: 'my' });
       expect(ok.name).toBe('my');
     });
@@ -145,7 +150,7 @@ describe('MockSpotifyService (unit)', () => {
       status: 200,
       text: async () => 'not-json',
     });
-    await silenceIfPass(async () => {
+    await run(async () => {
       const res = await svc.searchTracks('y');
       expect(res.items).toEqual([]);
     });
@@ -165,7 +170,7 @@ describe('MockSpotifyService (unit)', () => {
       status: 200,
       text: async () => JSON.stringify(payload),
     });
-    await silenceIfPass(async () => {
+    await run(async () => {
       const out = await svc.searchPlaylists('p', { market: 'US' });
       expect(out.playlists.length).toBe(1);
     });
@@ -185,7 +190,7 @@ describe('MockSpotifyService (unit)', () => {
       .fn()
       .mockResolvedValueOnce(first)
       .mockResolvedValueOnce(second);
-    await silenceIfPass(async () => {
+    await run(async () => {
       const res = await svc.removeTracksFromPlaylist('pl', { tracks: [] });
       expect(res.snapshot_id).toBe('s1');
     });
@@ -228,7 +233,7 @@ describe('MockSpotifyService (unit)', () => {
       if (progressCalls.length === 1) throw new Error('boom'); // ensure handler exceptions are caught
     });
 
-    await silenceIfPass(async () => {
+    await run(async () => {
       const out = await svc.getPlaylistTracks('pl', { onProgress });
       expect(out.tracks.length).toBe(3);
       expect(onProgress).toHaveBeenCalled();
@@ -254,7 +259,7 @@ describe('MockSpotifyService (unit)', () => {
         json: async () => ({ snapshot_id: 'b' }),
       });
 
-    await silenceIfPass(async () => {
+    await run(async () => {
       const res = await svc.addTracksToPlaylist('pl', { uris });
       expect(res.snapshot_id).toBe('b');
     });

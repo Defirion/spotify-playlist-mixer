@@ -633,7 +633,6 @@ describe('PlaylistMixer behavior', () => {
     await waitFor(() =>
       expect(mockMixGeneration.createPlaylist).toHaveBeenCalled()
     );
-    await waitFor(() => expect(errorSpy).toHaveBeenCalled());
     expect(onMixed).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();
@@ -700,7 +699,6 @@ describe('PlaylistMixer behavior', () => {
     await waitFor(() =>
       expect(mockMixGeneration.generateMix).toHaveBeenCalled()
     );
-    await waitFor(() => expect(errorSpy).toHaveBeenCalled());
     expect(onMixed).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();

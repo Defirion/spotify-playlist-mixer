@@ -6,9 +6,10 @@
  * - rich error rendering path
  */
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import TrackSourceModal from '../TrackSourceModal';
+import { generateTrackInstanceId } from '../../utils/trackUtils';
 
 // Mock generateTrackInstanceId to control and observe calls while preserving other utilities
 const seq: string[] = ['init-1', 'init-2', 'regen-1'];
@@ -67,22 +68,24 @@ describe('TrackSourceModal branches', () => {
       { id: 't2', name: 'B' } as any,
     ];
 
-    // spy on console.log so we can assert the handler ran
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
     render(<TrackSourceModal {...baseProps} tracks={tracks} />);
 
-    // dispatch custom event for t1 -> handler should run and log
+    // Two tracks => two instance IDs generated on mount.
+    const callsAfterMount = (generateTrackInstanceId as import('vitest').Mock)
+      .mock.calls.length;
+    expect(callsAfterMount).toBe(2);
+
+    // Dispatching the event should regenerate the dragged track's instance ID.
     const ev = new CustomEvent('trackDraggedToPreview', {
       detail: { trackId: 't1' },
     });
-    window.dispatchEvent(ev as Event);
+    act(() => {
+      window.dispatchEvent(ev as Event);
+    });
 
-    expect(logSpy).toHaveBeenCalledWith(
-      'Regenerated instance ID for dragged track:',
-      't1'
-    );
-    logSpy.mockRestore();
+    expect(
+      (generateTrackInstanceId as import('vitest').Mock).mock.calls.length
+    ).toBe(callsAfterMount + 1);
   });
 
   test('rich error object renders label and ErrorHandler', () => {

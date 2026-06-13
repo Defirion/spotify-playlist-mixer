@@ -375,6 +375,44 @@ describe('useSpotifySearch', () => {
     });
   });
 
+  describe('Manual search edge cases', () => {
+    it('sets error when spotify service not initialized and search is called', async () => {
+      vi.useRealTimers();
+      const { result } = renderHook(() =>
+        useSpotifySearch(null as any, { autoSearch: false })
+      );
+
+      await act(async () => {
+        await result.current.search('q');
+      });
+
+      expect(result.current.error).toBeInstanceOf(Error);
+      expect(result.current.results).toEqual([]);
+    });
+
+    it('clear aborts in-flight search and prevents state update after abort', async () => {
+      vi.useRealTimers();
+      let resolveSearch: ((value: unknown) => void) | null = null;
+      mockSpotifyService.searchTracks.mockImplementation(
+        () => new Promise(resolve => (resolveSearch = resolve))
+      );
+
+      const { result } = renderHook(() =>
+        useSpotifySearch(mockAccessToken, { autoSearch: false })
+      );
+
+      await act(async () => {
+        const p = result.current.search('slow');
+        // clear immediately, which should abort the in-flight request
+        result.current.clear();
+        resolveSearch!({ tracks: [{ id: 'z' }], hasMore: false, total: 1 });
+        await p;
+      });
+
+      expect(result.current.results).toEqual([]);
+    });
+  });
+
   describe('Utility methods', () => {
     it('clears search results and state', () => {
       const { result } = renderHook(() => useSpotifySearch(mockAccessToken));

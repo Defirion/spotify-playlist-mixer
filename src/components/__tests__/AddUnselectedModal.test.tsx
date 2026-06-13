@@ -463,18 +463,14 @@ describe('AddUnselectedModal', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockApiGet.mockRejectedValue(new Error('API Error'));
 
     render(<AddUnselectedModal {...defaultProps} />);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to fetch playlist tracks:',
-        expect.any(Error)
-      );
+      expect(
+        screen.getByText(/Error loading tracks\. Please try again\./i)
+      ).toBeInTheDocument();
     });
-
-    consoleSpy.mockRestore();
   });
 });

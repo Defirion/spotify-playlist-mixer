@@ -2,7 +2,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Silence Policy compliance: prefer per-suite spies instead of module-scoped reassignment.
+// Prefer per-suite console spies instead of module-scoped reassignment.
 let consoleErrorSpy: import('vitest').MockInstance;
 beforeEach(() => {
   consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

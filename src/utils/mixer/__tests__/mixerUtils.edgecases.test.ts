@@ -9,7 +9,7 @@ import {
 describe('mixerUtils edge cases', () => {
   const OLD_ENV = process.env.NODE_ENV;
 
-  // Per-suite suppression of noisy logs (follow SILENCE_POLICY pattern #1)
+  // Per-suite suppression of noisy logs during passing runs
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});

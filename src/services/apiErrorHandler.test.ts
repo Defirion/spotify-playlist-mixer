@@ -165,6 +165,23 @@ describe('ApiErrorHandler & ApiError', () => {
     expect(calls).toBeGreaterThanOrEqual(2);
   });
 
+  it('withRetry retries on RATE_LIMIT (429) and succeeds on third attempt', async () => {
+    const h = new ApiErrorHandler({ enableLogging: false });
+    vi.spyOn(ApiError.prototype, 'getRetryDelay').mockReturnValue(0 as any);
+    let attempt = 0;
+    const result = await h.withRetry(async () => {
+      attempt++;
+      if (attempt < 3) {
+        const err: any = new Error('Too Many Requests');
+        err.response = { status: 429 };
+        throw err;
+      }
+      return 'success';
+    });
+    expect(result).toBe('success');
+    expect(attempt).toBe(3);
+  });
+
   it('withRetry stops retrying when max attempts reached', async () => {
     const h = new ApiErrorHandler({ enableLogging: false });
     let calls = 0;

@@ -73,7 +73,7 @@ describe('PlaylistMixer error and edge flows', () => {
     vi.clearAllMocks();
   });
 
-  it('shows console error when createPlaylist throws', async () => {
+  it('recovers without crashing when createPlaylist throws', async () => {
     const createPlaylist = vi.fn().mockRejectedValue(new Error('boom'));
     mockUseMixGeneration.mockReturnValue({
       state: { loading: false, error: null, mixedTracks: [] },
@@ -95,6 +95,7 @@ describe('PlaylistMixer error and edge flows', () => {
       ratioImbalance: null,
     } as any);
 
+    // Keep the expected rejection from polluting test output.
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
@@ -114,7 +115,10 @@ describe('PlaylistMixer error and edge flows', () => {
     fireEvent.click(createBtn);
 
     await waitFor(() => expect(createPlaylist).toHaveBeenCalled());
-    expect(consoleSpy).toHaveBeenCalled();
+    // The rejection is caught: the component stays mounted and usable.
+    expect(
+      screen.getByRole('button', { name: /create this playlist/i })
+    ).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
 });

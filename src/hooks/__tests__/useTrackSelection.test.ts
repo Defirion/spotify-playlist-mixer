@@ -1,7 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
 import { useTrackSelection } from '../../hooks/useTrackSelection';
+import { SpotifyTrack } from '../../types';
 
-const makeTrack = (id: string) => ({ id, name: `Track ${id}` });
+// Only id/name are exercised here; cast the partial fixture to the full type.
+const makeTrack = (id: string) =>
+  ({ id, name: `Track ${id}` }) as unknown as SpotifyTrack;
 
 describe('useTrackSelection', () => {
   it('toggles selection when handleTrackSelect called and clears on add', () => {

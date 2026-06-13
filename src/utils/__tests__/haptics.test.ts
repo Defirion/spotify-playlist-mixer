@@ -1,50 +1,76 @@
 import { isVibrationSupported, vibrate } from '../haptics';
 
 describe('haptics', () => {
-  const originalNavigator: any = global.navigator;
+  const originalNavigator = (globalThis as any).navigator;
+  const originalDebug = process.env.DEBUG_HAPTICS;
 
   afterEach(() => {
-    (global as any).navigator = originalNavigator;
+    try {
+      if (originalNavigator === undefined) {
+        // remove mocked navigator
+        // @ts-ignore
+        delete (globalThis as any).navigator;
+      } else {
+        Object.defineProperty(globalThis, 'navigator', {
+          configurable: true,
+          value: originalNavigator,
+        });
+      }
+    } catch (e) {
+      (globalThis as any).navigator = originalNavigator;
+    }
+
+    process.env.DEBUG_HAPTICS = originalDebug;
+    vi.restoreAllMocks();
   });
 
-  test('isVibrationSupported false without vibrate', () => {
-    delete (global as any).navigator;
-    (global as any).navigator = { userAgent: 'jest' };
+  it('isVibrationSupported returns false when navigator is undefined', () => {
+    try {
+      // remove navigator if present
+      // @ts-ignore
+      delete (globalThis as any).navigator;
+    } catch (e) {
+      (globalThis as any).navigator = undefined;
+    }
     expect(isVibrationSupported()).toBe(false);
   });
 
-  test('isVibrationSupported true with vibrate', () => {
-    delete (global as any).navigator;
-    (global as any).navigator = { userAgent: 'jest' };
-    Object.defineProperty((global as any).navigator, 'vibrate', {
-      value: vi.fn(),
+  it('isVibrationSupported returns true when navigator.vibrate exists', () => {
+    Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
+      value: { vibrate: () => {} },
     });
     expect(isVibrationSupported()).toBe(true);
   });
 
-  test('vibrate calls underlying navigator.vibrate when supported', () => {
-    const spy = vi.fn();
-    delete (global as any).navigator;
-    (global as any).navigator = { userAgent: 'jest' };
-    Object.defineProperty((global as any).navigator, 'vibrate', {
-      value: spy,
+  it('vibrate calls navigator.vibrate when supported', () => {
+    const vibrateMock = vi.fn();
+    Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
+      value: { vibrate: vibrateMock },
     });
-    vibrate(50);
-    expect(spy).toHaveBeenCalledWith(50);
+    vibrate(100);
+    expect(vibrateMock).toHaveBeenCalledWith(100);
   });
 
-  test('vibrate swallows errors', () => {
-    const spy = vi.fn(() => {
-      throw new Error('boom');
-    });
-    delete (global as any).navigator;
-    (global as any).navigator = { userAgent: 'jest' };
-    Object.defineProperty((global as any).navigator, 'vibrate', {
-      value: spy,
+  it('vibrate does not throw when navigator.vibrate is absent', () => {
+    Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
+      value: {},
     });
-    expect(() => vibrate([10, 20, 10])).not.toThrow();
+    expect(() => vibrate(50)).not.toThrow();
+  });
+
+  it('vibrate logs debug info when DEBUG_HAPTICS=1', () => {
+    process.env.DEBUG_HAPTICS = '1';
+    const vibrateMock = vi.fn();
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { vibrate: vibrateMock },
+    });
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    vibrate([10, 20]);
+    expect(vibrateMock).toHaveBeenCalled();
+    expect(debugSpy).toHaveBeenCalled();
   });
 });

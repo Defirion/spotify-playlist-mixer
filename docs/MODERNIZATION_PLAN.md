@@ -5,9 +5,10 @@
 > need to know is in this file; verify claims against the code before acting
 > on them, but they were accurate when written.
 >
-> **Status: Phases A (`93114be9`) and B (`377abe09`) are COMMITTED. Resume
-> at Phase C.** The only uncommitted change in the tree is the deletion of
-> `big_idea.txt`, which predates this work — keep it out of commits.
+> **Status: Phases A (`93114be9`), B (`377abe09`), and C are COMMITTED.
+> Resume at Phase D.** The only uncommitted change in the tree is the
+> deletion of `big_idea.txt`, which predates this work — keep it out of
+> commits.
 
 ## Project snapshot
 
@@ -173,7 +174,34 @@ a surprise.
 
 ---
 
-## Phase C — consolidate the test suite
+## Phase C — consolidate the test suite ✅ DONE
+
+Landed: 178 → 135 test files, 1276 → 1144 tests, suite runtime 54s → 38s.
+Coverage held where it matters: `src/services` 95.0%, `src/utils/mixer`
+98.3% statements (both ≥ 90%); overall statements 96.8%. What changed:
+
+- App tests: nine files collapsed to `src/__tests__/App.test.tsx` (mocked
+  store + AppShell, incl. the token-refresh effect) and
+  `App.integration.test.tsx` (real store). Shared fixtures live in
+  `src/test-utils/mockStoreReturns.ts` (`applyStoreMocks`).
+- Spotify service: the `spotify.batchA–I` files (and other whole-service
+  mocks that asserted on their own mocks) were deleted; the real DI-based
+  suite now lives at `src/services/__tests__/spotify.service.test.ts` with
+  validation + DI cases folded in.
+- One file per hook (useMixGeneration/useMixPreview/useSpotifySearch/
+  useTrackOperations/useTrackSelection/useKeyboardNavigation) — `unit`,
+  `extra`, `simple`, and placeholder smoke files merged/dropped. Same for
+  accessibility/haptics/normalizeError/errorNormalizer/fetchClient.
+- De-brittled: dropped incidental `console.*` assertions (kept only where
+  logging is the feature: DEBUG-gated branches, dedup logging); auth-URL
+  tests already parse with `new URL`. Removed the `silenceIfPass`
+  machinery + `SILENCE_POLICY.md`.
+- `tsconfig.json` excludes `src/__tests__` and `src/test-utils` from
+  `tsc --noEmit`, so files relocated INTO `src/<area>/__tests__` get
+  type-checked — fixed the latent `any`/`MixOptions`/`.at()` errors that
+  surfaced. `scripts/dir-coverage.js` prints per-dir statement coverage.
+
+Original plan kept below for reference:
 
 Target: fewer, behavior-focused tests. ~700 is a reasonable landing zone;
 judge by redundancy, not by count. Keep coverage of `src/utils/mixer/**` and
