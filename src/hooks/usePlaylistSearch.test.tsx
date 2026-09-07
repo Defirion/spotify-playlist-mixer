@@ -48,7 +48,7 @@ describe('usePlaylistSearch', () => {
     fireEvent.change(input, { target: { value: '   ' } });
     await waitFor(() =>
       expect(screen.getByTestId('out').textContent).toContain(
-        'showResults":false'
+        'showResults\":false'
       )
     );
 
@@ -57,7 +57,7 @@ describe('usePlaylistSearch', () => {
     });
     await waitFor(() =>
       expect(screen.getByTestId('out').textContent).toContain(
-        'showResults":false'
+        'showResults\":false'
       )
     );
   });
@@ -81,12 +81,15 @@ describe('usePlaylistSearch', () => {
     );
   });
 
-  it('handles alternative tracks.items shape and errors from api.get', async () => {
+  it('handles alternative tracks.items shape and preserves Spotify http errors', async () => {
     const mockGet = jest
       .fn()
       .mockResolvedValueOnce({ data: { tracks: { items: [{ id: 't1' }] } } })
       .mockRejectedValueOnce({
-        response: { status: 500, data: { msg: 'bad' } },
+        response: {
+          status: 403,
+          data: { error: { message: 'Forbidden by Spotify' } },
+        },
       });
 
     (getSpotifyApi as jest.Mock).mockImplementation(() => ({
@@ -102,12 +105,12 @@ describe('usePlaylistSearch', () => {
       expect(screen.getByTestId('out').textContent).toContain('t1');
     });
 
-    // provoke error path
     fireEvent.change(input, { target: { value: 'will-error' } });
     await waitFor(() => {
-      expect(screen.getByTestId('out').textContent).toContain(
-        'Failed to search playlists'
-      );
+      const output = screen.getByTestId('out').textContent || '';
+      expect(output).toContain('Failed to search playlists');
+      expect(output).toContain('HTTP 403');
+      expect(output).toContain('Forbidden by Spotify');
     });
   });
 });
