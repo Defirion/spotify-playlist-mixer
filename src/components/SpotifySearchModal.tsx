@@ -26,7 +26,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
     } = useSpotifySearch(accessToken, {
       autoSearch: true, // Enable search-as-you-type
       debounceMs: 300, // Add debouncing to avoid too many API calls
-      limit: 20,
+      limit: 10, // Spotify reduced the /search maximum from 50 to 10 in Feb 2026
     });
 
     // Handle adding tracks with source metadata
