@@ -152,6 +152,7 @@ export function MainApp() {
       onDismissError={dismissError}
       onDismissSuccess={() => dismissSuccessToast('')}
       onMixedPlaylist={addMixedPlaylist}
+      onError={err => setUIError(err)}
     />
   );
 }
