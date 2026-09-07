@@ -45,12 +45,10 @@ export const usePlaylistSearch = ({
         return;
       }
 
-      // Cancel previous request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
 
-      // Create new abort controller
       abortControllerRef.current = new AbortController();
 
       try {
@@ -62,9 +60,7 @@ export const usePlaylistSearch = ({
           searchQuery
         )}&type=playlist&limit=${limit}`;
 
-        // Debug: surface request info to help diagnose live-app failures
         try {
-          // Only log in development to avoid leaking tokens or affecting tests
           if (process.env.NODE_ENV === 'development') {
             const maskedToken = accessToken
               ? accessToken.length > 10
@@ -81,108 +77,49 @@ export const usePlaylistSearch = ({
               maskedToken,
               defaultAuthHeader,
             });
-            try {
-              // Extra inspection: show all default headers shape to catch bundler/runtime differences
-              // eslint-disable-next-line no-console
-              console.debug(
-                'DEBUG (usePlaylistSearch): api.defaults.headers =',
-                api?.defaults?.headers
-              );
-            } catch (e) {
-              // ignore
-            }
           }
-        } catch (e) {
-          // swallow debug errors
+        } catch (_) {
+          // Debug logging must never affect search behavior.
         }
 
-        // Perform request and capture network errors for debugging
-        let response;
-        try {
-          response = await api.get(requestUrl);
-        } catch (err) {
-          // Development-only detailed error logging to help diagnose live failures
-          try {
-            if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const maybeResponse = (err as any)?.response;
-              // eslint-disable-next-line no-console
-              console.error('DEBUG (usePlaylistSearch): request failed', {
-                url: requestUrl,
-                error: err,
-                status: maybeResponse?.status,
-                responseData: maybeResponse?.data,
-                responseHeaders: maybeResponse?.headers,
-              });
-            }
-          } catch (e) {
-            // swallow
-          }
+        const response = await api.get(requestUrl);
 
-          throw err;
-        }
-
-        // Check if request was aborted
         if (abortControllerRef.current?.signal.aborted) {
           return;
         }
 
-        // Some MSW handlers or API responses may return playlists under
-        // `playlists` or `tracks` depending on test harness. Be defensive
-        // and accept either shape. Validate the resulting items before
-        // setting state to avoid "cannot read properties of undefined" errors.
-        const items =
-          response?.data?.playlists?.items ?? response?.data?.tracks?.items;
+        const items = response?.data?.playlists?.items;
         if (!Array.isArray(items)) {
-          // Log unexpected API shapes to help debugging in CI or locally.
-          // Respect TEST_VERBOSE so passing test runs stay quiet unless requested.
-          const _testVerbose = String(
-            process.env.TEST_VERBOSE || ''
-          ).toLowerCase();
-          if (
-            _testVerbose === '1' ||
-            _testVerbose === 'true' ||
-            process.env.NODE_ENV === 'development'
-          ) {
-            console.error(
-              'Unexpected Spotify API response shape for playlist search:',
-              response
-            );
-          }
+          console.error(
+            'Unexpected Spotify API response shape for playlist search:',
+            response
+          );
           setResults([]);
-        } else {
-          setResults(items);
+          setShowResults(false);
+          setError('Spotify returned an unexpected playlist search response.');
+          return;
         }
+
+        setResults(items.filter((playlist: any) => playlist && playlist.id));
         setShowResults(true);
       } catch (err) {
-        // Don't set error if request was aborted
         if (!abortControllerRef.current?.signal.aborted) {
-          // Surface axios-like response objects where available to help
-          // diagnose unexpected API responses in logs. Keep the primary
-          // console.error call shape the same (message, error) so existing
-          // tests that assert this call continue to pass.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const maybeResponse = (err as any)?.response ?? null;
-          // Always surface the primary error call so tests that assert on it
-          // remain stable. Additional diagnostic logging is gated behind
-          // TEST_VERBOSE or development mode to avoid noisy CI output.
+          const status = maybeResponse?.status;
+          const spotifyMessage = maybeResponse?.data?.error?.message;
+
           console.error('Failed to search playlists:', err);
-          const _testVerbose = String(
-            process.env.TEST_VERBOSE || ''
-          ).toLowerCase();
-          if (
-            _testVerbose === '1' ||
-            _testVerbose === 'true' ||
-            process.env.NODE_ENV === 'development'
-          ) {
-            if (maybeResponse) {
-              // Log the response object separately to avoid changing the
-              // original error call signature asserted in tests.
-              console.error('Spotify API response:', maybeResponse);
-            }
-          }
-          setError('Failed to search playlists. Please try again.');
+
+          const message = status
+            ? `Spotify playlist search failed (${status})${
+                spotifyMessage ? `: ${spotifyMessage}` : ''
+              }`
+            : 'Failed to search playlists. Please try again.';
+
+          setError(message);
           setResults([]);
+          setShowResults(false);
         }
       } finally {
         setLoading(false);
@@ -191,26 +128,21 @@ export const usePlaylistSearch = ({
     [accessToken, limit]
   );
 
-  // Debounced search effect
   useEffect(() => {
-    // Clear previous timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Don't search if query is empty or looks like a URL
     if (!query.trim() || isValidSpotifyLink(query.trim())) {
       setResults([]);
       setShowResults(false);
       return;
     }
 
-    // Set new timeout
     debounceTimeoutRef.current = setTimeout(() => {
       searchPlaylists(query);
     }, debounceMs);
 
-    // Cleanup
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -218,7 +150,6 @@ export const usePlaylistSearch = ({
     };
   }, [query, debounceMs, searchPlaylists]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
@@ -248,7 +179,6 @@ export const usePlaylistSearch = ({
   };
 };
 
-// Helper function to check if input is a Spotify link
 const isValidSpotifyLink = (input: string): boolean => {
   const spotifyUrlRegex =
     /^(https?:\/\/(open\.)?spotify\.com\/(playlist|track|album)\/[a-zA-Z0-9]+(\?.*)?)$/;
