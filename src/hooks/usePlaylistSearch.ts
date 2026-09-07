@@ -181,7 +181,23 @@ export const usePlaylistSearch = ({
               console.error('Spotify API response:', maybeResponse);
             }
           }
-          setError('Failed to search playlists. Please try again.');
+
+          const status = maybeResponse?.status;
+          const spotifyError = maybeResponse?.data?.error;
+          const spotifyMessage =
+            typeof spotifyError === 'string'
+              ? spotifyError
+              : spotifyError?.message || maybeResponse?.data?.message;
+          const details = [
+            status ? `HTTP ${status}` : null,
+            spotifyMessage || null,
+          ].filter(Boolean);
+
+          setError(
+            details.length > 0
+              ? `Failed to search playlists (${details.join(': ')}).`
+              : 'Failed to search playlists. Please try again.'
+          );
           setResults([]);
         }
       } finally {
