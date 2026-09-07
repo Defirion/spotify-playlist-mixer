@@ -10,7 +10,7 @@ const useSpotifySearch = (
   accessToken: string | null,
   options: UseSpotifySearchOptions = {}
 ): UseSpotifySearchReturn => {
-  const { debounceMs = 300, autoSearch = true, limit = 20, market } = options;
+  const { debounceMs = 300, autoSearch = true, limit = 10, market } = options;
 
   // State
   const [query, setQuery] = useState<string>('');

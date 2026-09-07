@@ -71,7 +71,7 @@ describe('useSpotifySearch', () => {
         { id: '2', name: 'Track 2', artists: [{ name: 'Artist 2' }] },
       ],
       total: 100,
-      limit: 20,
+      limit: 10,
       offset: 0,
       hasMore: true,
     };
@@ -99,7 +99,7 @@ describe('useSpotifySearch', () => {
         expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
           'test query',
           {
-            limit: 20,
+            limit: 10,
             offset: 0,
             market: undefined,
           }
@@ -256,7 +256,7 @@ describe('useSpotifySearch', () => {
         expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith(
           'new query',
           {
-            limit: 20,
+            limit: 10,
             offset: 0,
             market: undefined,
           }
@@ -308,7 +308,7 @@ describe('useSpotifySearch', () => {
 
       expect(mockSpotifyService.searchTracks).toHaveBeenCalledTimes(2);
       expect(mockSpotifyService.searchTracks).toHaveBeenLastCalledWith('test', {
-        limit: 20,
+        limit: 10,
         offset: 1,
         market: undefined,
       });
@@ -491,7 +491,7 @@ describe('useSpotifySearch', () => {
 
       await waitFor(() => {
         expect(mockSpotifyService.searchTracks).toHaveBeenCalledWith('test', {
-          limit: 20,
+          limit: 10,
           offset: 0,
           market: 'US',
         });
