@@ -36,6 +36,7 @@ type AppShellProps = {
   onDismissError?: () => void;
   onDismissSuccess?: () => void;
   onMixedPlaylist?: (playlist: any) => void;
+  onError?: (error: unknown) => void;
 };
 
 const AppShell: React.FC<AppShellProps> = ({
@@ -52,6 +53,7 @@ const AppShell: React.FC<AppShellProps> = ({
   onDismissError,
   onDismissSuccess,
   onMixedPlaylist,
+  onError,
   onRatioUpdate,
   onPlaylistRemove,
   mixOptions,
@@ -105,7 +107,7 @@ const AppShell: React.FC<AppShellProps> = ({
             selectedPlaylists={selectedPlaylists}
             onPlaylistSelect={onPlaylistSelect ?? (() => {})}
             onClearAll={onClearAll ?? (() => {})}
-            onError={() => {}}
+            onError={onError ?? (() => {})}
           />
         </ErrorBoundary>
 
@@ -136,7 +138,7 @@ const AppShell: React.FC<AppShellProps> = ({
               mixOptions={mixOptions || ({} as any)}
               updateMixOptions={updateMixOptions || (() => {})}
               onMixedPlaylist={onMixedPlaylist ?? (() => {})}
-              onError={() => {}}
+              onError={onError ?? (() => {})}
             />
           </ErrorBoundary>
         )}
