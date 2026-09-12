@@ -45,6 +45,7 @@ export const useAuth = () =>
       accessToken: state.accessToken,
       refreshToken: state.refreshToken,
       tokenExpiresAt: state.tokenExpiresAt,
+      grantedScopes: state.grantedScopes,
       isAuthenticated: state.isAuthenticated,
       setAccessToken: state.setAccessToken,
       setTokens: state.setTokens,
