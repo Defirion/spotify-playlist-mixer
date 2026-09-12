@@ -27,7 +27,6 @@ export function makeStoreReturns() {
       accessToken: null as string | null,
       refreshToken: null as string | null,
       tokenExpiresAt: null as number | null,
-      grantedScopes: [] as string[],
       isAuthenticated: false,
       setAccessToken: vi.fn(),
       setTokens: vi.fn(),
