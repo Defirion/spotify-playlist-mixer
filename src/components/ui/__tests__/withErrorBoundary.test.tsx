@@ -7,12 +7,12 @@ const WorkingComponent = () => <div>Working Component</div>;
 describe('withErrorBoundary', () => {
   beforeEach(() => {
     // Suppress console.error during tests that expect errors
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     // Restore console.error after each test
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('renders the wrapped component correctly', () => {
@@ -46,7 +46,7 @@ describe('withErrorBoundary', () => {
       _errorInfo: React.ErrorInfo | null,
       _handleRetry: () => void
     ) => <div>Custom Fallback</div>;
-    const handleError = jest.fn();
+    const handleError = vi.fn();
     const Component = withErrorBoundary(WorkingComponent);
 
     // This test just verifies the component renders without error when error boundary props are passed

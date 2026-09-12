@@ -9,10 +9,10 @@ const baseProps = {
 };
 
 describe('AppShell', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
   beforeAll(() => {
     // Prevent ErrorBoundary from spamming test output during intentional error paths
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterAll(() => {
     consoleErrorSpy.mockRestore();

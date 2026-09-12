@@ -5,12 +5,12 @@ import { useAutoScroll } from '../useAutoScroll';
 let frameCallbacks: Array<() => void> = [];
 let frameId = 0;
 
-const mockRequestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
+const mockRequestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
   frameCallbacks.push(() => callback(Date.now()));
   return ++frameId;
 });
 
-const mockCancelAnimationFrame = jest.fn((id: number) => {
+const mockCancelAnimationFrame = vi.fn((id: number) => {
   // Remove callback from queue if it exists
   frameCallbacks = frameCallbacks.filter((_, index) => index + 1 !== id);
 });
@@ -44,7 +44,7 @@ describe('useAutoScroll Edge Cases and Branch Coverage', () => {
       },
       scrollHeight: 1000,
       clientHeight: 400,
-      getBoundingClientRect: jest.fn(() => ({
+      getBoundingClientRect: vi.fn(() => ({
         top: 50,
         bottom: 450,
         left: 0,
@@ -56,11 +56,11 @@ describe('useAutoScroll Edge Cases and Branch Coverage', () => {
 
     mockScrollContainer = container as unknown as HTMLElement;
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('initialization and default behavior', () => {
@@ -393,7 +393,7 @@ describe('useAutoScroll Edge Cases and Branch Coverage', () => {
     it('handles getBoundingClientRect throwing error', () => {
       const errorContainer = {
         ...mockScrollContainer,
-        getBoundingClientRect: jest.fn(() => {
+        getBoundingClientRect: vi.fn(() => {
           throw new Error('getBoundingClientRect failed');
         }),
       } as unknown as HTMLElement;
@@ -411,7 +411,7 @@ describe('useAutoScroll Edge Cases and Branch Coverage', () => {
 
     it('handles scroll container properties being undefined', () => {
       const incompleteContainer = {
-        getBoundingClientRect: jest.fn(() => ({
+        getBoundingClientRect: vi.fn(() => ({
           top: 50,
           bottom: 450,
           left: 0,

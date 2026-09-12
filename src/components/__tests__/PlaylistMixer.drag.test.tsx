@@ -7,76 +7,80 @@ import { useMixPreview } from '../../hooks/useMixPreview';
 import { useMixWarnings } from '../../hooks/useMixWarnings';
 
 // Mock the DndProvider so tests can invoke the passed handlers directly
-jest.mock('../DndProvider', () => {
-  return function MockDndProvider({
-    children,
-    onDragStart,
-    onDragEnd,
-    onDragCancel,
-  }: any) {
-    return (
-      <div>
-        <div data-testid="dnd-children">{children}</div>
-        <button
-          data-testid="dnd-start-external"
-          onClick={() =>
-            onDragStart({
-              active: {
-                id: 'drag-1',
-                data: {
-                  current: {
-                    context: 'modal',
-                    track: {
-                      id: 't-external',
-                      instanceId: 'inst-external',
-                      sourcePlaylist: 'p1',
+vi.mock('../DndProvider', () => {
+  const __mod = (() => {
+    return function MockDndProvider({
+      children,
+      onDragStart,
+      onDragEnd,
+      onDragCancel,
+    }: any) {
+      return (
+        <div>
+          <div data-testid="dnd-children">{children}</div>
+          <button
+            data-testid="dnd-start-external"
+            onClick={() =>
+              onDragStart({
+                active: {
+                  id: 'drag-1',
+                  data: {
+                    current: {
+                      context: 'modal',
+                      track: {
+                        id: 't-external',
+                        instanceId: 'inst-external',
+                        sourcePlaylist: 'p1',
+                      },
                     },
                   },
                 },
-              },
-            })
-          }
-        />
-        <button data-testid="dnd-cancel" onClick={() => onDragCancel()} />
-        <button
-          data-testid="dnd-end-external"
-          onClick={() =>
-            onDragEnd({
-              active: {
-                id: 'drag-1',
-                data: {
-                  current: {
-                    context: 'modal',
-                    track: {
-                      id: 't-external',
-                      instanceId: 'inst-external',
-                      sourcePlaylist: 'p1',
+              })
+            }
+          />
+          <button data-testid="dnd-cancel" onClick={() => onDragCancel()} />
+          <button
+            data-testid="dnd-end-external"
+            onClick={() =>
+              onDragEnd({
+                active: {
+                  id: 'drag-1',
+                  data: {
+                    current: {
+                      context: 'modal',
+                      track: {
+                        id: 't-external',
+                        instanceId: 'inst-external',
+                        sourcePlaylist: 'p1',
+                      },
                     },
                   },
                 },
-              },
-              over: { id: 'some-target' },
-            })
-          }
-        />
-      </div>
-    );
-  };
+                over: { id: 'some-target' },
+              })
+            }
+          />
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
-jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(),
+vi.mock('../../hooks/useMixGeneration', () => ({
+  useMixGeneration: vi.fn(),
 }));
-jest.mock('../../hooks/useMixPreview', () => ({ useMixPreview: jest.fn() }));
-jest.mock('../../hooks/useMixWarnings', () => ({ useMixWarnings: jest.fn() }));
+vi.mock('../../hooks/useMixPreview', () => ({ useMixPreview: vi.fn() }));
+vi.mock('../../hooks/useMixWarnings', () => ({ useMixWarnings: vi.fn() }));
 
-const mockUseMixGeneration = useMixGeneration as jest.MockedFunction<
-  typeof useMixGeneration
->;
-const mockUseMixPreview = useMixPreview as jest.MockedFunction<
+const mockUseMixGeneration =
+  useMixGeneration as import('vitest').MockedFunction<typeof useMixGeneration>;
+const mockUseMixPreview = useMixPreview as import('vitest').MockedFunction<
   typeof useMixPreview
 >;
-const mockUseMixWarnings = useMixWarnings as jest.MockedFunction<
+const mockUseMixWarnings = useMixWarnings as import('vitest').MockedFunction<
   typeof useMixWarnings
 >;
 
@@ -101,9 +105,7 @@ const baseMixOptions = {
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'Drag Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 const baseRatio = {
@@ -111,15 +113,15 @@ const baseRatio = {
 };
 
 describe('PlaylistMixer drag optimistic flows', () => {
-  let updateTrackOrder: jest.Mock;
-  let getPreviewTracks: jest.Mock;
-  let generatePreview: jest.Mock;
-  let createPlaylist: jest.Mock;
+  let updateTrackOrder: import('vitest').Mock;
+  let getPreviewTracks: import('vitest').Mock;
+  let generatePreview: import('vitest').Mock;
+  let createPlaylist: import('vitest').Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    createPlaylist = jest.fn().mockResolvedValue({ id: 'pl' });
+    createPlaylist = vi.fn().mockResolvedValue({ id: 'pl' });
     mockUseMixGeneration.mockReturnValue({
       state: {
         loading: false,
@@ -128,9 +130,9 @@ describe('PlaylistMixer drag optimistic flows', () => {
         exhaustedPlaylists: [],
         stoppedEarly: false,
       },
-      generateMix: jest.fn(),
+      generateMix: vi.fn(),
       createPlaylist,
-      reset: jest.fn(),
+      reset: vi.fn(),
     } as any);
 
     // Start with empty preview
@@ -140,15 +142,15 @@ describe('PlaylistMixer drag optimistic flows', () => {
       error: null,
       customTrackOrder: null,
     };
-    updateTrackOrder = jest.fn();
-    getPreviewTracks = jest.fn(() => []);
-    generatePreview = jest.fn();
+    updateTrackOrder = vi.fn();
+    getPreviewTracks = vi.fn(() => []);
+    generatePreview = vi.fn();
 
     mockUseMixPreview.mockReturnValue({
       state: previewState,
       generatePreview,
       updateTrackOrder,
-      clearPreview: jest.fn(),
+      clearPreview: vi.fn(),
       getPreviewTracks,
     } as any);
 
@@ -172,7 +174,7 @@ describe('PlaylistMixer drag optimistic flows', () => {
         selectedPlaylists={mockSelectedPlaylists as any}
         ratioConfig={baseRatio as any}
         mixOptions={baseMixOptions as any}
-        updateMixOptions={jest.fn()}
+        updateMixOptions={vi.fn()}
       />
     );
 
@@ -204,7 +206,7 @@ describe('PlaylistMixer drag optimistic flows', () => {
 
   it('dispatches event when external drag ends and clears optimistic reference', async () => {
     // make getPreviewTracks return the optimistic track (was added earlier)
-    getPreviewTracks = jest.fn(() => [
+    getPreviewTracks = vi.fn(() => [
       { id: 't-external', instanceId: 'inst-external', sourcePlaylist: 'p1' },
     ]);
     mockUseMixPreview.mockReturnValue({
@@ -218,13 +220,13 @@ describe('PlaylistMixer drag optimistic flows', () => {
         error: null,
         customTrackOrder: null,
       },
-      generatePreview: jest.fn(),
+      generatePreview: vi.fn(),
       updateTrackOrder: updateTrackOrder,
-      clearPreview: jest.fn(),
+      clearPreview: vi.fn(),
       getPreviewTracks,
     } as any);
 
-    const listener = jest.fn();
+    const listener = vi.fn();
     window.addEventListener('trackDraggedToPreview', listener as any);
 
     render(
@@ -233,7 +235,7 @@ describe('PlaylistMixer drag optimistic flows', () => {
         selectedPlaylists={mockSelectedPlaylists as any}
         ratioConfig={baseRatio as any}
         mixOptions={baseMixOptions as any}
-        updateMixOptions={jest.fn()}
+        updateMixOptions={vi.fn()}
       />
     );
 

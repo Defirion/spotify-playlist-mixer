@@ -6,11 +6,11 @@ import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactor
 import PlaylistMixer from '../../components/PlaylistMixer';
 
 // IMPORTANT: mocks first (before importing PlaylistMixer)
-jest.mock('../../hooks/useMixPreview', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixPreviewModule()
+vi.mock('../../hooks/useMixPreview', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixPreviewModule()
 );
-jest.mock('../../hooks/useMixGeneration', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule()
+vi.mock('../../hooks/useMixGeneration', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule()
 );
 
 // legacy helpers removed; use inline mocks where needed
@@ -22,7 +22,7 @@ describe('Mixer error scenarios (hook-mocked)', () => {
       makePlaylistWithTracks({ id: 'empty2' }, 0),
     ];
 
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
 
     // Render and assert user-friendly message appears in UI
     render(
@@ -44,7 +44,7 @@ describe('Mixer error scenarios (hook-mocked)', () => {
   });
 
   test('invalid ratio configuration triggers validation path (no crash)', async () => {
-    const mockOnError = jest.fn();
+    const mockOnError = vi.fn();
     const playlist = makePlaylistWithTracks({ name: 'A' }, 3);
 
     render(

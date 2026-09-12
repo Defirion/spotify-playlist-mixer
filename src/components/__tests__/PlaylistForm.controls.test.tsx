@@ -17,15 +17,13 @@ const defaultMixOptions = {
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'My Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 
 describe('PlaylistForm controls', () => {
   it('reports playlist name changes and toggles', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm

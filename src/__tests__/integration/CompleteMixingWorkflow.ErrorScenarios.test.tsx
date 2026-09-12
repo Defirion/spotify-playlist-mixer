@@ -6,8 +6,8 @@ import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactor
 import PlaylistMixer from '../../components/PlaylistMixer';
 
 // Error scenarios: preview rejects or returns empty
-jest.mock('../../hooks/useMixPreview', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixPreviewModule(
+vi.mock('../../hooks/useMixPreview', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixPreviewModule(
     async (cfg: any) => {
       if (cfg.simulate === 'empty') return { tracks: [] };
       if (cfg.simulate === 'error') throw new Error('Network error');
@@ -19,8 +19,8 @@ jest.mock('../../hooks/useMixPreview', () =>
   )
 );
 
-jest.mock('../../hooks/useMixGeneration', () =>
-  require('../../test-utils/mocks/mixHooks').makeUseMixGenerationModule(
+vi.mock('../../hooks/useMixGeneration', async () =>
+  (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule(
     async (cfg: any) => {
       if (cfg.simulate === 'error') throw new Error('Generation failed');
       const tracks = cfg.playlists

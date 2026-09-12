@@ -3,9 +3,8 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
-    jest: true,
   },
-  extends: ['react-app', 'react-app/jest', 'prettier'],
+  extends: ['react-app', 'prettier'],
   plugins: ['prettier'],
   rules: {
     'prettier/prettier': 'error',

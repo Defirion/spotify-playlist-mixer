@@ -8,7 +8,7 @@ import {
 
 describe('mixHooks mock factories', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.TEST_VERBOSE;
   });
 
@@ -54,7 +54,7 @@ describe('mixHooks mock factories', () => {
     expect(mix).toHaveProperty('tracks');
 
     // createPlaylist returns created result; when TEST_VERBOSE set it logs
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     process.env.TEST_VERBOSE = '1';
     const created = await inst.createPlaylist('name', [{ id: 't' }]);
     expect(created.id).toBe('created');

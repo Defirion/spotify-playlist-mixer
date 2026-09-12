@@ -14,14 +14,14 @@ describe('mixerUtils remaining branches', () => {
     Object.keys = origObjectKeys;
     process.env.NODE_ENV = origNodeEnv;
     delete process.env.TEST_VERBOSE;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('falls back to manual keys when Object.keys returns non-array-like', () => {
     // Force Object.keys to return something invalid
-    (Object as any).keys = jest.fn(() => ({ 0: 'a', 1: 'b' }) as any);
+    (Object as any).keys = vi.fn(() => ({ 0: 'a', 1: 'b' }) as any);
     process.env.TEST_VERBOSE = 'true';
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = safeObjectKeys({ a: 1, b: 2 });
     // restore immediately to avoid breaking expect internals which call Object.keys
@@ -32,7 +32,7 @@ describe('mixerUtils remaining branches', () => {
 
   it('calculateTotalDuration returns 0 and warns on non-array input', () => {
     process.env.TEST_VERBOSE = 'true';
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(calculateTotalDuration(null as any)).toBe(0);
     expect(spy).toHaveBeenCalled();
   });
@@ -58,7 +58,7 @@ describe('mixerUtils remaining branches', () => {
 
   it('cleanPlaylistTracks handles wrapped tracks object and logs when verbose', () => {
     process.env.TEST_VERBOSE = '1';
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     const input: any = {
       p1: {
@@ -79,7 +79,7 @@ describe('mixerUtils remaining branches', () => {
 
   it('cleanPlaylistTracks returns empty object and warns for invalid input', () => {
     process.env.TEST_VERBOSE = 'true';
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const out = cleanPlaylistTracks(null as any);
     expect(out).toEqual({});
     expect(spy).toHaveBeenCalled();
@@ -88,14 +88,14 @@ describe('mixerUtils remaining branches', () => {
   it('logDebugInfo logs when NODE_ENV=development and TEST_VERBOSE true', () => {
     process.env.NODE_ENV = 'development';
     process.env.TEST_VERBOSE = 'true';
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     logDebugInfo('info', 'msg', { a: 1 });
     expect(spy).toHaveBeenCalled();
   });
 
   it('logDebugInfo is a no-op in production', () => {
     process.env.NODE_ENV = 'production';
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     logDebugInfo('info', 'msg');
     expect(spy).not.toHaveBeenCalled();
   });

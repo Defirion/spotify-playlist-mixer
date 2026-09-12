@@ -6,12 +6,12 @@ import {
 
 describe('mixingCalculations edge cases', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
   test('calculateTargetCounts uses time-based path when weightType=time', () => {
     const playlistTracks: any = {
       p1: Array.from({ length: 5 }, (_, i) => ({
@@ -82,13 +82,13 @@ describe('mixingCalculations edge cases', () => {
     const optionsTime: any = {
       useAllSongs: false,
       useTimeLimit: true,
-      targetDuration: 1,
+      targetDuration: 60,
       totalSongs: 10,
     };
     const mixedTracks = [{ duration_ms: 30 * 1000 }]; // 0.5 min
-    expect(shouldContinueMixing(optionsTime, mixedTracks as any, 0, {})).toBe(
-      true
-    );
+    expect(
+      shouldContinueMixing(optionsTime, mixedTracks as any, 0, { p1: false })
+    ).toBe(true);
 
     const optionsCount: any = {
       useAllSongs: false,

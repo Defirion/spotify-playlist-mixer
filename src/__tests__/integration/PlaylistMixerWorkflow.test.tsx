@@ -14,7 +14,6 @@ const mockTracks = [
     name: 'Test Track 1',
     artists: [{ name: 'Artist 1' }],
     duration_ms: 180000,
-    popularity: 75,
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
   },
   {
@@ -22,17 +21,16 @@ const mockTracks = [
     name: 'Test Track 2',
     artists: [{ name: 'Artist 2' }],
     duration_ms: 210000,
-    popularity: 60,
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
   },
 ] as unknown as SpotifyTrack[];
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 } as unknown as Storage;
 // @ts-ignore
 global.localStorage = localStorageMock;
@@ -45,43 +43,48 @@ const getAllTrackItems = () =>
 let _trackIdCounter = 0;
 const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
 
-jest.mock('../../utils/trackUtils', () => ({
-  formatDuration: jest.fn(
+vi.mock('../../utils/trackUtils', () => ({
+  formatDuration: vi.fn(
     (ms: number) =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
         .toString()
         .padStart(2, '0')}`
   ),
-  getTrackQuadrant: jest.fn(() => 'high-energy-high-valence'),
-  getPopularityStyle: jest.fn(() => ({
+  getTrackQuadrant: vi.fn(() => 'high-energy-high-valence'),
+  getPopularityStyle: vi.fn(() => ({
     background: '#4CAF50',
     color: '#fff',
     text: 'Popular',
   })),
-  generateTrackInstanceId: jest.fn(() => _genTrackId()),
+  generateTrackInstanceId: vi.fn(() => _genTrackId()),
 }));
 
 // Mock virtualization hook
-jest.mock('../../hooks/useVirtualization', () => {
-  return jest.fn(() => ({
-    visibleItems: mockTracks,
-    startIndex: 0,
-    containerProps: {},
-    spacerProps: {},
-    getItemProps: () => ({}),
-  }));
+vi.mock('../../hooks/useVirtualization', () => {
+  const __mod = (() => {
+    return vi.fn(() => ({
+      visibleItems: mockTracks,
+      startIndex: 0,
+      containerProps: {},
+      spacerProps: {},
+      getItemProps: () => ({}),
+    }));
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 describe('Playlist Mixer Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Modal and TrackList Integration', () => {
     it('displays track list inside modal with proper interactions', async () => {
       const user = userEvent.setup();
-      const onClose = jest.fn();
-      const onTrackSelect = jest.fn();
+      const onClose = vi.fn();
+      const onTrackSelect = vi.fn();
 
       render(
         <Modal isOpen={true} onClose={onClose} title="Select Tracks">
@@ -113,8 +116,8 @@ describe('Playlist Mixer Integration Tests', () => {
 
     it('handles keyboard navigation between modal and track list', async () => {
       const user = userEvent.setup();
-      const onClose = jest.fn();
-      const onTrackSelect = jest.fn();
+      const onClose = vi.fn();
+      const onTrackSelect = vi.fn();
 
       render(
         <Modal isOpen={true} onClose={onClose} title="Select Tracks">
@@ -144,8 +147,8 @@ describe('Playlist Mixer Integration Tests', () => {
   describe('TrackList and TrackItem Integration', () => {
     it('handles track selection and removal workflows', async () => {
       const user = userEvent.setup();
-      const onTrackSelect = jest.fn();
-      const onTrackRemove = jest.fn();
+      const onTrackSelect = vi.fn();
+      const onTrackRemove = vi.fn();
       const selectedTracks = new Set([mockTracks[0].id]);
 
       render(
@@ -181,9 +184,9 @@ describe('Playlist Mixer Integration Tests', () => {
   describe('Complex User Workflows', () => {
     it('handles multi-step track management workflow', async () => {
       const user = userEvent.setup();
-      const onTrackSelect = jest.fn();
-      const onTrackRemove = jest.fn();
-      const onClose = jest.fn();
+      const onTrackSelect = vi.fn();
+      const onTrackRemove = vi.fn();
+      const onClose = vi.fn();
 
       const TestWorkflow = () => {
         const [selectedTracks, setSelectedTracks] = React.useState<Set<string>>(
@@ -267,7 +270,7 @@ describe('Playlist Mixer Integration Tests', () => {
 
     it('handles error states and recovery', async () => {
       const user = userEvent.setup();
-      const onError = jest.fn();
+      const onError = vi.fn();
 
       const ErrorTestComponent = () => {
         const [hasError, setHasError] = React.useState(false);
@@ -323,7 +326,7 @@ describe('Playlist Mixer Integration Tests', () => {
   describe('Accessibility Integration', () => {
     it('maintains focus management across components', async () => {
       const user = userEvent.setup();
-      const onClose = jest.fn();
+      const onClose = vi.fn();
 
       render(
         <div>
@@ -357,7 +360,7 @@ describe('Playlist Mixer Integration Tests', () => {
 
     it('provides proper ARIA relationships between components', () => {
       render(
-        <Modal isOpen={true} onClose={jest.fn()} title="Track Selection">
+        <Modal isOpen={true} onClose={vi.fn()} title="Track Selection">
           <TrackList tracks={mockTracks.slice(0, 2)} selectable={true} />
         </Modal>
       );
@@ -381,7 +384,7 @@ describe('Playlist Mixer Integration Tests', () => {
       const startTime = performance.now();
 
       render(
-        <Modal isOpen={true} onClose={jest.fn()} title="Performance Test">
+        <Modal isOpen={true} onClose={vi.fn()} title="Performance Test">
           <TrackList tracks={mockTracks} selectable={true} />
         </Modal>
       );
@@ -405,7 +408,6 @@ describe('Playlist Mixer Integration Tests', () => {
         name: `Test Track ${i}`,
         artists: [{ name: `Artist ${i}` }],
         duration_ms: 180000 + i * 1000,
-        popularity: Math.floor(Math.random() * 100),
         external_urls: { spotify: `https://open.spotify.com/track/track${i}` },
       })) as unknown as SpotifyTrack[];
 

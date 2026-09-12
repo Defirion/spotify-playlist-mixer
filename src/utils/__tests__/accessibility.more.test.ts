@@ -11,8 +11,8 @@ beforeEach(() => {
   });
 });
 
-test('module auto-initializes immediately when document.readyState is complete', () => {
-  jest.resetModules();
+test('module auto-initializes immediately when document.readyState is complete', async () => {
+  vi.resetModules();
   // ensure readyState complete
   Object.defineProperty(document, 'readyState', {
     configurable: true,
@@ -21,7 +21,7 @@ test('module auto-initializes immediately when document.readyState is complete',
 
   // require the module fresh so auto-init runs
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require('../accessibility');
+  await import('../accessibility');
 
   // initialization should have appended nodes
   expect(document.getElementById('sr-live-region-polite')).toBeTruthy();
@@ -29,8 +29,8 @@ test('module auto-initializes immediately when document.readyState is complete',
   expect(document.getElementById('drag-instructions')).toBeTruthy();
 });
 
-test('module attaches DOMContentLoaded listener when readyState loading and handles event', () => {
-  jest.resetModules();
+test('module attaches DOMContentLoaded listener when readyState loading and handles event', async () => {
+  vi.resetModules();
   Object.defineProperty(document, 'readyState', {
     configurable: true,
     value: 'loading',
@@ -38,7 +38,7 @@ test('module attaches DOMContentLoaded listener when readyState loading and hand
 
   // require the module fresh to let it attach the listener
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require('../accessibility');
+  await import('../accessibility');
 
   // nodes should not exist yet
   expect(document.getElementById('sr-live-region-polite')).toBeFalsy();
@@ -51,14 +51,12 @@ test('module attaches DOMContentLoaded listener when readyState loading and hand
   expect(document.getElementById('drag-instructions')).toBeTruthy();
 });
 
-test('announceToScreenReader with assertive priority updates assertive region after timeout', () => {
-  jest.useFakeTimers();
+test('announceToScreenReader with assertive priority updates assertive region after timeout', async () => {
+  vi.useFakeTimers();
   // import module normally and initialize
-  jest.resetModules();
-  const {
-    initializeAccessibility,
-    announceToScreenReader,
-  } = require('../accessibility');
+  vi.resetModules();
+  const { initializeAccessibility, announceToScreenReader } =
+    await import('../accessibility');
   initializeAccessibility();
 
   const assertive = document.getElementById(
@@ -74,7 +72,7 @@ test('announceToScreenReader with assertive priority updates assertive region af
   expect(assertive.textContent).toBe('');
 
   // advance timers to when message should be applied
-  jest.advanceTimersByTime(20);
+  vi.advanceTimersByTime(20);
   expect(assertive.textContent).toBe('urgent');
-  jest.useRealTimers();
+  vi.useRealTimers();
 });

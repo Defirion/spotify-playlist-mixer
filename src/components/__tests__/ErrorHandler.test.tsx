@@ -5,35 +5,40 @@ import ErrorHandler from '../ErrorHandler';
 import { ApiError } from '../../services/apiErrorHandler';
 
 // Mock the ApiErrorDisplay component
-jest.mock('../ui/ApiErrorDisplay', () => {
-  return function MockApiErrorDisplay({
-    error,
-    onRetry,
-    onDismiss,
-    showDetails,
-    className,
-    testId,
-  }: any) {
-    return (
-      <div data-testid={testId || 'api-error-display'} className={className}>
-        <div>API Error: {error.title}</div>
-        <div>{error.message}</div>
-        {onRetry && <button onClick={onRetry}>API Retry</button>}
-        {onDismiss && <button onClick={onDismiss}>API Dismiss</button>}
-        {showDetails !== undefined && (
-          <div>Show Details: {showDetails.toString()}</div>
-        )}
-      </div>
-    );
-  };
+vi.mock('../ui/ApiErrorDisplay', () => {
+  const __mod = (() => {
+    return function MockApiErrorDisplay({
+      error,
+      onRetry,
+      onDismiss,
+      showDetails,
+      className,
+      testId,
+    }: any) {
+      return (
+        <div data-testid={testId || 'api-error-display'} className={className}>
+          <div>API Error: {error.title}</div>
+          <div>{error.message}</div>
+          {onRetry && <button onClick={onRetry}>API Retry</button>}
+          {onDismiss && <button onClick={onDismiss}>API Dismiss</button>}
+          {showDetails !== undefined && (
+            <div>Show Details: {showDetails.toString()}</div>
+          )}
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 describe('ErrorHandler', () => {
-  const mockOnDismiss = jest.fn();
-  const mockOnRetry = jest.fn();
+  const mockOnDismiss = vi.fn();
+  const mockOnRetry = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders nothing when error is null', () => {

@@ -15,7 +15,6 @@ const mockTracks: MixedTrack[] = [
       id: 'track1',
       name: 'Track 1',
       duration_ms: 180000,
-      popularity: 80,
       uri: 'spotify:track:track1',
       external_urls: { spotify: 'https://spotify.com' },
       track_number: 1,
@@ -29,7 +28,6 @@ const mockTracks: MixedTrack[] = [
       id: 'track2',
       name: 'Track 2',
       duration_ms: 200000,
-      popularity: 70,
       uri: 'spotify:track:track2',
       external_urls: { spotify: 'https://spotify.com' },
       track_number: 1,
@@ -47,7 +45,7 @@ const mockStats = {
 
 describe('MixPreview Drag Integration', () => {
   it('should render TrackListContainer with tracks', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview
@@ -67,7 +65,7 @@ describe('MixPreview Drag Integration', () => {
   });
 
   it('should call onTrackOrderChange when tracks are reordered', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview
@@ -87,7 +85,7 @@ describe('MixPreview Drag Integration', () => {
   });
 
   it('should not call onTrackOrderChange when reordering to same position', () => {
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview

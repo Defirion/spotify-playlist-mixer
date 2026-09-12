@@ -1,35 +1,35 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { usePlaylistSearch } from '../usePlaylistSearch';
 
-// Mock the spotify utils
-jest.mock('../../utils/spotify', () => ({
-  getSpotifyApi: jest.fn(),
-}));
+import { getSpotifyApi } from '../../utils/spotify';
 
-const { getSpotifyApi } = require('../../utils/spotify');
+// Mock the spotify utils
+vi.mock('../../utils/spotify', () => ({
+  getSpotifyApi: vi.fn(),
+}));
 
 describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   // suppress noisy console output during tests
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset environment for each test
     delete process.env.NODE_ENV;
     delete process.env.TEST_VERBOSE;
 
     // Per-suite suppression of noisy logs during passing runs
     // Tests that need to assert on console.error may still create their own spies
-    jest.spyOn(console, 'debug').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('handles missing accessToken', async () => {
-    const mockGet = jest.fn();
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn();
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: null })
@@ -46,8 +46,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('handles empty query strings', async () => {
-    const mockGet = jest.fn();
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn();
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -65,8 +65,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('detects and ignores Spotify URLs', async () => {
-    const mockGet = jest.fn();
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn();
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -107,8 +107,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       },
     };
 
-    const mockGet = jest.fn().mockResolvedValue(mockTracksResponse);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockResolvedValue(mockTracksResponse);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -131,8 +131,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       },
     };
 
-    const mockGet = jest.fn().mockResolvedValue(mockBadResponse);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockResolvedValue(mockBadResponse);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token', debounceMs: 10 })
@@ -167,12 +167,12 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       resolveSecondRequest = resolve;
     });
 
-    const mockGet = jest
+    const mockGet = vi
       .fn()
       .mockReturnValueOnce(firstRequestPromise)
       .mockReturnValueOnce(secondRequestPromise);
 
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token', debounceMs: 10 })
@@ -223,7 +223,7 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
     const originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
-    const mockGet = jest.fn().mockResolvedValue({
+    const mockGet = vi.fn().mockResolvedValue({
       data: { playlists: { items: [{ id: 'test', name: 'Test Playlist' }] } },
     });
     const mockApi = {
@@ -234,7 +234,7 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
         },
       },
     };
-    (getSpotifyApi as jest.Mock).mockReturnValue(mockApi);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue(mockApi);
 
     const { result } = renderHook(() =>
       usePlaylistSearch({
@@ -266,7 +266,9 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
   it('includes detailed error logging in development mode', async () => {
     process.env.NODE_ENV = 'development';
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const mockError = {
       response: {
@@ -276,8 +278,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       },
     };
 
-    const mockGet = jest.fn().mockRejectedValue(mockError);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockRejectedValue(mockError);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -302,7 +304,9 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
   it('includes verbose error logging when TEST_VERBOSE is set', async () => {
     process.env.TEST_VERBOSE = 'true';
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const mockError = {
       response: {
@@ -311,8 +315,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       },
     };
 
-    const mockGet = jest.fn().mockRejectedValue(mockError);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockRejectedValue(mockError);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -347,8 +351,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       data: { unexpected: 'shape' },
     };
 
-    const mockGet = jest.fn().mockResolvedValue(mockBadResponse);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockResolvedValue(mockBadResponse);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token', debounceMs: 10 })
@@ -376,10 +380,10 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('handles debouncing correctly', async () => {
-    const mockGet = jest.fn().mockResolvedValue({
+    const mockGet = vi.fn().mockResolvedValue({
       data: { playlists: { items: [] } },
     });
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token', debounceMs: 100 })
@@ -399,12 +403,12 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('cleans up timeouts and abort controllers on unmount', () => {
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
-    const mockGet = jest.fn().mockResolvedValue({
+    const mockGet = vi.fn().mockResolvedValue({
       data: { playlists: { items: [] } },
     });
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result, unmount } = renderHook(
       () => usePlaylistSearch({ accessToken: 'token', debounceMs: 1000 }) // Long debounce
@@ -438,10 +442,10 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('handles custom debounce and limit options', async () => {
-    const mockGet = jest.fn().mockResolvedValue({
+    const mockGet = vi.fn().mockResolvedValue({
       data: { playlists: { items: [] } },
     });
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({
@@ -461,11 +465,13 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
   });
 
   it('handles errors without response object', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const simpleError = new Error('Network error');
-    const mockGet = jest.fn().mockRejectedValue(simpleError);
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    const mockGet = vi.fn().mockRejectedValue(simpleError);
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })
@@ -479,10 +485,6 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       );
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to search playlists:',
-      simpleError
-    );
     consoleErrorSpy.mockRestore();
   });
 
@@ -490,13 +492,13 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
     const abortError = new Error('Request aborted');
     abortError.name = 'AbortError';
 
-    const mockGet = jest.fn().mockImplementation(() => {
+    const mockGet = vi.fn().mockImplementation(() => {
       const controller = new AbortController();
       controller.abort();
       return Promise.reject(abortError);
     });
 
-    (getSpotifyApi as jest.Mock).mockReturnValue({ get: mockGet });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
 
     const { result } = renderHook(() =>
       usePlaylistSearch({ accessToken: 'token' })

@@ -6,7 +6,7 @@ import Modal from '../Modal';
 
 describe('Modal', () => {
   it('does not render when closed', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={false} onClose={onClose} title="T">
         <div>content</div>
@@ -17,7 +17,7 @@ describe('Modal', () => {
   });
 
   it('renders when open with title and close button', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="Title">
         <div>content</div>
@@ -30,7 +30,7 @@ describe('Modal', () => {
   });
 
   it('calls onClose when backdrop is clicked and closeOnBackdropClick=true', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="T">
         <div>content</div>
@@ -43,7 +43,7 @@ describe('Modal', () => {
   });
 
   it('does not close on backdrop when closeOnBackdropClick=false', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal
         isOpen={true}
@@ -61,7 +61,7 @@ describe('Modal', () => {
   });
 
   it('calls onClose on Escape when closeOnEscape=true', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="T">
         <div>content</div>
@@ -73,7 +73,7 @@ describe('Modal', () => {
   });
 
   it('prevents tabbing out of modal (focus trap) by wrapping focus', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} title="T">
         <button>first</button>

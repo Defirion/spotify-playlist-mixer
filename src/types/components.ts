@@ -68,7 +68,6 @@ export interface TrackItemProps extends BaseComponentProps {
   // draggable prop removed - will be handled by dnd-kit wrapper
   selected?: boolean;
   actions?: React.ReactNode;
-  showPopularity?: boolean;
   showDuration?: boolean;
   showAlbum?: boolean;
   showArtist?: boolean;
@@ -108,7 +107,7 @@ export interface TrackListProps extends BaseComponentProps {
   error?: import('../utils/normalizeError').DisplayError | string | null;
   showHeader?: boolean;
   sortable?: boolean;
-  sortBy?: 'name' | 'artist' | 'album' | 'duration' | 'popularity';
+  sortBy?: 'name' | 'artist' | 'album' | 'duration';
   sortDirection?: 'asc' | 'desc';
   onSort?: (sortBy: string, direction: 'asc' | 'desc') => void;
   virtualizationOptions?: Partial<VirtualizationOptions>;
@@ -118,7 +117,6 @@ export interface TrackListProps extends BaseComponentProps {
   overscan?: number;
   showCheckbox?: boolean;
   // showDragHandle removed - will be handled by dnd-kit wrapper
-  showPopularity?: boolean;
   showDuration?: boolean;
   showAlbumArt?: boolean;
   showSourcePlaylist?: boolean;
@@ -279,6 +277,11 @@ export interface ToastProps {
 export interface MixedPlaylistToast {
   toastId: string;
   name: string;
+  items?: {
+    total?: number;
+    length?: number;
+  };
+  /** @deprecated Spotify renamed this field to `items`. */
   tracks?: {
     total?: number;
     length?: number;

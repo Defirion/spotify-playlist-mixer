@@ -1,35 +1,37 @@
-// Main playlist mixer orchestrator
-// This module coordinates the mixing process by delegating to specialized modules
+// Main playlist mixer orchestrator.
+//
+// Spotify no longer returns catalog popularity. Mixing therefore operates on
+// the tracks returned by each playlist and uses only the user's ratio and
+// ordering choices.
 
 import { MixOptions, RatioConfig } from '../../types/mixer';
-import {
-  PlaylistTracks,
-  PopularityPools,
-  MixedTrack,
-  PopularityStrategy,
-} from './types';
+import { PlaylistTracks, PlaylistQueues, MixedTrack } from './types';
 import {
   safeObjectKeys,
   cleanPlaylistTracks,
   logDebugInfo,
 } from './mixerUtils';
-import { createPopularityPools } from './popularityQuadrants';
-import { createStrategyManager } from './mixingStrategies';
+import { shufflePlaylistTracks } from './trackShuffler';
+import {
+  calculateTargetCounts,
+  shouldContinueMixing,
+  shouldStopDueToExhaustion,
+  getNextPlaylistId,
+  addSongsFromPlaylist,
+} from './mixingCalculations';
 
-// Mixing context interface for initialization
 export interface MixingContext {
   playlistTracks: PlaylistTracks;
+  playlistQueues: PlaylistQueues;
   ratioConfig: RatioConfig;
   options: MixOptions;
-  popularityPools: PopularityPools;
   playlistIds: string[];
   totalWeight: number;
   estimatedTotalSongs: number;
   targetCounts: { [key: string]: number };
 }
 
-// Mixing state interface for tracking progress
-export interface MixingState {
+interface MixingState {
   mixedTracks: MixedTrack[];
   playlistCounts: { [key: string]: number };
   playlistDurations: { [key: string]: number };
@@ -37,41 +39,28 @@ export interface MixingState {
   attempts: number;
 }
 
-/**
- * Create mixing context with all necessary data for the mixing process
- */
+const shouldShuffleTracks = (options: MixOptions): boolean =>
+  Boolean(options.shuffleTracks);
+
 export const createMixingContext = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
   options: MixOptions
 ): MixingContext => {
-  logDebugInfo('info', '🎵 Creating mixing context', {
-    playlistCount: safeObjectKeys(playlistTracks).length,
-    strategy: options.popularityStrategy,
-    recencyBoost: options.recencyBoost,
-  });
-
-  // Create popularity pools for each playlist
-  const popularityPools = createPopularityPools(playlistTracks, {
-    recencyBoost: options.recencyBoost,
-    shuffleWithinGroups: options.shuffleWithinGroups,
-  });
-
-  // Get valid playlist IDs
   const playlistIds = safeObjectKeys(ratioConfig).filter(
     id => playlistTracks[id] && playlistTracks[id].length > 0
   );
-
-  // Calculate total weight
   const totalWeight = playlistIds.reduce(
     (sum, id) => sum + (ratioConfig[id].weight || 1),
     0
   );
-
-  // Import and use calculation module
-  const { calculateTargetCounts } = require('./mixingCalculations');
+  const playlistQueues = shouldShuffleTracks(options)
+    ? shufflePlaylistTracks(playlistTracks)
+    : Object.fromEntries(
+        Object.entries(playlistTracks).map(([id, tracks]) => [id, [...tracks]])
+      );
   const { estimatedTotalSongs, targetCounts } = calculateTargetCounts(
-    playlistTracks,
+    playlistQueues,
     ratioConfig,
     options,
     playlistIds,
@@ -80,9 +69,9 @@ export const createMixingContext = (
 
   return {
     playlistTracks,
+    playlistQueues,
     ratioConfig,
     options,
-    popularityPools,
     playlistIds,
     totalWeight,
     estimatedTotalSongs,
@@ -90,12 +79,9 @@ export const createMixingContext = (
   };
 };
 
-/**
- * Validate inputs for the mixing process
- */
 export const validateInputs = (
-  playlistTracks: any,
-  ratioConfig: any,
+  playlistTracks: unknown,
+  ratioConfig: unknown,
   options: MixOptions
 ): {
   isValid: boolean;
@@ -103,130 +89,63 @@ export const validateInputs = (
   cleanedPlaylistTracks: PlaylistTracks;
 } => {
   const errors: string[] = [];
-
   if (!playlistTracks || safeObjectKeys(playlistTracks).length === 0) {
     errors.push('playlistTracks is empty or invalid');
   }
-
   if (!ratioConfig || safeObjectKeys(ratioConfig).length === 0) {
     errors.push('ratioConfig is empty or invalid');
   }
-
   if (!options) {
     errors.push('options is required');
-  } else {
-    if (
-      options.useTimeLimit &&
-      (!options.targetDuration || options.targetDuration <= 0)
-    ) {
-      errors.push('targetDuration must be positive when useTimeLimit is true');
-    }
-    if (
-      !options.useTimeLimit &&
-      !options.useAllSongs &&
-      (!options.totalSongs || options.totalSongs <= 0)
-    ) {
-      errors.push(
-        'totalSongs must be positive when not using time limit or all songs'
-      );
-    }
+  } else if (
+    options.useTimeLimit &&
+    (!options.targetDuration || options.targetDuration <= 0)
+  ) {
+    errors.push('targetDuration must be positive when useTimeLimit is true');
+  } else if (
+    !options.useTimeLimit &&
+    !options.useAllSongs &&
+    (!options.totalSongs || options.totalSongs <= 0)
+  ) {
+    errors.push(
+      'totalSongs must be positive when not using time limit or all songs'
+    );
   }
 
   const cleanedPlaylistTracks = cleanPlaylistTracks(playlistTracks);
-
   if (safeObjectKeys(cleanedPlaylistTracks).length === 0) {
     errors.push('No valid playlists found after cleaning');
   }
 
-  const isValid = errors.length === 0;
-
-  if (!isValid) {
-    logDebugInfo('error', 'Input validation failed', { errors });
-  }
-
-  return { isValid, errors, cleanedPlaylistTracks };
+  return {
+    isValid: errors.length === 0,
+    errors,
+    cleanedPlaylistTracks,
+  };
 };
 
-// Re-export from calculations module for backward compatibility
 export { calculateTargetCounts } from './mixingCalculations';
 
-/**
- * Main playlist mixing function - orchestrates the entire mixing process
- */
 export const mixPlaylists = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
   options: MixOptions
 ): MixedTrack[] => {
-  logDebugInfo('info', '=== POPULARITY-AWARE MIXER ===');
-
-  // Validate inputs
   const validation = validateInputs(playlistTracks, ratioConfig, options);
-  if (!validation.isValid) {
-    return [];
-  }
+  if (!validation.isValid) return [];
 
-  // Create mixing context
   const context = createMixingContext(
     validation.cleanedPlaylistTracks,
     ratioConfig,
     options
   );
-
-  // Initialize mixing state
   const state = initializeMixingState(context);
-
-  // Get strategy and execute mixing
-  const strategyManager = createStrategyManager();
-  const strategy = strategyManager.getStrategy(
-    options.popularityStrategy as PopularityStrategy
+  const maxAttempts = Math.max(
+    1,
+    context.options.useAllSongs
+      ? context.estimatedTotalSongs * 2
+      : (context.options.totalSongs || 100) * 2
   );
-
-  return executeMixingLoop(context, state, strategy);
-};
-
-/**
- * Initialize mixing state with empty values
- */
-const initializeMixingState = (context: MixingContext): MixingState => {
-  const playlistCounts: { [key: string]: number } = {};
-  const playlistDurations: { [key: string]: number } = {};
-  const playlistExhausted: { [key: string]: boolean } = {};
-
-  context.playlistIds.forEach(playlistId => {
-    playlistCounts[playlistId] = 0;
-    playlistDurations[playlistId] = 0;
-    playlistExhausted[playlistId] = false;
-  });
-
-  return {
-    mixedTracks: [],
-    playlistCounts,
-    playlistDurations,
-    playlistExhausted,
-    attempts: 0,
-  };
-};
-
-/**
- * Execute the main mixing loop
- */
-const executeMixingLoop = (
-  context: MixingContext,
-  state: MixingState,
-  strategy: any
-): MixedTrack[] => {
-  const {
-    shouldContinueMixing,
-    shouldStopDueToExhaustion,
-    getNextPlaylistId,
-    addSongsFromPlaylist,
-  } = require('./mixingCalculations');
-
-  const maxAttempts = context.options.useAllSongs
-    ? context.estimatedTotalSongs * 2
-    : (context.options.totalSongs || 100) * 10;
-
   const shouldContinue = () =>
     shouldContinueMixing(
       context.options,
@@ -237,7 +156,6 @@ const executeMixingLoop = (
 
   while (shouldContinue() && state.attempts < maxAttempts) {
     state.attempts++;
-
     if (
       shouldStopDueToExhaustion(
         context.options.continueWhenPlaylistEmpty,
@@ -248,42 +166,51 @@ const executeMixingLoop = (
       break;
     }
 
-    const selectedPlaylistId = getNextPlaylistId(
+    const playlistId = getNextPlaylistId(
       context.ratioConfig,
       context.totalWeight,
       state.playlistCounts,
       state.playlistDurations,
       state.playlistExhausted,
       state.mixedTracks,
-      context.popularityPools,
-      context.estimatedTotalSongs,
-      strategy,
+      context.playlistQueues,
       context.playlistIds
     );
-
-    if (!selectedPlaylistId) break;
+    if (!playlistId) break;
 
     const songsAdded = addSongsFromPlaylist(
-      selectedPlaylistId,
+      playlistId,
       context.ratioConfig,
       context.totalWeight,
-      context.popularityPools,
-      context.estimatedTotalSongs,
-      strategy,
+      context.playlistQueues,
       state.mixedTracks,
       state.playlistCounts,
       state.playlistDurations,
       shouldContinue
     );
-
-    if (songsAdded === 0) {
-      state.playlistExhausted[selectedPlaylistId] = true;
-    }
+    if (songsAdded === 0) state.playlistExhausted[playlistId] = true;
   }
 
-  logDebugInfo(
-    'info',
-    `🎵 Mixing complete: ${state.mixedTracks.length} tracks in ${state.attempts} attempts`
-  );
+  logDebugInfo('info', `Mixed ${state.mixedTracks.length} tracks`);
   return state.mixedTracks;
+};
+
+const initializeMixingState = (context: MixingContext): MixingState => {
+  const playlistCounts: Record<string, number> = {};
+  const playlistDurations: Record<string, number> = {};
+  const playlistExhausted: Record<string, boolean> = {};
+
+  context.playlistIds.forEach(id => {
+    playlistCounts[id] = 0;
+    playlistDurations[id] = 0;
+    playlistExhausted[id] = false;
+  });
+
+  return {
+    mixedTracks: [],
+    playlistCounts,
+    playlistDurations,
+    playlistExhausted,
+    attempts: 0,
+  };
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { SpotifyPlaylist } from '../types';
+import { getPlaylistItemCount } from '../utils/spotify';
 import LoadingOverlay from './LoadingOverlay';
 import { usePlaylistSearch } from '../hooks/usePlaylistSearch';
 import { useSpotifyUrlHandler } from '../hooks/useSpotifyUrlHandler';
@@ -328,7 +329,7 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
                         </div>
                         <div className={styles.searchResultMeta}>
                           by {playlist?.owner?.display_name || 'Unknown'} •{' '}
-                          {playlist?.tracks?.total || 0} tracks
+                          {getPlaylistItemCount(playlist)} tracks
                         </div>
                       </div>
                       {isAlreadySelected && (

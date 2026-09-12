@@ -1,11 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import AppShell from './AppShell';
-import RatioConfig from './components/RatioConfig';
-import PlaylistMixer from './components/PlaylistMixer';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import { SpotifyPlaylist } from './types/spotify';
 import {
   completeAuthorization,
   refreshAccessToken,
@@ -18,6 +15,7 @@ import {
   useUI,
   setUIError,
 } from './store';
+import { getSpotifyClientId } from './config';
 import styles from './App.module.css';
 
 export function MainApp() {
@@ -66,7 +64,7 @@ export function MainApp() {
       return;
     }
 
-    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const clientId = getSpotifyClientId();
     if (!clientId) {
       setUIError(new Error('Spotify Client ID is not configured'));
       return;
@@ -87,7 +85,7 @@ export function MainApp() {
   useEffect(() => {
     if (!refreshToken || !tokenExpiresAt) return;
 
-    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const clientId = getSpotifyClientId();
     if (!clientId) return;
 
     const refreshIn = Math.max(tokenExpiresAt - Date.now() - 60_000, 0);
@@ -113,12 +111,11 @@ export function MainApp() {
 
   const handleApplyPreset = ({
     ratioConfig: newRatioConfig,
-    strategy,
     settings,
     presetName,
   }: any) => {
     setRatioConfigBulk(newRatioConfig);
-    applyPresetOptions({ strategy, settings, presetName });
+    applyPresetOptions({ settings, presetName });
     if (error) {
       setUIError(null);
     }
@@ -152,55 +149,6 @@ export function MainApp() {
       onDismissError={dismissError}
       onDismissSuccess={() => dismissSuccessToast('')}
       onMixedPlaylist={addMixedPlaylist}
-      onError={err => setUIError(err)}
-    />
-  );
-}
-
-// intentionally unused helper container retained for manual testing / storybook
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function RatioConfigContainer() {
-  const { selectedPlaylists, togglePlaylistSelection } = usePlaylistSelection();
-  const { ratioConfig, updateRatioConfig } = useRatioConfig();
-
-  const handlePlaylistRemove = (playlistId: string) => {
-    const playlist = selectedPlaylists.find(p => p.id === playlistId);
-    if (playlist) {
-      togglePlaylistSelection(playlist);
-    }
-  };
-
-  return (
-    <RatioConfig
-      selectedPlaylists={selectedPlaylists}
-      ratioConfig={ratioConfig}
-      onRatioUpdate={updateRatioConfig}
-      onPlaylistRemove={handlePlaylistRemove}
-    />
-  );
-}
-
-// intentionally unused helper container retained for manual testing / storybook
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function PlaylistMixerContainer() {
-  const { accessToken } = useAuth();
-  const { selectedPlaylists } = usePlaylistSelection();
-  const { ratioConfig } = useRatioConfig();
-  const { mixOptions, updateMixOptions } = useMixOptions();
-  const { addMixedPlaylist } = useUI();
-
-  const handleMixedPlaylist = (result: SpotifyPlaylist) => {
-    addMixedPlaylist(result);
-  };
-
-  return (
-    <PlaylistMixer
-      accessToken={(accessToken ?? '') as string}
-      selectedPlaylists={selectedPlaylists}
-      ratioConfig={ratioConfig}
-      mixOptions={mixOptions}
-      updateMixOptions={updateMixOptions}
-      onMixedPlaylist={handleMixedPlaylist}
       onError={err => setUIError(err)}
     />
   );

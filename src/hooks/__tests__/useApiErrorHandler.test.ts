@@ -47,7 +47,7 @@ describe('useApiErrorHandler', () => {
   it('handles retry with successful function', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
     const testError = new Error('Test error');
-    const retryFn = jest.fn().mockResolvedValue('success');
+    const retryFn = vi.fn().mockResolvedValue('success');
 
     // Set initial error
     act(() => {
@@ -74,7 +74,7 @@ describe('useApiErrorHandler', () => {
     const initialError = new Error('Initial error');
     const retryError = new Error('Retry error') as any;
     retryError.response = { status: 404 };
-    const retryFn = jest.fn().mockRejectedValue(retryError);
+    const retryFn = vi.fn().mockRejectedValue(retryError);
 
     // Set initial error
     act(() => {
@@ -119,7 +119,7 @@ describe('useApiErrorHandler', () => {
 
   it('wraps API calls correctly', async () => {
     const { result } = renderHook(() => useApiErrorHandler());
-    const mockApiCall = jest.fn().mockResolvedValue('success');
+    const mockApiCall = vi.fn().mockResolvedValue('success');
 
     const wrappedCall = result.current.wrapApiCall(mockApiCall, {
       test: 'context',
@@ -136,7 +136,7 @@ describe('useApiErrorHandler', () => {
     const networkError = new Error('Network Error') as any;
     networkError.code = 'NETWORK_ERROR';
 
-    const mockApiCall = jest
+    const mockApiCall = vi
       .fn()
       .mockRejectedValueOnce(networkError)
       .mockResolvedValue('success');
@@ -154,7 +154,7 @@ describe('useApiErrorHandler', () => {
     const networkError = new Error('Network Error') as any;
     networkError.code = 'NETWORK_ERROR';
 
-    const mockApiCall = jest
+    const mockApiCall = vi
       .fn()
       .mockRejectedValueOnce(networkError)
       .mockResolvedValue('success');
@@ -195,7 +195,7 @@ describe('useApiErrorHandler', () => {
   });
 
   it('calls custom error handler', () => {
-    const customErrorHandler = jest.fn();
+    const customErrorHandler = vi.fn();
     const { result } = renderHook(() =>
       useApiErrorHandler({
         onError: customErrorHandler,
@@ -215,7 +215,7 @@ describe('useApiErrorHandler', () => {
     const { result } = renderHook(() => useApiErrorHandler());
     const testError = new Error('Test error');
     let resolveRetry: (value: string) => void;
-    const retryFn = jest.fn(
+    const retryFn = vi.fn(
       () =>
         new Promise<string>(resolve => {
           resolveRetry = resolve;

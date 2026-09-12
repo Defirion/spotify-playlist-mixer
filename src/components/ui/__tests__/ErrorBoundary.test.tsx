@@ -2,10 +2,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Silence Policy compliance: prefer per-suite spies instead of module-scoped reassignment.
-let consoleErrorSpy: jest.SpyInstance;
+// Prefer per-suite console spies instead of module-scoped reassignment.
+let consoleErrorSpy: import('vitest').MockInstance;
 beforeEach(() => {
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
   consoleErrorSpy?.mockRestore?.();
@@ -83,9 +83,9 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const reloadSpy = jest.spyOn(window, 'location', 'get');
+    const reloadSpy = vi.spyOn(window, 'location', 'get');
     // @ts-ignore
-    reloadSpy.mockReturnValue({ reload: jest.fn() });
+    reloadSpy.mockReturnValue({ reload: vi.fn() });
 
     const ThrowError = () => {
       throw new Error('Test Error');
@@ -107,7 +107,7 @@ describe('ErrorBoundary', () => {
     const ThrowError = () => {
       throw new Error('Test Error');
     };
-    const handleError = jest.fn();
+    const handleError = vi.fn();
 
     render(
       <ErrorBoundary onError={handleError}>

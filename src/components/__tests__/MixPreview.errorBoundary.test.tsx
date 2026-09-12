@@ -4,23 +4,28 @@ import '@testing-library/jest-dom';
 import PlaylistMixer from '../PlaylistMixer';
 
 // Mock hooks used by PlaylistMixer
-jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(),
+vi.mock('../../hooks/useMixGeneration', () => ({
+  useMixGeneration: vi.fn(),
 }));
 
-jest.mock('../../hooks/useMixPreview', () => ({
-  useMixPreview: jest.fn(),
+vi.mock('../../hooks/useMixPreview', () => ({
+  useMixPreview: vi.fn(),
 }));
 
-jest.mock('../../hooks/useMixWarnings', () => ({
-  useMixWarnings: jest.fn(),
+vi.mock('../../hooks/useMixWarnings', () => ({
+  useMixWarnings: vi.fn(),
 }));
 
 // Mock MixPreview to throw when rendered
-jest.mock('../features/mixer/MixPreview', () => {
-  return function ThrowingMixPreview() {
-    throw new Error('Test throw from MixPreview');
-  };
+vi.mock('../features/mixer/MixPreview', () => {
+  const __mod = (() => {
+    return function ThrowingMixPreview() {
+      throw new Error('Test throw from MixPreview');
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 // Minimal props to mount PlaylistMixer
@@ -46,28 +51,26 @@ const defaultProps: any = {
     targetDuration: 0,
     useTimeLimit: false,
     useAllSongs: true,
-    shuffleWithinGroups: false,
-    popularityStrategy: 'mixed',
-    recencyBoost: false,
+    shuffleTracks: false,
     continueWhenPlaylistEmpty: false,
   },
-  updateMixOptions: jest.fn(),
-  onMixedPlaylist: jest.fn(),
-  onError: jest.fn(),
+  updateMixOptions: vi.fn(),
+  onMixedPlaylist: vi.fn(),
+  onError: vi.fn(),
 };
 
 describe('MixPreview ErrorBoundary integration', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: import('vitest').MockInstance;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Silence expected React error logs during test
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { useMixGeneration } = require('../../hooks/useMixGeneration');
-    const { useMixPreview } = require('../../hooks/useMixPreview');
-    const { useMixWarnings } = require('../../hooks/useMixWarnings');
+    const { useMixGeneration } = await import('../../hooks/useMixGeneration');
+    const { useMixPreview } = await import('../../hooks/useMixPreview');
+    const { useMixWarnings } = await import('../../hooks/useMixWarnings');
 
-    useMixGeneration.mockReturnValue({
+    vi.mocked(useMixGeneration).mockReturnValue({
       state: {
         loading: false,
         error: null,
@@ -75,30 +78,30 @@ describe('MixPreview ErrorBoundary integration', () => {
         exhaustedPlaylists: [],
         stoppedEarly: false,
       },
-      generateMix: jest.fn(),
-      createPlaylist: jest.fn(),
-      reset: jest.fn(),
+      generateMix: vi.fn(),
+      createPlaylist: vi.fn(),
+      reset: vi.fn(),
     });
 
     // Provide a non-null preview so PlaylistMixer attempts to render MixPreview
-    useMixPreview.mockReturnValue({
+    vi.mocked(useMixPreview).mockReturnValue({
       state: {
         preview: {
           tracks: [{ id: 't1', instanceId: 'i1' }],
           stats: {},
           totalDuration: 0,
-        },
+        } as any,
         loading: false,
         error: null,
         customTrackOrder: null,
       },
-      generatePreview: jest.fn(),
-      updateTrackOrder: jest.fn(),
-      clearPreview: jest.fn(),
-      getPreviewTracks: jest.fn(() => []),
+      generatePreview: vi.fn(),
+      updateTrackOrder: vi.fn(),
+      clearPreview: vi.fn(),
+      getPreviewTracks: vi.fn(() => []),
     });
 
-    useMixWarnings.mockReturnValue({
+    vi.mocked(useMixWarnings).mockReturnValue({
       exceedsLimit: null,
       ratioImbalance: null,
     });
@@ -106,7 +109,7 @@ describe('MixPreview ErrorBoundary integration', () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('renders ErrorBoundary fallback when MixPreview throws', () => {

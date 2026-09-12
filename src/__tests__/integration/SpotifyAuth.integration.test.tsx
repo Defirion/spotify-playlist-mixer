@@ -18,7 +18,7 @@ const waitForRedirect = async (): Promise<URL> => {
 
 describe('SpotifyAuth Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     sessionStorage.clear();
     // Mock window.location
     // capture original so we can restore it later

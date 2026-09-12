@@ -21,7 +21,6 @@ interface MixPreview {
   tracks: MixedTrack[];
   stats: PlaylistStats;
   totalDuration: number;
-  usedStrategy: string;
   exhaustedPlaylists: string[];
   stoppedEarly: boolean;
 }
@@ -208,7 +207,6 @@ export const useMixPreview = (
           tracks: previewTracks,
           stats: playlistStats,
           totalDuration,
-          usedStrategy: mixOptions.popularityStrategy,
           exhaustedPlaylists,
           stoppedEarly,
         };

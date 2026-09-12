@@ -89,23 +89,26 @@ export const useSpotifyUrlHandler = ({
         // Fetch all tracks to calculate real average duration
         let allTracks: any[] = [];
         let offset = 0;
-        const limit = 100;
+        const limit = 50;
 
         while (true) {
           const tracksResponse = await api.get(
-            `/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`
+            `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`
           );
           const items = tracksResponse.data.items || [];
           const tracks = items
             .filter(
               (item: any) =>
-                item.track && item.track.id && item.track.duration_ms
+                (item.item ?? item.track)?.id &&
+                (item.item ?? item.track)?.duration_ms
             ) // Filter out null tracks and those without duration
-            .map((item: any) => item.track);
+            .map((item: any) => item.item ?? item.track);
 
           allTracks = [...allTracks, ...tracks];
 
-          if (tracks.length < limit) break;
+          // Page size is based on raw playlist items, not playable tracks:
+          // Spotify can include unavailable items that are filtered above.
+          if (items.length < limit) break;
           offset += limit;
         }
 

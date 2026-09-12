@@ -1,17 +1,22 @@
 import createFetchClient from '../fetchClient';
 
+const jsonHeaders = {
+  get: (k: string) =>
+    k.toLowerCase() === 'content-type' ? 'application/json' : null,
+};
+
 describe('FetchInstance', () => {
   beforeEach(() => {
-    (global as any).fetch = jest.fn();
+    (global as any).fetch = vi.fn();
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete (global as any).fetch;
   });
 
   test('GET returns JSON when content-type is application/json', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
@@ -34,7 +39,7 @@ describe('FetchInstance', () => {
   });
 
   test('GET returns text when content-type is not json', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
@@ -62,7 +67,7 @@ describe('FetchInstance', () => {
 
   test('POST merges headers and stringifies JSON body', async () => {
     let capturedInit: any = null;
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockImplementation(async (_url: string, init: any) => {
         capturedInit = init;
@@ -102,8 +107,55 @@ describe('FetchInstance', () => {
     expect(res.data).toEqual({ created: true });
   });
 
+  test('joins a relative path to a baseURL with trailing slash', async () => {
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: jsonHeaders,
+      json: async () => ({ ok: true }),
+      text: async () => JSON.stringify({ ok: true }),
+    });
+
+    const client = createFetchClient({ baseURL: 'https://api.example.com/' });
+    const res = await client.get('/v1/items');
+
+    expect((global as any).fetch).toHaveBeenCalledWith(
+      'https://api.example.com/v1/items',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(res.data).toEqual({ ok: true });
+  });
+
+  test('sends FormData body unchanged and does not set JSON content-type', async () => {
+    const form = new FormData();
+    form.append('a', '1');
+
+    let capturedInit: any = null;
+    (global as any).fetch = vi
+      .fn()
+      .mockImplementation(async (_url: string, init: any) => {
+        capturedInit = init;
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          headers: jsonHeaders,
+          json: async () => ({ ok: true }),
+          text: async () => JSON.stringify({ ok: true }),
+        };
+      });
+
+    const client = createFetchClient({ baseURL: 'https://host' });
+    await client.post('/upload', form as any);
+
+    expect(capturedInit.body).toBeInstanceOf(FormData);
+    // content-type must not be forced to application/json for FormData
+    expect(capturedInit.headers['Content-Type']).toBeUndefined();
+  });
+
   test('throws an error with response attached when response is not ok', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValue({
+    (global as any).fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 400,
       statusText: 'Bad Request',

@@ -2,7 +2,7 @@ import { createAuthSlice } from '../../store/slices/authSlice';
 
 describe('authSlice', () => {
   let state: Record<string, any> = {};
-  const set = jest.fn((patch: any) => {
+  const set = vi.fn((patch: any) => {
     if (typeof patch === 'function') {
       state = { ...state, ...patch(state) };
     } else {
@@ -62,7 +62,7 @@ describe('authSlice', () => {
   it('clearAuth removes localStorage item when window.localStorage is available', () => {
     const origWindow = (global as any).window;
     const origLocalStorage = (global as any).localStorage;
-    const removeItem = jest.fn();
+    const removeItem = vi.fn();
     (global as any).window = { localStorage: { removeItem } } as any;
     (global as any).localStorage = { removeItem } as any;
 
@@ -83,7 +83,7 @@ describe('authSlice', () => {
   it('clearAuth swallows errors from localStorage.removeItem', () => {
     const origWindow = (global as any).window;
     const origLocalStorage = (global as any).localStorage;
-    const removeItem = jest.fn(() => {
+    const removeItem = vi.fn(() => {
       throw new Error('fail');
     });
     (global as any).window = { localStorage: { removeItem } } as any;

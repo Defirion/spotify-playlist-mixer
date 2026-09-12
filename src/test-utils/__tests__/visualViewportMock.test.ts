@@ -3,7 +3,7 @@ import { createVisualViewportMock } from '../../test-utils/mocks/visualViewportM
 describe('createVisualViewportMock', () => {
   test('setHeight updates height and triggers resize listener', () => {
     const api = createVisualViewportMock(800, 0);
-    const resizeCb = jest.fn();
+    const resizeCb = vi.fn();
 
     api.vv.addEventListener('resize', resizeCb);
     api.setHeight(600);
@@ -14,7 +14,7 @@ describe('createVisualViewportMock', () => {
 
   test('setOffsetTop updates offsetTop and triggers scroll listener', () => {
     const api = createVisualViewportMock(800, 10);
-    const scrollCb = jest.fn();
+    const scrollCb = vi.fn();
 
     api.vv.addEventListener('scroll', scrollCb);
     api.setOffsetTop(42);

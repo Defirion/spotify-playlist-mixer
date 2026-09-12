@@ -92,7 +92,7 @@ export class FetchInstance {
   }
 
   delete<T = any>(url: string, config?: any) {
-    return this.request('DELETE', url, undefined, config).then(
+    return this.request('DELETE', url, config?.data, config).then(
       r => r as any as { data: T }
     );
   }

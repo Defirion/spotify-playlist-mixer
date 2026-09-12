@@ -6,46 +6,60 @@ import { MixedTrack } from '../../../../types';
 import { makeTrack } from '../../../../test-utils/mocks/spotify';
 
 // Mock child components to focus on MixPreview behavior
-jest.mock('../../../SpotifySearchModal', () => {
-  return function MockSpotifySearchModal({
-    isOpen,
-    onClose,
-    onAddTracks,
-  }: any) {
-    if (!isOpen) return null;
-    return (
-      <div data-testid="spotify-search-modal">
-        <button onClick={onClose}>Close</button>
-        <button
-          onClick={() => onAddTracks([{ id: 'new-track', name: 'New Track' }])}
-        >
-          Add Track
-        </button>
-      </div>
-    );
-  };
+vi.mock('../../../SpotifySearchModal', () => {
+  const __mod = (() => {
+    return function MockSpotifySearchModal({
+      isOpen,
+      onClose,
+      onAddTracks,
+    }: any) {
+      if (!isOpen) return null;
+      return (
+        <div data-testid="spotify-search-modal">
+          <button onClick={onClose}>Close</button>
+          <button
+            onClick={() =>
+              onAddTracks([{ id: 'new-track', name: 'New Track' }])
+            }
+          >
+            Add Track
+          </button>
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
-jest.mock('../../../AddUnselectedModal', () => {
-  return function MockAddUnselectedModal({
-    isOpen,
-    onClose,
-    onAddTracks,
-  }: any) {
-    if (!isOpen) return null;
-    return (
-      <div data-testid="add-unselected-modal">
-        <button onClick={onClose}>Close</button>
-        <button
-          onClick={() =>
-            onAddTracks([{ id: 'unselected-track', name: 'Unselected Track' }])
-          }
-        >
-          Add Unselected
-        </button>
-      </div>
-    );
-  };
+vi.mock('../../../AddUnselectedModal', () => {
+  const __mod = (() => {
+    return function MockAddUnselectedModal({
+      isOpen,
+      onClose,
+      onAddTracks,
+    }: any) {
+      if (!isOpen) return null;
+      return (
+        <div data-testid="add-unselected-modal">
+          <button onClick={onClose}>Close</button>
+          <button
+            onClick={() =>
+              onAddTracks([
+                { id: 'unselected-track', name: 'Unselected Track' },
+              ])
+            }
+          >
+            Add Unselected
+          </button>
+        </div>
+      );
+    };
+  })();
+  return typeof __mod === 'function'
+    ? { __esModule: true, default: __mod }
+    : __mod;
 });
 
 const mockTracks: MixedTrack[] = [
@@ -54,7 +68,6 @@ const mockTracks: MixedTrack[] = [
       id: 'track1',
       name: 'Track 1',
       duration_ms: 180000,
-      popularity: 80,
       uri: 'spotify:track:track1',
     }),
     sourcePlaylist: 'playlist1',
@@ -64,7 +77,6 @@ const mockTracks: MixedTrack[] = [
       id: 'track2',
       name: 'Track 2',
       duration_ms: 200000,
-      popularity: 70,
       uri: 'spotify:track:track2',
     }),
     sourcePlaylist: 'playlist2',
@@ -82,13 +94,13 @@ describe('MixPreview Behavior Tests', () => {
     stats: mockStats,
     totalDuration: 380000,
     loading: false,
-    onTrackOrderChange: jest.fn(),
+    onTrackOrderChange: vi.fn(),
     accessToken: 'test-token',
     selectedPlaylists: [],
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders loading state correctly', () => {
@@ -168,7 +180,7 @@ describe('MixPreview Behavior Tests', () => {
 
   it('handles adding tracks from Spotify search', async () => {
     const user = userEvent.setup();
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview
@@ -191,7 +203,7 @@ describe('MixPreview Behavior Tests', () => {
 
   it('handles adding tracks from unselected modal', async () => {
     const user = userEvent.setup();
-    const mockOnTrackOrderChange = jest.fn();
+    const mockOnTrackOrderChange = vi.fn();
 
     render(
       <MixPreview

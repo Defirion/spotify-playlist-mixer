@@ -344,7 +344,6 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                       selected={selectedTracksToAdd.has(track.id)}
                       showCheckbox={true}
                       showAlbumArt={true}
-                      showPopularity={true}
                       showDuration={true}
                       showSourcePlaylist={false}
                     />

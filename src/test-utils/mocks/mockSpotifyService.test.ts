@@ -1,25 +1,30 @@
 import { makeMockSpotifyService } from './mockSpotifyService';
-import { silenceIfPass } from '../silenceIfPass';
+
+// Invoke an async block and await it (call sites kept from the old silenceIfPass helper).
+const run = <T>(fn: () => Promise<T>) => fn();
 
 describe('MockSpotifyService (unit)', () => {
   const originalFetch = (global as any).fetch;
 
   // Keep passing test output quiet; tests can still assert explicit logs.
-  let consoleErrorSpy: jest.SpyInstance | undefined;
+  let consoleErrorSpy: import('vitest').MockInstance | undefined;
+  let consoleLogSpy: import('vitest').MockInstance | undefined;
   beforeAll(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
   afterAll(() => {
-    if (consoleErrorSpy) consoleErrorSpy.mockRestore();
+    consoleErrorSpy?.mockRestore();
+    consoleLogSpy?.mockRestore();
   });
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('getUserPlaylists returns all when options.all is true', async () => {
-    await silenceIfPass(async () => {
+    await run(async () => {
       const Mock = makeMockSpotifyService();
       const svc = new Mock('token');
       const res = await svc.getUserPlaylists({ all: true });
@@ -32,9 +37,9 @@ describe('MockSpotifyService (unit)', () => {
     const Mock = makeMockSpotifyService();
     const svc = new Mock('token');
     // success JSON + non-json handled quietly for passing tests
-    await silenceIfPass(async () => {
+    await run(async () => {
       // success JSON
-      (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      (global as any).fetch = vi.fn().mockResolvedValueOnce({
         status: 200,
         text: async () => JSON.stringify({ id: 'me', display_name: 'Me' }),
       });
@@ -42,7 +47,7 @@ describe('MockSpotifyService (unit)', () => {
       expect(profile.id).toBe('me');
 
       // non-json body
-      (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      (global as any).fetch = vi.fn().mockResolvedValueOnce({
         status: 200,
         text: async () => 'not-json',
       });
@@ -51,7 +56,7 @@ describe('MockSpotifyService (unit)', () => {
     });
 
     // error status remains unwrapped so the expectation behaves the same
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       text: async () => JSON.stringify({ error: 'boom' }),
     });
@@ -66,11 +71,11 @@ describe('MockSpotifyService (unit)', () => {
       'Search query cannot be empty'
     );
 
-    // simulate one 429 then a successful response — keep the successful
+    // simulate one 429 then a successful response - keep the successful
     // portion quiet for passing tests
-    await silenceIfPass(async () => {
+    await run(async () => {
       const okPayload = {
-        tracks: { items: [{ id: 't1' }], total: 1, limit: 20, offset: 0 },
+        tracks: { items: [{ id: 't1' }], total: 1, limit: 5, offset: 0 },
       };
 
       const first = {
@@ -85,7 +90,7 @@ describe('MockSpotifyService (unit)', () => {
         text: async () => JSON.stringify(okPayload),
       };
 
-      (global as any).fetch = jest
+      (global as any).fetch = vi
         .fn()
         .mockResolvedValueOnce(first)
         .mockResolvedValueOnce(second);
@@ -96,52 +101,14 @@ describe('MockSpotifyService (unit)', () => {
     });
   });
 
-  it('getTrackAudioFeatures validates id and handles non-json body', async () => {
-    const Mock = makeMockSpotifyService();
-    const svc = new Mock('token');
-    await expect(svc.getTrackAudioFeatures('')).rejects.toThrow(
-      'Track ID required'
-    );
-
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      status: 200,
-      text: async () => 'raw',
-    });
-    await silenceIfPass(async () => {
-      const res = await svc.getTrackAudioFeatures('abc');
-      expect(res.__raw).toBe('raw');
-    });
-  });
-
-  it('getMultipleTrackAudioFeatures validates input and returns audio_features array', async () => {
-    const Mock = makeMockSpotifyService();
-    const svc = new Mock('token');
-    await expect(svc.getMultipleTrackAudioFeatures([])).rejects.toThrow(
-      'Track IDs required'
-    );
-
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      status: 200,
-      text: async () => JSON.stringify({ audio_features: [{ id: 'a1' }] }),
-    });
-    await silenceIfPass(async () => {
-      const res = await svc.getMultipleTrackAudioFeatures(['a1']);
-      expect(Array.isArray(res)).toBe(true);
-      expect(res[0].id).toBe('a1');
-    });
-  });
-
   it('createPlaylist validates inputs', async () => {
     const Mock = makeMockSpotifyService();
     const svc = new Mock('token');
-    await expect(svc.createPlaylist('', { name: 'x' })).rejects.toThrow(
-      'User ID is required'
-    );
-    await expect(svc.createPlaylist('u1', {})).rejects.toThrow(
+    await expect(svc.createPlaylist({})).rejects.toThrow(
       'Playlist name is required'
     );
-    await silenceIfPass(async () => {
-      const ok = await svc.createPlaylist('u1', { name: 'my' });
+    await run(async () => {
+      const ok = await svc.createPlaylist({ name: 'my' });
       expect(ok.name).toBe('my');
     });
   });
@@ -155,7 +122,7 @@ describe('MockSpotifyService (unit)', () => {
 
     // mock a 400 response
     const bad = { status: 400, json: async () => ({ error: 'bad' }) };
-    (global as any).fetch = jest.fn().mockResolvedValueOnce(bad);
+    (global as any).fetch = vi.fn().mockResolvedValueOnce(bad);
 
     await expect(
       svc.addTracksToPlaylist('p1', { uris: ['u1'] })
@@ -167,7 +134,7 @@ describe('MockSpotifyService (unit)', () => {
     const svc = new Mock('token');
 
     // HTTP 500
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       text: async () => JSON.stringify({ error: 'boom' }),
       headers: {},
@@ -176,11 +143,11 @@ describe('MockSpotifyService (unit)', () => {
     await expect(svc.searchTracks('x')).rejects.toThrow('HTTP 500');
 
     // non-json success body
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 200,
       text: async () => 'not-json',
     });
-    await silenceIfPass(async () => {
+    await run(async () => {
       const res = await svc.searchTracks('y');
       expect(res.items).toEqual([]);
     });
@@ -196,11 +163,11 @@ describe('MockSpotifyService (unit)', () => {
     const payload = {
       playlists: { items: [{ id: 'pl1' }], total: 1, limit: 20, offset: 0 },
     };
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 200,
       text: async () => JSON.stringify(payload),
     });
-    await silenceIfPass(async () => {
+    await run(async () => {
       const out = await svc.searchPlaylists('p', { market: 'US' });
       expect(out.playlists.length).toBe(1);
     });
@@ -216,22 +183,22 @@ describe('MockSpotifyService (unit)', () => {
       status: 200,
       json: async () => ({ snapshot_id: 's1' }),
     };
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce(first)
       .mockResolvedValueOnce(second);
-    await silenceIfPass(async () => {
-      const res = await svc.removeTracksFromPlaylist('pl', { tracks: [] });
+    await run(async () => {
+      const res = await svc.removeTracksFromPlaylist('pl', { items: [] });
       expect(res.snapshot_id).toBe('s1');
     });
 
     // simulate server error
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({
       status: 500,
       json: async () => ({ error: 'x' }),
     });
     await expect(
-      svc.removeTracksFromPlaylist('pl', { tracks: [] })
+      svc.removeTracksFromPlaylist('pl', { items: [] })
     ).rejects.toHaveProperty('type');
   });
 
@@ -240,13 +207,13 @@ describe('MockSpotifyService (unit)', () => {
     const svc = new Mock('token');
 
     const page1 = {
-      items: [{ track: { id: 't1' } }, { track: { id: 't2' } }],
+      items: [{ item: { id: 't1' } }, { item: { id: 't2' } }],
       total: 3,
       next: true,
     };
-    const page2 = { items: [{ track: { id: 't3' } }], total: 3, next: false };
+    const page2 = { items: [{ item: { id: 't3' } }], total: 3, next: false };
 
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce({
         status: 200,
@@ -258,12 +225,12 @@ describe('MockSpotifyService (unit)', () => {
       });
 
     const progressCalls: any[] = [];
-    const onProgress = jest.fn((p: any) => {
+    const onProgress = vi.fn((p: any) => {
       progressCalls.push(p);
       if (progressCalls.length === 1) throw new Error('boom'); // ensure handler exceptions are caught
     });
 
-    await silenceIfPass(async () => {
+    await run(async () => {
       const out = await svc.getPlaylistTracks('pl', { onProgress });
       expect(out.tracks.length).toBe(3);
       expect(onProgress).toHaveBeenCalled();
@@ -278,7 +245,7 @@ describe('MockSpotifyService (unit)', () => {
     );
 
     // two POST responses
-    (global as any).fetch = jest
+    (global as any).fetch = vi
       .fn()
       .mockResolvedValueOnce({
         status: 200,
@@ -289,7 +256,7 @@ describe('MockSpotifyService (unit)', () => {
         json: async () => ({ snapshot_id: 'b' }),
       });
 
-    await silenceIfPass(async () => {
+    await run(async () => {
       const res = await svc.addTracksToPlaylist('pl', { uris });
       expect(res.snapshot_id).toBe('b');
     });

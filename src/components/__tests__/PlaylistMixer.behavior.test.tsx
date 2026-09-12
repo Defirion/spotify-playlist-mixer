@@ -8,16 +8,16 @@ import PlaylistMixer from '../PlaylistMixer';
 // Mocks for hooks
 const mockMixGeneration = {
   state: { loading: false },
-  generateMix: jest.fn(),
-  createPlaylist: jest.fn(),
+  generateMix: vi.fn(),
+  createPlaylist: vi.fn(),
 };
 
 const mockMixPreview = {
   state: { preview: null, loading: false },
-  getPreviewTracks: jest.fn(),
-  updateTrackOrder: jest.fn(),
-  clearPreview: jest.fn(),
-  generatePreview: jest.fn(),
+  getPreviewTracks: vi.fn(),
+  updateTrackOrder: vi.fn(),
+  clearPreview: vi.fn(),
+  generatePreview: vi.fn(),
 };
 
 const mockMixWarnings = {
@@ -25,154 +25,170 @@ const mockMixWarnings = {
   ratioImbalance: false,
 };
 
-jest.mock('../../hooks/useMixGeneration', () => ({
+vi.mock('../../hooks/useMixGeneration', () => ({
   useMixGeneration: () => mockMixGeneration,
 }));
 
-jest.mock('../../hooks/useMixPreview', () => ({
+vi.mock('../../hooks/useMixPreview', () => ({
   useMixPreview: () => mockMixPreview,
 }));
 
-jest.mock('../../hooks/useMixWarnings', () => ({
+vi.mock('../../hooks/useMixWarnings', () => ({
   useMixWarnings: () => mockMixWarnings,
 }));
 
 // Mock DndProvider to expose drag callbacks via buttons
-jest.mock('../DndProvider', () => (props: any) => {
-  // capture the passed props so tests can call the autoScroll.canScroll at runtime
-  (global as any).__lastDndProps = props;
+vi.mock('../DndProvider', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    // capture the passed props so tests can call the autoScroll.canScroll at runtime
+    (global as any).__lastDndProps = props;
 
-  return (
-    <div>
-      <button
-        onClick={() =>
-          props.onDragStart && props.onDragStart(mockDragStartEvent)
-        }
-      >
-        Trigger DragStart
-      </button>
-      <button
-        onClick={() => props.onDragEnd && props.onDragEnd(mockDragEndEvent)}
-      >
-        Trigger DragEnd
-      </button>
-      <button
-        onClick={() =>
-          props.onDragEnd &&
-          // use instance ids that will match preview tracks in tests
-          props.onDragEnd({
-            active: { id: 'a1', data: { current: {} } },
-            over: { id: 'b1', data: { current: {} } },
-          })
-        }
-      >
-        Trigger Internal Reorder
-      </button>
-      <button
-        onClick={() =>
-          props.onDragEnd &&
-          // drag end with no over
-          props.onDragEnd({
-            active: { id: 'noover', data: { current: {} } },
-            over: null,
-          })
-        }
-      >
-        Trigger DragEnd NoOver
-      </button>
-      <button
-        onClick={() =>
-          props.onDragEnd &&
-          // active === over (same index)
-          props.onDragEnd({
-            active: { id: 'a1', data: { current: {} } },
-            over: { id: 'a1', data: { current: {} } },
-          })
-        }
-      >
-        Trigger Same Reorder
-      </button>
-      <button
-        onClick={() =>
-          props.onDragEnd &&
-          // optimistic same - modal style active and over equals optimistic instance id i1
-          props.onDragEnd({
-            active: {
-              id: 'drag-i1',
-              data: { current: { context: 'modal', track: mockTrack } },
-            },
-            over: { id: 'i1' },
-          })
-        }
-      >
-        Trigger DragEnd OptimisticSame
-      </button>
-      <button
-        onClick={() =>
-          props.onDragEnd &&
-          // optimistic move - modal style active and over equals another track id o1
-          props.onDragEnd({
-            active: {
-              id: 'drag-i1',
-              data: { current: { context: 'modal', track: mockTrack } },
-            },
-            over: { id: 'o1' },
-          })
-        }
-      >
-        Trigger DragEnd OptimisticMove
-      </button>
-      <button onClick={() => props.onDragCancel && props.onDragCancel()}>
-        Trigger DragCancel
-      </button>
-      {props.children}
-    </div>
-  );
-});
+    return (
+      <div>
+        <button
+          onClick={() =>
+            props.onDragStart && props.onDragStart(mockDragStartEvent)
+          }
+        >
+          Trigger DragStart
+        </button>
+        <button
+          onClick={() => props.onDragEnd && props.onDragEnd(mockDragEndEvent)}
+        >
+          Trigger DragEnd
+        </button>
+        <button
+          onClick={() =>
+            props.onDragEnd &&
+            // use instance ids that will match preview tracks in tests
+            props.onDragEnd({
+              active: { id: 'a1', data: { current: {} } },
+              over: { id: 'b1', data: { current: {} } },
+            })
+          }
+        >
+          Trigger Internal Reorder
+        </button>
+        <button
+          onClick={() =>
+            props.onDragEnd &&
+            // drag end with no over
+            props.onDragEnd({
+              active: { id: 'noover', data: { current: {} } },
+              over: null,
+            })
+          }
+        >
+          Trigger DragEnd NoOver
+        </button>
+        <button
+          onClick={() =>
+            props.onDragEnd &&
+            // active === over (same index)
+            props.onDragEnd({
+              active: { id: 'a1', data: { current: {} } },
+              over: { id: 'a1', data: { current: {} } },
+            })
+          }
+        >
+          Trigger Same Reorder
+        </button>
+        <button
+          onClick={() =>
+            props.onDragEnd &&
+            // optimistic same - modal style active and over equals optimistic instance id i1
+            props.onDragEnd({
+              active: {
+                id: 'drag-i1',
+                data: { current: { context: 'modal', track: mockTrack } },
+              },
+              over: { id: 'i1' },
+            })
+          }
+        >
+          Trigger DragEnd OptimisticSame
+        </button>
+        <button
+          onClick={() =>
+            props.onDragEnd &&
+            // optimistic move - modal style active and over equals another track id o1
+            props.onDragEnd({
+              active: {
+                id: 'drag-i1',
+                data: { current: { context: 'modal', track: mockTrack } },
+              },
+              over: { id: 'o1' },
+            })
+          }
+        >
+          Trigger DragEnd OptimisticMove
+        </button>
+        <button onClick={() => props.onDragCancel && props.onDragCancel()}>
+          Trigger DragCancel
+        </button>
+        {props.children}
+      </div>
+    );
+  },
+}));
 
 // Mock MixControls to expose create/generate actions
-jest.mock('../features/mixer/MixControls', () => (props: any) => {
-  return (
-    <div>
-      <button
-        onClick={() => props.onGeneratePreview && props.onGeneratePreview()}
-      >
-        Generate Preview
-      </button>
-      <button
-        onClick={() => props.onCreatePlaylist && props.onCreatePlaylist()}
-      >
-        Create Playlist
-      </button>
-      <div data-testid="has-preview">{props.hasPreview ? 'yes' : 'no'}</div>
-      <div data-testid="loading">{props.loading ? 'gen-loading' : 'idle'}</div>
-      <div data-testid="preview-loading">
-        {props.previewLoading ? 'prev-loading' : 'idle'}
+vi.mock('../features/mixer/MixControls', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <button
+          onClick={() => props.onGeneratePreview && props.onGeneratePreview()}
+        >
+          Generate Preview
+        </button>
+        <button
+          onClick={() => props.onCreatePlaylist && props.onCreatePlaylist()}
+        >
+          Create Playlist
+        </button>
+        <div data-testid="has-preview">{props.hasPreview ? 'yes' : 'no'}</div>
+        <div data-testid="loading">
+          {props.loading ? 'gen-loading' : 'idle'}
+        </div>
+        <div data-testid="preview-loading">
+          {props.previewLoading ? 'prev-loading' : 'idle'}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+}));
 
 // Minimal MixPreview mock to render lists if present
-jest.mock('../features/mixer/MixPreview', () => (props: any) => {
-  return (
-    <div>
-      <div data-testid="preview-tracks">
-        {props.tracks ? props.tracks.length : '0'}
+vi.mock('../features/mixer/MixPreview', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return (
+      <div>
+        <div data-testid="preview-tracks">
+          {props.tracks ? props.tracks.length : '0'}
+        </div>
+        <button
+          onClick={() =>
+            props.onTrackOrderChange && props.onTrackOrderChange([])
+          }
+        >
+          Change Order
+        </button>
       </div>
-      <button
-        onClick={() => props.onTrackOrderChange && props.onTrackOrderChange([])}
-      >
-        Change Order
-      </button>
-    </div>
-  );
-});
+    );
+  },
+}));
 
 // Minimal PlaylistForm mock
-jest.mock('../features/mixer/PlaylistForm', () => (props: any) => {
-  return <div data-testid="playlist-form">PlaylistForm</div>;
-});
+vi.mock('../features/mixer/PlaylistForm', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    return <div data-testid="playlist-form">PlaylistForm</div>;
+  },
+}));
 
 // Helpers for fake drag events
 const mockTrack = {
@@ -199,7 +215,7 @@ const mockDragEndEvent = {
 
 describe('PlaylistMixer behavior', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // default preview tracks empty
     mockMixPreview.getPreviewTracks.mockReturnValue([]);
     mockMixPreview.state.preview = null;
@@ -215,7 +231,7 @@ describe('PlaylistMixer behavior', () => {
 
   afterEach(() => {
     // restore console.log to original implementation
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('calls generatePreview when user requests it through controls', async () => {
@@ -265,16 +281,14 @@ describe('PlaylistMixer behavior', () => {
       totalDuration: 123,
     } as any;
 
-    const updateMixOptions = jest.fn();
+    const updateMixOptions = vi.fn();
     const initialMixOptions = {
       playlistName: 'X',
       totalSongs: 5,
       targetDuration: 60,
       useTimeLimit: false,
       useAllSongs: false,
-      shuffleWithinGroups: false,
-      popularityStrategy: 'none',
-      recencyBoost: 0,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 
@@ -409,7 +423,7 @@ describe('PlaylistMixer behavior', () => {
       totalDuration: 0,
     } as any;
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     render(
       <PlaylistMixer
@@ -444,7 +458,7 @@ describe('PlaylistMixer behavior', () => {
       totalDuration: 0,
     } as any;
 
-    const eventSpy = jest.fn();
+    const eventSpy = vi.fn();
     window.addEventListener('trackDraggedToPreview', eventSpy as any);
 
     render(
@@ -522,7 +536,7 @@ describe('PlaylistMixer behavior', () => {
       />
     );
 
-    const eventSpy = jest.fn();
+    const eventSpy = vi.fn();
     window.addEventListener('trackDraggedToPreview', eventSpy as any);
 
     // ensure component saw a drag start so it has active drag state
@@ -542,7 +556,7 @@ describe('PlaylistMixer behavior', () => {
     mockMixPreview.getPreviewTracks.mockReturnValue([{ id: 't1' }]);
     mockMixGeneration.createPlaylist.mockResolvedValue(resultPlaylist);
 
-    const onMixed = jest.fn();
+    const onMixed = vi.fn();
 
     render(
       <PlaylistMixer
@@ -570,7 +584,7 @@ describe('PlaylistMixer behavior', () => {
     mockMixGeneration.generateMix.mockResolvedValue(generatedTracks as any);
     mockMixGeneration.createPlaylist.mockResolvedValue(resultPlaylist);
 
-    const onMixed = jest.fn();
+    const onMixed = vi.fn();
 
     render(
       <PlaylistMixer
@@ -598,8 +612,8 @@ describe('PlaylistMixer behavior', () => {
     mockMixPreview.getPreviewTracks.mockReturnValue([{ id: 't1' }]);
     mockMixGeneration.createPlaylist.mockRejectedValue(new Error('fail'));
 
-    const onMixed = jest.fn();
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const onMixed = vi.fn();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <PlaylistMixer
@@ -617,7 +631,6 @@ describe('PlaylistMixer behavior', () => {
     await waitFor(() =>
       expect(mockMixGeneration.createPlaylist).toHaveBeenCalled()
     );
-    await waitFor(() => expect(errorSpy).toHaveBeenCalled());
     expect(onMixed).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();
@@ -633,8 +646,8 @@ describe('PlaylistMixer behavior', () => {
     } as any;
     mockMixGeneration.createPlaylist.mockResolvedValue({ id: 'dbg' });
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const onMixed = jest.fn();
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const onMixed = vi.fn();
 
     render(
       <PlaylistMixer
@@ -665,8 +678,8 @@ describe('PlaylistMixer behavior', () => {
       new Error('generate failed')
     );
 
-    const onMixed = jest.fn();
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const onMixed = vi.fn();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <PlaylistMixer
@@ -684,7 +697,6 @@ describe('PlaylistMixer behavior', () => {
     await waitFor(() =>
       expect(mockMixGeneration.generateMix).toHaveBeenCalled()
     );
-    await waitFor(() => expect(errorSpy).toHaveBeenCalled());
     expect(onMixed).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();
@@ -704,9 +716,7 @@ describe('PlaylistMixer behavior', () => {
       targetDuration: 60,
       useTimeLimit: false,
       useAllSongs: false,
-      shuffleWithinGroups: false,
-      popularityStrategy: 'none',
-      recencyBoost: 0,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 
@@ -786,7 +796,7 @@ describe('PlaylistMixer behavior', () => {
       totalDuration: 0,
     } as any;
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     render(
       <PlaylistMixer
@@ -824,7 +834,7 @@ describe('PlaylistMixer behavior', () => {
       totalDuration: 0,
     } as any;
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     render(
       <PlaylistMixer

@@ -4,7 +4,7 @@ import useErrorHandler from '../useErrorHandler';
 describe('useErrorHandler', () => {
   let consoleErrorSpy: any;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   afterEach(() => {
     consoleErrorSpy?.mockRestore?.();
@@ -66,7 +66,7 @@ describe('useErrorHandler', () => {
   it('handles retry with successful function', async () => {
     const { result } = renderHook(() => useErrorHandler());
     const testError = new Error('Test error');
-    const retryFn = jest.fn().mockResolvedValue('success');
+    const retryFn = vi.fn().mockResolvedValue('success');
 
     // Set initial error
     act(() => {
@@ -90,7 +90,7 @@ describe('useErrorHandler', () => {
     const { result } = renderHook(() => useErrorHandler());
     const initialError = new Error('Initial error');
     const retryError = new Error('Retry error');
-    const retryFn = jest.fn().mockRejectedValue(retryError);
+    const retryFn = vi.fn().mockRejectedValue(retryError);
 
     // Set initial error
     act(() => {
@@ -131,7 +131,7 @@ describe('useErrorHandler', () => {
   it('wraps async functions with error handling', async () => {
     const { result } = renderHook(() => useErrorHandler());
     const testError = new Error('Async error');
-    const asyncFn = jest.fn().mockRejectedValue(testError);
+    const asyncFn = vi.fn().mockRejectedValue(testError);
 
     const wrappedFn = result.current.withErrorHandling(asyncFn);
 
@@ -150,7 +150,7 @@ describe('useErrorHandler', () => {
 
   it('wraps successful async functions correctly', async () => {
     const { result } = renderHook(() => useErrorHandler());
-    const asyncFn = jest.fn().mockResolvedValue('success');
+    const asyncFn = vi.fn().mockResolvedValue('success');
 
     const wrappedFn = result.current.withErrorHandling(asyncFn);
 
@@ -169,7 +169,7 @@ describe('useErrorHandler', () => {
     const { result } = renderHook(() => useErrorHandler());
     const testError = new Error('Test error');
     let resolveRetry: (value: string) => void;
-    const retryFn = jest.fn(
+    const retryFn = vi.fn(
       () =>
         new Promise<void>(resolve => {
           resolveRetry = resolve as any;
@@ -203,7 +203,7 @@ describe('useErrorHandler', () => {
   });
 
   it('calls custom error handler when provided', () => {
-    const customErrorHandler = jest.fn();
+    const customErrorHandler = vi.fn();
     const { result } = renderHook(() =>
       useErrorHandler({
         onError: customErrorHandler,

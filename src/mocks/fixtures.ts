@@ -27,9 +27,9 @@ export const mockPlaylists = [
       id: 'test_user_123',
       display_name: 'Test User',
     },
-    tracks: {
+    items: {
       total: 25,
-      href: 'https://api.spotify.com/v1/playlists/playlist_1/tracks',
+      href: 'https://api.spotify.com/v1/playlists/playlist_1/items',
     },
     images: [
       {
@@ -52,9 +52,9 @@ export const mockPlaylists = [
       id: 'test_user_123',
       display_name: 'Test User',
     },
-    tracks: {
+    items: {
       total: 18,
-      href: 'https://api.spotify.com/v1/playlists/playlist_2/tracks',
+      href: 'https://api.spotify.com/v1/playlists/playlist_2/items',
     },
     images: [
       {
@@ -77,9 +77,9 @@ export const mockPlaylists = [
       id: 'test_user_123',
       display_name: 'Test User',
     },
-    tracks: {
+    items: {
       total: 32,
-      href: 'https://api.spotify.com/v1/playlists/playlist_3/tracks',
+      href: 'https://api.spotify.com/v1/playlists/playlist_3/items',
     },
     images: [
       {
@@ -126,7 +126,6 @@ export const mockTracks = [
     },
     duration_ms: 210000,
     explicit: false,
-    popularity: 75,
     preview_url: 'https://example.com/preview1.mp3',
     track_number: 1,
     uri: 'spotify:track:track_1',
@@ -173,7 +172,6 @@ export const mockTracks = [
     },
     duration_ms: 195000,
     explicit: true,
-    popularity: 82,
     preview_url: 'https://example.com/preview2.mp3',
     track_number: 3,
     uri: 'spotify:track:track_2',
@@ -212,7 +210,6 @@ export const mockTracks = [
     },
     duration_ms: 240000,
     explicit: false,
-    popularity: 68,
     preview_url: 'https://example.com/preview3.mp3',
     track_number: 2,
     uri: 'spotify:track:track_3',
@@ -251,7 +248,6 @@ export const mockTracks = [
     },
     duration_ms: 180000,
     explicit: false,
-    popularity: 91,
     preview_url: 'https://example.com/preview4.mp3',
     track_number: 1,
     uri: 'spotify:track:track_4',
@@ -290,7 +286,6 @@ export const mockTracks = [
     },
     duration_ms: 225000,
     explicit: false,
-    popularity: 73,
     preview_url: 'https://example.com/preview5.mp3',
     track_number: 4,
     uri: 'spotify:track:track_5',

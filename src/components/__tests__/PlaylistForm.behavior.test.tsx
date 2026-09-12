@@ -7,7 +7,7 @@ const makePlaylist = (id: string, total = 5, avgSec?: number) => ({
   id,
   name: `P ${id}`,
   images: [],
-  tracks: { total },
+  items: { total },
   owner: { id: 'u' },
   realAverageDurationSeconds: avgSec,
 });
@@ -18,15 +18,13 @@ const baseMixOptions = {
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'My Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 
 describe('PlaylistForm behavior', () => {
   it('changes totalSongs when Set Song Count input is edited', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
@@ -47,7 +45,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('changes targetDuration (seconds) when Set Duration input is edited', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
@@ -71,7 +69,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('shows formatted total duration when Use All Songs is active', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     // one playlist with avg 200s and total 4 songs => ~13m
     render(
@@ -89,7 +87,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('renders exceedsLimit warning when provided', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
     const exceeds = {
       type: 'songs' as const,
       requested: 200,
@@ -114,7 +112,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('renders ratio imbalance warning and toggles continueWhenPlaylistEmpty', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
     const ratio = {
       limitingPlaylistName: 'P 1',
       mixWillBecomeImbalancedAt: '10',
@@ -138,7 +136,9 @@ describe('PlaylistForm behavior', () => {
     expect(screen.getByText(/Ratio imbalance warning/i)).toBeInTheDocument();
     expect(screen.getByText(/P 1/)).toBeInTheDocument();
 
-    const checkbox = screen.getByRole('checkbox');
+    const checkbox = screen.getByLabelText(
+      /Continue mixing until all songs are used up/i
+    );
     expect(checkbox).not.toBeChecked();
 
     fireEvent.click(checkbox);
@@ -147,34 +147,8 @@ describe('PlaylistForm behavior', () => {
     });
   });
 
-  it('selects popularityStrategy when strategy buttons are clicked', () => {
-    const onMixOptionsChange = jest.fn();
-
-    render(
-      <PlaylistForm
-        mixOptions={{ ...baseMixOptions } as any}
-        onMixOptionsChange={onMixOptionsChange}
-        selectedPlaylists={[makePlaylist('1')] as any}
-        exceedsLimit={null}
-        ratioImbalance={null}
-      />
-    );
-
-    const frontLoaded = screen.getByRole('button', { name: /front-loaded/i });
-    fireEvent.click(frontLoaded);
-    expect(onMixOptionsChange).toHaveBeenCalledWith({
-      popularityStrategy: 'front-loaded',
-    });
-
-    const crescendo = screen.getByRole('button', { name: /crescendo/i });
-    fireEvent.click(crescendo);
-    expect(onMixOptionsChange).toHaveBeenCalledWith({
-      popularityStrategy: 'crescendo',
-    });
-  });
-
   it('changes playlist name when input edited', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
@@ -194,7 +168,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('toggles Use All / Set Song Count / Set Duration via buttons', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
@@ -228,34 +202,8 @@ describe('PlaylistForm behavior', () => {
     });
   });
 
-  it('selects mixed and mid-peak popularity strategies', () => {
-    const onMixOptionsChange = jest.fn();
-
-    render(
-      <PlaylistForm
-        mixOptions={{ ...baseMixOptions } as any}
-        onMixOptionsChange={onMixOptionsChange}
-        selectedPlaylists={[makePlaylist('1')] as any}
-        exceedsLimit={null}
-        ratioImbalance={null}
-      />
-    );
-
-    const mixed = screen.getByRole('button', { name: /mixed/i });
-    fireEvent.click(mixed);
-    expect(onMixOptionsChange).toHaveBeenCalledWith({
-      popularityStrategy: 'mixed',
-    });
-
-    const midPeak = screen.getByRole('button', { name: /mid-peak/i });
-    fireEvent.click(midPeak);
-    expect(onMixOptionsChange).toHaveBeenCalledWith({
-      popularityStrategy: 'mid-peak',
-    });
-  });
-
   it('formats fallback duration when no realAverageDurationSeconds provided', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     // two playlists with totals 3 and 4, no avg durations -> fallback 3.5 minutes per song
     render(
@@ -274,7 +222,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('formats hours correctly when total duration exceeds 60 minutes', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     // one playlist with 100 songs at 120s each => 200 minutes -> 3h 20m
     render(
@@ -292,7 +240,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('renders the alternate ratio imbalance message when willStopEarly is false', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
     const ratio = {
       limitingPlaylistName: 'P 2',
       mixWillBecomeImbalancedAt: '5',
@@ -319,27 +267,8 @@ describe('PlaylistForm behavior', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the active strategy button when popularityStrategy is preselected', () => {
-    const onMixOptionsChange = jest.fn();
-
-    render(
-      <PlaylistForm
-        mixOptions={
-          { ...baseMixOptions, popularityStrategy: 'front-loaded' } as any
-        }
-        onMixOptionsChange={onMixOptionsChange}
-        selectedPlaylists={[makePlaylist('1')] as any}
-        exceedsLimit={null}
-        ratioImbalance={null}
-      />
-    );
-
-    const frontLoaded = screen.getByRole('button', { name: /front-loaded/i });
-    expect(frontLoaded).toHaveClass('active');
-  });
-
   it('renders time-based exceedsLimit messaging when type is time', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
     const exceeds = {
       type: 'time' as const,
       requested: 1000,
@@ -364,7 +293,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('sets max attribute for totalSongs input to available totalSongs', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
@@ -383,7 +312,7 @@ describe('PlaylistForm behavior', () => {
   });
 
   it('sets max attribute for time limit input to available totalDurationMinutes', () => {
-    const onMixOptionsChange = jest.fn();
+    const onMixOptionsChange = vi.fn();
 
     // one playlist with 10 songs at 120s => 20 minutes
     render(
@@ -400,14 +329,12 @@ describe('PlaylistForm behavior', () => {
     expect(input).toHaveAttribute('max', '20');
   });
 
-  it('shows mid-peak and crescendo buttons as active when preselected', () => {
-    const onMixOptionsChange = jest.fn();
+  it('toggles playlist-order shuffling', () => {
+    const onMixOptionsChange = vi.fn();
 
-    const { rerender } = render(
+    render(
       <PlaylistForm
-        mixOptions={
-          { ...baseMixOptions, popularityStrategy: 'mid-peak' } as any
-        }
+        mixOptions={{ ...baseMixOptions, shuffleTracks: true } as any}
         onMixOptionsChange={onMixOptionsChange}
         selectedPlaylists={[makePlaylist('1')] as any}
         exceedsLimit={null}
@@ -415,23 +342,11 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    const midPeak = screen.getByRole('button', { name: /mid-peak/i });
-    expect(midPeak).toHaveClass('active');
-
-    // rerender with crescendo selected
-    rerender(
-      <PlaylistForm
-        mixOptions={
-          { ...baseMixOptions, popularityStrategy: 'crescendo' } as any
-        }
-        onMixOptionsChange={onMixOptionsChange}
-        selectedPlaylists={[makePlaylist('1')] as any}
-        exceedsLimit={null}
-        ratioImbalance={null}
-      />
+    const checkbox = screen.getByLabelText(
+      /Shuffle tracks within each playlist/i
     );
-
-    const crescendo = screen.getByRole('button', { name: /crescendo/i });
-    expect(crescendo).toHaveClass('active');
+    expect(checkbox).toBeChecked();
+    fireEvent.click(checkbox);
+    expect(onMixOptionsChange).toHaveBeenCalledWith({ shuffleTracks: false });
   });
 });

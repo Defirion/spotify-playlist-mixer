@@ -6,24 +6,23 @@ import { useMixGeneration } from '../../hooks/useMixGeneration';
 import { useMixPreview } from '../../hooks/useMixPreview';
 import { useMixWarnings } from '../../hooks/useMixWarnings';
 
-jest.mock('../DndProvider', () => ({
+vi.mock('../DndProvider', () => ({
   __esModule: true,
   default: ({ children }: any) => <div>{children}</div>,
 }));
 
-jest.mock('../../hooks/useMixGeneration', () => ({
-  useMixGeneration: jest.fn(),
+vi.mock('../../hooks/useMixGeneration', () => ({
+  useMixGeneration: vi.fn(),
 }));
-jest.mock('../../hooks/useMixPreview', () => ({ useMixPreview: jest.fn() }));
-jest.mock('../../hooks/useMixWarnings', () => ({ useMixWarnings: jest.fn() }));
+vi.mock('../../hooks/useMixPreview', () => ({ useMixPreview: vi.fn() }));
+vi.mock('../../hooks/useMixWarnings', () => ({ useMixWarnings: vi.fn() }));
 
-const mockUseMixGeneration = useMixGeneration as jest.MockedFunction<
-  typeof useMixGeneration
->;
-const mockUseMixPreview = useMixPreview as jest.MockedFunction<
+const mockUseMixGeneration =
+  useMixGeneration as import('vitest').MockedFunction<typeof useMixGeneration>;
+const mockUseMixPreview = useMixPreview as import('vitest').MockedFunction<
   typeof useMixPreview
 >;
-const mockUseMixWarnings = useMixWarnings as jest.MockedFunction<
+const mockUseMixWarnings = useMixWarnings as import('vitest').MockedFunction<
   typeof useMixWarnings
 >;
 
@@ -60,9 +59,7 @@ const baseMixOptions = {
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'Error Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 const baseRatio = {
@@ -71,24 +68,24 @@ const baseRatio = {
 
 describe('PlaylistMixer error and edge flows', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('shows console error when createPlaylist throws', async () => {
-    const createPlaylist = jest.fn().mockRejectedValue(new Error('boom'));
+  it('recovers without crashing when createPlaylist throws', async () => {
+    const createPlaylist = vi.fn().mockRejectedValue(new Error('boom'));
     mockUseMixGeneration.mockReturnValue({
       state: { loading: false, error: null, mixedTracks: [] },
-      generateMix: jest.fn(),
+      generateMix: vi.fn(),
       createPlaylist,
-      reset: jest.fn(),
+      reset: vi.fn(),
     } as any);
 
     mockUseMixPreview.mockReturnValue({
       state: { preview: null, loading: false, error: null },
-      generatePreview: jest.fn(),
-      updateTrackOrder: jest.fn(),
-      clearPreview: jest.fn(),
-      getPreviewTracks: jest.fn(() => []),
+      generatePreview: vi.fn(),
+      updateTrackOrder: vi.fn(),
+      clearPreview: vi.fn(),
+      getPreviewTracks: vi.fn(() => []),
     } as any);
 
     mockUseMixWarnings.mockReturnValue({
@@ -96,9 +93,8 @@ describe('PlaylistMixer error and edge flows', () => {
       ratioImbalance: null,
     } as any);
 
-    const consoleSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    // Keep the expected rejection from polluting test output.
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <PlaylistMixer
@@ -106,7 +102,7 @@ describe('PlaylistMixer error and edge flows', () => {
         selectedPlaylists={mockSelectedPlaylists as any}
         ratioConfig={baseRatio as any}
         mixOptions={baseMixOptions as any}
-        updateMixOptions={jest.fn()}
+        updateMixOptions={vi.fn()}
       />
     );
 
@@ -117,7 +113,10 @@ describe('PlaylistMixer error and edge flows', () => {
     fireEvent.click(createBtn);
 
     await waitFor(() => expect(createPlaylist).toHaveBeenCalled());
-    expect(consoleSpy).toHaveBeenCalled();
+    // The rejection is caught: the component stays mounted and usable.
+    expect(
+      screen.getByRole('button', { name: /create this playlist/i })
+    ).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
 });

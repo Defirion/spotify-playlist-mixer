@@ -34,7 +34,6 @@ const mockPlaylistTracks: PlaylistTracks = {
       },
       duration_ms: 180000,
       explicit: false,
-      popularity: 80,
       preview_url: null,
       track_number: 1,
       external_urls: { spotify: '' },
@@ -61,7 +60,6 @@ const mockPlaylistTracks: PlaylistTracks = {
       },
       duration_ms: 200000,
       explicit: false,
-      popularity: 60,
       preview_url: null,
       track_number: 1,
       external_urls: { spotify: '' },
@@ -90,7 +88,6 @@ const mockPlaylistTracks: PlaylistTracks = {
       },
       duration_ms: 190000,
       explicit: false,
-      popularity: 70,
       preview_url: null,
       track_number: 1,
       external_urls: { spotify: '' },
@@ -109,9 +106,7 @@ const mockOptions: MixOptions = {
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'Test Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: true,
 };
 
@@ -171,7 +166,7 @@ describe('Playlist Mixer Orchestrator', () => {
       expect(context.playlistTracks).toEqual(mockPlaylistTracks);
       expect(context.ratioConfig).toEqual(mockRatioConfig);
       expect(context.options).toEqual(mockOptions);
-      expect(context.popularityPools).toBeDefined();
+      expect(context.playlistQueues).toBeDefined();
       expect(context.totalWeight).toBe(3); // 2 + 1
       expect(context.estimatedTotalSongs).toBe(3);
       expect(context.targetCounts).toBeDefined();
@@ -237,25 +232,11 @@ describe('Playlist Mixer Orchestrator', () => {
       expect(result).toHaveLength(0);
     });
 
-    it('should handle different popularity strategies', () => {
-      const strategies = [
-        'mixed',
-        'front-loaded',
-        'mid-peak',
-        'crescendo',
-      ] as const;
+    it('preserves playlist order when shuffling is disabled', () => {
+      const options = { ...mockOptions, shuffleTracks: false };
+      const result = mixPlaylists(mockPlaylistTracks, mockRatioConfig, options);
 
-      strategies.forEach(strategy => {
-        const options = { ...mockOptions, popularityStrategy: strategy };
-        const result = mixPlaylists(
-          mockPlaylistTracks,
-          mockRatioConfig,
-          options
-        );
-
-        expect(result.length).toBeGreaterThan(0);
-        expect(result.every(track => track.sourcePlaylist)).toBe(true);
-      });
+      expect(result.map(track => track.id)).toEqual(['1', '3', '2']);
     });
 
     it('should handle useAllSongs option', () => {

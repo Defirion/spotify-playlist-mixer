@@ -9,22 +9,32 @@ import * as spotifyUtils from '../../utils/spotify';
 // dragAndDrop utils import removed - will be replaced with dnd-kit
 
 // Mock dependencies
-jest.mock('../../utils/spotify');
+vi.mock('../../utils/spotify', () => ({
+  getSpotifyApi: vi.fn(),
+  getPlaylistItemCount: vi.fn(
+    (playlist: any) =>
+      playlist.items?.total ??
+      playlist.items?.length ??
+      playlist.tracks?.total ??
+      playlist.tracks?.length ??
+      0
+  ),
+}));
 let _trackIdCounter = 0;
 const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
 
-jest.mock('../../utils/trackUtils', () => ({
-  formatDuration: jest.fn(
+vi.mock('../../utils/trackUtils', () => ({
+  formatDuration: vi.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
         .toString()
         .padStart(2, '0')}`
   ),
-  getTrackQuadrant: jest.fn(() => 'high-energy-happy'),
-  getPopularityStyle: jest.fn(() => ({ opacity: 1 })),
-  generateTrackInstanceId: jest.fn(() => _genTrackId()),
+  getTrackQuadrant: vi.fn(() => 'high-energy-happy'),
+  getPopularityStyle: vi.fn(() => ({ opacity: 1 })),
+  generateTrackInstanceId: vi.fn(() => _genTrackId()),
 }));
-jest.mock('../ui/Modal', () => ({
+vi.mock('../ui/Modal', () => ({
   __esModule: true,
   default: ({
     isOpen,
@@ -49,7 +59,7 @@ jest.mock('../ui/Modal', () => ({
     ) : null;
   },
 }));
-jest.mock('../ui/TrackList', () => ({
+vi.mock('../ui/TrackList', () => ({
   __esModule: true,
   default: ({
     tracks,
@@ -119,7 +129,6 @@ const mockTracks: SpotifyTrack[] = [
     id: 'track1',
     name: 'Test Track 1',
     duration_ms: 180000,
-    popularity: 75,
     uri: 'spotify:track:track1',
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
   }),
@@ -127,7 +136,6 @@ const mockTracks: SpotifyTrack[] = [
     id: 'track2',
     name: 'Test Track 2',
     duration_ms: 200000,
-    popularity: 80,
     uri: 'spotify:track:track2',
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
   }),
@@ -155,15 +163,15 @@ const mockCurrentTracks: SpotifyTrack[] = [];
 
 const defaultProps = {
   isOpen: true,
-  onClose: jest.fn(),
+  onClose: vi.fn(),
   accessToken: 'test-token',
   selectedPlaylists: mockPlaylists,
   currentTracks: mockCurrentTracks,
-  onAddTracks: jest.fn(),
+  onAddTracks: vi.fn(),
 };
 
 // Mock API responses
-const mockApiGet = jest.fn();
+const mockApiGet = vi.fn();
 const mockSpotifyApi = {
   get: mockApiGet,
 };
@@ -171,14 +179,14 @@ const mockSpotifyApi = {
 describe('AddUnselectedModal', () => {
   let consoleErrorSpy: any;
   // Silence console.log noise from TrackSourceModal closing messages
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleLogSpy: import('vitest').MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (spotifyUtils.getSpotifyApi as any).mockReturnValue(mockSpotifyApi);
     // Silence console.error to reduce noisy act warnings in test output
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     // Legacy drag utils mock removed
 
     // Mock API response for playlist tracks
@@ -192,7 +200,7 @@ describe('AddUnselectedModal', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     consoleErrorSpy?.mockRestore?.();
     consoleLogSpy?.mockRestore?.();
   });
@@ -229,7 +237,7 @@ describe('AddUnselectedModal', () => {
     });
 
     expect(mockApiGet).toHaveBeenCalledWith(
-      '/playlists/playlist1/tracks?offset=0&limit=100'
+      '/playlists/playlist1/items?offset=0&limit=50'
     );
   });
 
@@ -463,20 +471,14 @@ describe('AddUnselectedModal', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    const consoleSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
     mockApiGet.mockRejectedValue(new Error('API Error'));
 
     render(<AddUnselectedModal {...defaultProps} />);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to fetch playlist tracks:',
-        expect.any(Error)
-      );
+      expect(
+        screen.getByText(/Error loading tracks\. Please try again\./i)
+      ).toBeInTheDocument();
     });
-
-    consoleSpy.mockRestore();
   });
 });

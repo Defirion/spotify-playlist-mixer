@@ -1,140 +1,516 @@
-// Provide a lightweight, test-local mock class that implements the methods
-// exercised by this file. Tests stub `service['api']` directly, so methods
-// should delegate to `this.api` and shape results similarly to the real
-// implementation.
-import SpotifyService from '../../services/spotify';
+import SpotifyService from '../spotify';
+import { ApiError, ERROR_TYPES } from '../apiErrorHandler';
+import { FetchInstance } from '../fetchClient';
+import { getSpotifyApi } from '../../utils/spotify';
 
-jest.mock('../../services/spotify', () => {
-  class TestMockSpotifyService {
-    accessToken: string;
-    api: any;
-    constructor(accessToken: string) {
-      this.accessToken = accessToken;
-      this.api = {
-        get: async () => ({ data: {} }),
-        post: async () => ({ data: {} }),
-      };
-    }
+// We stub the underlying API layer so tests focus on service behavior.
+vi.mock('../../utils/spotify');
+const mockGetSpotifyApi = getSpotifyApi as import('vitest').MockedFunction<
+  typeof getSpotifyApi
+>;
 
-    async searchTracks(query: string, options: any = {}) {
-      if (!query || (typeof query === 'string' && query.trim() === '')) {
-        throw new Error('Search query cannot be empty');
-      }
-      const response = await this.api.get('/search');
-      const items = (
-        (response &&
-          response.data &&
-          response.data.tracks &&
-          response.data.tracks.items) ||
-        []
-      ).filter((t: any) => t && t.id);
-      const total = response?.data?.tracks?.total || items.length;
-      const limit = response?.data?.tracks?.limit || items.length;
-      const offset = response?.data?.tracks?.offset || 0;
-      return {
-        items,
-        tracks: items,
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
-      };
-    }
+// Helper to build a fake API client shape the service expects
+function makeApi(overrides: Partial<Record<string, any>> = {}): any {
+  return {
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+    ...overrides,
+  };
+}
 
-    async getPlaylistTracks(playlistId: string, options: any = {}) {
-      const response = await this.api.get(`/playlists/${playlistId}/tracks`);
-      const items = ((response && response.data && response.data.items) || [])
-        .map((item: any) => ({
-          ...item.track,
-          added_at: item.added_at,
-          added_by: item.added_by,
-        }))
-        .filter((t: any) => t && t.id);
-      return {
-        tracks: items,
-        total: response?.data?.total || items.length,
-        hasMore: false,
-      };
-    }
-
-    async getUserProfile() {
-      const response = await this.api.get('/me');
-      return response && response.data;
-    }
-  }
-
-  return { __esModule: true, default: TestMockSpotifyService };
-});
-
-// Minimal fixture data used by these tests
-const mockTrack = { id: 't1', name: 'Track 1', artists: [{ name: 'Artist' }] };
-const mockPlaylistTrack = {
-  track: mockTrack,
-  added_at: '2020-01-01T00:00:00Z',
-  added_by: { id: 'u1' },
-};
-
-describe('SpotifyService - service level behaviors', () => {
-  const ACCESS_TOKEN = 'test_token';
-  let service: SpotifyService;
-
-  // No global MSW in this test; stub the internal axios-like api directly
-
+describe('SpotifyService', () => {
   beforeEach(() => {
-    service = new SpotifyService(ACCESS_TOKEN);
+    vi.clearAllMocks();
   });
 
-  test('searchTracks returns filtered tracks for valid query', async () => {
-    // stub api.get to return expected shape
-    // @ts-ignore
-    service['api'] = {
-      get: jest.fn().mockResolvedValue({
+  describe('constructor', () => {
+    it('should throw BAD_REQUEST error when access token missing', () => {
+      const captureError = () => {
+        try {
+          new (SpotifyService as any)('');
+        } catch (e: any) {
+          return e;
+        }
+        return null;
+      };
+      const err = captureError();
+      expect(err).toBeInstanceOf(ApiError);
+      expect((err as any).type).toBe(ERROR_TYPES.BAD_REQUEST);
+    });
+
+    it('should create instance when token provided', () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('token123');
+      expect(svc.getAccessToken()).toBe('token123');
+      expect(mockGetSpotifyApi).toHaveBeenCalledWith('token123');
+    });
+
+    it('should accept a DI client and infer token from Authorization header', () => {
+      const api = makeApi({
+        defaults: { headers: { Authorization: 'Bearer abc' } },
+      });
+      // When passing a client directly, getSpotifyApi should not be used
+      const svc = new (SpotifyService as any)(api as any);
+      expect(svc.getAccessToken()).toBe('abc');
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
+    });
+
+    it('should infer token from lowercase authorization header when present', () => {
+      const api = makeApi({
+        defaults: { headers: { authorization: 'Bearer lower' } },
+      });
+      const svc = new (SpotifyService as any)(api as any);
+      expect(svc.getAccessToken()).toBe('lower');
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
+    });
+
+    it('should throw ApiError when constructed with null token', () => {
+      // @ts-ignore - testing runtime behavior
+      expect(() => new SpotifyService(null)).toThrow(ApiError);
+    });
+  });
+
+  describe('dependency injection with a real FetchInstance', () => {
+    class MockFetch extends FetchInstance {
+      get = vi.fn();
+      post = vi.fn();
+      delete = vi.fn();
+    }
+
+    it('uses the injected client for requests', async () => {
+      const mock = new MockFetch({
+        baseURL: 'https://api.spotify.com/v1',
+        headers: { Authorization: 'Bearer injected_token' },
+      });
+      (mock.get as import('vitest').Mock).mockResolvedValue({
+        data: { items: [], total: 0, limit: 50, offset: 0 },
+      });
+
+      const service = new SpotifyService(mock as any);
+
+      expect(service.getAccessToken()).toBe('injected_token');
+
+      await service.getUserPlaylists();
+      expect(mock.get).toHaveBeenCalledTimes(1);
+      const calledPath = (mock.get as import('vitest').Mock).mock.calls[0][0];
+      const url = new URL(calledPath, 'https://api.spotify.com/v1');
+      expect(url.pathname.endsWith('/me/playlists')).toBe(true);
+      expect(url.searchParams.get('limit')).toBe('50');
+      expect(url.searchParams.get('offset')).toBe('0');
+    });
+
+    it('setAccessToken updates the injected client headers', () => {
+      const mock = new MockFetch({
+        baseURL: 'x',
+        headers: { Authorization: 'Bearer old' },
+      });
+      const service = new SpotifyService(mock as any);
+      service.setAccessToken('new_token');
+      expect(service.getAccessToken()).toBe('new_token');
+      expect(mock.defaults.headers.Authorization).toBe('Bearer new_token');
+    });
+  });
+
+  describe('setAccessToken / getAccessToken', () => {
+    it('should update internal api client when setting new token', () => {
+      const firstApi = makeApi();
+      const secondApi = makeApi();
+      mockGetSpotifyApi
+        .mockReturnValueOnce(firstApi as any)
+        .mockReturnValueOnce(secondApi as any);
+      const svc = new (SpotifyService as any)('t1');
+      svc.setAccessToken('t2');
+      expect(svc.getAccessToken()).toBe('t2');
+      expect(mockGetSpotifyApi).toHaveBeenLastCalledWith('t2');
+    });
+
+    it('should update DI client headers when constructed with a client', () => {
+      const api = makeApi({ defaults: { headers: {} } });
+      const svc = new (SpotifyService as any)(api as any);
+      svc.setAccessToken('t3');
+      expect(api.defaults.headers.Authorization).toBe('Bearer t3');
+      // Should not rebuild via getSpotifyApi when headers exist
+      expect(mockGetSpotifyApi).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('searchTracks', () => {
+    it('should throw BAD_REQUEST when query empty', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.searchTracks('')).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+        context: expect.objectContaining({ operation: 'searchTracks' }),
+      });
+    });
+
+    it('should perform request and map response when successful', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+
+      api.get.mockResolvedValue({
         data: {
-          tracks: { items: [mockTrack], total: 1, limit: 20, offset: 0 },
+          tracks: {
+            items: [
+              { id: 'track1', name: 'T1' },
+              { id: 'track2', name: 'T2' },
+              { id: null, name: 'invalid' }, // filtered out
+            ],
+            total: 2,
+            limit: 2,
+            offset: 0,
+          },
         },
-      }),
-    };
+      });
 
-    const res = await service.searchTracks('track');
-    expect(res).toHaveProperty('items');
-    expect(Array.isArray(res.items)).toBe(true);
+      const result = await svc.searchTracks('hello', { limit: 2 });
+      expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/search?'));
+      expect(result.items.map((t: any) => t.id)).toEqual(['track1', 'track2']);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('should set hasMore true when more results available', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: {
+          tracks: {
+            items: [{ id: 't1' }],
+            total: 10,
+            limit: 1,
+            offset: 0,
+          },
+        },
+      });
+      const res = await svc.searchTracks('hello', { limit: 1 });
+      expect(res.hasMore).toBe(true);
+    });
+
+    it('should throw BAD_REQUEST when limit exceeds 10', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.searchTracks('q', { limit: 11 })).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
+    });
+
+    it('should include market param when provided', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: {
+          tracks: { items: [{ id: 't1' }], total: 1, limit: 1, offset: 0 },
+        },
+      });
+      await svc.searchTracks('hello', { limit: 1, market: 'US' });
+      const calledUrl = api.get.mock.calls[0][0];
+      expect(calledUrl).toContain('market=US');
+    });
   });
 
-  test('searchTracks throws on empty query', async () => {
-    await expect(service.searchTracks('')).rejects.toThrow();
+  describe('getPlaylistTracks', () => {
+    it('should throw BAD_REQUEST when playlistId missing', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.getPlaylistTracks('')).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
+    });
+
+    it('should paginate and invoke progress callback', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+
+      // Simulate two pages via successive resolves
+      api.get.mockResolvedValueOnce({
+        data: {
+          items: [
+            { added_at: 'now', added_by: {}, item: { id: 'a', name: 'A' } },
+            { added_at: 'now', added_by: {}, item: { id: 'b', name: 'B' } },
+          ],
+          total: 3,
+          limit: 2,
+          offset: 0,
+        },
+      });
+      api.get.mockResolvedValueOnce({
+        data: {
+          items: [
+            { added_at: 'now', added_by: {}, item: { id: 'c', name: 'C' } },
+          ],
+          total: 3,
+          limit: 2,
+          offset: 2,
+        },
+      });
+
+      const progressCalls: any[] = [];
+      const res = await svc.getPlaylistTracks('pl1', {
+        onProgress: (p: any) => progressCalls.push(p),
+      });
+      expect(res.tracks.map((t: any) => t.id)).toEqual(['a', 'b', 'c']);
+      expect(progressCalls.length).toBeGreaterThan(0);
+      expect(progressCalls[progressCalls.length - 1].percentage).toBe(100);
+    });
+
+    it('should invoke progress callback at least once for empty playlist', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: { items: [], total: 0, limit: 50, offset: 0 },
+      });
+      const progressCalls: any[] = [];
+      const res = await svc.getPlaylistTracks('plEmpty', {
+        onProgress: (p: any) => progressCalls.push(p),
+      });
+      expect(res.tracks).toEqual([]);
+      expect(progressCalls.length).toBe(1); // final enforced progress call
+      expect(progressCalls[0].percentage).toBe(0);
+    });
   });
 
-  test('getPlaylistTracks paginates and returns tracks', async () => {
-    // @ts-ignore
-    service['api'] = {
-      get: jest
-        .fn()
-        .mockResolvedValue({ data: { items: [mockPlaylistTrack], total: 1 } }),
-    };
+  describe('getUserPlaylists', () => {
+    it('should fetch single page by default', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: { items: [{ id: 'pl1' }], total: 1, limit: 1, offset: 0 },
+      });
+      const res = await svc.getUserPlaylists({ limit: 1 });
+      expect(res.items.length).toBe(1);
+      expect(res.hasMore).toBe(false);
+    });
 
-    const result = await service.getPlaylistTracks('playlist_1');
-    expect(result).toHaveProperty('tracks');
-    expect(Array.isArray(result.tracks)).toBe(true);
-    expect(result.total).toBeGreaterThanOrEqual(result.tracks.length);
+    it('should fetch all pages when all=true', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+
+      // first page
+      api.get.mockResolvedValueOnce({
+        data: { items: [{ id: 'pl1' }], total: 3, limit: 2, offset: 0 },
+      });
+      // second page
+      api.get.mockResolvedValueOnce({
+        data: {
+          items: [{ id: 'pl2' }, { id: 'pl3' }],
+          total: 3,
+          limit: 2,
+          offset: 2,
+        },
+      });
+
+      const res = await svc.getUserPlaylists({ all: true });
+      expect(res.items.map((p: any) => p.id)).toEqual(['pl1', 'pl2', 'pl3']);
+      expect(res.hasMore).toBe(false);
+    });
+
+    it('should set hasMore true when more playlists exist', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: { items: [{ id: 'pl1' }], total: 5, limit: 1, offset: 0 },
+      });
+      const res = await svc.getUserPlaylists({ limit: 1 });
+      expect(res.hasMore).toBe(true);
+    });
   });
 
-  test('handles 429 rate-limit by surfacing an error via withRetry', async () => {
-    // @ts-ignore
-    service['api'] = {
-      get: jest.fn().mockRejectedValue({
-        response: { status: 429, headers: { 'retry-after': '1' } },
-      }),
-    };
+  describe('createPlaylist', () => {
+    it('should validate required fields', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.createPlaylist({ name: '' })).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
+      await expect(
+        svc.createPlaylist({ name: '' } as any)
+      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
+    });
 
-    await expect(service.searchTracks('track')).rejects.toBeDefined();
+    it('should post playlist data and return response', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.post.mockResolvedValue({ data: { id: 'newPL', name: 'New' } });
+      const pl = await svc.createPlaylist({ name: 'New' });
+      expect(api.post).toHaveBeenCalledWith(
+        '/me/playlists',
+        expect.objectContaining({ name: 'New' })
+      );
+      expect(pl.id).toBe('newPL');
+    });
   });
 
-  test('handles 401 auth expiry by surfacing an error', async () => {
-    // @ts-ignore
-    service['api'] = {
-      get: jest.fn().mockRejectedValue({ response: { status: 401 } }),
-    };
+  describe('addTracksToPlaylist', () => {
+    it('should validate playlistId and trackUris array', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(
+        svc.addTracksToPlaylist('', { uris: ['x'] } as any)
+      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
+      await expect(
+        svc.addTracksToPlaylist('pl1', { uris: [] } as any)
+      ).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+        context: expect.objectContaining({ operation: 'addTracksToPlaylist' }),
+      });
+    });
 
-    await expect(service.getUserProfile()).rejects.toBeDefined();
+    it('should batch >100 URIs and return last snapshot id', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      const uris = Array.from({ length: 205 }).map(
+        (_, i) => `spotify:track:${i}`
+      );
+      api.post.mockResolvedValue({ data: { snapshot_id: 's1' } });
+      const res = await svc.addTracksToPlaylist('pl1', { uris });
+      expect(api.post).toHaveBeenCalledTimes(3); // 205 -> 3 batches (100,100,5)
+      expect(res.snapshot_id).toBe('s1');
+    });
+
+    it('should include position only on first batch when provided', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      const uris = Array.from({ length: 105 }).map(
+        (_, i) => `spotify:track:${i}`
+      );
+      api.post.mockResolvedValue({ data: { snapshot_id: 'snap' } });
+      await svc.addTracksToPlaylist('pl1', { uris, position: 3 });
+      const firstCallBody = api.post.mock.calls[0][1];
+      const secondCallBody = api.post.mock.calls[1][1];
+      expect(firstCallBody.position).toBe(3);
+      expect(secondCallBody.position).toBeUndefined();
+    });
+
+    it('should throw RATE_LIMIT ApiError when batch repeatedly 429s', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      const uris = ['spotify:track:1'];
+      api.post.mockImplementation(async () => {
+        const err: any = new Error('Too many');
+        err.response = { status: 429, headers: { 'retry-after': '0' } };
+        throw err;
+      });
+      await expect(
+        svc.addTracksToPlaylist('pl1', { uris })
+      ).rejects.toMatchObject({ type: ERROR_TYPES.RATE_LIMIT });
+    });
+
+    it('should throw SERVER_ERROR ApiError when batch fails with 500', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      const uris = ['spotify:track:1'];
+      api.post.mockImplementation(async () => {
+        const err: any = new Error('Server boom');
+        err.response = { status: 500 };
+        throw err;
+      });
+      await expect(
+        svc.addTracksToPlaylist('pl1', { uris })
+      ).rejects.toMatchObject({ type: ERROR_TYPES.SERVER_ERROR });
+    });
+  });
+
+  describe('removeTracksFromPlaylist', () => {
+    it('should validate inputs', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(
+        svc.removeTracksFromPlaylist('', { items: [{ uri: 'x' }] } as any)
+      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
+      await expect(
+        svc.removeTracksFromPlaylist('pl1', { items: [] } as any)
+      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
+    });
+
+    it('should delete tracks and return snapshot', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.delete.mockResolvedValue({ data: { snapshot_id: 'snapX' } });
+      const res = await svc.removeTracksFromPlaylist('pl1', {
+        items: [{ uri: 'a' }],
+      });
+      expect(api.delete).toHaveBeenCalledWith('/playlists/pl1/items', {
+        data: { items: [{ uri: 'a' }] },
+      });
+      expect(res.snapshot_id).toBe('snapX');
+    });
+  });
+
+  describe('getPlaylist', () => {
+    it('should validate playlistId', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.getPlaylist('')).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
+    });
+
+    it('should build query parameters when provided', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({ data: { id: 'pl1' } });
+      await svc.getPlaylist('pl1', { market: 'US', fields: 'id,name' });
+      const calledUrl = api.get.mock.calls[0][0];
+      expect(calledUrl).toContain('market=US');
+      expect(calledUrl).toContain('fields=id%2Cname');
+    });
+  });
+
+  describe('searchPlaylists', () => {
+    it('should validate query', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(svc.searchPlaylists('')).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
+    });
+
+    it('should map response', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      api.get.mockResolvedValue({
+        data: {
+          playlists: { items: [{ id: 'p1' }], total: 1, limit: 1, offset: 0 },
+        },
+      });
+      const res = await svc.searchPlaylists('mix');
+      expect(res.playlists[0].id).toBe('p1');
+      expect(res.hasMore).toBe(false);
+    });
+
+    it('should throw BAD_REQUEST when limit exceeds 10', async () => {
+      const api = makeApi();
+      mockGetSpotifyApi.mockReturnValue(api as any);
+      const svc = new (SpotifyService as any)('tok');
+      await expect(
+        svc.searchPlaylists('mix', { limit: 99 })
+      ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
+    });
   });
 });

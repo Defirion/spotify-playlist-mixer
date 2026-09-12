@@ -18,7 +18,7 @@ describe('ScrollToBottom', () => {
       value: 800,
       configurable: true,
     });
-    window.scrollTo = jest.fn();
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
@@ -88,8 +88,8 @@ describe('ScrollToBottom', () => {
     (window as any).visualViewport = {
       height: 300,
       offsetTop: 0,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     };
 
     Object.defineProperty(document.documentElement, 'scrollHeight', {

@@ -27,6 +27,15 @@ describe('normalizeApiError', () => {
     expect(out.retryAfterSeconds).toBe(30);
   });
 
+  it('reads Retry-After regardless of header casing', () => {
+    const err: any = {
+      response: { status: 429, headers: { 'Retry-After': '5' } },
+    };
+    const out = normalizeApiError(err);
+    expect(out.type).toBe('RATE_LIMIT');
+    expect(out.retryAfterSeconds).toBe(5);
+  });
+
   it('handles 500 server error', () => {
     const err: any = { response: { status: 502, headers: {} } };
     const out = normalizeApiError(err);

@@ -1,5 +1,4 @@
-// Complex mixing calculations and logic
-// This module handles the detailed calculations for mixing ratios, target counts, and track selection
+// Calculations for ratio-aware playlist mixing.
 
 import { MixOptions, RatioConfig } from '../../types/mixer';
 import { PlaylistTracks, MixedTrack } from './types';
@@ -9,9 +8,6 @@ import {
   logDebugInfo,
 } from './mixerUtils';
 
-/**
- * Calculate target song counts for each playlist based on ratios and options
- */
 export const calculateTargetCounts = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
@@ -23,41 +19,28 @@ export const calculateTargetCounts = (
   targetCounts: { [key: string]: number };
 } => {
   const { totalSongs, targetDuration, useTimeLimit, useAllSongs } = options;
+  const estimatedTotalSongs = useAllSongs
+    ? calculateOptimalMixLength(
+        playlistTracks,
+        ratioConfig,
+        playlistIds,
+        totalWeight
+      )
+    : useTimeLimit
+      ? Math.ceil(targetDuration / 210)
+      : totalSongs;
 
-  let estimatedTotalSongs: number;
-
-  if (useAllSongs) {
-    estimatedTotalSongs = calculateOptimalMixLength(
-      playlistTracks,
-      ratioConfig,
-      playlistIds,
-      totalWeight
-    );
-  } else if (useTimeLimit) {
-    estimatedTotalSongs = Math.ceil(targetDuration / 3.5);
-  } else {
-    estimatedTotalSongs = totalSongs;
-  }
-
-  // Calculate target counts for each playlist
   const targetCounts: { [key: string]: number } = {};
   playlistIds.forEach(playlistId => {
     const weight = ratioConfig[playlistId].weight || 1;
-    const targetRatio = weight / totalWeight;
-    targetCounts[playlistId] = Math.round(estimatedTotalSongs * targetRatio);
-
-    logDebugInfo(
-      'info',
-      `🎯 ${playlistId}: weight ${weight}/${totalWeight} = ${Math.round(targetRatio * 100)}% → ~${targetCounts[playlistId]} songs`
+    targetCounts[playlistId] = Math.round(
+      estimatedTotalSongs * (weight / totalWeight)
     );
   });
 
   return { estimatedTotalSongs, targetCounts };
 };
 
-/**
- * Calculate optimal mix length for "use all songs" mode
- */
 const calculateOptimalMixLength = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
@@ -69,176 +52,85 @@ const calculateOptimalMixLength = (
   );
 
   if (hasTimeBasedWeighting) {
-    return calculateOptimalMixLengthByTime(
-      playlistTracks,
-      ratioConfig,
-      playlistIds,
-      totalWeight
-    );
-  } else {
-    return calculateOptimalMixLengthByFrequency(
-      playlistTracks,
-      ratioConfig,
-      playlistIds,
-      totalWeight
+    let minPossibleDuration = Infinity;
+
+    playlistIds.forEach(playlistId => {
+      const tracks = playlistTracks[playlistId] || [];
+      const weight = ratioConfig[playlistId].weight || 1;
+      const targetRatio = weight / totalWeight;
+      const totalDuration = calculateTotalDuration(tracks) / 1000;
+      const averageDuration = tracks.length
+        ? totalDuration / tracks.length
+        : 210;
+      minPossibleDuration = Math.min(
+        minPossibleDuration,
+        (tracks.length * averageDuration) / targetRatio
+      );
+    });
+
+    const allTracks = playlistIds.flatMap(id => playlistTracks[id] || []);
+    const averageDuration = allTracks.length
+      ? calculateTotalDuration(allTracks) / 1000 / allTracks.length
+      : 210;
+    return Math.max(
+      1,
+      Math.floor((minPossibleDuration / averageDuration) * 1.05)
     );
   }
-};
 
-/**
- * Calculate optimal mix length based on time weighting
- */
-const calculateOptimalMixLengthByTime = (
-  playlistTracks: PlaylistTracks,
-  ratioConfig: RatioConfig,
-  playlistIds: string[],
-  totalWeight: number
-): number => {
-  let minPossibleDuration = Infinity;
-
-  playlistIds.forEach(playlistId => {
-    const config = ratioConfig[playlistId];
-    const weight = config.weight || 1;
-    const targetRatio = weight / totalWeight;
-    const availableCount = playlistTracks[playlistId].length;
-
-    const playlistTracksData = playlistTracks[playlistId] || [];
-    const totalDuration = calculateTotalDuration(playlistTracksData);
-    const avgDurationSeconds =
-      playlistTracksData.length > 0
-        ? totalDuration / playlistTracksData.length / 1000
-        : 210;
-    const availableDurationSeconds = availableCount * avgDurationSeconds;
-
-    const maxTotalDurationIfThisLimits = availableDurationSeconds / targetRatio;
-
-    if (maxTotalDurationIfThisLimits < minPossibleDuration) {
-      minPossibleDuration = maxTotalDurationIfThisLimits;
-    }
-
-    logDebugInfo(
-      'info',
-      `📊 ${playlistId}: ${availableCount} songs (${Math.round(availableDurationSeconds / 60)}m), ${Math.round(targetRatio * 100)}% time ratio → max total: ${Math.round(maxTotalDurationIfThisLimits / 60)}m`
-    );
-  });
-
-  const overallAvgDuration =
-    playlistIds.reduce((sum, id) => {
-      const playlistTracksData = playlistTracks[id] || [];
-      const totalDuration = calculateTotalDuration(playlistTracksData);
-      const avgDuration =
-        playlistTracksData.length > 0
-          ? totalDuration / playlistTracksData.length / 1000
-          : 210;
-      return sum + avgDuration;
-    }, 0) / playlistIds.length;
-
-  const estimatedSongs = Math.floor(
-    (minPossibleDuration / overallAvgDuration) * 1.05
-  );
-  logDebugInfo(
-    'info',
-    `🎯 useAllSongs (time-based): optimal mix = ${Math.round(minPossibleDuration / 60)}m ≈ ${estimatedSongs} songs`
-  );
-  return estimatedSongs;
-};
-
-/**
- * Calculate optimal mix length based on frequency weighting
- */
-const calculateOptimalMixLengthByFrequency = (
-  playlistTracks: PlaylistTracks,
-  ratioConfig: RatioConfig,
-  playlistIds: string[],
-  totalWeight: number
-): number => {
   let minPossibleSongs = Infinity;
-
   playlistIds.forEach(playlistId => {
     const weight = ratioConfig[playlistId].weight || 1;
     const targetRatio = weight / totalWeight;
-    const availableCount = playlistTracks[playlistId].length;
-
-    const maxTotalIfThisLimits = Math.floor(availableCount / targetRatio);
-
-    if (maxTotalIfThisLimits < minPossibleSongs) {
-      minPossibleSongs = maxTotalIfThisLimits;
-    }
-
-    logDebugInfo(
-      'info',
-      `📊 ${playlistId}: ${availableCount} songs, ${Math.round(targetRatio * 100)}% freq ratio → max total: ${maxTotalIfThisLimits}`
+    minPossibleSongs = Math.min(
+      minPossibleSongs,
+      Math.floor((playlistTracks[playlistId] || []).length / targetRatio)
     );
   });
 
-  const estimatedSongs = Math.floor(minPossibleSongs * 1.05);
-  logDebugInfo(
-    'info',
-    `🎯 useAllSongs (frequency-based): optimal mix length = ${estimatedSongs} songs (${minPossibleSongs} + 5% buffer)`
-  );
-  return estimatedSongs;
+  return Math.max(1, Math.floor(minPossibleSongs * 1.05));
 };
 
-/**
- * Determine if mixing should continue based on options and current state
- */
 export const shouldContinueMixing = (
   options: MixOptions,
   mixedTracks: MixedTrack[],
   estimatedTotalSongs: number,
   playlistExhausted: { [key: string]: boolean }
 ): boolean => {
-  if (options.useAllSongs) {
-    const hasAvailableTracks = safeObjectKeys(playlistExhausted).some(
-      id => !playlistExhausted[id]
-    );
-    const belowTarget = mixedTracks.length < estimatedTotalSongs;
+  const hasAvailableTracks = safeObjectKeys(playlistExhausted).some(
+    id => !playlistExhausted[id]
+  );
 
-    return (
-      (belowTarget && hasAvailableTracks) ||
-      (options.continueWhenPlaylistEmpty && hasAvailableTracks)
-    );
+  if (options.useAllSongs) {
+    return hasAvailableTracks && mixedTracks.length < estimatedTotalSongs;
   }
 
   if (options.useTimeLimit) {
-    const currentDuration = calculateTotalDuration(mixedTracks) / (1000 * 60);
-    return currentDuration < options.targetDuration;
+    return (
+      hasAvailableTracks &&
+      calculateTotalDuration(mixedTracks) / 1000 < options.targetDuration
+    );
   }
 
-  return mixedTracks.length < options.totalSongs;
+  return hasAvailableTracks && mixedTracks.length < options.totalSongs;
 };
 
-/**
- * Check if mixing should stop due to exhausted playlists
- */
 export const shouldStopDueToExhaustion = (
   continueWhenPlaylistEmpty: boolean,
   playlistExhausted: { [key: string]: boolean },
   totalPlaylistCount: number
 ): boolean => {
-  const exhaustedPlaylists = safeObjectKeys(playlistExhausted).filter(
+  const exhaustedCount = safeObjectKeys(playlistExhausted).filter(
     id => playlistExhausted[id]
+  ).length;
+
+  return (
+    exhaustedCount === totalPlaylistCount ||
+    (!continueWhenPlaylistEmpty && exhaustedCount > 0)
   );
-
-  if (!continueWhenPlaylistEmpty && exhaustedPlaylists.length > 0) {
-    logDebugInfo(
-      'info',
-      `🛑 Stopping due to exhausted playlist(s): ${exhaustedPlaylists.join(', ')}`
-    );
-    return true;
-  }
-
-  if (exhaustedPlaylists.length === totalPlaylistCount) {
-    logDebugInfo('info', '🛑 All playlists exhausted, stopping');
-    return true;
-  }
-
-  return false;
 };
 
-/**
- * Get the next playlist ID to select from based on weight ratios
- */
+/** Select the playlist furthest below its configured ratio. */
 export const getNextPlaylistId = (
   ratioConfig: RatioConfig,
   totalWeight: number,
@@ -246,54 +138,37 @@ export const getNextPlaylistId = (
   playlistDurations: { [key: string]: number },
   playlistExhausted: { [key: string]: boolean },
   mixedTracks: MixedTrack[],
-  popularityPools: any,
-  estimatedTotalSongs: number,
-  strategy: any,
+  playlistTracks: PlaylistTracks,
   playlistIds: string[]
 ): string | null => {
   let bestPlaylistId: string | null = null;
-  let maxDeficit = -1;
+  let maxDeficit = -Infinity;
 
   for (const playlistId of playlistIds) {
     if (playlistExhausted[playlistId]) continue;
 
-    const config = ratioConfig[playlistId];
-    const targetRatio = (config.weight || 1) / totalWeight;
-    let currentRatio = 0;
-
-    if (config.weightType === 'time') {
-      const totalDurationSoFar = Object.values(playlistDurations).reduce(
-        (sum, dur) => sum + dur,
-        0
-      );
-      if (totalDurationSoFar > 0) {
-        currentRatio = playlistDurations[playlistId] / totalDurationSoFar;
-      }
-    } else {
-      if (mixedTracks.length > 0) {
-        currentRatio = playlistCounts[playlistId] / mixedTracks.length;
-      }
-    }
-
-    const deficit = targetRatio - currentRatio;
-
-    // Check if playlist still has available tracks
-    const availableTracksForPlaylist = strategy.getTracksForPosition(
-      popularityPools,
-      playlistId,
-      mixedTracks.length,
-      estimatedTotalSongs
-    );
-    const usedTrackIds = new Set(mixedTracks.map(t => t.id));
-    const hasAvailableTracks = availableTracksForPlaylist.some(
-      (track: any) => !usedTrackIds.has(track.id)
-    );
-
-    if (!hasAvailableTracks) {
+    const availableTracks = playlistTracks[playlistId] || [];
+    const usedTrackIds = new Set(mixedTracks.map(track => track.id));
+    if (!availableTracks.some(track => !usedTrackIds.has(track.id))) {
       playlistExhausted[playlistId] = true;
-      logDebugInfo('info', `🚫 Playlist ${playlistId} is now exhausted`);
       continue;
     }
+
+    const config = ratioConfig[playlistId];
+    const targetRatio = (config.weight || 1) / totalWeight;
+    const totalDuration = Object.values(playlistDurations).reduce(
+      (sum, duration) => sum + duration,
+      0
+    );
+    const currentRatio =
+      config.weightType === 'time'
+        ? totalDuration > 0
+          ? playlistDurations[playlistId] / totalDuration
+          : 0
+        : mixedTracks.length > 0
+          ? playlistCounts[playlistId] / mixedTracks.length
+          : 0;
+    const deficit = targetRatio - currentRatio;
 
     if (deficit > maxDeficit) {
       maxDeficit = deficit;
@@ -304,95 +179,49 @@ export const getNextPlaylistId = (
   return bestPlaylistId;
 };
 
-/**
- * Add songs from the selected playlist to the mix
- */
+/** Add one configured group from a playlist to the mix. */
 export const addSongsFromPlaylist = (
   playlistId: string,
   ratioConfig: RatioConfig,
   totalWeight: number,
-  popularityPools: any,
-  estimatedTotalSongs: number,
-  strategy: any,
+  playlistTracks: PlaylistTracks,
   mixedTracks: MixedTrack[],
   playlistCounts: { [key: string]: number },
   playlistDurations: { [key: string]: number },
   shouldContinue: () => boolean
 ): number => {
   const config = ratioConfig[playlistId];
-  const currentPosition = mixedTracks.length;
+  const availableTracks = playlistTracks[playlistId] || [];
+  const usedTrackIds = new Set(mixedTracks.map(track => track.id));
+  let songsToTake = Math.max(1, config.min || 1);
 
-  const availableTracks = strategy.getTracksForPosition(
-    popularityPools,
-    playlistId,
-    currentPosition,
-    estimatedTotalSongs
-  );
-
-  if (availableTracks.length === 0) {
-    return 0;
-  }
-
-  // Determine how many songs to take
-  let songsToTake = config.min || 1;
-
-  // Check if we should add more songs to balance time
   if (config.max > config.min) {
-    const totalDurationSoFar = Object.values(playlistDurations).reduce(
-      (sum, dur) => sum + dur,
+    const totalDuration = Object.values(playlistDurations).reduce(
+      (sum, duration) => sum + duration,
       0
     );
-    const currentPlaylistShare = playlistDurations[playlistId];
     const targetRatio = (config.weight || 1) / totalWeight;
-    const expectedShare = totalDurationSoFar * targetRatio;
-
-    if (currentPlaylistShare < expectedShare * 0.8) {
+    if (
+      config.weightType === 'time' &&
+      totalDuration > 0 &&
+      playlistDurations[playlistId] < totalDuration * targetRatio * 0.8
+    ) {
       songsToTake = config.max;
-      logDebugInfo(
-        'info',
-        `Adding extra songs to ${playlistId} for time balance`
-      );
     }
   }
 
-  logDebugInfo(
-    'info',
-    `🎼 Adding ${songsToTake} songs from playlist ${playlistId} (position ${currentPosition}/${estimatedTotalSongs})`
-  );
-
-  // Add songs from this playlist
   let songsAdded = 0;
-  const usedTrackIds = new Set(mixedTracks.map(t => t.id));
+  for (const track of availableTracks) {
+    if (songsAdded >= songsToTake || !shouldContinue()) break;
+    if (usedTrackIds.has(track.id)) continue;
 
-  for (let i = 0; i < songsToTake && shouldContinue(); i++) {
-    let selectedTrack = null;
-    for (const track of availableTracks) {
-      if (!usedTrackIds.has(track.id)) {
-        selectedTrack = track;
-        break;
-      }
-    }
+    mixedTracks.push({ ...track, sourcePlaylist: playlistId });
+    usedTrackIds.add(track.id);
+    playlistCounts[playlistId]++;
+    playlistDurations[playlistId] += track.duration_ms || 0;
+    songsAdded++;
 
-    if (selectedTrack) {
-      const mixedTrack: MixedTrack = {
-        ...selectedTrack,
-        sourcePlaylist: playlistId,
-      };
-
-      mixedTracks.push(mixedTrack);
-      usedTrackIds.add(selectedTrack.id);
-
-      playlistCounts[playlistId]++;
-      playlistDurations[playlistId] += selectedTrack.duration_ms || 0;
-      songsAdded++;
-
-      logDebugInfo(
-        'info',
-        `   ✅ Added: ${selectedTrack.name} by ${selectedTrack.artists[0]?.name}`
-      );
-    } else {
-      break;
-    }
+    logDebugInfo('info', `Added ${track.name} from playlist ${playlistId}`);
   }
 
   return songsAdded;

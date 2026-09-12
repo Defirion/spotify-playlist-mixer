@@ -1,10 +1,6 @@
-// Track shuffling and randomization utilities
+// Track shuffling and randomization utilities.
 
-import {
-  TrackWithPopularity,
-  PopularityQuadrants,
-  PopularityPools,
-} from './types';
+import { SpotifyTrack } from '../../types/spotify';
 
 /**
  * Shuffle array using Fisher-Yates algorithm
@@ -20,38 +16,16 @@ export const shuffleArray = <T>(array: T[]): T[] => {
   return shuffled;
 };
 
-/**
- * Shuffle tracks within each quadrant of a popularity quadrants object
- * @param quadrants - Popularity quadrants to shuffle
- * @returns New quadrants object with shuffled tracks within each quadrant
- */
-export const shuffleQuadrants = (
-  quadrants: PopularityQuadrants
-): PopularityQuadrants => {
-  return {
-    topHits: shuffleArray(quadrants.topHits),
-    popular: shuffleArray(quadrants.popular),
-    moderate: shuffleArray(quadrants.moderate),
-    deepCuts: shuffleArray(quadrants.deepCuts),
-  };
-};
-
-/**
- * Shuffle tracks within popularity groups for all playlists
- * @param popularityPools - Popularity pools for all playlists
- * @returns New popularity pools with shuffled tracks within each quadrant
- */
-export const shuffleWithinGroups = (
-  popularityPools: PopularityPools
-): PopularityPools => {
-  const shuffledPools: PopularityPools = {};
-
-  Object.keys(popularityPools).forEach(playlistId => {
-    shuffledPools[playlistId] = shuffleQuadrants(popularityPools[playlistId]);
-  });
-
-  return shuffledPools;
-};
+/** Shuffle each playlist independently without mutating the input map. */
+export const shufflePlaylistTracks = (
+  playlistTracks: Record<string, SpotifyTrack[]>
+): Record<string, SpotifyTrack[]> =>
+  Object.fromEntries(
+    Object.entries(playlistTracks).map(([playlistId, tracks]) => [
+      playlistId,
+      shuffleArray(tracks),
+    ])
+  );
 
 /**
  * Get a random track from an array with optional exclusion support
@@ -60,9 +34,9 @@ export const shuffleWithinGroups = (
  * @returns Random track from the array, or null if no valid tracks available
  */
 export const getRandomTrack = (
-  tracks: TrackWithPopularity[],
+  tracks: SpotifyTrack[],
   excludeIds?: Set<string>
-): TrackWithPopularity | null => {
+): SpotifyTrack | null => {
   if (!tracks || tracks.length === 0) {
     return null;
   }
@@ -88,10 +62,10 @@ export const getRandomTrack = (
  * @returns Array of random tracks (may be fewer than requested if not enough available)
  */
 export const getRandomTracks = (
-  tracks: TrackWithPopularity[],
+  tracks: SpotifyTrack[],
   count: number,
   excludeIds?: Set<string>
-): TrackWithPopularity[] => {
+): SpotifyTrack[] => {
   if (!tracks || tracks.length === 0 || count <= 0) {
     return [];
   }
@@ -108,22 +82,4 @@ export const getRandomTracks = (
   // Shuffle the available tracks and take the first 'count' items
   const shuffledTracks = shuffleArray(availableTracks);
   return shuffledTracks.slice(0, Math.min(count, shuffledTracks.length));
-};
-
-/**
- * Shuffle tracks within quadrants while maintaining quadrant structure
- * Used when shuffleWithinGroups option is enabled
- * @param quadrants - Popularity quadrants to process
- * @param shouldShuffle - Whether to actually shuffle or return as-is
- * @returns Quadrants with optionally shuffled tracks
- */
-export const conditionalShuffleQuadrants = (
-  quadrants: PopularityQuadrants,
-  shouldShuffle: boolean
-): PopularityQuadrants => {
-  if (!shouldShuffle) {
-    return quadrants;
-  }
-
-  return shuffleQuadrants(quadrants);
 };

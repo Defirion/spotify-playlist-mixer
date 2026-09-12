@@ -13,48 +13,6 @@ export function formatDuration(durationMs: number): string {
 }
 
 /**
- * Get track quadrant based on track properties
- * This is a simplified version that uses popularity as a proxy
- */
-export function getTrackQuadrant(track: SpotifyTrack): string {
-  // Defensive checks: ensure we don't crash when tests pass partial/undefined tracks
-  if (!track) return 'low-energy-low-valence';
-
-  // Simplified logic using popularity and track name length as proxies
-  // In a real implementation, this would use audio features
-  const popularity =
-    typeof track.popularity === 'number' ? track.popularity : 50;
-  const nameLength = track.name ? track.name.length : 0;
-
-  if (popularity > 50 && nameLength > 20) return 'high-energy-high-valence';
-  if (popularity > 50 && nameLength <= 20) return 'high-energy-low-valence';
-  if (popularity <= 50 && nameLength > 20) return 'low-energy-high-valence';
-  return 'low-energy-low-valence';
-}
-
-/**
- * Get popularity style based on quadrant and popularity
- */
-export function getPopularityStyle(
-  quadrant: string,
-  popularity?: number
-): { background: string; color: string; text: string } {
-  // This is a simplified version - the original might have more complex logic
-  const popularityText = popularity ? `${popularity}%` : '';
-
-  switch (quadrant) {
-    case 'high-energy-high-valence':
-      return { background: '#4CAF50', color: '#fff', text: popularityText };
-    case 'high-energy-low-valence':
-      return { background: '#FF5722', color: '#fff', text: popularityText };
-    case 'low-energy-high-valence':
-      return { background: '#2196F3', color: '#fff', text: popularityText };
-    default:
-      return { background: '#9E9E9E', color: '#fff', text: popularityText };
-  }
-}
-
-/**
  * Generate a unique instance ID for a track
  * This allows the same Spotify track to be added multiple times
  */

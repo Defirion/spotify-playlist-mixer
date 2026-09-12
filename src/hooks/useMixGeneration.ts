@@ -291,19 +291,12 @@ export const useMixGeneration = (
           throw new Error('No tracks to add to playlist');
         }
 
-        // Get user profile
-        const userProfile = await spotifyServiceRef.current.getUserProfile();
-        const userId = userProfile.id;
-
         // Create new playlist
-        const newPlaylist = await spotifyServiceRef.current.createPlaylist(
-          userId,
-          {
-            name: playlistName.trim(),
-            description: `Mixed playlist created with Spotify Playlist Mixer`,
-            public: false,
-          }
-        );
+        const newPlaylist = await spotifyServiceRef.current.createPlaylist({
+          name: playlistName.trim(),
+          description: `Mixed playlist created with Spotify Playlist Mixer`,
+          public: false,
+        });
 
         // Extract track URIs
         const trackUris = tracks
@@ -341,7 +334,7 @@ export const useMixGeneration = (
 
         return {
           ...newPlaylist,
-          tracks: { total: trackUris.length, href: '' },
+          items: { total: trackUris.length, href: '' },
           duration: durationMinutes,
         };
       } catch (err) {

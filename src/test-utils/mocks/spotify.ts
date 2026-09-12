@@ -43,7 +43,6 @@ export function makeTrack(overrides?: Partial<SpotifyTrack>): SpotifyTrack {
     album: overrides?.album || album,
     duration_ms: overrides?.duration_ms ?? 180000,
     explicit: overrides?.explicit ?? false,
-    popularity: overrides?.popularity ?? 50,
     preview_url: overrides?.preview_url ?? null,
     track_number: overrides?.track_number ?? 1,
     uri: overrides?.uri || 'spotify:track:track1',
@@ -61,11 +60,11 @@ export function makePlaylist(
     name: overrides?.name || 'Playlist 1',
     description: overrides?.description ?? null,
     images: overrides?.images || [],
-    tracks: overrides?.tracks || {
-      total: overrides?.tracks?.total ?? 0,
+    items: overrides?.items || {
+      total: overrides?.items?.total ?? overrides?.tracks?.total ?? 0,
       href:
-        overrides?.tracks?.href ||
-        'https://api.spotify.com/playlists/playlist1/tracks',
+        overrides?.items?.href ||
+        'https://api.spotify.com/playlists/playlist1/items',
     },
     owner: overrides?.owner || {
       id: 'user1',

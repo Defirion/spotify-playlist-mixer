@@ -33,13 +33,13 @@ const mockRatioConfig: RatioConfigType = {
 const defaultProps = {
   selectedPlaylists: [mockPlaylist],
   ratioConfig: mockRatioConfig,
-  onRatioUpdate: jest.fn(),
-  onPlaylistRemove: jest.fn(),
+  onRatioUpdate: vi.fn(),
+  onPlaylistRemove: vi.fn(),
 };
 
 describe('RatioConfig', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders component with playlist information', () => {

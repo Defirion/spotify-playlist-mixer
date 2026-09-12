@@ -3,7 +3,7 @@ import { render, cleanup, screen } from '@testing-library/react';
 import { useUnselectedTracks } from '../useUnselectedTracks';
 
 // Prevent accidental network calls by stubbing the spotify API helper used by the hook
-jest.mock('../../utils/spotify', () => ({
+vi.mock('../../utils/spotify', () => ({
   getSpotifyApi: (/* token: string */) => ({
     get: async () => ({ data: { items: [] } }),
   }),

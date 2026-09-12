@@ -7,9 +7,10 @@ import { mockTracks } from '../../../mocks/fixtures';
 import useVirtualization from '../../../hooks/useVirtualization';
 
 // Mock the virtualization hook used by TrackList
-jest.mock('../../../hooks/useVirtualization');
+vi.mock('../../../hooks/useVirtualization');
 
-const mockedUseVirtualization = useVirtualization as unknown as jest.Mock;
+const mockedUseVirtualization =
+  useVirtualization as unknown as import('vitest').Mock;
 
 describe('TrackList virtualization', () => {
   beforeEach(() => {
@@ -83,7 +84,7 @@ describe('TrackList virtualization', () => {
       getItemProps,
     });
 
-    const onTrackMouseEnter = jest.fn();
+    const onTrackMouseEnter = vi.fn();
 
     render(
       (

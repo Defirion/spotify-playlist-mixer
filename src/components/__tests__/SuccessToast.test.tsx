@@ -4,26 +4,11 @@ import '@testing-library/jest-dom';
 import SuccessToast from '../SuccessToast';
 import { MixedPlaylistToast } from '../../types/components';
 
-// Mock CSS modules
-jest.mock('../SuccessToast.module.css', () => ({
-  toastContainer: 'toastContainer',
-  toast: 'toast',
-  'toast-0': 'toast-0',
-  'toast-1': 'toast-1',
-  'toast-2': 'toast-2',
-  'toast-stacked': 'toast-stacked',
-  toastContent: 'toastContent',
-  toastMain: 'toastMain',
-  toastTitle: 'toastTitle',
-  toastMessage: 'toastMessage',
-  toastDetails: 'toastDetails',
-  toastButton: 'toastButton',
-  closeButton: 'closeButton',
-  spotifyLink: 'spotifyLink',
-}));
+// CSS modules need no mock: vitest css.modules.classNameStrategy
+// 'non-scoped' already exposes raw class names.
 
 describe('SuccessToast', () => {
-  const mockOnDismiss = jest.fn();
+  const mockOnDismiss = vi.fn();
 
   const createMockPlaylist = (
     overrides: Partial<MixedPlaylistToast> = {}
@@ -38,14 +23,14 @@ describe('SuccessToast', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock the current time for consistent time calculations
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2023-01-01T12:05:00Z'));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T12:05:00Z'));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Rendering', () => {

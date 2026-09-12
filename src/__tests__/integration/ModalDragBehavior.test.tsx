@@ -22,12 +22,12 @@ const sampleTracks = [
 
 describe('Modal drag visual state', () => {
   it('applies non-interactive/hidden styles when dnd-dragging class is present', async () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
 
     // Temporarily suppress the specific React act(...) warning that arises
     // because MutationObserver invokes state updates outside of act in JSDOM.
     const realConsoleError = console.error;
-    const spy = jest.spyOn(console, 'error').mockImplementation((...args) => {
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args) => {
       const first = args[0] as string;
       if (
         typeof first === 'string' &&

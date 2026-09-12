@@ -7,9 +7,7 @@ const DEFAULT_MIX_OPTIONS: MixOptions = {
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'My Mixed Playlist',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: true,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 
@@ -21,7 +19,6 @@ export interface MixingSlice {
   updateMixOptions: (updates: Partial<MixOptions>) => void;
   resetMixOptions: () => void;
   applyPresetOptions: (preset: {
-    strategy: string;
     settings: Partial<MixOptions>;
     presetName: string;
   }) => void;
@@ -52,15 +49,12 @@ export const createMixingSlice: StateCreator<
       mixOptions: { ...DEFAULT_MIX_OPTIONS },
     })),
 
-  applyPresetOptions: ({ strategy, settings, presetName }) =>
+  applyPresetOptions: ({ settings, presetName }) =>
     set(state => ({
       ...state,
       mixOptions: {
         ...state.mixOptions,
-        popularityStrategy: strategy as any, // Cast to handle string to PopularityStrategy
-        recencyBoost: settings.recencyBoost ?? state.mixOptions.recencyBoost,
-        shuffleWithinGroups:
-          settings.shuffleWithinGroups ?? state.mixOptions.shuffleWithinGroups,
+        shuffleTracks: settings.shuffleTracks ?? state.mixOptions.shuffleTracks,
         useTimeLimit: settings.useTimeLimit || false,
         useAllSongs:
           settings.useAllSongs !== undefined

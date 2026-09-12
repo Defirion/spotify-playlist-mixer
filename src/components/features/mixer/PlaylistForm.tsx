@@ -1,5 +1,6 @@
 import React from 'react';
 import { MixOptions, SpotifyPlaylist } from '../../../types';
+import { getPlaylistItemCount } from '../../../utils/spotify';
 import styles from '../../PlaylistMixer.module.css';
 
 interface PlaylistFormProps {
@@ -38,7 +39,7 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
 
   const getTotalAvailableContent = () => {
     const totalSongs = selectedPlaylists.reduce(
-      (sum, playlist) => sum + playlist.tracks.total,
+      (sum, playlist) => sum + getPlaylistItemCount(playlist),
       0
     );
 
@@ -46,10 +47,12 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
     for (const playlist of selectedPlaylists) {
       if (playlist.realAverageDurationSeconds) {
         const playlistDurationMinutes =
-          (playlist.tracks.total * playlist.realAverageDurationSeconds) / 60;
+          (getPlaylistItemCount(playlist) *
+            playlist.realAverageDurationSeconds) /
+          60;
         totalDurationMinutes += playlistDurationMinutes;
       } else {
-        totalDurationMinutes += playlist.tracks.total * 3.5;
+        totalDurationMinutes += getPlaylistItemCount(playlist) * 3.5;
       }
     }
 
@@ -214,82 +217,23 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
         </div>
       )}
 
-      {/* Strategy Selection */}
+      {/* Track ordering */}
       <div className={styles.inputGroup}>
-        <label className={styles.label}>
-          How should we arrange popular songs?
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={mixOptions.shuffleTracks}
+            onChange={e =>
+              onMixOptionsChange({ shuffleTracks: e.target.checked })
+            }
+            className={styles.checkbox}
+          />
+          Shuffle tracks within each playlist before balancing the mix
         </label>
-        <div className={styles.strategyGrid}>
-          <button
-            type="button"
-            className={`${styles.strategyOption} ${
-              mixOptions.popularityStrategy === 'mixed' ? styles.active : ''
-            }`}
-            onClick={() =>
-              onMixOptionsChange({
-                popularityStrategy: 'mixed',
-              })
-            }
-          >
-            <div className={styles.strategyTitle}>🎲 Mixed</div>
-            <div className={styles.strategyDescription}>
-              Popular and deep cuts evenly distributed throughout
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.strategyOption} ${
-              mixOptions.popularityStrategy === 'front-loaded'
-                ? styles.active
-                : ''
-            }`}
-            onClick={() =>
-              onMixOptionsChange({
-                popularityStrategy: 'front-loaded',
-              })
-            }
-          >
-            <div className={styles.strategyTitle}>🚀 Front-Loaded</div>
-            <div className={styles.strategyDescription}>
-              Start with hits, gradually transition to deep cuts
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.strategyOption} ${
-              mixOptions.popularityStrategy === 'mid-peak' ? styles.active : ''
-            }`}
-            onClick={() =>
-              onMixOptionsChange({
-                popularityStrategy: 'mid-peak',
-              })
-            }
-          >
-            <div className={styles.strategyTitle}>⛰️ Mid-Peak</div>
-            <div className={styles.strategyDescription}>
-              Build to popular songs in the middle, bookend with variety
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.strategyOption} ${
-              mixOptions.popularityStrategy === 'crescendo' ? styles.active : ''
-            }`}
-            onClick={() =>
-              onMixOptionsChange({
-                popularityStrategy: 'crescendo',
-              })
-            }
-          >
-            <div className={styles.strategyTitle}>📈 Crescendo</div>
-            <div className={styles.strategyDescription}>
-              Start with deep cuts, build up to the biggest hits
-            </div>
-          </button>
-        </div>
+        <p className={styles.helpText}>
+          Spotify no longer provides catalog popularity. The mixer uses your
+          playlist ratios and preserves playlist order unless shuffle is on.
+        </p>
       </div>
     </div>
   );

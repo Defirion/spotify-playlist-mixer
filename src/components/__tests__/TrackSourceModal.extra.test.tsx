@@ -6,31 +6,32 @@
  * - rich error rendering path
  */
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import TrackSourceModal from '../TrackSourceModal';
+import { generateTrackInstanceId } from '../../utils/trackUtils';
 
 // Mock generateTrackInstanceId to control and observe calls while preserving other utilities
 const seq: string[] = ['init-1', 'init-2', 'regen-1'];
-jest.mock('../../utils/trackUtils', () => {
-  const actual = jest.requireActual('../../utils/trackUtils');
+vi.mock('../../utils/trackUtils', async () => {
+  const actual = await vi.importActual('../../utils/trackUtils');
   return {
     ...actual,
-    generateTrackInstanceId: jest.fn(() => seq.shift()),
+    generateTrackInstanceId: vi.fn(() => seq.shift()),
   };
 });
 
 const baseProps = {
   isOpen: true,
-  onClose: jest.fn(),
+  onClose: vi.fn(),
   title: 'Choose',
   className: '',
   tracks: [],
   loading: false,
   error: null,
-  onAddTracks: jest.fn(),
+  onAddTracks: vi.fn(),
   searchQuery: '',
-  onSearchQueryChange: jest.fn(),
+  onSearchQueryChange: vi.fn(),
   searchPlaceholder: 'Search tracks, artists, or albums...',
   showSearchButton: false,
   onManualSearch: undefined,
@@ -48,7 +49,7 @@ describe('TrackSourceModal branches', () => {
   });
 
   test('pressing Enter triggers onManualSearch when provided', () => {
-    const onManual = jest.fn();
+    const onManual = vi.fn();
     const props = {
       ...baseProps,
       onManualSearch: onManual,
@@ -67,22 +68,24 @@ describe('TrackSourceModal branches', () => {
       { id: 't2', name: 'B' } as any,
     ];
 
-    // spy on console.log so we can assert the handler ran
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     render(<TrackSourceModal {...baseProps} tracks={tracks} />);
 
-    // dispatch custom event for t1 -> handler should run and log
+    // Two tracks => two instance IDs generated on mount.
+    const callsAfterMount = (generateTrackInstanceId as import('vitest').Mock)
+      .mock.calls.length;
+    expect(callsAfterMount).toBe(2);
+
+    // Dispatching the event should regenerate the dragged track's instance ID.
     const ev = new CustomEvent('trackDraggedToPreview', {
       detail: { trackId: 't1' },
     });
-    window.dispatchEvent(ev as Event);
+    act(() => {
+      window.dispatchEvent(ev as Event);
+    });
 
-    expect(logSpy).toHaveBeenCalledWith(
-      'Regenerated instance ID for dragged track:',
-      't1'
-    );
-    logSpy.mockRestore();
+    expect(
+      (generateTrackInstanceId as import('vitest').Mock).mock.calls.length
+    ).toBe(callsAfterMount + 1);
   });
 
   test('rich error object renders label and ErrorHandler', () => {

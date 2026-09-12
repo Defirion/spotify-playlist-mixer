@@ -117,11 +117,14 @@ describe('Legacy JSON Serializability Gate (MSW removed)', () => {
   testSerializability(mockAuthToken, 'mockAuthToken');
 
   // Placeholder assertion: confirm removed MSW handlers are absent
-  it('no MSW handlers module present (expected)', () => {
+  it('no MSW handlers module present (expected)', async () => {
     let threw = false;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('../../test-utils/mocks/mswHandlers');
+      // computed specifier so Vite does not try to resolve it at build time;
+      // the module is intentionally absent
+      // eslint-disable-next-line no-useless-concat
+      const missing = '../../test-utils/mocks/' + 'mswHandlers';
+      await import(/* @vite-ignore */ missing);
     } catch {
       threw = true;
     }

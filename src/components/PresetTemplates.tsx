@@ -4,7 +4,6 @@ import {
   PresetTemplate,
   PresetApplyData,
   RatioConfig,
-  PresetStrategy,
   PresetSettings,
   RatioConfigItem,
 } from '../types/mixer';
@@ -21,9 +20,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
     {
       id: 'karimctiva',
       name: '💃 Karimctiva',
-      description: 'Perfect for bachata/salsa mixing with dance flow',
-      strategy: 'mid-peak' as PresetStrategy,
-      strategyLabel: 'Party Mode',
+      description: 'Balanced bachata/salsa mixing with dance flow',
       ratios: (playlists: SpotifyPlaylist[]): RatioConfigItem[] =>
         playlists.map((playlist: SpotifyPlaylist): RatioConfigItem => {
           const name = playlist.name.toLowerCase();
@@ -36,8 +33,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
           }
         }),
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 300,
         useAllSongs: false,
@@ -47,8 +43,6 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       id: 'workout-mix',
       name: '💪 Workout Mix',
       description: 'High energy with consistent tempo',
-      strategy: 'front-loaded' as PresetStrategy,
-      strategyLabel: 'Hits First',
       ratios: (playlists: SpotifyPlaylist[]): RatioConfigItem[] =>
         playlists.map(
           (): RatioConfigItem => ({
@@ -59,8 +53,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
           })
         ),
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 60,
         useAllSongs: false,
@@ -69,9 +62,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
     {
       id: 'road-trip',
       name: '🚗 Road Trip',
-      description: 'Build to epic finale with sing-along hits',
-      strategy: 'crescendo' as PresetStrategy,
-      strategyLabel: 'Build Up',
+      description: 'A varied, evenly blended road-trip mix',
       ratios: (playlists: SpotifyPlaylist[]): RatioConfigItem[] =>
         playlists.map(
           (): RatioConfigItem => ({
@@ -82,8 +73,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
           })
         ),
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 180,
         useAllSongs: false,
@@ -110,7 +100,6 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
 
     const applyData: PresetApplyData = {
       ratioConfig,
-      strategy: preset.strategy,
       settings: preset.settings,
       presetName: preset.name,
     };
@@ -158,8 +147,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
             <h3 className={styles.presetName}>{preset.name}</h3>
             <p className={styles.presetDescription}>{preset.description}</p>
             <div className={styles.presetMeta}>
-              Song Order Style: {preset.strategyLabel} •{' '}
-              {selectedPlaylists.length} playlists
+              Playlist-balanced order • {selectedPlaylists.length} playlists
             </div>
           </div>
         ))}

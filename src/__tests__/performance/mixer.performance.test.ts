@@ -5,35 +5,34 @@ import {
   validateInputs,
 } from '../../utils/mixer';
 
-// Tests rely on the global helper installed by src/setupTests.ts
-declare function silenceIfPass<T>(fn: () => T | Promise<T>): Promise<T>;
-
 // Performance test template for playlist mixer
 // - This test targets the real `mixPlaylists` export from `src/utils/mixer`.
 // - The test is skipped by default to avoid CI flakiness. Run with `npm run test:perf`.
+
+// Invoke an async block and await it (call sites kept from the old silenceIfPass helper).
+const run = <T>(fn: () => Promise<T>) => fn();
 
 function makeTracks(n: number, prefix = '') {
   return Array.from({ length: n }, (_, i) => ({
     id: `${prefix}t${i}`,
     name: `Track ${prefix}${i}`,
     uri: `spotify:track:${prefix}t${i}`,
-    popularity: Math.floor(Math.random() * 100),
     duration_ms: 180000,
     artists: [{ id: `${prefix}a${i}`, name: `Artist ${i}` }],
     album: { id: `${prefix}al${i}`, name: `Album ${i}` },
   }));
 }
 
-test('mixPlaylists performance — 1000 tracks', async () => {
-  let logSpy: jest.SpyInstance | undefined;
-  let errorSpy: jest.SpyInstance | undefined;
-  // Silence Policy: silence verbose logs for passing runs but allow opt-in via PERF_DEBUG
+test('mixPlaylists performance - 1000 tracks', async () => {
+  let logSpy: import('vitest').MockInstance | undefined;
+  let errorSpy: import('vitest').MockInstance | undefined;
+  // Silence verbose logs for passing runs but allow opt-in via PERF_DEBUG
   const debugEnabled = process.env.PERF_DEBUG === '1';
   if (!debugEnabled) {
-    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   }
-  await silenceIfPass(async () => {
+  await run(async () => {
     // Total desired tracks across all playlists (default 2000 for a stress test)
     const TOTAL = Number(process.env.PERF_TOTAL || 2000);
 
@@ -68,9 +67,7 @@ test('mixPlaylists performance — 1000 tracks', async () => {
       useTimeLimit: false,
       useAllSongs: true,
       playlistName: 'perf-test',
-      shuffleWithinGroups: true,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: true,
       continueWhenPlaylistEmpty: false,
     };
 
@@ -184,8 +181,8 @@ test('mixPlaylists performance — 1000 tracks', async () => {
     };
     // Write current-run.json for comparisons
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       const outPath = path.join(__dirname, 'baselines', 'current-run.json');
       fs.writeFileSync(outPath, JSON.stringify(metrics, null, 2));
     } catch (e: any) {
@@ -200,7 +197,7 @@ test('mixPlaylists performance — 1000 tracks', async () => {
     }
 
     expect(Array.isArray(result)).toBe(true);
-    // Fail the test if the mixer produced no tracks — indicates misconfiguration
+    // Fail the test if the mixer produced no tracks - indicates misconfiguration
     const mixedCount = Array.isArray(result) ? result.length : 0;
     expect(mixedCount).toBeGreaterThan(0);
 

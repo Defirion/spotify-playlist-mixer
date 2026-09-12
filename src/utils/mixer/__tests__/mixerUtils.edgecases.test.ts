@@ -9,16 +9,16 @@ import {
 describe('mixerUtils edge cases', () => {
   const OLD_ENV = process.env.NODE_ENV;
 
-  // Per-suite suppression of noisy logs (follow SILENCE_POLICY pattern #1)
+  // Per-suite suppression of noisy logs during passing runs
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     // Intentionally do NOT mock console.warn here because some tests assert warn calls
   });
 
   afterEach(() => {
     process.env.NODE_ENV = OLD_ENV;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('safeObjectKeys returns [] for non-object', () => {
@@ -30,7 +30,7 @@ describe('mixerUtils edge cases', () => {
 
   test('calculateTotalDuration handles non-array input and invalid tracks', () => {
     process.env.NODE_ENV = 'development';
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     expect(calculateTotalDuration({} as any)).toBe(0);
 
@@ -55,7 +55,7 @@ describe('mixerUtils edge cases', () => {
       p3: 'invalid',
     } as any;
 
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const cleaned = cleanPlaylistTracks(input);
     expect(Object.keys(cleaned).sort()).toEqual(['p1', 'p2']);
     expect(cleaned.p1[0].id).toBe('1');
@@ -70,7 +70,7 @@ describe('mixerUtils edge cases', () => {
   });
 
   test('logDebugInfo only logs in development', () => {
-    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     process.env.NODE_ENV = 'development';
     logDebugInfo('info', 'testing', { a: 1 });
     expect(log).toHaveBeenCalled();

@@ -19,7 +19,7 @@ const tokenJson = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const mockFetchOnce = (body: unknown, ok = true, status = 200) => {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (global.fetch as import('vitest').Mock).mockResolvedValueOnce({
     ok,
     status,
     json: async () => body,
@@ -29,7 +29,7 @@ const mockFetchOnce = (body: unknown, ok = true, status = 200) => {
 describe('spotifyAuth (PKCE)', () => {
   beforeEach(() => {
     sessionStorage.clear();
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
   });
 
   describe('generateRandomString', () => {
@@ -106,7 +106,8 @@ describe('spotifyAuth (PKCE)', () => {
       expect(tokens.refreshToken).toBe('refresh-456');
       expect(tokens.expiresAt).toBeGreaterThanOrEqual(before + 3600_000);
 
-      const [calledUrl, init] = (global.fetch as jest.Mock).mock.calls[0];
+      const [calledUrl, init] = (global.fetch as import('vitest').Mock).mock
+        .calls[0];
       expect(calledUrl).toBe(SPOTIFY_TOKEN_URL);
       const body = new URLSearchParams(init.body);
       expect(body.get('grant_type')).toBe('authorization_code');
@@ -210,7 +211,7 @@ describe('spotifyAuth (PKCE)', () => {
       expect(tokens.accessToken).toBe('access-123');
       expect(tokens.refreshToken).toBe('rotated-refresh');
 
-      const [, init] = (global.fetch as jest.Mock).mock.calls[0];
+      const [, init] = (global.fetch as import('vitest').Mock).mock.calls[0];
       const body = new URLSearchParams(init.body);
       expect(body.get('grant_type')).toBe('refresh_token');
       expect(body.get('refresh_token')).toBe('old-refresh');
@@ -225,7 +226,7 @@ describe('spotifyAuth (PKCE)', () => {
     });
 
     it('rejects with the HTTP status when the body is not JSON', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as import('vitest').Mock).mockResolvedValueOnce({
         ok: false,
         status: 503,
         json: async () => {

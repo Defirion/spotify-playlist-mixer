@@ -7,7 +7,7 @@ import {
 
 describe('mixHooks additional branches', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     delete process.env.TEST_VERBOSE;
   });
 
@@ -59,7 +59,7 @@ describe('mixHooks additional branches', () => {
     delete process.env.TEST_VERBOSE;
     const mod = makeUseMixGenerationModule();
     const api = mod.useMixGeneration();
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const created = await api.createPlaylist('name', [] as any);
     expect(created.id).toBe('created');
     expect(spy).not.toHaveBeenCalled();

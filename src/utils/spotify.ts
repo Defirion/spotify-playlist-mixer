@@ -39,3 +39,18 @@ export const getSpotifyApi = (accessToken: string): FetchInstance => {
 
   return instance;
 };
+
+/**
+ * Return the item count from Spotify's current playlist shape.
+ * The fallback keeps imported snapshots from before the February 2026 rename
+ * readable without sending deprecated fields back to Spotify.
+ */
+export const getPlaylistItemCount = (playlist: {
+  items?: { total?: number; length?: number };
+  tracks?: { total?: number; length?: number };
+}): number =>
+  playlist.items?.total ??
+  playlist.items?.length ??
+  playlist.tracks?.total ??
+  playlist.tracks?.length ??
+  0;

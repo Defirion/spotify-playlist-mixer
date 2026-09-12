@@ -40,11 +40,11 @@ const mockPlaylists: SpotifyPlaylist[] = [
   },
 ];
 
-const mockOnApplyPreset = jest.fn();
+const mockOnApplyPreset = vi.fn();
 
 describe('PresetTemplates', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders null when no playlists are selected', () => {
@@ -81,13 +81,13 @@ describe('PresetTemplates', () => {
 
     // Check descriptions
     expect(
-      screen.getByText('Perfect for bachata/salsa mixing with dance flow')
+      screen.getByText('Balanced bachata/salsa mixing with dance flow')
     ).toBeInTheDocument();
     expect(
       screen.getByText('High energy with consistent tempo')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Build to epic finale with sing-along hits')
+      screen.getByText('A varied, evenly blended road-trip mix')
     ).toBeInTheDocument();
 
     // Check tip section
@@ -130,10 +130,8 @@ describe('PresetTemplates', () => {
         playlist1: { min: 2, max: 2, weight: 55, weightType: 'time' }, // Bachata playlist
         playlist2: { min: 1, max: 2, weight: 45, weightType: 'time' }, // Salsa playlist
       },
-      strategy: 'mid-peak',
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 300,
         useAllSongs: false,
@@ -164,10 +162,8 @@ describe('PresetTemplates', () => {
         playlist1: { min: 3, max: 5, weight: 3, weightType: 'frequency' },
         playlist2: { min: 3, max: 5, weight: 3, weightType: 'frequency' },
       },
-      strategy: 'front-loaded',
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 60,
         useAllSongs: false,
@@ -198,10 +194,8 @@ describe('PresetTemplates', () => {
         playlist1: { min: 2, max: 3, weight: 2, weightType: 'frequency' },
         playlist2: { min: 2, max: 3, weight: 2, weightType: 'frequency' },
       },
-      strategy: 'crescendo',
       settings: {
-        recencyBoost: true,
-        shuffleWithinGroups: true,
+        shuffleTracks: true,
         useTimeLimit: true,
         targetDuration: 180,
         useAllSongs: false,
@@ -256,7 +250,7 @@ describe('PresetTemplates', () => {
   });
 
   it('shows alert when trying to apply preset with no playlists', () => {
-    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     render(
       <PresetTemplates
