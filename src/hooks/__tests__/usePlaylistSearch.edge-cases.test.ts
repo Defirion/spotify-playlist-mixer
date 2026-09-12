@@ -5,6 +5,7 @@ import { getSpotifyApi } from '../../utils/spotify';
 
 // Mock the spotify utils
 vi.mock('../../utils/spotify', () => ({
+  getDefaultMarket: vi.fn(() => 'US'),
   getSpotifyApi: vi.fn(),
 }));
 
@@ -258,7 +259,7 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
     expect(result.current.results[0].name).toBe('Test Playlist');
     expect(mockGet).toHaveBeenCalledWith(
-      expect.stringContaining('/search?q=test%20query'),
+      expect.stringContaining('/search?q=test+query'),
       { signal: expect.any(AbortSignal) }
     );
 

@@ -1,12 +1,14 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePlaylistSearch } from '../usePlaylistSearch';
-import { getSpotifyApi } from '../../utils/spotify';
+import { getDefaultMarket, getSpotifyApi } from '../../utils/spotify';
 
 // Mock the Spotify API utility
 vi.mock('../../utils/spotify');
 const mockGetSpotifyApi = getSpotifyApi as import('vitest').MockedFunction<
   typeof getSpotifyApi
 >;
+const mockGetDefaultMarket =
+  getDefaultMarket as import('vitest').MockedFunction<typeof getDefaultMarket>;
 
 const mockApiResponse = {
   data: {
@@ -37,6 +39,8 @@ describe('usePlaylistSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+
+    mockGetDefaultMarket.mockReturnValue('US');
 
     mockGetSpotifyApi.mockReturnValue({
       get: mockGet,
@@ -98,7 +102,7 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query&type=playlist&limit=10',
+          '/search?q=test+query&type=playlist&limit=10&market=US',
           { signal: expect.any(AbortSignal) }
         );
       });
@@ -151,7 +155,7 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query%20final&type=playlist&limit=10',
+          '/search?q=test+query+final&type=playlist&limit=10&market=US',
           { signal: expect.any(AbortSignal) }
         );
       });
@@ -381,7 +385,7 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query&type=playlist&limit=10',
+          '/search?q=test+query&type=playlist&limit=10&market=US',
           { signal: expect.any(AbortSignal) }
         );
       });

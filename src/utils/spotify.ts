@@ -3,6 +3,27 @@ import createFetchClient from '../services/fetchClient';
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
+/**
+ * Spotify's current catalog endpoints need a market when the user country is
+ * not available to the request. A valid user token normally supplies it, but
+ * the browser locale is a safe fallback for browser-only calls. Spotify gives
+ * the authenticated user's country priority when it is available.
+ */
+export const getDefaultMarket = (): string | undefined => {
+  if (typeof navigator === 'undefined') return undefined;
+
+  const locales = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+
+  for (const locale of locales) {
+    const region = locale?.match(/[-_]([A-Za-z]{2})$/)?.[1];
+    if (region) return region.toUpperCase();
+  }
+
+  return undefined;
+};
+
 export const getSpotifyApi = (accessToken: string): FetchInstance => {
   const normalizedToken = (accessToken || '').startsWith('Bearer ')
     ? accessToken.replace(/^Bearer\s+/i, '')

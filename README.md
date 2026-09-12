@@ -14,6 +14,8 @@ This repository follows Spotify's February 2026 Web API changes:
 - New playlists are created with `POST /me/playlists`.
 - Tracks are added and removed through `/playlists/{playlist_id}/items`.
 - Search requests use Spotify's current limit of 5 by default and 10 maximum.
+- Search requests include a browser-market fallback when Spotify cannot infer the
+  user's country from the access token.
 - The removed catalog `popularity` value is not part of the app's types, mixer,
   UI, presets, or tests. Mixing is based on playlist ratios, track duration,
   playlist order, and the explicit shuffle setting.

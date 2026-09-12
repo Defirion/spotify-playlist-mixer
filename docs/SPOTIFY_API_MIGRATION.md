@@ -35,7 +35,7 @@ See the [Search reference](https://developer.spotify.com/documentation/web-api/r
 | Create playlist        | `POST /me/playlists`                                   |
 | Add items              | `POST /playlists/{id}/items`, batches of 100 URIs      |
 | Remove items           | `DELETE /playlists/{id}/items` with an `items` body    |
-| Search                 | Default 5, maximum 10                                  |
+| Search                 | Default 5, maximum 10; browser market fallback          |
 | Mixing signal          | Ratios, duration, playlist order, and explicit shuffle |
 
 `getPlaylistItemCount` and the item mapper retain read-only fallbacks for old

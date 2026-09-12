@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SpotifyPlaylist } from '../types';
-import { getSpotifyApi } from '../utils/spotify';
+import { getDefaultMarket, getSpotifyApi } from '../utils/spotify';
 
 interface UsePlaylistSearchOptions {
   accessToken: string | null;
@@ -75,9 +75,14 @@ export const usePlaylistSearch = ({
         setError(null);
 
         const api = getSpotifyApi(accessToken);
-        const requestUrl = `/search?q=${encodeURIComponent(
-          searchQuery
-        )}&type=playlist&limit=${limit}`;
+        const params = new URLSearchParams({
+          q: searchQuery,
+          type: 'playlist',
+          limit: limit.toString(),
+        });
+        const market = getDefaultMarket();
+        if (market) params.set('market', market);
+        const requestUrl = `/search?${params.toString()}`;
 
         // Debug: surface request info to help diagnose live-app failures
         try {
