@@ -1,5 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { getDefaultMarket, getSpotifyApi } from '../utils/spotify';
+import {
+  beginAuthorization,
+  DEFAULT_SCOPES,
+} from '../services/spotifyAuth';
+import { getSpotifyClientId } from '../config';
+import { useAppStore } from '../store';
 import styles from './SpotifyDiagnostics.module.css';
 
 type ProbeResult = {
@@ -63,6 +69,8 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<ProbeResult[] | null>(null);
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
+  const [reconnectError, setReconnectError] = useState<string | null>(null);
+  const grantedScopes = useAppStore(state => state.grantedScopes);
 
   const runDiagnostics = useCallback(async () => {
     setRunning(true);
@@ -79,6 +87,7 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
     if (market) searchParams.set('market', market);
 
     const probes = [
+      ['Current user (/me)', '/me'],
       ['Owned playlists (/me/playlists)', '/me/playlists?limit=1'],
       ['Playlist search (/search)', `/search?${searchParams.toString()}`],
     ] as const;
@@ -93,12 +102,43 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
     setRunning(false);
   }, [accessToken]);
 
+  const reconnectWithFreshApproval = useCallback(async () => {
+    setReconnectError(null);
+    try {
+      const clientId = getSpotifyClientId();
+      if (!clientId) {
+        throw new Error('Spotify Client ID is not configured');
+      }
+
+      const authUrl = await beginAuthorization({
+        clientId,
+        redirectUri: window.location.origin + '/',
+        scopes: DEFAULT_SCOPES,
+        showDialog: true,
+      });
+      window.location.href = authUrl;
+    } catch (error) {
+      setReconnectError(
+        error instanceof Error
+          ? error.message
+          : 'Could not start fresh Spotify authorization'
+      );
+    }
+  }, []);
+
   return (
     <details className={styles.container}>
       <summary className={styles.summary}>Spotify diagnostics</summary>
       <p className={styles.description}>
-        Checks the two Spotify capabilities used to find playlists. Only the UTC
-        run time, statuses, and Spotify error details are shown.
+        Checks the authenticated account, playlist access, and catalog search.
+        Only the UTC run time, granted scope names, statuses, and Spotify error
+        details are shown.
+      </p>
+      <p className={styles.description}>
+        Granted scopes:{' '}
+        {grantedScopes.length > 0
+          ? [...grantedScopes].sort().join(', ')
+          : 'not reported for this token'}
       </p>
       <button
         type="button"
@@ -107,7 +147,16 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
         disabled={running}
       >
         {running ? 'Running diagnostics...' : 'Run diagnostics'}
+      </button>{' '}
+      <button
+        type="button"
+        className="btn"
+        onClick={reconnectWithFreshApproval}
+        disabled={running}
+      >
+        Reconnect with fresh Spotify approval
       </button>
+      {reconnectError && <p className={styles.failure}>{reconnectError}</p>}
       {results && (
         <div aria-live="polite">
           {checkedAt && (
