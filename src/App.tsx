@@ -23,7 +23,6 @@ export function MainApp() {
     accessToken,
     refreshToken,
     tokenExpiresAt,
-    grantedScopes,
     isAuthenticated,
     setAccessToken,
     setTokens,
@@ -91,7 +90,7 @@ export function MainApp() {
 
     const refreshIn = Math.max(tokenExpiresAt - Date.now() - 60_000, 0);
     const timer = window.setTimeout(() => {
-      refreshAccessToken(clientId, refreshToken, grantedScopes)
+      refreshAccessToken(clientId, refreshToken)
         .then(tokens => setTokens(tokens))
         .catch(() => {
           // Refresh failed (revoked/expired) — drop back to the connect screen.
@@ -100,13 +99,7 @@ export function MainApp() {
     }, refreshIn);
 
     return () => window.clearTimeout(timer);
-  }, [
-    refreshToken,
-    tokenExpiresAt,
-    grantedScopes,
-    setTokens,
-    clearAuth,
-  ]);
+  }, [refreshToken, tokenExpiresAt, setTokens, clearAuth]);
 
   const handlePlaylistSelection = (playlist: any) => {
     togglePlaylistSelection(playlist);
