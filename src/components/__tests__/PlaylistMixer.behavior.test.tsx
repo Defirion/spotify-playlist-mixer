@@ -288,9 +288,7 @@ describe('PlaylistMixer behavior', () => {
       targetDuration: 60,
       useTimeLimit: false,
       useAllSongs: false,
-      shuffleWithinGroups: false,
-      popularityStrategy: 'none',
-      recencyBoost: 0,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 
@@ -718,9 +716,7 @@ describe('PlaylistMixer behavior', () => {
       targetDuration: 60,
       useTimeLimit: false,
       useAllSongs: false,
-      shuffleWithinGroups: false,
-      popularityStrategy: 'none',
-      recencyBoost: 0,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 

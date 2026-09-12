@@ -2,11 +2,6 @@
 
 import { SpotifyTrack, SpotifyPlaylist, SpotifyUserProfile } from './spotify';
 
-export type PopularityStrategy =
-  | 'mixed'
-  | 'front-loaded'
-  | 'mid-peak'
-  | 'crescendo';
 export type WeightType = 'frequency' | 'time';
 
 export interface MixOptions {
@@ -15,9 +10,7 @@ export interface MixOptions {
   useTimeLimit: boolean;
   useAllSongs: boolean;
   playlistName: string;
-  shuffleWithinGroups: boolean;
-  popularityStrategy: PopularityStrategy;
-  recencyBoost: boolean;
+  shuffleTracks: boolean;
   continueWhenPlaylistEmpty: boolean;
 }
 
@@ -35,9 +28,6 @@ export interface RatioConfig {
 export interface MixedTrack extends SpotifyTrack {
   sourcePlaylist: string;
   originalIndex?: number;
-  popularityScore?: number;
-  recencyScore?: number;
-  finalScore?: number;
   // Unique instance ID for drag/drop operations (allows duplicate songs)
   instanceId?: string;
 }
@@ -136,7 +126,6 @@ export interface TrackItemProps {
   selected?: boolean;
   actions?: React.ReactNode;
   className?: string;
-  showPopularity?: boolean;
   showDuration?: boolean;
   showAlbum?: boolean;
   showArtist?: boolean;
@@ -269,11 +258,8 @@ export type OptionalFields<T, K extends keyof T> = Omit<T, K> &
   Partial<Pick<T, K>>;
 
 // Preset template types
-export type PresetStrategy = 'mid-peak' | 'front-loaded' | 'crescendo';
-
 export interface PresetSettings {
-  recencyBoost: boolean;
-  shuffleWithinGroups: boolean;
+  shuffleTracks: boolean;
   useTimeLimit: boolean;
   targetDuration: number; // in minutes
   useAllSongs: boolean;
@@ -283,15 +269,12 @@ export interface PresetTemplate {
   id: string;
   name: string;
   description: string;
-  strategy: PresetStrategy;
-  strategyLabel: string;
   ratios: (playlists: SpotifyPlaylist[]) => RatioConfigItem[];
   settings: PresetSettings;
 }
 
 export interface PresetApplyData {
   ratioConfig: RatioConfig;
-  strategy: PresetStrategy;
   settings: PresetSettings;
   presetName: string;
 }

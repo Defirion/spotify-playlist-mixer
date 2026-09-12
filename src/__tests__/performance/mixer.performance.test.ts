@@ -17,7 +17,6 @@ function makeTracks(n: number, prefix = '') {
     id: `${prefix}t${i}`,
     name: `Track ${prefix}${i}`,
     uri: `spotify:track:${prefix}t${i}`,
-    popularity: Math.floor(Math.random() * 100),
     duration_ms: 180000,
     artists: [{ id: `${prefix}a${i}`, name: `Artist ${i}` }],
     album: { id: `${prefix}al${i}`, name: `Album ${i}` },
@@ -68,9 +67,7 @@ test('mixPlaylists performance - 1000 tracks', async () => {
       useTimeLimit: false,
       useAllSongs: true,
       playlistName: 'perf-test',
-      shuffleWithinGroups: true,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: true,
       continueWhenPlaylistEmpty: false,
     };
 

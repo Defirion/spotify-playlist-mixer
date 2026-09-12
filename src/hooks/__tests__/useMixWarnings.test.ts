@@ -20,13 +20,11 @@ describe('useMixWarnings', () => {
   it('returns null warnings when under limits', () => {
     const mixOptions: MixOptions = {
       totalSongs: 5,
-      targetDuration: 60,
+      targetDuration: 3600,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'x',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: true,
     } as MixOptions;
     const ratioCfg: RatioConfig = {
@@ -45,13 +43,11 @@ describe('useMixWarnings', () => {
   it('detects exceeds songs limit', () => {
     const mixOptions: MixOptions = {
       totalSongs: 1000,
-      targetDuration: 60,
+      targetDuration: 3600,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'x',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: true,
     } as MixOptions;
 
@@ -70,14 +66,12 @@ describe('useMixWarnings', () => {
   it('detects ratio imbalance for time-based weightType', () => {
     const mixOptions: MixOptions = {
       totalSongs: 100,
-      // make targetDuration large enough (minutes) so imbalance is detectable
-      targetDuration: 60,
+      // targetDuration is measured in seconds, so use one hour here.
+      targetDuration: 3600,
       useTimeLimit: true,
       useAllSongs: false,
       playlistName: 'x',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as MixOptions;
 
@@ -101,9 +95,7 @@ describe('useMixWarnings', () => {
       useTimeLimit: false,
       useAllSongs: true,
       playlistName: 'x',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: true,
     } as MixOptions;
 

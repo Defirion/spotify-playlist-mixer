@@ -14,9 +14,9 @@ const mockPlaylist: SpotifyPlaylist = {
   name: 'Test Playlist',
   description: 'A test playlist',
   images: [{ url: 'https://example.com/image.jpg', height: 300, width: 300 }],
-  tracks: {
+  items: {
     total: 25,
-    href: 'https://api.spotify.com/v1/playlists/test123456789012345678/tracks',
+    href: 'https://api.spotify.com/v1/playlists/test123456789012345678/items',
   },
   owner: {
     id: 'user1',
@@ -184,7 +184,7 @@ describe('useSpotifyUrlHandler', () => {
 
       expect(mockGet).toHaveBeenCalledWith('/playlists/test123456789012345678');
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/tracks?offset=0&limit=100'
+        '/playlists/test123456789012345678/items?offset=0&limit=50'
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
@@ -249,8 +249,8 @@ describe('useSpotifyUrlHandler', () => {
     it('handles pagination for large playlists', async () => {
       const firstBatch = {
         data: {
-          items: Array.from({ length: 100 }, (_, i) => ({
-            track: {
+          items: Array.from({ length: 50 }, (_, i) => ({
+            item: {
               id: `track${i}`,
               name: `Track ${i}`,
               duration_ms: 180000,
@@ -262,7 +262,7 @@ describe('useSpotifyUrlHandler', () => {
       const secondBatch = {
         data: {
           items: Array.from({ length: 50 }, (_, i) => ({
-            track: {
+            item: {
               id: `track${i + 100}`,
               name: `Track ${i + 100}`,
               duration_ms: 180000,
@@ -271,10 +271,13 @@ describe('useSpotifyUrlHandler', () => {
         },
       };
 
+      const finalBatch = { data: { items: [] } };
+
       mockGet
         .mockResolvedValueOnce({ data: mockPlaylist })
         .mockResolvedValueOnce(firstBatch)
-        .mockResolvedValueOnce(secondBatch);
+        .mockResolvedValueOnce(secondBatch)
+        .mockResolvedValueOnce(finalBatch);
 
       const { result } = renderHook(() => useSpotifyUrlHandler(defaultProps));
 
@@ -285,17 +288,17 @@ describe('useSpotifyUrlHandler', () => {
       });
 
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/tracks?offset=0&limit=100'
+        '/playlists/test123456789012345678/items?offset=0&limit=50'
       );
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/tracks?offset=100&limit=100'
+        '/playlists/test123456789012345678/items?offset=50&limit=50'
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
         ...mockPlaylist,
         coverImage: 'https://example.com/image.jpg',
         realAverageDurationSeconds: 180, // All tracks have same duration
-        tracksWithDuration: 150, // 100 + 50 tracks
+        tracksWithDuration: 100, // two 50-item pages
       });
     });
   });

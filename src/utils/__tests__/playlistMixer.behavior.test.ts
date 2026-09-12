@@ -37,10 +37,8 @@ const ratioConfig = {
 const options = {
   useAllSongs: true,
   useTimeLimit: false,
-  popularityStrategy: 'mixed',
   continueWhenPlaylistEmpty: false,
-  recencyBoost: 0,
-  shuffleWithinGroups: false,
+  shuffleTracks: false,
 };
 
 describe('mixPlaylists behavior via compat layer', () => {

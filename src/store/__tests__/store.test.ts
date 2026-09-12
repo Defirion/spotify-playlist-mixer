@@ -63,9 +63,7 @@ describe('Zustand Store', () => {
         useTimeLimit: false,
         useAllSongs: true,
         playlistName: 'My Mixed Playlist',
-        shuffleWithinGroups: true,
-        popularityStrategy: 'mixed',
-        recencyBoost: true,
+        shuffleTracks: true,
         continueWhenPlaylistEmpty: false,
       },
       error: null,
@@ -225,17 +223,19 @@ describe('Zustand Store', () => {
 
       act(() => {
         result.current.applyPresetOptions({
-          strategy: 'popular',
-          settings: { totalSongs: 75, recencyBoost: false },
-          presetName: 'Popular Mix',
+          settings: {
+            shuffleTracks: false,
+            useAllSongs: false,
+            useTimeLimit: false,
+          },
+          presetName: 'Ordered Mix',
         });
       });
 
-      expect(result.current.mixOptions.popularityStrategy).toBe('popular');
+      expect(result.current.mixOptions.shuffleTracks).toBe(false);
       // applyPresetOptions no longer mutates totalSongs; it updates playlistName and other flags.
       expect(result.current.mixOptions.totalSongs).toBe(100);
-      expect(result.current.mixOptions.recencyBoost).toBe(false);
-      expect(result.current.mixOptions.playlistName).toBe('Popular Mix Mix');
+      expect(result.current.mixOptions.playlistName).toBe('Ordered Mix Mix');
     });
   });
 

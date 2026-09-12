@@ -134,9 +134,7 @@ const mockMixOptions: MixOptions = {
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'My Mixed Playlist',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: true,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 

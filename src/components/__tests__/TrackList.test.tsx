@@ -57,7 +57,6 @@ const mockTracks: SpotifyTrack[] = [
     uri: 'spotify:track:track1',
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
     duration_ms: 180000,
-    popularity: 75,
   }),
   makeTrack({
     id: 'track2',
@@ -65,7 +64,6 @@ const mockTracks: SpotifyTrack[] = [
     uri: 'spotify:track:track2',
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
     duration_ms: 200000,
-    popularity: 80,
   }),
 ];
 

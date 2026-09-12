@@ -8,6 +8,7 @@ import {
 } from '../types/mixer';
 import { useRatioCalculation } from '../hooks/useRatioCalculation';
 import styles from './RatioConfig.module.css';
+import { getPlaylistItemCount } from '../utils/spotify';
 
 interface ExampleMixDisplayProps {
   selectedPlaylists: SpotifyPlaylist[];
@@ -201,7 +202,7 @@ const RatioConfig = memo<RatioConfigProps>(
                   <div className={styles.playlistInfo}>
                     <div className={styles.playlistName}>{playlist.name}</div>
                     <div className={styles.playlistDetails}>
-                      {playlist.tracks.total} tracks
+                      {getPlaylistItemCount(playlist)} tracks
                       {playlist.realAverageDurationSeconds && (
                         <span>
                           {' '}
@@ -214,7 +215,7 @@ const RatioConfig = memo<RatioConfigProps>(
                       )}
                       {playlist.realAverageDurationSeconds &&
                         playlist.tracksWithDuration !==
-                          playlist.tracks.total && (
+                          getPlaylistItemCount(playlist) && (
                           <span className={styles.playlistDurationInfo}>
                             {' '}
                             ({playlist.tracksWithDuration} with duration data)

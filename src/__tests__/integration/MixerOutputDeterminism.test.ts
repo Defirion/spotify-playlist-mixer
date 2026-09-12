@@ -18,7 +18,6 @@ describe('Mixer output invariants', () => {
     } as any;
     const mixOptions = {
       totalSongs: 6,
-      popularityStrategy: 'mixed',
       useTimeLimit: false,
       useAllSongs: false,
     } as any;

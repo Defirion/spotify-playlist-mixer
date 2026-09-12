@@ -305,7 +305,7 @@ describe('useMixGeneration', () => {
         tracks as any
       );
       expect(result.id).toBe('np');
-      expect(result.tracks.total).toBe(1);
+      expect(result.items.total).toBe(1);
       expect(result.duration).toBe(1); // rounded minutes
     });
   });

@@ -8,7 +8,6 @@ export const makeTrack = (idSuffix: string | number, overrides: any = {}) => {
     duration_ms: overrides.duration_ms ?? 180000,
     artists: overrides.artists ?? [{ name: 'Artist' }],
     album: overrides.album ?? { name: 'Album' },
-    popularity: overrides.popularity ?? 50,
     release_date: overrides.release_date ?? '2020-01-01',
     ...overrides,
   };

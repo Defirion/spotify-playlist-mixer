@@ -1,14 +1,33 @@
-# Modernization Plan — branch `modernization`
+# Modernization Plan — Spotify Playlist Mixer
 
-> Handoff document. Written 2026-06-12 for a fresh session with no prior
-> context; updated 2026-06-13 after Phases A and B landed. Everything you
-> need to know is in this file; verify claims against the code before acting
-> on them, but they were accurate when written.
+> Historical handoff document. The original plan was written 2026-06-12 and
+> is retained below for context. The current Spotify API refresh was completed
+> in the working tree on 2026-09-12; verify claims against the code before
+> extending the migration.
 >
-> **Status: Phases A (`93114be9`), B (`377abe09`), and C are COMMITTED.
-> Resume at Phase D.** The only uncommitted change in the tree is the
-> deletion of `big_idea.txt`, which predates this work — keep it out of
-> commits.
+> **Status: Phases A (`93114be9`), B (`377abe09`), and C are historical
+> milestones. The Spotify API refresh is complete and verified with 130 test
+> files / 1025 tests plus a production build. Phase D remains separate work.**
+> The deletion of `big_idea.txt` and the `.claude/` directory are unrelated
+> working-tree changes — keep them out of this work.
+
+## Current Spotify API refresh — 2026-09-12
+
+The implementation now follows Spotify's [February 2026 Web API
+changelog](https://developer.spotify.com/documentation/web-api/references/changes/february-2026):
+
+- Playlist collections use `items`, and playlist contents are fetched from
+  `/playlists/{id}/items` in pages of 50.
+- Playlist item payloads use `item`; unavailable entries are filtered out.
+- Playlist creation uses `/me/playlists`; adding and removing content uses
+  `/playlists/{id}/items`.
+- Search defaults to 5 results and enforces Spotify's new maximum of 10.
+- Spotify's removed catalog `popularity` field is absent from application
+  types, mixer calculations, presets, controls, track rows, fixtures, and
+  tests. Mixing is now ratio-, duration-, order-, and shuffle-driven.
+
+The detailed endpoint mapping and upgrade checklist are in
+[SPOTIFY_API_MIGRATION.md](SPOTIFY_API_MIGRATION.md).
 
 ## Project snapshot
 
@@ -16,7 +35,7 @@
   with **Vite 8 / Vitest** (migrated from CRA in Phase B), zustand store,
   dnd-kit drag & drop. Deployed to Netlify
   (https://spotify-mixer.netlify.app/) from `master`.
-- **State**: 178 test files / 1276 tests pass (`npx vitest run`, ~50 s);
+- **State**: 130 test files / 1025 tests pass (`npm test`);
   `npm run build` (= `tsc --noEmit && vite build`) and `npm run lint` are
   clean; `npm audit` reports 0 vulnerabilities. Auth is Spotify
   Authorization Code + PKCE (`src/services/spotifyAuth.ts`); don't disturb
@@ -36,12 +55,12 @@
 Four phases, in this order (3 before 1 on purpose — deleting dead code first
 shrinks the migration surface):
 
-| Phase | What | Why |
-|---|---|---|
-| A | Delete dead code | less to migrate |
-| B | CRA → Vite + Vitest | toolchain is deprecated; 28 unfixable audit vulns |
-| C | Consolidate the test suite | brittle, duplicated, implementation-coupled |
-| D | Finish the store migration | AppShell threads ~17 props that components could read from the store |
+| Phase | What                       | Why                                                                  |
+| ----- | -------------------------- | -------------------------------------------------------------------- |
+| A     | Delete dead code           | less to migrate                                                      |
+| B     | CRA → Vite + Vitest        | toolchain is deprecated; 28 unfixable audit vulns                    |
+| C     | Consolidate the test suite | brittle, duplicated, implementation-coupled                          |
+| D     | Finish the store migration | AppShell threads ~17 props that components could read from the store |
 
 Run the full test suite + production build after each phase. Each phase ends
 with a commit (end commit messages with
@@ -148,7 +167,7 @@ Original plan kept below for reference:
    stragglers: `jest.requireActual` → `vi.importActual` (async — the
    `jest.mock(..., () => ({...jest.requireActual()}))` pattern used in the
    auth tests becomes `vi.mock(path, async importOriginal => ({ ...(await
-   importOriginal()), ... }))`).
+importOriginal()), ... }))`).
 4. `src/jest.polyfills.ts` and `jest.config.js` (standalone config used by
    `coverage:jest` script): delete once vitest is in. `src/__mocks__/fileMock.ts`
    and `identity-obj-proxy` become unneeded (Vite handles assets/CSS).
@@ -273,9 +292,12 @@ the full flow (connect → add playlists → preset → mix → create) works.
   localStorage persistence). `spotifyAuth.test.ts` includes an RFC 7636
   vector test — it must keep passing.
 - `.env` stays gitignored; never commit a client ID.
-- The mixer's "Random Mix" strategy interleaves popularity quadrants
-  round-robin (fixed 2026-06-12; concatenation made it behave like "Hits
-  First"). `mixingStrategies.test.ts` pins this.
+- The mixer must not depend on Spotify's removed catalog popularity field.
+  Keep ratios, duration, playlist order, and the explicit `shuffleTracks`
+  option as its supported signals.
+- Playlist API calls must use the current `/items` routes and item response
+  shape. Read-only compatibility fallbacks may remain for old snapshots, but
+  deprecated fields must not be sent back to Spotify.
 - Production build output must remain deployable on Netlify without
   dashboard changes (build cmd `npm run build`, publish `build/`,
   env `REACT_APP_SPOTIFY_CLIENT_ID`).

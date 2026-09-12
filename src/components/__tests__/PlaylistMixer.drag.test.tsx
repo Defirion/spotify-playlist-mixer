@@ -105,9 +105,7 @@ const baseMixOptions = {
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'Drag Mix',
-  shuffleWithinGroups: true,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: true,
   continueWhenPlaylistEmpty: false,
 };
 const baseRatio = {

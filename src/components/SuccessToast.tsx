@@ -1,6 +1,7 @@
 import React from 'react';
 import { SuccessToastProps } from '../types/components';
 import styles from './SuccessToast.module.css';
+import { getPlaylistItemCount } from '../utils/spotify';
 
 const SuccessToast: React.FC<SuccessToastProps> = ({
   mixedPlaylists,
@@ -30,7 +31,7 @@ const SuccessToast: React.FC<SuccessToastProps> = ({
                 </h3>
                 <p className={styles.toastMessage}>
                   Your new playlist "{playlist.name}" has been created with{' '}
-                  {playlist.tracks?.total || playlist.tracks?.length || 0} songs
+                  {getPlaylistItemCount(playlist)} songs
                   {playlist.duration !== undefined &&
                     playlist.duration !== null && (
                       <span>

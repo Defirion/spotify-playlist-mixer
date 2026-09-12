@@ -41,7 +41,6 @@ export interface SpotifyTrack {
   album: SpotifyAlbum;
   duration_ms: number;
   explicit: boolean;
-  popularity: number;
   preview_url: string | null;
   track_number: number;
   uri: string;
@@ -51,7 +50,6 @@ export interface SpotifyTrack {
   disc_number?: number;
   is_local?: boolean;
   is_playable?: boolean;
-  available_markets?: string[];
   // Custom properties for our app
   sourcePlaylist?: string;
   sourcePlaylistName?: string;
@@ -74,12 +72,22 @@ export interface SpotifyPlaylistTracks {
   items?: SpotifyPlaylistTrackItem[];
 }
 
+/** The current Spotify playlist summary/content collection. */
+export interface SpotifyPlaylistItems {
+  total: number;
+  href: string;
+  items?: SpotifyPlaylistItem[];
+}
+
 export interface SpotifyPlaylist {
   id: string;
   name: string;
   description: string | null;
   images: SpotifyImage[];
-  tracks: SpotifyPlaylistTracks;
+  /** Current Spotify API field. Contents are fetched from `/items`. */
+  items?: SpotifyPlaylistItems;
+  /** @deprecated Spotify renamed this field to `items` in February 2026. */
+  tracks?: SpotifyPlaylistTracks;
   owner: SpotifyPlaylistOwner;
   public: boolean;
   collaborative: boolean;
@@ -97,14 +105,22 @@ export interface SpotifyPlaylist {
 }
 
 export interface SpotifyPlaylistTrackItem {
-  track: SpotifyTrack;
-  added_at: string;
-  added_by: SpotifyPlaylistOwner;
+  /** Current Spotify API field. May be null for an unavailable item. */
+  item?: SpotifyTrack | null;
+  /** @deprecated Spotify renamed this field to `item`. */
+  track?: SpotifyTrack | null;
+  added_at: string | null;
+  added_by: SpotifyPlaylistOwner | null;
   is_local: boolean;
 }
 
+/** A playlist item that this application can mix (tracks only). */
+export type SpotifyPlaylistItem = SpotifyPlaylistTrackItem;
+
 export interface SpotifyUserProfile {
   id: string;
+  /** Stable pseudoanonymous account identifier added by Spotify in May 2026. */
+  account_id?: string;
   display_name: string;
   email?: string;
   country?: string;
@@ -166,7 +182,8 @@ export interface SpotifyAddTracksResponse {
 }
 
 export interface SpotifyRemoveTracksRequest {
-  tracks: Array<{
+  /** Current Spotify API field for DELETE /playlists/{id}/items. */
+  items: Array<{
     uri: string;
     positions?: number[];
   }>;

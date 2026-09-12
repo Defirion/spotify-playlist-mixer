@@ -64,9 +64,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
       prev.targetDuration !== current.targetDuration ||
       prev.useTimeLimit !== current.useTimeLimit ||
       prev.useAllSongs !== current.useAllSongs ||
-      prev.shuffleWithinGroups !== current.shuffleWithinGroups ||
-      prev.popularityStrategy !== current.popularityStrategy ||
-      prev.recencyBoost !== current.recencyBoost ||
+      prev.shuffleTracks !== current.shuffleTracks ||
       prev.continueWhenPlaylistEmpty !== current.continueWhenPlaylistEmpty;
 
     if (shouldClearPreview) {

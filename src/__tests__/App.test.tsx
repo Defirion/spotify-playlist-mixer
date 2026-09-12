@@ -263,7 +263,7 @@ describe('MainApp', () => {
           'p-mock': { min: 1, max: 2, weight: 1, weightType: 'frequency' },
         },
         strategy: 'mid-peak',
-        settings: { recencyBoost: true },
+        settings: { shuffleTracks: true },
         presetName: 'Mock Preset',
       });
 
@@ -271,8 +271,7 @@ describe('MainApp', () => {
         'p-mock': { min: 1, max: 2, weight: 1, weightType: 'frequency' },
       });
       expect(useMixOptions.applyPresetOptions).toHaveBeenCalledWith({
-        strategy: 'mid-peak',
-        settings: { recencyBoost: true },
+        settings: { shuffleTracks: true },
         presetName: 'Mock Preset',
       });
       expect(store.setUIError).toHaveBeenCalledWith(null);

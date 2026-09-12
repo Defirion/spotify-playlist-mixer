@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { SpotifyPlaylist, MixOptions, RatioConfig } from '../types';
+import { getPlaylistItemCount } from '../utils/spotify';
 
 interface ExceedsLimitWarning {
   type: 'time' | 'songs';
@@ -34,7 +35,7 @@ export const useMixWarnings = (
     if (selectedPlaylists.length === 0) return null;
 
     const totalSongs = selectedPlaylists.reduce(
-      (sum, playlist) => sum + playlist.tracks.total,
+      (sum, playlist) => sum + getPlaylistItemCount(playlist),
       0
     );
 
@@ -42,10 +43,12 @@ export const useMixWarnings = (
     for (const playlist of selectedPlaylists) {
       if (playlist.realAverageDurationSeconds) {
         const playlistDurationMinutes =
-          (playlist.tracks.total * playlist.realAverageDurationSeconds) / 60;
+          (getPlaylistItemCount(playlist) *
+            playlist.realAverageDurationSeconds) /
+          60;
         totalDurationMinutes += playlistDurationMinutes;
       } else {
-        totalDurationMinutes += playlist.tracks.total * 3.5;
+        totalDurationMinutes += getPlaylistItemCount(playlist) * 3.5;
       }
     }
     totalDurationMinutes = Math.round(totalDurationMinutes);
@@ -119,7 +122,7 @@ export const useMixWarnings = (
       const weight = config.weight || 1;
       let exhaustionPoint = Infinity;
 
-      const availableCount = playlist.tracks.total;
+      const availableCount = getPlaylistItemCount(playlist);
       const avgSongDurationSeconds = playlist.realAverageDurationSeconds || 210;
 
       if (availableCount === 0) {
@@ -185,7 +188,7 @@ export const useMixWarnings = (
       };
     }
 
-    const targetLength = useTimeLimit ? targetDuration * 60 * 1000 : totalSongs;
+    const targetLength = useTimeLimit ? targetDuration * 1000 : totalSongs;
 
     if (
       targetLength > minExhaustionPoint &&

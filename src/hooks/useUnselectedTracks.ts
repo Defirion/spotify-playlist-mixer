@@ -44,19 +44,22 @@ export const useUnselectedTracks = ({
     async (api: any, playlistId: string): Promise<SpotifyTrack[]> => {
       let allTracks: SpotifyTrack[] = [];
       let offset = 0;
-      const limit = 100;
+      const limit = 50;
 
       while (true) {
         const response = await api.get(
-          `/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`
+          `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`
         );
-        const tracks = response.data.items
-          .filter((item: any) => item.track && item.track.id)
-          .map((item: any) => item.track);
+        const items = response.data.items || [];
+        const tracks = items
+          .map((item: any) => item.item ?? item.track)
+          .filter((track: any) => track && track.id);
 
         allTracks = [...allTracks, ...tracks];
 
-        if (tracks.length < limit) break;
+        // Page size is based on raw playlist items, not playable tracks:
+        // Spotify can include unavailable items that are filtered above.
+        if (items.length < limit) break;
         offset += limit;
       }
 

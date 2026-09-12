@@ -19,9 +19,7 @@ describe('playlistMixer edge cases', () => {
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'Edge Mix',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 
@@ -51,9 +49,7 @@ describe('playlistMixer edge cases', () => {
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'Edge',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 
@@ -68,20 +64,15 @@ describe('playlistMixer edge cases', () => {
     } as any;
     const totalWeight = 1;
 
-    const popularityPools = { x: [] } as any;
-
-    const estimatedTotalSongs = 20;
-
-    const strategy = {
-      getTracksForPosition: (_pools: any, _id: string) => {
-        return [
-          makeTrack('x1', { duration_ms: 180000 }),
-          makeTrack('x2', { duration_ms: 180000 }),
-          makeTrack('x3', { duration_ms: 180000 }),
-          makeTrack('x4', { duration_ms: 180000 }),
-        ];
-      },
-    } as any;
+    ratioConfig.x.weightType = 'time';
+    const playlistTracks = {
+      x: [
+        makeTrack('x1', { duration_ms: 180000 }),
+        makeTrack('x2', { duration_ms: 180000 }),
+        makeTrack('x3', { duration_ms: 180000 }),
+        makeTrack('x4', { duration_ms: 180000 }),
+      ],
+    };
 
     const mixedTracks: any[] = [];
     const playlistCounts: any = { x: 0, y: 0 };
@@ -93,9 +84,7 @@ describe('playlistMixer edge cases', () => {
       playlistId,
       ratioConfig,
       totalWeight,
-      popularityPools,
-      estimatedTotalSongs,
-      strategy,
+      playlistTracks,
       mixedTracks,
       playlistCounts,
       playlistDurations,
@@ -123,9 +112,7 @@ describe('playlistMixer edge cases', () => {
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'PerfMix',
-      shuffleWithinGroups: false,
-      popularityStrategy: 'mixed',
-      recencyBoost: false,
+      shuffleTracks: false,
       continueWhenPlaylistEmpty: false,
     } as any;
 

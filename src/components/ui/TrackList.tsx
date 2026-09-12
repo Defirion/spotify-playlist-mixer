@@ -21,7 +21,6 @@ const TrackList = memo<TrackListProps>(
     overscan = 5, // Number of items to render outside visible area
     showCheckbox = false,
     // showDragHandle prop removed
-    showPopularity = true,
     showDuration = true,
     showAlbumArt = true,
     showSourcePlaylist = false,
@@ -107,7 +106,6 @@ const TrackList = memo<TrackListProps>(
               actions={customActions}
               showCheckbox={showCheckbox}
               // showDragHandle prop removed
-              showPopularity={showPopularity}
               showDuration={showDuration}
               showAlbumArt={showAlbumArt}
               showSourcePlaylist={showSourcePlaylist}
@@ -185,7 +183,6 @@ const TrackList = memo<TrackListProps>(
         // draggable removed
         showCheckbox,
         // showDragHandle removed
-        showPopularity,
         showDuration,
         showAlbumArt,
         showSourcePlaylist,

@@ -191,11 +191,11 @@ describe('SpotifyService', () => {
       expect(res.hasMore).toBe(true);
     });
 
-    it('should throw BAD_REQUEST when limit exceeds 50', async () => {
+    it('should throw BAD_REQUEST when limit exceeds 10', async () => {
       const api = makeApi();
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');
-      await expect(svc.searchTracks('q', { limit: 51 })).rejects.toMatchObject({
+      await expect(svc.searchTracks('q', { limit: 11 })).rejects.toMatchObject({
         type: ERROR_TYPES.BAD_REQUEST,
       });
     });
@@ -234,8 +234,8 @@ describe('SpotifyService', () => {
       api.get.mockResolvedValueOnce({
         data: {
           items: [
-            { added_at: 'now', added_by: {}, track: { id: 'a', name: 'A' } },
-            { added_at: 'now', added_by: {}, track: { id: 'b', name: 'B' } },
+            { added_at: 'now', added_by: {}, item: { id: 'a', name: 'A' } },
+            { added_at: 'now', added_by: {}, item: { id: 'b', name: 'B' } },
           ],
           total: 3,
           limit: 2,
@@ -245,7 +245,7 @@ describe('SpotifyService', () => {
       api.get.mockResolvedValueOnce({
         data: {
           items: [
-            { added_at: 'now', added_by: {}, track: { id: 'c', name: 'C' } },
+            { added_at: 'now', added_by: {}, item: { id: 'c', name: 'C' } },
           ],
           total: 3,
           limit: 2,
@@ -267,7 +267,7 @@ describe('SpotifyService', () => {
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');
       api.get.mockResolvedValue({
-        data: { items: [], total: 0, limit: 100, offset: 0 },
+        data: { items: [], total: 0, limit: 50, offset: 0 },
       });
       const progressCalls: any[] = [];
       const res = await svc.getPlaylistTracks('plEmpty', {
@@ -333,11 +333,11 @@ describe('SpotifyService', () => {
       const api = makeApi();
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');
-      await expect(svc.createPlaylist('', { name: 'x' })).rejects.toMatchObject(
-        { type: ERROR_TYPES.BAD_REQUEST }
-      );
+      await expect(svc.createPlaylist({ name: '' })).rejects.toMatchObject({
+        type: ERROR_TYPES.BAD_REQUEST,
+      });
       await expect(
-        svc.createPlaylist('u1', { name: '' } as any)
+        svc.createPlaylist({ name: '' } as any)
       ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
     });
 
@@ -346,9 +346,9 @@ describe('SpotifyService', () => {
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');
       api.post.mockResolvedValue({ data: { id: 'newPL', name: 'New' } });
-      const pl = await svc.createPlaylist('user1', { name: 'New' });
+      const pl = await svc.createPlaylist({ name: 'New' });
       expect(api.post).toHaveBeenCalledWith(
-        '/users/user1/playlists',
+        '/me/playlists',
         expect.objectContaining({ name: 'New' })
       );
       expect(pl.id).toBe('newPL');
@@ -436,10 +436,10 @@ describe('SpotifyService', () => {
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');
       await expect(
-        svc.removeTracksFromPlaylist('', { tracks: [{ uri: 'x' }] } as any)
+        svc.removeTracksFromPlaylist('', { items: [{ uri: 'x' }] } as any)
       ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
       await expect(
-        svc.removeTracksFromPlaylist('pl1', { tracks: [] } as any)
+        svc.removeTracksFromPlaylist('pl1', { items: [] } as any)
       ).rejects.toMatchObject({ type: ERROR_TYPES.BAD_REQUEST });
     });
 
@@ -449,9 +449,11 @@ describe('SpotifyService', () => {
       const svc = new (SpotifyService as any)('tok');
       api.delete.mockResolvedValue({ data: { snapshot_id: 'snapX' } });
       const res = await svc.removeTracksFromPlaylist('pl1', {
-        tracks: [{ uri: 'a' }],
+        items: [{ uri: 'a' }],
       });
-      expect(api.delete).toHaveBeenCalled();
+      expect(api.delete).toHaveBeenCalledWith('/playlists/pl1/items', {
+        data: { items: [{ uri: 'a' }] },
+      });
       expect(res.snapshot_id).toBe('snapX');
     });
   });
@@ -502,7 +504,7 @@ describe('SpotifyService', () => {
       expect(res.hasMore).toBe(false);
     });
 
-    it('should throw BAD_REQUEST when limit exceeds 50', async () => {
+    it('should throw BAD_REQUEST when limit exceeds 10', async () => {
       const api = makeApi();
       mockGetSpotifyApi.mockReturnValue(api as any);
       const svc = new (SpotifyService as any)('tok');

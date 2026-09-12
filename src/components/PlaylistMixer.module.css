@@ -112,52 +112,6 @@
   color: var(--mindaro);
 }
 
-.strategyGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.strategyOption {
-  padding: 16px;
-  border: 1px solid var(--fern-green);
-  background: var(--hunter-green);
-  color: var(--mindaro);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.strategyOption:hover {
-  background: var(--fern-green);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.strategyOption.active {
-  background: var(--fern-green);
-  border-color: var(--moss-green);
-  color: var(--mindaro);
-  box-shadow: 0 0 0 2px rgba(144, 169, 85, 0.3);
-}
-
-.strategyTitle {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--mindaro);
-}
-
-.strategyDescription {
-  font-size: 12px;
-  color: rgba(236, 243, 158, 0.7);
-  line-height: 1.3;
-}
-
 .warningBox {
   background: rgba(255, 193, 7, 0.1);
   border: 1px solid rgba(255, 193, 7, 0.3);
@@ -476,10 +430,6 @@
   }
 
   /* keep playlistBreakdown grid behavior defined earlier */
-
-  .strategyGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 480px) {
@@ -495,10 +445,6 @@
   .previewStats {
     flex-direction: column;
     gap: 8px;
-  }
-
-  .strategyGrid {
-    grid-template-columns: 1fr;
   }
 }
 /* Drag over styles for drop zones */

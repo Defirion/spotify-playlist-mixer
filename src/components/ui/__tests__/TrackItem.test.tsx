@@ -11,17 +11,6 @@ vi.mock('../../../utils/trackUtils', () => ({
         .toString()
         .padStart(2, '0')}`
   ),
-  getTrackQuadrant: vi.fn(() => 'high-energy-high-valence'),
-  getPopularityStyle: vi.fn((_quadrant: any, popularity: any) => {
-    if (popularity !== undefined) {
-      return {
-        background: '#4CAF50',
-        color: '#fff',
-        text: 'Popular',
-      };
-    }
-    return null;
-  }),
 }));
 
 describe('TrackItem', () => {

@@ -157,9 +157,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'x',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     expect(utils.state.preview).not.toBeNull();
@@ -176,9 +174,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'x',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     expect(utils.state.preview).not.toBeNull();
@@ -198,7 +194,7 @@ describe('useMixPreview', () => {
       await utils.generatePreview(
         [makePlaylist('p1'), makePlaylist('p2')] as any,
         {},
-        { popularityStrategy: 'pop' } as any
+        { shuffleTracks: true } as any
       );
     });
 
@@ -222,9 +218,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     // Should include search stats
@@ -239,9 +233,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     // Should result in empty tracks due to error handling
@@ -258,9 +250,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     const reordered = [...utils.state.preview!.tracks].reverse();
@@ -280,9 +270,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     // Verify preview exists
@@ -310,7 +298,7 @@ describe('useMixPreview', () => {
       await utils.generatePreview(
         [makePlaylist('p1'), makePlaylist('p2')] as any,
         {},
-        { popularityStrategy: 'pop' } as any
+        { shuffleTracks: true } as any
       );
     });
 
@@ -340,9 +328,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     // Should result in empty array due to safety check
@@ -359,9 +345,7 @@ describe('useMixPreview', () => {
     const utils = renderUseMixPreview('token'); // No onError option
 
     await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {
-        popularityStrategy: 'pop',
-      } as any);
+      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
     });
 
     // Should set error state even without onError callback

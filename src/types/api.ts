@@ -100,7 +100,6 @@ export interface ISpotifyService {
     options?: GetPlaylistTracksOptions
   ): Promise<SpotifyServicePlaylistTracksResult>;
   createPlaylist(
-    userId: string,
     playlistData: SpotifyCreatePlaylistRequest
   ): Promise<SpotifyCreatePlaylistResponse>;
   addTracksToPlaylist(

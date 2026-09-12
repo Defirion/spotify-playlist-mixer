@@ -9,7 +9,17 @@ import * as spotifyUtils from '../../utils/spotify';
 // dragAndDrop utils import removed - will be replaced with dnd-kit
 
 // Mock dependencies
-vi.mock('../../utils/spotify');
+vi.mock('../../utils/spotify', () => ({
+  getSpotifyApi: vi.fn(),
+  getPlaylistItemCount: vi.fn(
+    (playlist: any) =>
+      playlist.items?.total ??
+      playlist.items?.length ??
+      playlist.tracks?.total ??
+      playlist.tracks?.length ??
+      0
+  ),
+}));
 let _trackIdCounter = 0;
 const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
 
@@ -119,7 +129,6 @@ const mockTracks: SpotifyTrack[] = [
     id: 'track1',
     name: 'Test Track 1',
     duration_ms: 180000,
-    popularity: 75,
     uri: 'spotify:track:track1',
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
   }),
@@ -127,7 +136,6 @@ const mockTracks: SpotifyTrack[] = [
     id: 'track2',
     name: 'Test Track 2',
     duration_ms: 200000,
-    popularity: 80,
     uri: 'spotify:track:track2',
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
   }),
@@ -229,7 +237,7 @@ describe('AddUnselectedModal', () => {
     });
 
     expect(mockApiGet).toHaveBeenCalledWith(
-      '/playlists/playlist1/tracks?offset=0&limit=100'
+      '/playlists/playlist1/items?offset=0&limit=50'
     );
   });
 

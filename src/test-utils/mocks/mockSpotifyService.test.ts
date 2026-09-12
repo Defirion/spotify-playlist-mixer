@@ -75,7 +75,7 @@ describe('MockSpotifyService (unit)', () => {
     // portion quiet for passing tests
     await run(async () => {
       const okPayload = {
-        tracks: { items: [{ id: 't1' }], total: 1, limit: 20, offset: 0 },
+        tracks: { items: [{ id: 't1' }], total: 1, limit: 5, offset: 0 },
       };
 
       const first = {
@@ -104,14 +104,11 @@ describe('MockSpotifyService (unit)', () => {
   it('createPlaylist validates inputs', async () => {
     const Mock = makeMockSpotifyService();
     const svc = new Mock('token');
-    await expect(svc.createPlaylist('', { name: 'x' })).rejects.toThrow(
-      'User ID is required'
-    );
-    await expect(svc.createPlaylist('u1', {})).rejects.toThrow(
+    await expect(svc.createPlaylist({})).rejects.toThrow(
       'Playlist name is required'
     );
     await run(async () => {
-      const ok = await svc.createPlaylist('u1', { name: 'my' });
+      const ok = await svc.createPlaylist({ name: 'my' });
       expect(ok.name).toBe('my');
     });
   });
@@ -191,7 +188,7 @@ describe('MockSpotifyService (unit)', () => {
       .mockResolvedValueOnce(first)
       .mockResolvedValueOnce(second);
     await run(async () => {
-      const res = await svc.removeTracksFromPlaylist('pl', { tracks: [] });
+      const res = await svc.removeTracksFromPlaylist('pl', { items: [] });
       expect(res.snapshot_id).toBe('s1');
     });
 
@@ -201,7 +198,7 @@ describe('MockSpotifyService (unit)', () => {
       json: async () => ({ error: 'x' }),
     });
     await expect(
-      svc.removeTracksFromPlaylist('pl', { tracks: [] })
+      svc.removeTracksFromPlaylist('pl', { items: [] })
     ).rejects.toHaveProperty('type');
   });
 
@@ -210,11 +207,11 @@ describe('MockSpotifyService (unit)', () => {
     const svc = new Mock('token');
 
     const page1 = {
-      items: [{ track: { id: 't1' } }, { track: { id: 't2' } }],
+      items: [{ item: { id: 't1' } }, { item: { id: 't2' } }],
       total: 3,
       next: true,
     };
-    const page2 = { items: [{ track: { id: 't3' } }], total: 3, next: false };
+    const page2 = { items: [{ item: { id: 't3' } }], total: 3, next: false };
 
     (global as any).fetch = vi
       .fn()

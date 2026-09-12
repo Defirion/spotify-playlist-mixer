@@ -111,12 +111,11 @@ export function MainApp() {
 
   const handleApplyPreset = ({
     ratioConfig: newRatioConfig,
-    strategy,
     settings,
     presetName,
   }: any) => {
     setRatioConfigBulk(newRatioConfig);
-    applyPresetOptions({ strategy, settings, presetName });
+    applyPresetOptions({ settings, presetName });
     if (error) {
       setUIError(null);
     }

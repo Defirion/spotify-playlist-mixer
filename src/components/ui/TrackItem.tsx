@@ -1,9 +1,5 @@
 import React, { forwardRef, memo, useMemo, useCallback } from 'react';
-import {
-  formatDuration,
-  getTrackQuadrant,
-  getPopularityStyle,
-} from '../../utils/trackUtils';
+import { formatDuration } from '../../utils/trackUtils';
 import { TrackItemProps } from '../../types';
 import styles from './TrackItem.module.css';
 
@@ -20,7 +16,6 @@ const TrackItem = memo(
         className = '',
         showCheckbox = false,
         // showDragHandle prop removed
-        showPopularity = true,
         showDuration = true,
         showAlbumArt = true,
         showSourcePlaylist = false,
@@ -39,17 +34,6 @@ const TrackItem = memo(
       },
       ref
     ) => {
-      // Memoize expensive calculations
-      const quadrant = useMemo(() => getTrackQuadrant(track), [track]);
-
-      const popularityStyle = useMemo(
-        () =>
-          showPopularity && track.popularity !== undefined
-            ? getPopularityStyle(quadrant, track.popularity)
-            : null,
-        [showPopularity, track.popularity, quadrant]
-      );
-
       // Calculate grid template based on visible elements
       const gridTemplate = useMemo(() => {
         const columns = [];
@@ -196,24 +180,6 @@ const TrackItem = memo(
                   <span>•</span>
                   <span className={styles.sourcePlaylist}>
                     {track.sourcePlaylistName}
-                  </span>
-                </>
-              )}
-
-              {/* Popularity Indicator */}
-              {popularityStyle && (
-                <>
-                  <span>•</span>
-                  <span
-                    className={styles.popularityBadge}
-                    style={
-                      {
-                        '--badge-bg': popularityStyle.background,
-                        '--badge-color': popularityStyle.color,
-                      } as React.CSSProperties
-                    }
-                  >
-                    {popularityStyle.text}
                   </span>
                 </>
               )}

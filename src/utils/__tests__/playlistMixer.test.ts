@@ -16,9 +16,7 @@ const baseOptions: MixOptions = {
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'Test',
-  shuffleWithinGroups: false,
-  popularityStrategy: 'mixed',
-  recencyBoost: false,
+  shuffleTracks: false,
   continueWhenPlaylistEmpty: false,
 };
 

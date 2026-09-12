@@ -1,7 +1,5 @@
 import {
   formatDuration,
-  getTrackQuadrant,
-  getPopularityStyle,
   generateTrackInstanceId,
   getTrackDragId,
   createMixedTrackInstance,
@@ -14,42 +12,6 @@ describe('trackUtils', () => {
       expect(formatDuration(90000)).toBe('1:30');
       expect(formatDuration(61000)).toBe('1:01');
       expect(formatDuration(0)).toBe('0:00');
-    });
-  });
-
-  describe('getTrackQuadrant', () => {
-    it('should return default quadrant for falsy input', () => {
-      // @ts-ignore
-      expect(getTrackQuadrant(null)).toBe('low-energy-low-valence');
-    });
-
-    it('should determine quadrant based on popularity and name length', () => {
-      const trackA: any = { popularity: 60, name: 'Short Name' };
-      expect(getTrackQuadrant(trackA)).toBe('high-energy-low-valence');
-
-      const trackB: any = {
-        popularity: 70,
-        name: 'This is a very long track name indeed',
-      };
-      expect(getTrackQuadrant(trackB)).toBe('high-energy-high-valence');
-
-      const trackC: any = {
-        popularity: 30,
-        name: 'Long-ish name maybe more than twenty',
-      };
-      expect(getTrackQuadrant(trackC)).toBe('low-energy-high-valence');
-    });
-  });
-
-  describe('getPopularityStyle', () => {
-    it('should return styles for quadrants and include popularity text', () => {
-      const s1 = getPopularityStyle('high-energy-high-valence', 80);
-      expect(s1.background).toBe('#4CAF50');
-      expect(s1.text).toBe('80%');
-
-      const s2 = getPopularityStyle('low-energy-low-valence');
-      expect(s2.background).toBe('#9E9E9E');
-      expect(s2.text).toBe('');
     });
   });
 

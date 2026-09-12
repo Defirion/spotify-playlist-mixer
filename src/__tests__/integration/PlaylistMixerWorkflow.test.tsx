@@ -14,7 +14,6 @@ const mockTracks = [
     name: 'Test Track 1',
     artists: [{ name: 'Artist 1' }],
     duration_ms: 180000,
-    popularity: 75,
     external_urls: { spotify: 'https://open.spotify.com/track/track1' },
   },
   {
@@ -22,7 +21,6 @@ const mockTracks = [
     name: 'Test Track 2',
     artists: [{ name: 'Artist 2' }],
     duration_ms: 210000,
-    popularity: 60,
     external_urls: { spotify: 'https://open.spotify.com/track/track2' },
   },
 ] as unknown as SpotifyTrack[];
@@ -410,7 +408,6 @@ describe('Playlist Mixer Integration Tests', () => {
         name: `Test Track ${i}`,
         artists: [{ name: `Artist ${i}` }],
         duration_ms: 180000 + i * 1000,
-        popularity: Math.floor(Math.random() * 100),
         external_urls: { spotify: `https://open.spotify.com/track/track${i}` },
       })) as unknown as SpotifyTrack[];
 

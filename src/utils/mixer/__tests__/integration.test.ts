@@ -9,7 +9,6 @@ describe('Mixer Utils Integration', () => {
     uri: `spotify:track:${id}`,
     name: `Track ${id}`,
     duration_ms,
-    popularity: 50,
     explicit: false,
     preview_url: null,
     track_number: 1,

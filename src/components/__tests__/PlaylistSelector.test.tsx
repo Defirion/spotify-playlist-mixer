@@ -23,6 +23,9 @@ vi.mock('../../utils/spotify', () => ({
   getSpotifyApi: vi.fn(() => ({
     get: vi.fn(),
   })),
+  getPlaylistItemCount: vi.fn(
+    (playlist: any) => playlist.items?.total ?? playlist.tracks?.total ?? 0
+  ),
 }));
 
 const mockPlaylists: SpotifyPlaylist[] = [

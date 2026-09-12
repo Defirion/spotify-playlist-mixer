@@ -17,7 +17,7 @@ export function makeMockSpotifyService() {
         const items = Array.from({ length: 120 }).map((_, i) => ({
           id: `pl_all_${i}`,
           name: `PL ${i}`,
-          tracks: { total: 0 },
+          items: { total: 0 },
         }));
         return {
           items,
@@ -28,7 +28,7 @@ export function makeMockSpotifyService() {
           hasMore: false,
         };
       }
-      const items = [{ id: 'pl_1', name: 'PL 1', tracks: { total: 0 } }];
+      const items = [{ id: 'pl_1', name: 'PL 1', items: { total: 0 } }];
       return {
         items,
         playlists: items,
@@ -64,7 +64,7 @@ export function makeMockSpotifyService() {
     }
 
     async searchTracks(query: string, options: any = {}) {
-      const limit = options.limit || 20;
+      const limit = options.limit || 5;
       const offset = options.offset || 0;
       if (!query || !String(query).trim()) {
         const err: any = new Error('Search query cannot be empty');
@@ -145,7 +145,7 @@ export function makeMockSpotifyService() {
       throw new Error('Max retries exceeded');
     }
     async searchPlaylists(query: string, options: any = {}) {
-      const limit = options.limit || 20;
+      const limit = options.limit || 5;
       const offset = options.offset || 0;
       if (!query || !String(query).trim()) {
         const err: any = new Error('Search query cannot be empty');
@@ -192,13 +192,8 @@ export function makeMockSpotifyService() {
       };
     }
 
-    async createPlaylist(userId: string, body: any) {
+    async createPlaylist(body: any) {
       // Basic validation to mirror production behavior
-      if (!userId) {
-        const err: any = new Error('User ID is required');
-        err.response = { status: 400 };
-        throw err;
-      }
       if (!body || !body.name) {
         const err: any = new Error('Playlist name is required');
         err.response = { status: 400 };
@@ -210,7 +205,7 @@ export function makeMockSpotifyService() {
     async removeTracksFromPlaylist(playlistId: string, request: any) {
       if (!playlistId) throw new Error('Playlist ID is required');
 
-      const url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+      const url = `https://api.spotify.com/v1/playlists/${playlistId}/items`;
       const maxRetries = 3;
       let attempt = 0;
       while (true) {
@@ -254,13 +249,13 @@ export function makeMockSpotifyService() {
 
     async getPlaylistTracks(playlistId: string, options: any = {}) {
       if (!playlistId) throw new Error('Playlist ID is required');
-      const limit = 100;
+      const limit = 50;
       let offset = 0;
       let all: any[] = [];
       let total = 0;
       // loop pages
       while (true) {
-        const url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`;
+        const url = `https://api.spotify.com/v1/playlists/${playlistId}/items?limit=${limit}&offset=${offset}`;
         if (process.env.TEST_VERBOSE) {
           console.error(
             '[MockSpotifyService] About to call fetch:',
@@ -313,7 +308,9 @@ export function makeMockSpotifyService() {
             text ? text.slice(0, 200) : '<empty>'
           );
         }
-        const items = (data.items || []).map((it: any) => it.track || it);
+        const items = (data.items || []).map(
+          (it: any) => it.item || it.track || it
+        );
         all = all.concat(items);
         total =
           typeof data.total === 'number' && data.total > 0
@@ -349,7 +346,7 @@ export function makeMockSpotifyService() {
         const body: any = { uris: batch };
         if (i === 0 && typeof request.position !== 'undefined')
           body.position = request.position;
-        const url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+        const url = `https://api.spotify.com/v1/playlists/${playlistId}/items`;
         const res = await (global as any).fetch(url, {
           method: 'POST',
           headers: {

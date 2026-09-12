@@ -36,6 +36,9 @@ interface PlaylistsResult {
   hasMore: boolean;
 }
 
+const SPOTIFY_SEARCH_LIMIT = 10;
+const SPOTIFY_PLAYLIST_ITEMS_LIMIT = 50;
+
 /**
  * Centralized Spotify API service class
  * Handles all Spotify API interactions with automatic pagination, error handling, and retry logic
@@ -136,7 +139,7 @@ class SpotifyService implements ISpotifyService {
     query: string,
     options: SearchTracksOptions = {}
   ): Promise<SearchResult> {
-    const { limit = 20, offset = 0, market } = options;
+    const { limit = 5, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {
       throw new ApiError(
@@ -146,10 +149,12 @@ class SpotifyService implements ISpotifyService {
       );
     }
 
-    if (limit > 50) {
+    if (limit > SPOTIFY_SEARCH_LIMIT) {
       throw new ApiError(
         ERROR_TYPES.BAD_REQUEST,
-        new Error('Limit cannot exceed 50 for search requests'),
+        new Error(
+          `Limit cannot exceed ${SPOTIFY_SEARCH_LIMIT} for search requests`
+        ),
         { operation: 'searchTracks', limit }
       );
     }
@@ -209,7 +214,7 @@ class SpotifyService implements ISpotifyService {
 
     const { market, onProgress } = options;
     const allTracks: SpotifyTrack[] = [];
-    const limit = 100; // Maximum allowed by Spotify API
+    const limit = SPOTIFY_PLAYLIST_ITEMS_LIMIT;
     let totalTracks: number | null = null;
 
     const fetchPage = async (cursor?: string | null) => {
@@ -227,7 +232,7 @@ class SpotifyService implements ISpotifyService {
         async () => {
           return (
             await this.api.get(
-              `/playlists/${playlistId}/tracks?${params.toString()}`
+              `/playlists/${playlistId}/items?${params.toString()}`
             )
           ).data;
         },
@@ -240,16 +245,23 @@ class SpotifyService implements ISpotifyService {
 
       const items = (response.items || [])
         .map((item: any) => ({
-          ...item.track,
+          ...(item.item ?? item.track),
           added_at: item.added_at,
           added_by: item.added_by,
         }))
         .filter((t: any) => t && t.id);
 
-      const nextCursor =
-        response.offset + response.limit < response.total
-          ? String(response.offset + response.limit)
-          : null;
+      const responseLimit =
+        typeof response.limit === 'number' ? response.limit : limit;
+      const responseOffset =
+        typeof response.offset === 'number' ? response.offset : offset;
+      const hasNextPage =
+        response.next !== undefined
+          ? Boolean(response.next)
+          : responseOffset + responseLimit < (response.total || 0);
+      const nextCursor = hasNextPage
+        ? String(responseOffset + responseLimit)
+        : null;
 
       return { items, next_cursor: nextCursor };
     };
@@ -373,13 +385,12 @@ class SpotifyService implements ISpotifyService {
    * Create a new playlist for the user
    */
   async createPlaylist(
-    userId: string,
     playlistData: SpotifyCreatePlaylistRequest
   ): Promise<SpotifyPlaylist> {
-    if (!userId) {
+    if (!playlistData) {
       throw new ApiError(
         ERROR_TYPES.BAD_REQUEST,
-        new Error('User ID is required'),
+        new Error('Playlist data is required'),
         { operation: 'createPlaylist' }
       );
     }
@@ -400,7 +411,7 @@ class SpotifyService implements ISpotifyService {
     } = playlistData;
 
     return this.withRetry(async () => {
-      const response = await this.api.post(`/users/${userId}/playlists`, {
+      const response = await this.api.post('/me/playlists', {
         name,
         description,
         public: isPublic,
@@ -476,7 +487,7 @@ class SpotifyService implements ISpotifyService {
           async () => {
             try {
               const response = await this.api.post(
-                `/playlists/${playlistId}/tracks`,
+                `/playlists/${playlistId}/items`,
                 requestBody
               );
               return response.data;
@@ -535,9 +546,9 @@ class SpotifyService implements ISpotifyService {
       );
     }
 
-    const { tracks } = request;
+    const { items } = request;
 
-    if (!Array.isArray(tracks) || tracks.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       throw new ApiError(
         ERROR_TYPES.BAD_REQUEST,
         new Error('Tracks array is required and cannot be empty'),
@@ -546,12 +557,9 @@ class SpotifyService implements ISpotifyService {
     }
 
     return this.withRetry(async () => {
-      const response = await this.api.delete(
-        `/playlists/${playlistId}/tracks`,
-        {
-          data: request,
-        }
-      );
+      const response = await this.api.delete(`/playlists/${playlistId}/items`, {
+        data: { ...request, items },
+      });
 
       return response.data;
     });
@@ -606,7 +614,7 @@ class SpotifyService implements ISpotifyService {
     offset: number;
     hasMore: boolean;
   }> {
-    const { limit = 20, offset = 0, market } = options;
+    const { limit = 5, offset = 0, market } = options;
 
     if (!query || query.trim() === '') {
       throw new ApiError(
@@ -616,10 +624,12 @@ class SpotifyService implements ISpotifyService {
       );
     }
 
-    if (limit > 50) {
+    if (limit > SPOTIFY_SEARCH_LIMIT) {
       throw new ApiError(
         ERROR_TYPES.BAD_REQUEST,
-        new Error('Limit cannot exceed 50 for search requests'),
+        new Error(
+          `Limit cannot exceed ${SPOTIFY_SEARCH_LIMIT} for search requests`
+        ),
         { operation: 'searchPlaylists', limit }
       );
     }
