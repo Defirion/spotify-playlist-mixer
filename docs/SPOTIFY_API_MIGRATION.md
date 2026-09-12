@@ -47,9 +47,10 @@ snapshots are no longer relevant.
 
 The app continues to use Spotify's recommended [Authorization Code with PKCE
 flow](https://developer.spotify.com/documentation/web-api/concepts/authorization)
-for browser applications. It requests playlist read and modify scopes, keeps
-access tokens in memory, and uses `sessionStorage` only for the PKCE redirect
-state.
+for browser applications. Spotify's current scopes documentation lists Search
+and `GET /me` under `user-read-private`, so the app requests that scope in
+addition to its playlist read and modify scopes. Access tokens remain in memory,
+and `sessionStorage` is used only for the PKCE redirect state.
 
 Playlist contents may require owner or collaborator access. Development-mode
 access is controlled by Spotify: the app owner needs active Premium, and each
@@ -63,11 +64,12 @@ update raised the Client ID limit from one to 25 per developer account and made
 Development Mode quota account-wide. Consult the current [quota modes
 documentation](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
 when configuring a Developer Dashboard app. The authenticated UI's optional
-Spotify diagnostics panel compares `/me/playlists` and `/search` using only a
-UTC run time, endpoint statuses, and safe provider error details; it never
-displays access tokens or profile fields. It does not probe `/me`, because that
-endpoint requires `user-read-private`, a scope the mixer does not otherwise
-need.
+Spotify diagnostics panel compares `/me`, `/me/playlists`, and `/search` using
+only a UTC run time, the granted scope names reported by Spotify, endpoint
+statuses, and safe provider error details; it never displays access tokens or
+profile fields. A user-triggered reconnect path sets `show_dialog=true` so a
+troubleshooting run can obtain an explicit fresh approval instead of relying on
+a previously approved browser session.
 
 ## Upgrade checklist for future changes
 
