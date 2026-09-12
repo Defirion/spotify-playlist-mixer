@@ -34,6 +34,7 @@ describe('authSlice', () => {
       isAuthenticated: false,
       refreshToken: null,
       tokenExpiresAt: null,
+      grantedScopes: [],
     });
   });
 
@@ -49,12 +50,14 @@ describe('authSlice', () => {
       accessToken: 'access-1',
       refreshToken: 'refresh-1',
       expiresAt,
+      grantedScopes: ['playlist-read-private', 'user-read-private'],
     });
 
     expect(set).toHaveBeenCalledWith({
       accessToken: 'access-1',
       refreshToken: 'refresh-1',
       tokenExpiresAt: expiresAt,
+      grantedScopes: ['playlist-read-private', 'user-read-private'],
       isAuthenticated: true,
     });
   });
