@@ -2,6 +2,7 @@ import {
   beginAuthorization,
   completeAuthorization,
   computeCodeChallenge,
+  DEFAULT_SCOPES,
   generateRandomString,
   refreshAccessToken,
   SPOTIFY_TOKEN_URL,
@@ -15,6 +16,7 @@ const tokenJson = (overrides: Record<string, unknown> = {}) => ({
   refresh_token: 'refresh-456',
   expires_in: 3600,
   token_type: 'Bearer',
+  scope: 'playlist-read-private user-read-private',
   ...overrides,
 });
 
@@ -72,6 +74,7 @@ describe('spotifyAuth (PKCE)', () => {
       );
       expect(url.searchParams.get('scope')).toBe('playlist-read-private');
       expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+      expect(url.searchParams.get('show_dialog')).toBeNull();
 
       const verifier = sessionStorage.getItem(VERIFIER_KEY);
       const state = sessionStorage.getItem(STATE_KEY);
@@ -81,6 +84,32 @@ describe('spotifyAuth (PKCE)', () => {
       expect(url.searchParams.get('code_challenge')).toBe(
         await computeCodeChallenge(verifier as string)
       );
+    });
+
+    it('requests the current search scope by default', async () => {
+      const url = new URL(
+        await beginAuthorization({
+          clientId: 'client-1',
+          redirectUri: 'http://localhost:3000/',
+        })
+      );
+
+      expect(DEFAULT_SCOPES).toContain('user-read-private');
+      expect(url.searchParams.get('scope')?.split(' ')).toContain(
+        'user-read-private'
+      );
+    });
+
+    it('can force Spotify to show a fresh approval dialog', async () => {
+      const url = new URL(
+        await beginAuthorization({
+          clientId: 'client-1',
+          redirectUri: 'http://localhost:3000/',
+          showDialog: true,
+        })
+      );
+
+      expect(url.searchParams.get('show_dialog')).toBe('true');
     });
   });
 
@@ -105,6 +134,10 @@ describe('spotifyAuth (PKCE)', () => {
       expect(tokens.accessToken).toBe('access-123');
       expect(tokens.refreshToken).toBe('refresh-456');
       expect(tokens.expiresAt).toBeGreaterThanOrEqual(before + 3600_000);
+      expect(tokens.grantedScopes).toEqual([
+        'playlist-read-private',
+        'user-read-private',
+      ]);
 
       const [calledUrl, init] = (global.fetch as import('vitest').Mock).mock
         .calls[0];
@@ -210,6 +243,7 @@ describe('spotifyAuth (PKCE)', () => {
 
       expect(tokens.accessToken).toBe('access-123');
       expect(tokens.refreshToken).toBe('rotated-refresh');
+      expect(tokens.grantedScopes).toContain('user-read-private');
 
       const [, init] = (global.fetch as import('vitest').Mock).mock.calls[0];
       const body = new URLSearchParams(init.body);
@@ -223,6 +257,20 @@ describe('spotifyAuth (PKCE)', () => {
       const tokens = await refreshAccessToken('client-1', 'old-refresh');
 
       expect(tokens.refreshToken).toBe('old-refresh');
+    });
+
+    it('keeps known scopes when a refresh response omits scope metadata', async () => {
+      mockFetchOnce(tokenJson({ scope: undefined }));
+
+      const tokens = await refreshAccessToken('client-1', 'old-refresh', [
+        'playlist-read-private',
+        'user-read-private',
+      ]);
+
+      expect(tokens.grantedScopes).toEqual([
+        'playlist-read-private',
+        'user-read-private',
+      ]);
     });
 
     it('rejects with the HTTP status when the body is not JSON', async () => {

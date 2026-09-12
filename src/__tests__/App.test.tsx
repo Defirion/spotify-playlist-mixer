@@ -45,6 +45,7 @@ const FAKE_TOKENS = {
   accessToken: 'FAKE_TOKEN',
   refreshToken: 'FAKE_REFRESH',
   expiresAt: Date.now() + 3600_000,
+  grantedScopes: ['playlist-read-private', 'user-read-private'],
 };
 
 describe('MainApp', () => {

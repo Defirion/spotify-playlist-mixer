@@ -67,6 +67,7 @@ describe('App integration (real store)', () => {
       accessToken: 'unit_test_token_abc123',
       refreshToken: null,
       expiresAt: Date.now() + 3600_000,
+      grantedScopes: ['playlist-read-private', 'user-read-private'],
     });
     window.history.replaceState({}, '', '/?code=unit_code&state=unit_state');
 
