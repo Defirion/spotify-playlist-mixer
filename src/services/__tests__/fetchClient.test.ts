@@ -65,6 +65,26 @@ describe('FetchInstance', () => {
     expect(res.data).toBe('plain text body');
   });
 
+  test('forwards an abort signal to fetch', async () => {
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: jsonHeaders,
+      json: async () => ({ ok: true }),
+      text: async () => JSON.stringify({ ok: true }),
+    });
+
+    const controller = new AbortController();
+    const client = createFetchClient({ baseURL: 'https://api.example.com' });
+    await client.get('/cancelable', { signal: controller.signal });
+
+    expect((global as any).fetch).toHaveBeenCalledWith(
+      'https://api.example.com/cancelable',
+      expect.objectContaining({ signal: controller.signal })
+    );
+  });
+
   test('POST merges headers and stringifies JSON body', async () => {
     let capturedInit: any = null;
     (global as any).fetch = vi
@@ -174,6 +194,30 @@ describe('FetchInstance', () => {
       response: expect.objectContaining({
         status: 400,
         data: { error: 'invalid' },
+      }),
+    });
+  });
+
+  test('parses JSON error bodies even without a JSON content type', async () => {
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      headers: {
+        get: () => 'text/plain; charset=utf-8',
+      },
+      json: async () => {
+        throw new Error('not json');
+      },
+      text: async () => '{"error":{"message":"Forbidden"}}',
+    });
+
+    const client = createFetchClient({ baseURL: 'https://api.example.com' });
+
+    await expect(client.get('/forbidden')).rejects.toMatchObject({
+      response: expect.objectContaining({
+        status: 403,
+        data: { error: { message: 'Forbidden' } },
       }),
     });
   });

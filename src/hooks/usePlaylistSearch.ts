@@ -19,6 +19,21 @@ interface UsePlaylistSearchReturn {
   clearResults: () => void;
 }
 
+const getResponseErrorMessage = (response: any): string | undefined => {
+  const data = response?.data;
+
+  if (typeof data === 'string' && data.trim()) {
+    return data.trim();
+  }
+
+  const spotifyError = data?.error;
+  if (typeof spotifyError === 'string' && spotifyError.trim()) {
+    return spotifyError.trim();
+  }
+
+  return spotifyError?.message || data?.message;
+};
+
 /**
  * Custom hook for searching Spotify playlists
  * Handles debounced search, loading states, and error handling
@@ -50,8 +65,10 @@ export const usePlaylistSearch = ({
         abortControllerRef.current.abort();
       }
 
-      // Create new abort controller
-      abortControllerRef.current = new AbortController();
+      // Create new abort controller and retain the local reference so an old
+      // request cannot inspect the newer request's cancellation state.
+      const requestController = new AbortController();
+      abortControllerRef.current = requestController;
 
       try {
         setLoading(true);
@@ -99,7 +116,9 @@ export const usePlaylistSearch = ({
         // Perform request and capture network errors for debugging
         let response;
         try {
-          response = await api.get(requestUrl);
+          response = await api.get(requestUrl, {
+            signal: requestController.signal,
+          });
         } catch (err) {
           // Development-only detailed error logging to help diagnose live failures
           try {
@@ -123,7 +142,7 @@ export const usePlaylistSearch = ({
         }
 
         // Check if request was aborted
-        if (abortControllerRef.current?.signal.aborted) {
+        if (requestController.signal.aborted) {
           return;
         }
 
@@ -156,7 +175,7 @@ export const usePlaylistSearch = ({
         setShowResults(true);
       } catch (err) {
         // Don't set error if request was aborted
-        if (!abortControllerRef.current?.signal.aborted) {
+        if (!requestController.signal.aborted) {
           // Surface axios-like response objects where available to help
           // diagnose unexpected API responses in logs. Keep the primary
           // console.error call shape the same (message, error) so existing
@@ -183,25 +202,29 @@ export const usePlaylistSearch = ({
           }
 
           const status = maybeResponse?.status;
-          const spotifyError = maybeResponse?.data?.error;
-          const spotifyMessage =
-            typeof spotifyError === 'string'
-              ? spotifyError
-              : spotifyError?.message || maybeResponse?.data?.message;
+          const spotifyMessage = getResponseErrorMessage(maybeResponse);
           const details = [
             status ? `HTTP ${status}` : null,
             spotifyMessage || null,
           ].filter(Boolean);
 
-          setError(
-            details.length > 0
-              ? `Failed to search playlists (${details.join(': ')}).`
-              : 'Failed to search playlists. Please try again.'
-          );
+          if (status === 403) {
+            setError(
+              'Spotify denied playlist search (HTTP 403). If this app is in Development Mode, confirm this account is allowlisted and the app owner has Premium. After a recent Premium change, refresh and reconnect Spotify once the change has propagated.'
+            );
+          } else {
+            setError(
+              details.length > 0
+                ? `Failed to search playlists (${details.join(': ')}).`
+                : 'Failed to search playlists. Please try again.'
+            );
+          }
           setResults([]);
         }
       } finally {
-        setLoading(false);
+        if (abortControllerRef.current === requestController) {
+          setLoading(false);
+        }
       }
     },
     [accessToken, limit]

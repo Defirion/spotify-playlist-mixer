@@ -46,9 +46,22 @@ for the upstream details.
    npm start
    ```
 
+For the Netlify deployment, set the same `REACT_APP_SPOTIFY_CLIENT_ID` in the
+site's production environment and register the exact production redirect URI
+`https://spotify-mixer.netlify.app/` in the Spotify Developer Dashboard. Vite
+injects this value during the Netlify build, so changing it requires a new
+deploy. The repository includes `netlify.toml` with the build command, `build/`
+publish directory, Node version, and SPA fallback.
+
 The browser flow uses Authorization Code with PKCE. The verifier and state are
 held in `sessionStorage` for the redirect round trip; access tokens remain in
 memory. Never commit `.env` or a Client ID.
+
+Spotify Development Mode also requires the app owner to have an active Premium
+subscription and every signed-in user to be allowlisted. Spotify may allow the
+OAuth login before enforcing those requirements at the Web API, which appears
+in the app as HTTP 403. After adding a user or activating Premium, refresh the
+site and reconnect Spotify so the new token and account entitlement are used.
 
 ## Using the app
 

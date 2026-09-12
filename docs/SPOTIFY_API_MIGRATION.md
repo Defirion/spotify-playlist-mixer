@@ -52,9 +52,14 @@ access tokens in memory, and uses `sessionStorage` only for the PKCE redirect
 state.
 
 Playlist contents may require owner or collaborator access. Development-mode
-account and user limits are controlled by Spotify; consult the current
-[quota modes documentation](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
-when configuring a Developer Dashboard app.
+access is controlled by Spotify: the app owner needs active Premium, and each
+signed-in user needs to be on the app's allowlist. Spotify may let an
+unqualified user finish OAuth and then return HTTP 403 from the Web API; the app
+surfaces that as an access/configuration message rather than retrying it as a
+transient failure. Consult the current [quota modes
+documentation](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
+when configuring a Developer Dashboard app. After a new allowlist entry or
+Premium activation, refresh the site and reconnect to obtain a fresh token.
 
 ## Upgrade checklist for future changes
 

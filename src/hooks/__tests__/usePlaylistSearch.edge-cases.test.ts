@@ -258,7 +258,8 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
     expect(result.current.results[0].name).toBe('Test Playlist');
     expect(mockGet).toHaveBeenCalledWith(
-      expect.stringContaining('/search?q=test%20query')
+      expect.stringContaining('/search?q=test%20query'),
+      { signal: expect.any(AbortSignal) }
     );
 
     process.env.NODE_ENV = originalNodeEnv;
@@ -300,6 +301,25 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
     );
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it('explains Development Mode requirements for a 403 response', async () => {
+    const mockGet = vi.fn().mockRejectedValue({
+      response: { status: 403, data: { error: 'Forbidden' } },
+    });
+    (getSpotifyApi as import('vitest').Mock).mockReturnValue({ get: mockGet });
+
+    const { result } = renderHook(() =>
+      usePlaylistSearch({ accessToken: 'token' })
+    );
+
+    result.current.setQuery('test query');
+
+    await waitFor(() => {
+      expect(result.current.error).toContain('Development Mode');
+    });
+    expect(result.current.error).toContain('allowlisted');
+    expect(result.current.error).toContain('Premium');
   });
 
   it('includes verbose error logging when TEST_VERBOSE is set', async () => {
@@ -399,7 +419,9 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
 
     // Only the final query should have been executed
     expect(mockGet).toHaveBeenCalledTimes(1);
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('q=abc'));
+    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('q=abc'), {
+      signal: expect.any(AbortSignal),
+    });
   });
 
   it('cleans up timeouts and abort controllers on unmount', () => {
@@ -461,7 +483,9 @@ describe('usePlaylistSearch Edge Cases and Error Handling', () => {
       expect(mockGet).toHaveBeenCalled();
     });
 
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('limit=5'));
+    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('limit=5'), {
+      signal: expect.any(AbortSignal),
+    });
   });
 
   it('handles errors without response object', async () => {

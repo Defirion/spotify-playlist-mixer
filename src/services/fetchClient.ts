@@ -37,7 +37,11 @@ export class FetchInstance {
       config?.headers || {}
     );
     const finalUrl = this.buildUrl(url);
-    const init: RequestInit = { method, headers };
+    const init: RequestInit = {
+      method,
+      headers,
+      ...(config?.signal ? { signal: config.signal } : {}),
+    };
     if (data != null) {
       if (typeof data === 'object' && !(data instanceof FormData)) {
         init.body = JSON.stringify(data);
@@ -56,7 +60,19 @@ export class FetchInstance {
     if (contentType.includes('application/json')) {
       parsed = await resp.json();
     } else {
-      parsed = await resp.text();
+      const text = await resp.text();
+
+      // Spotify normally sends JSON errors, but preserve a useful structured
+      // error when an intermediary omits the JSON content type.
+      if (!resp.ok && text.trim()) {
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = text;
+        }
+      } else {
+        parsed = text;
+      }
     }
 
     const result = {

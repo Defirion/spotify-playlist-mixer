@@ -98,7 +98,8 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query&type=playlist&limit=10'
+          '/search?q=test%20query&type=playlist&limit=10',
+          { signal: expect.any(AbortSignal) }
         );
       });
 
@@ -150,7 +151,8 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query%20final&type=playlist&limit=10'
+          '/search?q=test%20query%20final&type=playlist&limit=10',
+          { signal: expect.any(AbortSignal) }
         );
       });
     });
@@ -379,7 +381,8 @@ describe('usePlaylistSearch', () => {
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith(
-          '/search?q=test%20query&type=playlist&limit=10'
+          '/search?q=test%20query&type=playlist&limit=10',
+          { signal: expect.any(AbortSignal) }
         );
       });
     });
