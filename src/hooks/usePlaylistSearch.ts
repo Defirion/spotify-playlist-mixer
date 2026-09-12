@@ -231,7 +231,7 @@ export const usePlaylistSearch = ({
             setError(
               `Spotify denied playlist search (HTTP 403${
                 providerDetail ? `: ${providerDetail}` : ''
-              }). If this app is in Development Mode, confirm this account is allowlisted and the app owner has Premium. The diagnostics panel can compare this with /me and /me/playlists access.`
+              }). If this app is in Development Mode, confirm this account is allowlisted and the app owner has Premium. The diagnostics panel can compare playlist-list and catalog-search access.`
             );
           } else {
             setError(

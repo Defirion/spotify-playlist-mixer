@@ -62,10 +62,12 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
 }) => {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<ProbeResult[] | null>(null);
+  const [checkedAt, setCheckedAt] = useState<string | null>(null);
 
   const runDiagnostics = useCallback(async () => {
     setRunning(true);
     setResults(null);
+    setCheckedAt(null);
 
     const api = getSpotifyApi(accessToken);
     const searchParams = new URLSearchParams({
@@ -77,7 +79,6 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
     if (market) searchParams.set('market', market);
 
     const probes = [
-      ['Current user (/me)', '/me'],
       ['Owned playlists (/me/playlists)', '/me/playlists?limit=1'],
       ['Playlist search (/search)', `/search?${searchParams.toString()}`],
     ] as const;
@@ -88,6 +89,7 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
     }
 
     setResults(nextResults);
+    setCheckedAt(new Date().toISOString());
     setRunning(false);
   }, [accessToken]);
 
@@ -95,8 +97,8 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
     <details className={styles.container}>
       <summary className={styles.summary}>Spotify diagnostics</summary>
       <p className={styles.description}>
-        Checks the authenticated account, playlist access, and catalog search.
-        Only statuses and Spotify error details are shown.
+        Checks the two Spotify capabilities used to find playlists. Only the UTC
+        run time, statuses, and Spotify error details are shown.
       </p>
       <button
         type="button"
@@ -107,18 +109,24 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
         {running ? 'Running diagnostics...' : 'Run diagnostics'}
       </button>
       {results && (
-        <ul className={styles.results} aria-live="polite">
-          {results.map(result => (
-            <li
-              key={result.name}
-              className={result.ok ? styles.success : styles.failure}
-            >
-              <span>{result.ok ? '✓' : '✕'}</span>{' '}
-              <strong>{result.name}</strong> — {result.status ?? 'No response'}
-              {result.detail ? ` — ${result.detail}` : ''}
-            </li>
-          ))}
-        </ul>
+        <div aria-live="polite">
+          {checkedAt && (
+            <p className={styles.checkedAt}>Checked at {checkedAt} UTC</p>
+          )}
+          <ul className={styles.results}>
+            {results.map(result => (
+              <li
+                key={result.name}
+                className={result.ok ? styles.success : styles.failure}
+              >
+                <span>{result.ok ? '✓' : '✕'}</span>{' '}
+                <strong>{result.name}</strong> —{' '}
+                {result.status ?? 'No response'}
+                {result.detail ? ` — ${result.detail}` : ''}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </details>
   );

@@ -67,8 +67,9 @@ rollout for existing integrations; the Premium requirement and five-user cap
 still apply. A later July 2026 update raised the Client ID limit from one to 25
 per developer account and made Development Mode quota account-wide. The
 authenticated app includes a user-triggered Spotify diagnostics panel that
-compares `/me`, `/me/playlists`, and `/search` without displaying token or
-profile data.
+compares `/me/playlists` and `/search` without displaying token or profile
+data. It intentionally avoids `/me`, which requires the unrelated
+`user-read-private` scope.
 
 ## Using the app
 
