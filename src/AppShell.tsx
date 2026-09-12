@@ -6,6 +6,7 @@ import PlaylistMixer from './components/PlaylistMixer';
 import PresetTemplates from './components/PresetTemplates';
 import ToastError from './components/ToastError';
 import SuccessToast from './components/SuccessToast';
+import SpotifyDiagnostics from './components/SpotifyDiagnostics';
 import ScrollToBottom from './components/ScrollToBottom';
 // These imports are kept for the routes and footer links; mark unused to avoid lint noise
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -91,6 +92,8 @@ const AppShell: React.FC<AppShellProps> = ({
             </div>
           ) : null}
         </div>
+
+        {accessToken && <SpotifyDiagnostics accessToken={accessToken} />}
 
         <ToastError error={error} onDismiss={onDismissError ?? (() => {})} />
 

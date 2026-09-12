@@ -35,7 +35,7 @@ See the [Search reference](https://developer.spotify.com/documentation/web-api/r
 | Create playlist        | `POST /me/playlists`                                   |
 | Add items              | `POST /playlists/{id}/items`, batches of 100 URIs      |
 | Remove items           | `DELETE /playlists/{id}/items` with an `items` body    |
-| Search                 | Default 5, maximum 10; browser market fallback          |
+| Search                 | Default 5, maximum 10; browser market fallback         |
 | Mixing signal          | Ratios, duration, playlist order, and explicit shuffle |
 
 `getPlaylistItemCount` and the item mapper retain read-only fallbacks for old
@@ -54,12 +54,18 @@ state.
 Playlist contents may require owner or collaborator access. Development-mode
 access is controlled by Spotify: the app owner needs active Premium, and each
 signed-in user needs to be on the app's allowlist. Spotify may let an
-unqualified user finish OAuth and then return HTTP 403 from the Web API; the app
-surfaces that as an access/configuration message rather than retrying it as a
-transient failure. Consult the current [quota modes
+unqualified user finish OAuth and then return HTTP 403 from the Web API; the
+app surfaces the provider's safe `message`/`reason` details when available and
+does not retry it as a transient failure. Spotify's March 9 update postponed
+the reduced endpoint-access rollout for existing integrations, while the
+Premium requirement and five-user cap remained. Its later July 2026 quota
+update raised the Client ID limit from one to 25 per developer account and made
+Development Mode quota account-wide. Consult the current [quota modes
 documentation](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
-when configuring a Developer Dashboard app. After a new allowlist entry or
-Premium activation, refresh the site and reconnect to obtain a fresh token.
+when configuring a Developer Dashboard app. The authenticated UI's optional
+Spotify diagnostics panel compares `/me`, `/me/playlists`, and `/search` using
+only endpoint statuses and safe provider error details; it never displays
+access tokens or profile fields.
 
 ## Upgrade checklist for future changes
 

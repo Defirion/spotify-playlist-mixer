@@ -34,6 +34,13 @@ const getResponseErrorMessage = (response: any): string | undefined => {
   return spotifyError?.message || data?.message;
 };
 
+const getResponseErrorReason = (response: any): string | undefined => {
+  const reason = response?.data?.error?.reason;
+  return typeof reason === 'string' && reason.trim()
+    ? reason.trim()
+    : undefined;
+};
+
 /**
  * Custom hook for searching Spotify playlists
  * Handles debounced search, loading states, and error handling
@@ -208,14 +215,23 @@ export const usePlaylistSearch = ({
 
           const status = maybeResponse?.status;
           const spotifyMessage = getResponseErrorMessage(maybeResponse);
+          const spotifyReason = getResponseErrorReason(maybeResponse);
           const details = [
             status ? `HTTP ${status}` : null,
             spotifyMessage || null,
           ].filter(Boolean);
 
           if (status === 403) {
+            const providerDetail = [spotifyReason, spotifyMessage]
+              .filter(Boolean)
+              .filter(
+                (detail, index, values) => values.indexOf(detail) === index
+              )
+              .join(': ');
             setError(
-              'Spotify denied playlist search (HTTP 403). If this app is in Development Mode, confirm this account is allowlisted and the app owner has Premium. After a recent Premium change, refresh and reconnect Spotify once the change has propagated.'
+              `Spotify denied playlist search (HTTP 403${
+                providerDetail ? `: ${providerDetail}` : ''
+              }). If this app is in Development Mode, confirm this account is allowlisted and the app owner has Premium. The diagnostics panel can compare this with /me and /me/playlists access.`
             );
           } else {
             setError(

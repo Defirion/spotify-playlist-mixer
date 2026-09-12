@@ -62,8 +62,13 @@ memory. Never commit `.env` or a Client ID.
 Spotify Development Mode also requires the app owner to have an active Premium
 subscription and every signed-in user to be allowlisted. Spotify may allow the
 OAuth login before enforcing those requirements at the Web API, which appears
-in the app as HTTP 403. After adding a user or activating Premium, refresh the
-site and reconnect Spotify so the new token and account entitlement are used.
+in the app as HTTP 403. Spotify later postponed the reduced endpoint-access
+rollout for existing integrations; the Premium requirement and five-user cap
+still apply. A later July 2026 update raised the Client ID limit from one to 25
+per developer account and made Development Mode quota account-wide. The
+authenticated app includes a user-triggered Spotify diagnostics panel that
+compares `/me`, `/me/playlists`, and `/search` without displaying token or
+profile data.
 
 ## Using the app
 
