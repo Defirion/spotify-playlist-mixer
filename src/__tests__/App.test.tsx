@@ -180,8 +180,8 @@ describe('MainApp', () => {
       expect(useAuth.setTokens).toHaveBeenCalledWith(FAKE_TOKENS);
     });
 
-    it('clears auth if proactive refresh fails', async () => {
-      refreshAccessToken.mockRejectedValue(new Error('refresh failed'));
+    it('clears auth when the refresh fails', async () => {
+      refreshAccessToken.mockRejectedValue(new Error('revoked'));
       const { useAuth } = applyStoreMocks(store, {
         useAuth: {
           isAuthenticated: true,
@@ -196,43 +196,129 @@ describe('MainApp', () => {
       await vi.runAllTimersAsync();
 
       expect(useAuth.clearAuth).toHaveBeenCalled();
+      expect(useAuth.setTokens).not.toHaveBeenCalled();
     });
-  });
 
-  describe('handler wiring', () => {
-    it('passes the store data and handlers into AppShell', () => {
-      const mocked = applyStoreMocks(store, {
-        useAuth: { isAuthenticated: true, accessToken: 'TOKEN' },
-        usePlaylistSelection: {
-          selectedPlaylists: [{ id: 'p1' }],
-        },
-        useRatioConfig: { ratioConfig: { p1: { ratio: 1 } } },
-        useMixOptions: { mixOptions: { shuffle: true } },
-        useUI: { mixedPlaylists: [{ id: 'mixed' }] },
+    it('does not schedule a refresh without a refresh token', async () => {
+      applyStoreMocks(store, {
+        useAuth: { isAuthenticated: true, accessToken: 't' },
       });
 
       render(<MainApp />);
 
-      expect(appShellProps.isAuthenticated).toBe(true);
-      expect(appShellProps.accessToken).toBe('TOKEN');
-      expect(appShellProps.selectedPlaylists).toEqual([{ id: 'p1' }]);
-      expect(appShellProps.ratioConfig).toEqual({ p1: { ratio: 1 } });
-      expect(appShellProps.mixOptions).toEqual({ shuffle: true });
-      expect(appShellProps.mixedPlaylists).toEqual([{ id: 'mixed' }]);
-      expect(appShellProps.onClearAll).toBe(
-        mocked.usePlaylistSelection.clearAllPlaylists
+      await vi.runAllTimersAsync();
+
+      expect(refreshAccessToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handlers passed to AppShell', () => {
+    it('onPlaylistSelect toggles the playlist in the store', () => {
+      const { usePlaylistSelection } = applyStoreMocks(store);
+
+      render(<MainApp />);
+      appShellProps.onPlaylistSelect({ id: 'p-mock', name: 'Mock' });
+
+      expect(usePlaylistSelection.togglePlaylistSelection).toHaveBeenCalledWith(
+        { id: 'p-mock', name: 'Mock' }
       );
+    });
+
+    it('onPlaylistRemove toggles a playlist that is selected and ignores one that is not', () => {
+      const playlist = { id: 'p1', name: 'Test Playlist' };
+      const { usePlaylistSelection } = applyStoreMocks(store, {
+        usePlaylistSelection: { selectedPlaylists: [playlist] },
+      });
+
+      render(<MainApp />);
+
+      appShellProps.onPlaylistRemove('p1');
+      expect(usePlaylistSelection.togglePlaylistSelection).toHaveBeenCalledWith(
+        playlist
+      );
+
+      usePlaylistSelection.togglePlaylistSelection.mockClear();
+      appShellProps.onPlaylistRemove('not-selected');
+      expect(
+        usePlaylistSelection.togglePlaylistSelection
+      ).not.toHaveBeenCalled();
+    });
+
+    it('onClearAll clears all playlists', () => {
+      const { usePlaylistSelection } = applyStoreMocks(store);
+
+      render(<MainApp />);
+      appShellProps.onClearAll();
+
+      expect(usePlaylistSelection.clearAllPlaylists).toHaveBeenCalled();
+    });
+
+    it('onApplyPreset applies ratio config and options, clearing an existing UI error', () => {
+      const { useRatioConfig, useMixOptions } = applyStoreMocks(store, {
+        useUI: { error: { message: 'previous error' } },
+      });
+
+      render(<MainApp />);
+      appShellProps.onApplyPreset({
+        ratioConfig: {
+          'p-mock': { min: 1, max: 2, weight: 1, weightType: 'frequency' },
+        },
+        strategy: 'mid-peak',
+        settings: { shuffleTracks: true },
+        presetName: 'Mock Preset',
+      });
+
+      expect(useRatioConfig.setRatioConfigBulk).toHaveBeenCalledWith({
+        'p-mock': { min: 1, max: 2, weight: 1, weightType: 'frequency' },
+      });
+      expect(useMixOptions.applyPresetOptions).toHaveBeenCalledWith({
+        settings: { shuffleTracks: true },
+        presetName: 'Mock Preset',
+      });
+      expect(store.setUIError).toHaveBeenCalledWith(null);
+    });
+
+    it('onApplyPreset does not touch the UI error when none exists', () => {
+      applyStoreMocks(store, { useUI: { error: null } });
+
+      render(<MainApp />);
+      appShellProps.onApplyPreset({
+        ratioConfig: {},
+        strategy: 'balanced',
+        settings: {},
+        presetName: 'p',
+      });
+
+      expect(store.setUIError).not.toHaveBeenCalled();
+    });
+
+    it('onDismissError, onDismissSuccess, and onMixedPlaylist forward to the store', () => {
+      const { useUI } = applyStoreMocks(store, {
+        useUI: { error: { message: 'err' }, mixedPlaylists: ['m1'] },
+      });
+
+      render(<MainApp />);
+
+      appShellProps.onDismissError();
+      expect(useUI.dismissError).toHaveBeenCalled();
+
+      appShellProps.onDismissSuccess();
+      expect(useUI.dismissSuccessToast).toHaveBeenCalledWith('');
+
+      appShellProps.onMixedPlaylist({ id: 'mixed-1' });
+      expect(useUI.addMixedPlaylist).toHaveBeenCalledWith({ id: 'mixed-1' });
     });
   });
 });
 
-describe('App', () => {
+describe('App routing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     applyStoreMocks(store);
+    window.history.replaceState({}, '', '/');
   });
 
-  it('renders routes and footer links', () => {
+  it('renders the footer route links', () => {
     render(<App />);
 
     expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
