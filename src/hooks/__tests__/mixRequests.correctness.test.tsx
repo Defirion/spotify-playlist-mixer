@@ -2,7 +2,6 @@ import { act, renderHook } from '@testing-library/react';
 import { useMixPreview } from '../useMixPreview';
 import { useMixGeneration } from '../useMixGeneration';
 import { useTrackSelection } from '../useTrackSelection';
-import usePlaylistTracks from '../usePlaylistTracks';
 import { makePlaylist, makeTrack } from '../../test-utils/mocks/spotify';
 
 vi.unmock('../useMixPreview');
@@ -167,45 +166,6 @@ test('logout cancels an active preview and unmount cancels transport', async () 
   await pending;
 });
 
-test('late playlist results and progress cannot clear the newer request loading state', async () => {
-  const old = deferred<any>(),
-    latest = deferred<any>();
-  getTracks
-    .mockReturnValueOnce(old.promise)
-    .mockReturnValueOnce(latest.promise);
-  const onProgress = vi.fn();
-  const { result, rerender } = renderHook(
-    ({ id }) => usePlaylistTracks('token', id, { onProgress }),
-    { initialProps: { id: 'a' } }
-  );
-  const oldProgress = getTracks.mock.calls[0][1].onProgress;
-  rerender({ id: 'b' });
-  await act(async () => {
-    oldProgress({ loaded: 99, total: 99, percentage: 100 });
-    old.resolve({
-      tracks: [makeTrack({ id: 'stale' })],
-      total: 1,
-      hasMore: false,
-    });
-  });
-  expect(result.current.loading).toBe(true);
-  expect(result.current.tracks).toEqual([]);
-  expect(onProgress).not.toHaveBeenCalled();
-  await act(async () => {
-    latest.resolve({
-      tracks: [makeTrack({ id: 'new' })],
-      total: 10,
-      hasMore: false,
-    });
-  });
-  expect(result.current.tracks[0].id).toBe('new');
-  expect(result.current.progress).toEqual({
-    loaded: 1,
-    total: 10,
-    percentage: 100,
-  });
-});
-
 test('duplicate occurrences can be selected separately', () => {
   const first = { ...makeTrack(), instanceId: 'first' };
   const second = { ...makeTrack(), instanceId: 'second' };
@@ -246,4 +206,47 @@ test('partial save reports the created playlist and never returns full success',
   });
   expect(onError).toHaveBeenCalledWith(expect.stringContaining('destination'));
   expect(result.current.state.loading).toBe(false);
+});
+
+test('late source results cannot clear a newer preview request loading state', async () => {
+  const old = deferred<any>(),
+    latest = deferred<any>();
+  getTracks
+    .mockReturnValueOnce(old.promise)
+    .mockReturnValueOnce(latest.promise);
+  const { result } = renderHook(() => useMixPreview('token'));
+  let previous!: Promise<void>, current!: Promise<void>;
+  act(() => {
+    previous = result.current.generatePreview(playlists, ratios, options);
+  });
+  const oldSignal = getTracks.mock.calls[0][1].signal;
+  act(() => {
+    current = result.current.generatePreview(playlists, ratios, options);
+  });
+  expect(oldSignal.aborted).toBe(true);
+  await act(async () => {
+    old.resolve({
+      tracks: [makeTrack({ id: 'stale' })],
+      total: 1,
+      hasMore: false,
+    });
+    await previous;
+  });
+  expect(result.current.state.loading).toBe(true);
+  expect(result.current.state.preview).toBeNull();
+  await act(async () => {
+    latest.resolve({
+      tracks: [makeTrack({ id: 'new' })],
+      total: 1,
+      hasMore: false,
+    });
+    await current;
+  });
+  expect(result.current.state.loading).toBe(false);
+  expect(result.current.getPreviewTracks().map(track => track.id)).toContain(
+    'new'
+  );
+  expect(
+    result.current.getPreviewTracks().map(track => track.id)
+  ).not.toContain('stale');
 });
