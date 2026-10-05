@@ -39,19 +39,19 @@ describe('mixerUtils remaining branches', () => {
 
   it('calculateTotalDuration skips invalid track entries', () => {
     const tracks: any = [
-      { id: 't1', duration_ms: 1000 },
+      { id: 't1', durationMs: 1000 },
       { id: 't2' },
       null,
-      { id: 't3', duration_ms: 'bad' },
+      { id: 't3', durationMs: 'bad' },
     ];
     expect(calculateTotalDuration(tracks)).toBe(1000);
   });
 
   it('calculateTotalDuration aggregates valid durations from mixed input', () => {
     const tracks = [
-      { id: 'a', duration_ms: 1000 },
+      { id: 'a', durationMs: 1000 },
       { id: 'b' },
-      { id: 'c', duration_ms: 2000 },
+      { id: 'c', durationMs: 2000 },
     ] as any;
     expect(calculateTotalDuration(tracks)).toBe(3000);
   });
@@ -63,7 +63,7 @@ describe('mixerUtils remaining branches', () => {
     const input: any = {
       p1: {
         tracks: [
-          { id: 'ok', uri: 'u', name: 'n', duration_ms: 1 },
+          { id: 'ok', uri: 'u', title: 'n', durationMs: 1 },
           { id: 'bad' },
         ],
       },

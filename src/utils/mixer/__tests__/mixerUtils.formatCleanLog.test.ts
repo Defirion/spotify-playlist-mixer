@@ -44,10 +44,10 @@ describe('cleanPlaylistTracks and logging', () => {
   const validTrack = {
     id: 'track1',
     uri: 'spotify:track:1',
-    name: 'Valid Track',
+    title: 'Valid Track',
   };
-  const invalidTrack = { id: '', uri: '', name: '' };
-  const incompleteTrack = { id: 'track2', name: 'Missing URI' };
+  const invalidTrack = { id: '', uri: '', title: '' };
+  const incompleteTrack = { id: 'track2' };
 
   it('returns empty object for null input', () => {
     expect(cleanPlaylistTracks(null as any)).toEqual({});

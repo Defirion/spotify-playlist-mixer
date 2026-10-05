@@ -18,40 +18,40 @@ describe('calculateTotalDuration', () => {
     expect(calculateTotalDuration([])).toBe(0);
   });
 
-  it('sums valid duration_ms values', () => {
+  it('sums valid durationMs values', () => {
     const tracks = [
-      { duration_ms: 1000 },
-      { duration_ms: 2000 },
-      { duration_ms: 3000 },
+      { durationMs: 1000 },
+      { durationMs: 2000 },
+      { durationMs: 3000 },
     ];
     expect(calculateTotalDuration(tracks as any)).toBe(6000);
   });
 
-  it('ignores tracks without duration_ms', () => {
+  it('ignores tracks without durationMs', () => {
     const tracks = [
-      { duration_ms: 1000 },
-      { name: 'no duration' },
-      { duration_ms: 2000 },
+      { durationMs: 1000 },
+      { title: 'no duration' },
+      { durationMs: 2000 },
     ];
     expect(calculateTotalDuration(tracks as any)).toBe(3000);
   });
 
-  it('ignores tracks with invalid duration_ms', () => {
+  it('ignores tracks with invalid durationMs', () => {
     const tracks = [
-      { duration_ms: 1000 },
-      { duration_ms: 'invalid' },
-      { duration_ms: null },
-      { duration_ms: 2000 },
+      { durationMs: 1000 },
+      { durationMs: 'invalid' },
+      { durationMs: null },
+      { durationMs: 2000 },
     ];
     expect(calculateTotalDuration(tracks as any)).toBe(3000);
   });
 
   it('handles null/undefined tracks in array', () => {
     const tracks = [
-      { duration_ms: 1000 },
+      { durationMs: 1000 },
       null,
       undefined,
-      { duration_ms: 2000 },
+      { durationMs: 2000 },
     ];
     expect(calculateTotalDuration(tracks as any)).toBe(3000);
   });
@@ -76,11 +76,11 @@ describe('validateTrack', () => {
   });
 
   it('returns false when missing id', () => {
-    expect(validateTrack({ uri: 'uri', name: 'name' } as any)).toBe(false);
+    expect(validateTrack({ uri: 'uri', title: 'name' } as any)).toBe(false);
   });
 
-  it('returns false when missing uri', () => {
-    expect(validateTrack({ id: 'id', name: 'name' } as any)).toBe(false);
+  it('accepts provider-neutral tracks without a URI', () => {
+    expect(validateTrack({ id: 'id', title: 'name' } as any)).toBe(true);
   });
 
   it('returns false when missing name', () => {
@@ -88,13 +88,13 @@ describe('validateTrack', () => {
   });
 
   it('returns false for empty string values', () => {
-    expect(validateTrack({ id: '', uri: 'uri', name: 'name' } as any)).toBe(
+    expect(validateTrack({ id: '', uri: 'uri', title: 'name' } as any)).toBe(
       false
     );
-    expect(validateTrack({ id: 'id', uri: '', name: 'name' } as any)).toBe(
-      false
+    expect(validateTrack({ id: 'id', uri: '', title: 'name' } as any)).toBe(
+      true
     );
-    expect(validateTrack({ id: 'id', uri: 'uri', name: '' } as any)).toBe(
+    expect(validateTrack({ id: 'id', uri: 'uri', title: '' } as any)).toBe(
       false
     );
   });
@@ -104,7 +104,7 @@ describe('validateTrack', () => {
       validateTrack({
         id: 'track1',
         uri: 'spotify:track:1',
-        name: 'Song Name',
+        title: 'Song Name',
       } as any)
     ).toBe(true);
   });
@@ -114,9 +114,9 @@ describe('validateTrack', () => {
       validateTrack({
         id: 'track1',
         uri: 'spotify:track:1',
-        name: 'Song Name',
+        title: 'Song Name',
         artist: 'Artist Name',
-        duration_ms: 180000,
+        durationMs: 180000,
       } as any)
     ).toBe(true);
   });

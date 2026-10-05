@@ -1,28 +1,29 @@
 # Spotify Playlist Mixer
 
-Spotify Playlist Mixer is a React/Vite app for combining tracks from several
-Spotify playlists into a new, ratio-controlled playlist. It supports playlist
-selection by URL or search, count- or time-based mixing, optional per-playlist
-shuffling, presets, preview reordering, and saving the result back to Spotify.
+Combine songs from a few Spotify playlists into one. Choose how much each
+playlist contributes, set a song count or listening time, and check the mix
+before saving it to Spotify.
 
-## Current Spotify API support
+You can find playlists by search or URL, shuffle their songs or keep them in
+order, and save your settings as presets. The app is built with React and Vite.
 
-This repository follows Spotify's February 2026 Web API changes:
+## Using the app
 
-- Playlist contents are read from `GET /playlists/{playlist_id}/items`.
-- Playlist items use the `item` field; unavailable items are skipped.
-- New playlists are created with `POST /me/playlists`.
-- Tracks are added and removed through `/playlists/{playlist_id}/items`.
-- Search requests use Spotify's current limit of 5 by default and 10 maximum.
-- Search requests include a browser-market fallback when Spotify cannot infer the
-  user's country from the access token.
-- The removed catalog `popularity` value is not part of the app's types, mixer,
-  UI, presets, or tests. Mixing is based on playlist ratios, track duration,
-  playlist order, and the explicit shuffle setting.
+1. Connect your Spotify account.
+2. Search for playlists or paste their Spotify URLs.
+3. Set how much of the mix should come from each playlist, by song count or
+   listening time.
+4. Choose a song count, a duration, or all songs.
+5. Keep shuffle on to randomize songs within each playlist, or turn it off to
+   use the order Spotify returns.
+6. Preview the mix, move or remove tracks, then save it as a new Spotify playlist.
 
-See the [Spotify Web API February 2026 changelog](https://developer.spotify.com/documentation/web-api/references/changes/february-2026)
-and the [Get Playlist Items reference](https://developer.spotify.com/documentation/web-api/reference/get-playlists-items)
-for the upstream details.
+The mix uses your playlist ratios, song lengths, and ordering settings. It can
+only include playable tracks that Spotify makes available to the app.
+
+Before mixing, exhaustion guidance estimates which source may run out first.
+You can apply suggested ratios based on source sizes or choose to continue with
+remaining playlists. These estimates are advisory; check the generated preview.
 
 ## Prerequisites
 
@@ -48,44 +49,33 @@ for the upstream details.
    npm start
    ```
 
-For the Netlify deployment, set the same `REACT_APP_SPOTIFY_CLIENT_ID` in the
-site's production environment and register the exact production redirect URI
-`https://spotify-mixer.netlify.app/` in the Spotify Developer Dashboard. Vite
-injects this value during the Netlify build, so changing it requires a new
-deploy. The repository includes `netlify.toml` with the build command, `build/`
-publish directory, Node version, and SPA fallback.
+## Deployment
+
+For the Netlify deployment, set `REACT_APP_SPOTIFY_CLIENT_ID` in the site's
+production environment and register `https://spotify-mixer.netlify.app/` as a
+Redirect URI in the Spotify Developer Dashboard. If you host the app elsewhere,
+use that site's URL instead. The redirect URI must match exactly.
+
+Vite reads the Client ID at build time, so deploy again after changing it.
+The included `netlify.toml` sets the build command, `build/` output directory,
+Node version, and routing fallback.
+
+## Spotify access and troubleshooting
 
 The browser flow uses Authorization Code with PKCE. The verifier and state are
 held in `sessionStorage` for the redirect round trip; access tokens remain in
 memory. Never commit `.env` or a Client ID.
 
-Spotify Development Mode also requires the app owner to have an active Premium
-subscription and every signed-in user to be allowlisted. Spotify may allow the
-OAuth login before enforcing those requirements at the Web API, which appears
-in the app as HTTP 403. Spotify later postponed the reduced endpoint-access
-rollout for existing integrations; the Premium requirement and five-user cap
-still apply. A later July 2026 update raised the Client ID limit from one to 25
-per developer account and made Development Mode quota account-wide. Spotify's
-current scopes documentation lists Search and `GET /me` under
-`user-read-private`, so the mixer requests that scope in addition to its
-playlist scopes. The authenticated app includes a user-triggered Spotify
-diagnostics panel that compares `/me`, `/me/playlists`, and `/search`, shows the
-scope names Spotify reports as granted, and never displays access tokens or
-profile fields. It also provides an explicit fresh-approval reconnect for
-troubleshooting previously authorized sessions.
+If you can sign in but get a 403 error when loading playlists or searching,
+check the app's Development Mode access settings. The app owner needs an active
+Premium subscription, and signed-in users need to be on the app's allowlist.
+Some playlist contents may also require owner or collaborator access.
 
-## Using the app
+After signing in, you can open the Spotify diagnostics panel to check playlist
+and search access. It does not display tokens or profile data.
 
-1. Connect your Spotify account.
-2. Add playlists by searching or pasting Spotify playlist URLs.
-3. Set each playlist's ratio using frequency or listening-time weighting.
-4. Choose all songs, a song count, or a duration target.
-5. Leave shuffle enabled for randomized source-playlist order, or disable it to
-   preserve each playlist's returned order.
-6. Preview, reorder, or remove tracks, then create the new Spotify playlist.
-
-The app only mixes playable tracks returned by Spotify. Playlist contents can
-require owner or collaborator access under Spotify's current permissions.
+See [Spotify API migration notes](docs/SPOTIFY_API_MIGRATION.md) for endpoint
+details and the history of Spotify's access changes.
 
 ## Development commands
 
@@ -107,8 +97,8 @@ src/
 ├── hooks/            # Spotify, preview, and mix-generation hooks
 ├── services/         # Spotify API, PKCE auth, fetch client
 ├── store/            # Zustand state slices
-├── types/            # Spotify and application contracts
-└── utils/mixer/      # Ratio-aware mixing and shuffling logic
+├── types/            # Spotify and app data types
+└── utils/mixer/      # Playlist mixing and shuffling
 docs/
 └── SPOTIFY_API_MIGRATION.md
 ```
@@ -116,8 +106,8 @@ docs/
 ## Contributing
 
 Please run `npm run build`, `npm test`, and `npm run lint` before opening a
-pull request. Keep Spotify response fixtures aligned with the current `items`
-shape and do not reintroduce popularity-based behavior.
+pull request. When changing Spotify integration code, keep the response fixtures
+consistent with the `items` format used by the app.
 
 ## License
 

@@ -137,6 +137,7 @@ const AppShell: React.FC<AppShellProps> = ({
               ratioConfig={ratioConfig ?? {}}
               mixOptions={mixOptions || ({} as any)}
               updateMixOptions={updateMixOptions || (() => {})}
+              onRatioUpdate={onRatioUpdate}
               onMixedPlaylist={onMixedPlaylist ?? (() => {})}
               onError={onError ?? (() => {})}
             />

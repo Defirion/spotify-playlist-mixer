@@ -1,6 +1,6 @@
 // Utility functions for the playlist mixer
 
-import { SpotifyTrack } from '../../types/spotify';
+import { Track } from '../../types/domain';
 import { PlaylistTracks, DebugInfo } from './types';
 
 /**
@@ -42,7 +42,7 @@ export const safeObjectKeys = (obj: any): string[] => {
 /**
  * Calculate total duration for a set of tracks (in milliseconds)
  */
-export const calculateTotalDuration = (tracks: SpotifyTrack[]): number => {
+export const calculateTotalDuration = (tracks: Track[]): number => {
   if (!Array.isArray(tracks)) {
     const _testVerbose = String(process.env.TEST_VERBOSE || '').toLowerCase();
     if (
@@ -58,27 +58,26 @@ export const calculateTotalDuration = (tracks: SpotifyTrack[]): number => {
   }
 
   return tracks.reduce((total, track) => {
-    if (!track || typeof track.duration_ms !== 'number') {
+    if (!track || typeof track.durationMs !== 'number') {
       return total;
     }
-    return total + track.duration_ms;
+    return total + track.durationMs;
   }, 0);
 };
 
 /**
  * Validate that a track object has the required properties
  */
-export const validateTrack = (track: any): track is SpotifyTrack => {
+export const validateTrack = (track: any): track is Track => {
   if (!track || typeof track !== 'object') {
     return false;
   }
 
   // Check for required properties
   const hasId = typeof track.id === 'string' && track.id.length > 0;
-  const hasUri = typeof track.uri === 'string' && track.uri.length > 0;
-  const hasName = typeof track.name === 'string' && track.name.length > 0;
+  const hasName = typeof track.title === 'string' && track.title.length > 0;
 
-  return hasId && hasUri && hasName;
+  return hasId && hasName;
 };
 
 /**

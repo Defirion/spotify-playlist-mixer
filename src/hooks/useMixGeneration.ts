@@ -1,14 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { mixPlaylists } from '../utils/mixer';
-import SpotifyService from '../services/spotify';
-import {
-  SpotifyPlaylist,
-  SpotifyTrack,
-  MixOptions,
-  RatioConfig,
-  MixedTrack,
-} from '../types';
-import normalizeMixResult from '../utils/normalizeMixResult';
+import { mixPlaylistsWithResult as mixPlaylists } from '../utils/mixer';
+import SpotifyGateway from '../services/spotifyGateway';
+import { normalizeSpotifyPlaylist } from '../services/spotifyNormalizer';
+import { Track } from '../types/domain';
+import { SpotifyPlaylist, MixOptions, RatioConfig, MixedTrack } from '../types';
 
 interface MixGenerationState {
   loading: boolean;
@@ -89,7 +84,7 @@ export const useMixGeneration = (
     stoppedEarly: false,
   });
 
-  const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const gatewayRef = useRef<SpotifyGateway | null>(null);
   const currentCallIdRef = useRef(0); // per-generateMix invocation guard
   const tokenVersionRef = useRef(0); // increments when accessToken changes
   const requestRef = useRef<AbortController | null>(null);
@@ -108,14 +103,14 @@ export const useMixGeneration = (
     [onEvent]
   );
 
-  // Initialize Spotify service
+  // Initialize the Spotify adapter
   useEffect(() => {
     requestRef.current?.abort();
     setState(prev => ({ ...prev, loading: savingRef.current }));
     if (accessToken) {
-      spotifyServiceRef.current = new SpotifyService(accessToken);
+      gatewayRef.current = new SpotifyGateway(accessToken);
     } else {
-      spotifyServiceRef.current = null;
+      gatewayRef.current = null;
     }
     tokenVersionRef.current++; // bump version so stale calls abort
     return () => {
@@ -135,8 +130,8 @@ export const useMixGeneration = (
       requestRef.current?.abort();
       const controller = new AbortController();
       requestRef.current = controller;
-      const service = spotifyServiceRef.current;
-      if (!spotifyServiceRef.current) {
+      const service = gatewayRef.current;
+      if (!gatewayRef.current) {
         throw new Error('Spotify service not available');
       }
 
@@ -155,7 +150,7 @@ export const useMixGeneration = (
         // Fetch all tracks in parallel (Promise.allSettled for robust partial failure handling)
         const fetchSpecs = selectedPlaylists.map(pl => ({
           playlist: pl,
-          promise: service!.getPlaylistTracks(pl.id, {
+          promise: service!.getPlaylist(normalizeSpotifyPlaylist(pl), {
             signal: controller.signal,
           }),
         }));
@@ -166,7 +161,7 @@ export const useMixGeneration = (
         if (controller.signal.aborted)
           throw new DOMException('Request canceled', 'AbortError');
 
-        const playlistTracks: Record<string, SpotifyTrack[]> = {};
+        const playlistTracks: Record<string, Track[]> = {};
         settledResults.forEach((res, idx) => {
           const { playlist } = fetchSpecs[idx];
           if (res.status === 'fulfilled') {
@@ -217,12 +212,13 @@ export const useMixGeneration = (
         // Generate mix using the standard algorithm
         const mixResult = mixPlaylists(playlistTracks, ratioConfig, mixOptions);
 
-        // Normalize the mix result into a predictable shape
+        // Keep canonical results separate from editor DTOs
         const {
-          tracks: mixedTracks,
+          tracks: domainTracks,
           exhaustedPlaylists,
           stoppedEarly,
-        } = normalizeMixResult(mixResult);
+        } = mixResult;
+        const mixedTracks = service!.toDisplayTracks(domainTracks);
 
         if (mixedTracks.length === 0) {
           throw new Error('Failed to mix playlists - no tracks generated');
@@ -296,10 +292,9 @@ export const useMixGeneration = (
     async (playlistName: string, tracks: MixedTrack[]) => {
       if (savingRef.current)
         throw new Error('A playlist save is already in progress');
-      const service = spotifyServiceRef.current;
+      const service = gatewayRef.current;
       const tokenVersion = tokenVersionRef.current;
-      let createdPlaylist: SpotifyPlaylist | null = null;
-      if (!spotifyServiceRef.current) {
+      if (!gatewayRef.current) {
         throw new Error('Spotify service not available');
       }
       savingRef.current = true;
@@ -319,14 +314,6 @@ export const useMixGeneration = (
           throw new Error('No tracks to add to playlist');
         }
 
-        // Create new playlist
-        const newPlaylist = await service!.createPlaylist({
-          name: playlistName.trim(),
-          description: `Mixed playlist created with Spotify Playlist Mixer`,
-          public: false,
-        });
-        createdPlaylist = newPlaylist;
-
         // Extract track URIs
         const trackUris = tracks
           .filter(track => {
@@ -344,12 +331,11 @@ export const useMixGeneration = (
           throw new Error('No valid track URIs found');
         }
 
-        // Add tracks to playlist
-        if (tokenVersion !== tokenVersionRef.current)
-          throw new Error('Spotify session changed during saving');
-        await service!.addTracksToPlaylist(newPlaylist.id, {
-          uris: trackUris,
-        });
+        const newPlaylist = await service!.saveDisplayPlaylist(
+          playlistName.trim(),
+          tracks.filter(track => track && track.uri),
+          { isSessionCurrent: () => tokenVersion === tokenVersionRef.current }
+        );
 
         // Calculate total duration for display
         const totalDuration = tracks.reduce(
@@ -371,10 +357,7 @@ export const useMixGeneration = (
       } catch (err) {
         const originalMessage =
           err instanceof Error ? err.message : 'Unknown error occurred';
-        const confirmed = (err as any)?.context?.confirmedTracks ?? 0;
-        const errorMessage = createdPlaylist
-          ? `Playlist "${createdPlaylist.name}" was created, but saving is incomplete: ${confirmed} of ${tracks.length} tracks confirmed saved. The last request may have succeeded. Open ${createdPlaylist.external_urls?.spotify || `https://open.spotify.com/playlist/${createdPlaylist.id}`} and check its contents before creating another mix. ${originalMessage}`
-          : originalMessage;
+        const errorMessage = originalMessage;
         setState(prev => ({
           ...prev,
           loading: false,
@@ -385,7 +368,6 @@ export const useMixGeneration = (
           onError('Failed to create mixed playlist: ' + errorMessage);
         }
 
-        if (createdPlaylist) throw new Error(errorMessage);
         throw err;
       } finally {
         savingRef.current = false;

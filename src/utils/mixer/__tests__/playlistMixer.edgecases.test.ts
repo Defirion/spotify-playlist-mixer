@@ -67,10 +67,10 @@ describe('playlistMixer edge cases', () => {
     ratioConfig.x.weightType = 'time';
     const playlistTracks = {
       x: [
-        makeTrack('x1', { duration_ms: 180000 }),
-        makeTrack('x2', { duration_ms: 180000 }),
-        makeTrack('x3', { duration_ms: 180000 }),
-        makeTrack('x4', { duration_ms: 180000 }),
+        makeTrack('x1', { durationMs: 180000 }),
+        makeTrack('x2', { durationMs: 180000 }),
+        makeTrack('x3', { durationMs: 180000 }),
+        makeTrack('x4', { durationMs: 180000 }),
       ],
     };
 

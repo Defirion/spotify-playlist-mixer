@@ -1,6 +1,6 @@
 // Track shuffling and randomization utilities.
 
-import { SpotifyTrack } from '../../types/spotify';
+import { Track } from '../../types/domain';
 
 /**
  * Shuffle array using Fisher-Yates algorithm
@@ -18,8 +18,8 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 
 /** Shuffle each playlist independently without mutating the input map. */
 export const shufflePlaylistTracks = (
-  playlistTracks: Record<string, SpotifyTrack[]>
-): Record<string, SpotifyTrack[]> =>
+  playlistTracks: Record<string, Track[]>
+): Record<string, Track[]> =>
   Object.fromEntries(
     Object.entries(playlistTracks).map(([playlistId, tracks]) => [
       playlistId,
@@ -34,9 +34,9 @@ export const shufflePlaylistTracks = (
  * @returns Random track from the array, or null if no valid tracks available
  */
 export const getRandomTrack = (
-  tracks: SpotifyTrack[],
+  tracks: Track[],
   excludeIds?: Set<string>
-): SpotifyTrack | null => {
+): Track | null => {
   if (!tracks || tracks.length === 0) {
     return null;
   }
@@ -62,10 +62,10 @@ export const getRandomTrack = (
  * @returns Array of random tracks (may be fewer than requested if not enough available)
  */
 export const getRandomTracks = (
-  tracks: SpotifyTrack[],
+  tracks: Track[],
   count: number,
   excludeIds?: Set<string>
-): SpotifyTrack[] => {
+): Track[] => {
   if (!tracks || tracks.length === 0 || count <= 0) {
     return [];
   }

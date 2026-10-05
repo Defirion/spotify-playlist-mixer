@@ -1,13 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { mixPlaylists } from '../utils/mixer';
-import SpotifyService from '../services/spotify';
-import {
-  SpotifyPlaylist,
-  SpotifyTrack,
-  MixOptions,
-  RatioConfig,
-  MixedTrack,
-} from '../types';
+import { mixPlaylistsWithResult as mixPlaylists } from '../utils/mixer';
+import SpotifyGateway from '../services/spotifyGateway';
+import { normalizeSpotifyPlaylist } from '../services/spotifyNormalizer';
+import { Track } from '../types/domain';
+import { SpotifyPlaylist, MixOptions, RatioConfig, MixedTrack } from '../types';
 
 interface PlaylistStats {
   [playlistId: string]: {
@@ -65,10 +61,10 @@ export const useMixPreview = (
     customTrackOrder: null,
   });
 
-  const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const gatewayRef = useRef<SpotifyGateway | null>(null);
   const requestRef = useRef<AbortController | null>(null);
 
-  // Initialize Spotify service
+  // Initialize the Spotify adapter
   useEffect(() => {
     requestRef.current?.abort();
     // Token renewal cancels in-flight loading without discarding an edited,
@@ -84,9 +80,9 @@ export const useMixPreview = (
           }
     );
     if (accessToken) {
-      spotifyServiceRef.current = new SpotifyService(accessToken);
+      gatewayRef.current = new SpotifyGateway(accessToken);
     } else {
-      spotifyServiceRef.current = null;
+      gatewayRef.current = null;
     }
     return () => {
       requestRef.current?.abort();
@@ -145,7 +141,7 @@ export const useMixPreview = (
       requestRef.current?.abort();
       const controller = new AbortController();
       requestRef.current = controller;
-      const service = spotifyServiceRef.current;
+      const service = gatewayRef.current;
       if (!service) {
         const error = 'Spotify service not available';
         setState(prev => ({ ...prev, error }));
@@ -163,11 +159,14 @@ export const useMixPreview = (
 
       try {
         // Fetch all tracks from selected playlists
-        const playlistTracks: Record<string, SpotifyTrack[]> = {};
+        const playlistTracks: Record<string, Track[]> = {};
         for (const playlist of selectedPlaylists) {
-          const result = await service.getPlaylistTracks(playlist.id, {
-            signal: controller.signal,
-          });
+          const result = await service.getPlaylist(
+            normalizeSpotifyPlaylist(playlist),
+            {
+              signal: controller.signal,
+            }
+          );
           if (controller.signal.aborted) return;
           playlistTracks[playlist.id] = result.tracks;
         }
@@ -175,45 +174,8 @@ export const useMixPreview = (
         // Generate full sample using actual settings
         const mixResult = mixPlaylists(playlistTracks, ratioConfig, mixOptions);
 
-        // Handle different return types from mixPlaylists
-        let previewTracks: MixedTrack[] = [];
-        let exhaustedPlaylists: string[] = [];
-        let stoppedEarly = false;
-
-        if (mixResult === null || mixResult === undefined) {
-          console.error('mixResult is null or undefined');
-          previewTracks = [];
-        } else if (Array.isArray(mixResult)) {
-          previewTracks = [...mixResult];
-          exhaustedPlaylists = (mixResult as any).exhaustedPlaylists || [];
-          stoppedEarly = (mixResult as any).stoppedEarly || false;
-        } else if (mixResult && typeof mixResult === 'object') {
-          const resultObj = mixResult as any;
-          if (Array.isArray(resultObj.tracks)) {
-            previewTracks = [...resultObj.tracks];
-          } else {
-            console.error(
-              'mixResult.tracks is not an array:',
-              resultObj.tracks
-            );
-            previewTracks = [];
-          }
-          exhaustedPlaylists = resultObj.exhaustedPlaylists || [];
-          stoppedEarly = resultObj.stoppedEarly || false;
-        } else {
-          console.error(
-            'mixResult is not an array or object:',
-            typeof mixResult,
-            mixResult
-          );
-          previewTracks = [];
-        }
-
-        // Final safety check
-        if (!Array.isArray(previewTracks)) {
-          console.error('previewTracks is not an array after processing!');
-          previewTracks = [];
-        }
+        const { tracks, exhaustedPlaylists, stoppedEarly } = mixResult;
+        const previewTracks = service.toDisplayTracks(tracks);
 
         // Calculate statistics
         const playlistStats = calculatePlaylistStats(

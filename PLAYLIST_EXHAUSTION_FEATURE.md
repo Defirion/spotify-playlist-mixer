@@ -99,9 +99,15 @@ This feature addresses the issue where the playlist mixer would continue adding 
 
 ## Future Enhancements
 
+Pre-mixing exhaustion predictions and ratio suggestions were added locally on
+5 October 2026. The warning estimates the first source to run out, explains the
+stop/continue policy, and offers source-size ratios through an explicit
+**Apply suggested ratios** button. Song-count balancing uses source counts;
+listening-time balancing uses estimated source duration. Estimates account for
+different average song lengths across sources. See
+[exhaustion guidance](docs/mixer-exhaustion-guidance.md) for limits and verification.
+
 Potential improvements could include:
 
 - Playlist-specific exhaustion handling
 - Advanced balancing algorithms when playlists are exhausted
-- Automatic ratio adjustment suggestions
-- Pre-mixing exhaustion predictions with recommendations

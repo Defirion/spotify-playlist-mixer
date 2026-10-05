@@ -1,12 +1,12 @@
 // Types used by the playlist mixer.
 
-import { SpotifyTrack } from '../../types/spotify';
+import { Track } from '../../types/domain';
 
 export interface PlaylistTracks {
-  [playlistId: string]: SpotifyTrack[];
+  [playlistId: string]: Track[];
 }
 
-export type { MixedTrack } from '../../types/mixer';
+export type { MixedTrack } from '../../types/domain';
 
 export interface DebugInfo {
   level: 'info' | 'warn' | 'error';

@@ -50,6 +50,7 @@ export interface SpotifyTrack {
   disc_number?: number;
   is_local?: boolean;
   is_playable?: boolean;
+  external_ids?: { isrc?: string };
   // Custom properties for our app
   sourcePlaylist?: string;
   sourcePlaylistName?: string;

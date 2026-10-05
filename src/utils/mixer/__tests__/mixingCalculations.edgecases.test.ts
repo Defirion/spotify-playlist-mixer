@@ -17,14 +17,14 @@ describe('mixingCalculations edge cases', () => {
       p1: Array.from({ length: 5 }, (_, i) => ({
         id: String(i),
         uri: 'u',
-        name: 'n',
-        duration_ms: 180000,
+        title: 'n',
+        durationMs: 180000,
       })),
       p2: Array.from({ length: 10 }, (_, i) => ({
         id: String(i + 10),
         uri: 'u',
-        name: 'n',
-        duration_ms: 240000,
+        title: 'n',
+        durationMs: 240000,
       })),
     };
     const ratioConfig: any = {
@@ -56,8 +56,8 @@ describe('mixingCalculations edge cases', () => {
       a: new Array(3).fill({
         id: '1',
         uri: 'u',
-        name: 'n',
-        duration_ms: 200000,
+        title: 'n',
+        durationMs: 200000,
       }),
     };
     const ratioConfig: any = { a: { weight: 1 } };
@@ -85,7 +85,7 @@ describe('mixingCalculations edge cases', () => {
       targetDurationSeconds: 60,
       totalSongs: 10,
     };
-    const mixedTracks = [{ duration_ms: 30 * 1000 }]; // 0.5 min
+    const mixedTracks = [{ durationMs: 30 * 1000 }]; // 0.5 min
     expect(
       shouldContinueMixing(optionsTime, mixedTracks as any, 0, { p1: false })
     ).toBe(true);

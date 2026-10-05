@@ -15,11 +15,11 @@ const run = <T>(fn: () => Promise<T>) => fn();
 function makeTracks(n: number, prefix = '') {
   return Array.from({ length: n }, (_, i) => ({
     id: `${prefix}t${i}`,
-    name: `Track ${prefix}${i}`,
-    uri: `spotify:track:${prefix}t${i}`,
-    duration_ms: 180000,
-    artists: [{ id: `${prefix}a${i}`, name: `Artist ${i}` }],
-    album: { id: `${prefix}al${i}`, name: `Album ${i}` },
+    title: `Track ${prefix}${i}`,
+    durationMs: 180000,
+    artists: [`Artist ${i}`],
+    sourceRefs: [],
+    album: `Album ${i}`,
   }));
 }
 
@@ -41,7 +41,7 @@ test('mixPlaylists performance - 1000 tracks', async () => {
     const p2Count = Math.floor(TOTAL * 0.3);
     const p3Count = TOTAL - p1Count - p2Count;
 
-    // Construct playlistTracks as expected by mixer types: { [playlistId]: SpotifyTrack[] }
+    // Construct playlistTracks as expected by mixer types: { [playlistId]: Track[] }
     const playlistTracks: any = {
       p1: makeTracks(p1Count, 'p1-'),
       p2: makeTracks(p2Count, 'p2-'),

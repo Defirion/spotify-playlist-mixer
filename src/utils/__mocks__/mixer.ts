@@ -1,2 +1,1 @@
-// Manual mock for utils/mixer
-export const mixPlaylists = vi.fn();
+export const mixPlaylistsWithResult = vi.fn();

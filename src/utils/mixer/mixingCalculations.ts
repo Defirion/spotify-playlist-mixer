@@ -223,10 +223,10 @@ export const addSongsFromPlaylist = (
     });
     usedTrackIds.add(track.id);
     playlistCounts[playlistId]++;
-    playlistDurations[playlistId] += track.duration_ms || 0;
+    playlistDurations[playlistId] += track.durationMs || 0;
     songsAdded++;
 
-    logDebugInfo('info', `Added ${track.name} from playlist ${playlistId}`);
+    logDebugInfo('info', `Added ${track.title} from playlist ${playlistId}`);
   }
 
   return songsAdded;

@@ -9,90 +9,14 @@ import {
 import { PlaylistTracks } from '../types';
 import { MixOptions, RatioConfig } from '../../../types/mixer';
 
-// Mock data
+import { makeTrack } from './fixtures';
+
 const mockPlaylistTracks: PlaylistTracks = {
   playlist1: [
-    {
-      id: '1',
-      name: 'Song 1',
-      uri: 'spotify:track:1',
-      artists: [
-        {
-          id: 'artist1',
-          name: 'Artist 1',
-          uri: 'spotify:artist:1',
-          external_urls: { spotify: '' },
-        },
-      ],
-      album: {
-        id: 'album1',
-        name: 'Album 1',
-        images: [],
-        release_date: '2023-01-01',
-        uri: 'spotify:album:1',
-        external_urls: { spotify: '' },
-      },
-      duration_ms: 180000,
-      explicit: false,
-      preview_url: null,
-      track_number: 1,
-      external_urls: { spotify: '' },
-    },
-    {
-      id: '2',
-      name: 'Song 2',
-      uri: 'spotify:track:2',
-      artists: [
-        {
-          id: 'artist2',
-          name: 'Artist 2',
-          uri: 'spotify:artist:2',
-          external_urls: { spotify: '' },
-        },
-      ],
-      album: {
-        id: 'album2',
-        name: 'Album 2',
-        images: [],
-        release_date: '2022-01-01',
-        uri: 'spotify:album:2',
-        external_urls: { spotify: '' },
-      },
-      duration_ms: 200000,
-      explicit: false,
-      preview_url: null,
-      track_number: 1,
-      external_urls: { spotify: '' },
-    },
+    makeTrack('1', { id: '1', durationMs: 180000 }),
+    makeTrack('2', { id: '2', durationMs: 200000 }),
   ],
-  playlist2: [
-    {
-      id: '3',
-      name: 'Song 3',
-      uri: 'spotify:track:3',
-      artists: [
-        {
-          id: 'artist3',
-          name: 'Artist 3',
-          uri: 'spotify:artist:3',
-          external_urls: { spotify: '' },
-        },
-      ],
-      album: {
-        id: 'album3',
-        name: 'Album 3',
-        images: [],
-        release_date: '2021-01-01',
-        uri: 'spotify:album:3',
-        external_urls: { spotify: '' },
-      },
-      duration_ms: 190000,
-      explicit: false,
-      preview_url: null,
-      track_number: 1,
-      external_urls: { spotify: '' },
-    },
-  ],
+  playlist2: [makeTrack('3', { id: '3', durationMs: 190000 })],
 };
 
 const mockRatioConfig: RatioConfig = {
@@ -202,9 +126,7 @@ describe('Playlist Mixer Orchestrator', () => {
 
       expect(result).toHaveLength(3);
       expect(result.every(track => track.sourcePlaylist)).toBe(true);
-      expect(result.every(track => track.id && track.name && track.uri)).toBe(
-        true
-      );
+      expect(result.every(track => track.id && track.title)).toBe(true);
     });
 
     it('should respect playlist ratios', () => {

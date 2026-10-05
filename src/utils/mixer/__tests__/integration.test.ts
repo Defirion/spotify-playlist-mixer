@@ -1,27 +1,15 @@
 // Integration test to verify all utility functions work together
 
 import * as MixerUtils from '../mixerUtils';
-import { SpotifyTrack } from '../../../types/spotify';
+import { Track } from '../../../types/domain';
 
 describe('Mixer Utils Integration', () => {
-  const createMockTrack = (id: string, duration_ms: number): SpotifyTrack => ({
+  const createMockTrack = (id: string, durationMs: number): Track => ({
     id,
-    uri: `spotify:track:${id}`,
-    name: `Track ${id}`,
-    duration_ms,
-    explicit: false,
-    preview_url: null,
-    track_number: 1,
-    artists: [],
-    album: {
-      id: 'album-id',
-      name: 'Test Album',
-      release_date: '2023-01-01',
-      images: [],
-      uri: 'spotify:album:test',
-      external_urls: { spotify: 'https://open.spotify.com/album/test' },
-    },
-    external_urls: { spotify: `https://open.spotify.com/track/${id}` },
+    title: `Track ${id}`,
+    durationMs,
+    artists: ['Artist'],
+    sourceRefs: [],
   });
 
   it('should export all required utility functions', () => {
@@ -38,7 +26,7 @@ describe('Mixer Utils Integration', () => {
     const rawPlaylistData = {
       playlist1: [
         createMockTrack('track1', 180000),
-        { id: '', uri: '', name: '' }, // Invalid track
+        { id: '', uri: '', title: '' }, // Invalid track
         createMockTrack('track2', 240000),
       ],
       playlist2: [createMockTrack('track3', 210000)],

@@ -1,3 +1,4 @@
+import SpotifyGateway from '../../services/spotifyGateway';
 import React from 'react';
 import { act, render } from '@testing-library/react';
 import { useMixPreview } from '../useMixPreview';
@@ -27,7 +28,7 @@ const { mockMixPlaylists, mockGetPlaylistTracks, MockSpotifyService } =
   });
 
 vi.mock('../../utils/mixer', () => ({
-  mixPlaylists: (...args: any[]) => mockMixPlaylists(...args),
+  mixPlaylistsWithResult: (...args: any[]) => mockMixPlaylists(...args),
 }));
 
 vi.mock('../../services/spotify', () => ({
@@ -70,6 +71,9 @@ describe('useMixPreview', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(SpotifyGateway.prototype, 'toDisplayTracks').mockImplementation(
+      tracks => tracks as any
+    );
     mockGetPlaylistTracks.mockImplementation(async (pid: string) => ({
       tracks: pid === 'p1' ? [makeTrack('t1', 'p1')] : [makeTrack('t2', 'p2')],
     }));
@@ -79,13 +83,14 @@ describe('useMixPreview', () => {
 
   afterEach(() => {
     consoleErrorSpy?.mockRestore?.();
+    vi.mocked(SpotifyGateway.prototype.toDisplayTracks).mockRestore();
   });
 
-  test('generates preview with per-playlist stats and total duration for array result', async () => {
+  test('generates preview with per-playlist stats and total duration for canonical result', async () => {
     const arr: any = [makeTrack('a', 'p1'), makeTrack('b', 'p2')];
     arr.exhaustedPlaylists = [];
     arr.stoppedEarly = false;
-    mockMixPlaylists.mockReturnValue(arr);
+    mockMixPlaylists.mockReturnValue(makeMixResult(arr));
     const utils = renderUseMixPreview('token');
     await act(async () => {
       await utils.generatePreview(
@@ -102,11 +107,13 @@ describe('useMixPreview', () => {
   });
 
   test('handles object-form mixer result and recalculates stats', async () => {
-    mockMixPlaylists.mockReturnValue({
-      tracks: [makeTrack('a', 'p1'), makeTrack('b', 'p2')],
-      exhaustedPlaylists: [],
-      stoppedEarly: false,
-    });
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult({
+        tracks: [makeTrack('a', 'p1'), makeTrack('b', 'p2')],
+        exhaustedPlaylists: [],
+        stoppedEarly: false,
+      })
+    );
     const utils = renderUseMixPreview('token');
     await act(async () => {
       await utils.generatePreview(
@@ -125,7 +132,7 @@ describe('useMixPreview', () => {
       throw new Error('playlist fetch failed');
     });
 
-    mockMixPlaylists.mockReturnValue([makeTrack('a', 'p1')]);
+    mockMixPlaylists.mockReturnValue(makeMixResult([makeTrack('a', 'p1')]));
     const onError = vi.fn();
     const utils = renderUseMixPreview('token', { onError });
     await act(async () => {
@@ -152,24 +159,14 @@ describe('useMixPreview', () => {
     expect(onError).toHaveBeenCalledWith('Spotify service not available');
   });
 
-  test('handles null mixResult gracefully', async () => {
-    mockMixPlaylists.mockReturnValue(null);
-    const utils = renderUseMixPreview('token');
-
-    await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
-    });
-
-    expect(utils.state.preview).not.toBeNull();
-    expect(utils.state.preview!.tracks.length).toBe(0);
-  });
-
-  test('object mixResult with non-array tracks preserves exhausted/stopped flags', async () => {
-    mockMixPlaylists.mockReturnValue({
-      tracks: 'not-an-array',
-      exhaustedPlaylists: ['p1'],
-      stoppedEarly: true,
-    });
+  test('empty mix preserves exhausted/stopped flags', async () => {
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult({
+        tracks: [],
+        exhaustedPlaylists: ['p1'],
+        stoppedEarly: true,
+      })
+    );
 
     const utils = renderUseMixPreview('token');
 
@@ -184,10 +181,9 @@ describe('useMixPreview', () => {
   });
 
   test('updateTrackOrder sets custom order and getPreviewTracks returns it', async () => {
-    mockMixPlaylists.mockReturnValue([
-      makeTrack('a', 'p1', 60000),
-      makeTrack('b', 'p2', 60000),
-    ]);
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult([makeTrack('a', 'p1', 60000), makeTrack('b', 'p2', 60000)])
+    );
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
@@ -211,10 +207,9 @@ describe('useMixPreview', () => {
   test('calculates search tracks stats when search tracks present', async () => {
     // Make tracks with search sourcePlaylist to trigger lines 108-112
     const searchTrack = { ...makeTrack('search1', 'search', 60000) };
-    mockMixPlaylists.mockReturnValue([
-      makeTrack('a', 'p1', 60000),
-      searchTrack,
-    ]);
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult([makeTrack('a', 'p1', 60000), searchTrack])
+    );
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
@@ -227,26 +222,12 @@ describe('useMixPreview', () => {
     expect(utils.state.preview!.stats['search'].count).toBe(1);
   });
 
-  test('handles non-array and non-object mixResult types', async () => {
-    // Return a string instead of array/object to trigger lines 182-187
-    mockMixPlaylists.mockReturnValue('invalid-type' as any);
-    const utils = renderUseMixPreview('token');
-
-    await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
-    });
-
-    // Should result in empty tracks due to error handling
-    expect(utils.state.preview!.tracks).toEqual([]);
-  });
-
   test('updateTrackOrder recalculates search stats when search tracks present', async () => {
     // Setup with search track to trigger lines 262-266 in updateTrackOrder
     const searchTrack = { ...makeTrack('search1', 'search', 60000) };
-    mockMixPlaylists.mockReturnValue([
-      makeTrack('a', 'p1', 60000),
-      searchTrack,
-    ]);
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult([makeTrack('a', 'p1', 60000), searchTrack])
+    );
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
@@ -266,7 +247,9 @@ describe('useMixPreview', () => {
 
   test('clearPreview resets all state', async () => {
     // Setup some preview state first
-    mockMixPlaylists.mockReturnValue([makeTrack('a', 'p1', 60000)]);
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult([makeTrack('a', 'p1', 60000)])
+    );
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
@@ -288,10 +271,9 @@ describe('useMixPreview', () => {
 
   test('getPreviewTracks returns original tracks when no custom order', async () => {
     // Test line 309 - when customTrackOrder is null or empty
-    mockMixPlaylists.mockReturnValue([
-      makeTrack('a', 'p1', 60000),
-      makeTrack('b', 'p2', 60000),
-    ]);
+    mockMixPlaylists.mockReturnValue(
+      makeMixResult([makeTrack('a', 'p1', 60000), makeTrack('b', 'p2', 60000)])
+    );
     const utils = renderUseMixPreview('token');
 
     await act(async () => {
@@ -315,24 +297,6 @@ describe('useMixPreview', () => {
     // Should now return custom order
     expect(utils.getPreviewTracks()).toEqual(customOrder);
     expect(utils.getPreviewTracks()).not.toEqual(originalTracks);
-  });
-
-  test('handles edge case where previewTracks becomes non-array after processing', async () => {
-    // Create an object that has a tracks property that's not an array
-    // This should trigger the final safety check on lines 192-193
-    mockMixPlaylists.mockReturnValue({
-      tracks: null, // This will cause previewTracks to be null
-      exhaustedPlaylists: [],
-      stoppedEarly: false,
-    });
-    const utils = renderUseMixPreview('token');
-
-    await act(async () => {
-      await utils.generatePreview([makePlaylist('p1')] as any, {}, {} as any);
-    });
-
-    // Should result in empty array due to safety check
-    expect(utils.state.preview!.tracks).toEqual([]);
   });
 
   test('handles missing onError callback in error scenarios', async () => {
@@ -387,3 +351,10 @@ describe('useMixPreview', () => {
     expect(utils.state.customTrackOrder).toBeNull();
   });
 });
+
+// Unit fixtures use display tracks; the presentation conversion is mocked above.
+function makeMixResult(tracksOrResult: any): any {
+  return Array.isArray(tracksOrResult)
+    ? { tracks: tracksOrResult, exhaustedPlaylists: [], stoppedEarly: false }
+    : { exhaustedPlaylists: [], stoppedEarly: false, ...tracksOrResult };
+}

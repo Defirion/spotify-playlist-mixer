@@ -138,7 +138,9 @@ This is design direction, not code to implement during the current repair.
 
 ## Current Scaffold
 
-The provider-boundary repair may add only:
+Implemented for the first mixing path on 5 October 2026: provider-neutral models and source/destination contracts in `src/types/domain.ts`, Spotify normalization in `src/services/spotifyNormalizer.ts`, and `SpotifyGateway` behind preview and generation/save hooks. The mixer consumes canonical track fields. Existing UI/store DTOs remain behind an explicit adapter presentation bridge. See [the provider-boundary verification record](provider-boundary-2026-10-05.md).
+
+The provider-boundary repair is limited to:
 
 - provider-neutral `Track`
 - provider-neutral `Playlist`
@@ -148,6 +150,8 @@ The provider-boundary repair may add only:
 - `PlaylistSource`
 - `PlaylistDestination`
 - `matched` / `ambiguous` / `missing` result types
+
+Matching result types remain unimplemented until a matcher or unresolved-import consumer needs them. No matching or local-library runtime has been introduced.
 
 ## Deferred
 

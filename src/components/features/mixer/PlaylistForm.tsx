@@ -1,6 +1,8 @@
 import React from 'react';
-import { MixOptions, SpotifyPlaylist } from '../../../types';
+import { MixOptions, SpotifyPlaylist, RatioConfigItem } from '../../../types';
 import { getPlaylistItemCount } from '../../../utils/spotify';
+import { RatioImbalanceWarning } from '../../../utils/exhaustionPrediction';
+import ExhaustionWarning from './ExhaustionWarning';
 import styles from '../../PlaylistMixer.module.css';
 
 interface PlaylistFormProps {
@@ -14,13 +16,8 @@ interface PlaylistFormProps {
     availableFormatted: string;
     requestedFormatted: string;
   } | null;
-  ratioImbalance?: {
-    limitingPlaylistName: string;
-    mixWillBecomeImbalancedAt: string | number;
-    unit: string;
-    willStopEarly: boolean;
-    isUseAllSongs?: boolean;
-  } | null;
+  ratioImbalance?: RatioImbalanceWarning | null;
+  onRatioUpdate?: (playlistId: string, config: RatioConfigItem) => void;
 }
 
 const PlaylistForm: React.FC<PlaylistFormProps> = ({
@@ -29,6 +26,7 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
   selectedPlaylists,
   exceedsLimit,
   ratioImbalance,
+  onRatioUpdate,
 }) => {
   const formatTotalDuration = (ms: number) => {
     const totalMinutes = Math.floor(ms / 60000);
@@ -199,36 +197,12 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
         </div>
       )}
 
-      {ratioImbalance && (
-        <div className={styles.warningBox}>
-          <span className={styles.warningIcon}>⚠️</span>
-          <div className={styles.warningText}>
-            <strong>Ratio imbalance warning:</strong> Based on your current
-            ratios, "{ratioImbalance.limitingPlaylistName}" will run out of
-            songs at {ratioImbalance.mixWillBecomeImbalancedAt}{' '}
-            {ratioImbalance.unit && ratioImbalance.unit}
-            {ratioImbalance.willStopEarly
-              ? ', and mixing will stop there'
-              : ', but mixing will continue with remaining playlists'}
-            .
-          </div>
-          <div className={styles.warningOption}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={mixOptions.continueWhenPlaylistEmpty}
-                onChange={e =>
-                  onMixOptionsChange({
-                    continueWhenPlaylistEmpty: e.target.checked,
-                  })
-                }
-                className={styles.checkbox}
-              />
-              Continue mixing until all songs are used up
-            </label>
-          </div>
-        </div>
-      )}
+      <ExhaustionWarning
+        warning={ratioImbalance ?? null}
+        mixOptions={mixOptions}
+        onMixOptionsChange={onMixOptionsChange}
+        onRatioUpdate={onRatioUpdate}
+      />
 
       {/* Track ordering */}
       <div className={styles.inputGroup}>

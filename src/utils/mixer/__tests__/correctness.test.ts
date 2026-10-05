@@ -1,6 +1,6 @@
 import { mixPlaylists } from '../playlistMixer';
 import { MixOptions, RatioConfig } from '../../../types';
-import { makeTrack } from '../../../test-utils/mocks/spotify';
+import { makeTrack } from './fixtures';
 
 const options: MixOptions = {
   totalSongs: 100,
@@ -11,12 +11,11 @@ const options: MixOptions = {
   shuffleTracks: false,
   playlistName: 'Regression mix',
 };
-const tracks = (prefix: string, count: number, duration_ms = 180000) =>
+const tracks = (prefix: string, count: number, durationMs = 180000) =>
   Array.from({ length: count }, (_, i) =>
-    makeTrack({
+    makeTrack(`${prefix}${i}`, {
       id: `${prefix}${i}`,
-      uri: `spotify:track:${prefix}${i}`,
-      duration_ms,
+      durationMs,
     })
   );
 
@@ -81,7 +80,7 @@ describe('correctness release mix semantics', () => {
       useTimeLimit: true,
     });
     expect(result).toHaveLength(360);
-    expect(result.reduce((sum, track) => sum + track.duration_ms, 0)).toBe(
+    expect(result.reduce((sum, track) => sum + track.durationMs, 0)).toBe(
       3600000
     );
   });
@@ -100,7 +99,7 @@ describe('correctness release mix semantics', () => {
       }
     );
     expect(result).toHaveLength(3);
-    expect(result.reduce((sum, track) => sum + track.duration_ms, 0)).toBe(
+    expect(result.reduce((sum, track) => sum + track.durationMs, 0)).toBe(
       420000
     );
   });

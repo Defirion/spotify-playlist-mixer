@@ -4,11 +4,13 @@
 // the tracks returned by each playlist and uses only the user's ratio and
 // ordering choices.
 
+import { MixResult } from '../../types/domain';
 import { MixOptions, RatioConfig } from '../../types/mixer';
 import { PlaylistTracks, PlaylistQueues, MixedTrack } from './types';
 import {
   safeObjectKeys,
   cleanPlaylistTracks,
+  calculateTotalDuration,
   logDebugInfo,
 } from './mixerUtils';
 import { shufflePlaylistTracks } from './trackShuffler';
@@ -129,13 +131,14 @@ export const validateInputs = (
 
 export { calculateTargetCounts } from './mixingCalculations';
 
-export const mixPlaylists = (
+export const mixPlaylistsWithResult = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
   options: MixOptions
-): MixedTrack[] => {
+): MixResult => {
   const validation = validateInputs(playlistTracks, ratioConfig, options);
-  if (!validation.isValid) return [];
+  if (!validation.isValid)
+    return { tracks: [], exhaustedPlaylists: [], stoppedEarly: false };
 
   const context = createMixingContext(
     Object.fromEntries(
@@ -211,7 +214,26 @@ export const mixPlaylists = (
   }
 
   logDebugInfo('info', `Mixed ${state.mixedTracks.length} tracks`);
-  return state.mixedTracks;
+  const usedIds = new Set(state.mixedTracks.map(track => track.id));
+  const exhaustedPlaylists = context.playlistIds.filter(
+    id => !context.playlistQueues[id].some(track => !usedIds.has(track.id))
+  );
+  const targetReached =
+    !options.useAllSongs &&
+    (options.useTimeLimit
+      ? calculateTotalDuration(state.mixedTracks) / 1000 >=
+        options.targetDurationSeconds
+      : state.mixedTracks.length >= options.totalSongs);
+  return {
+    tracks: state.mixedTracks,
+    exhaustedPlaylists,
+    stoppedEarly:
+      !targetReached &&
+      exhaustedPlaylists.length > 0 &&
+      (!options.useAllSongs ||
+        (!options.continueWhenPlaylistEmpty &&
+          exhaustedPlaylists.length < context.playlistIds.length)),
+  };
 };
 
 const initializeMixingState = (context: MixingContext): MixingState => {
@@ -233,3 +255,11 @@ const initializeMixingState = (context: MixingContext): MixingState => {
     attempts: 0,
   };
 };
+
+/** Array convenience for callers that need only tracks. */
+export const mixPlaylists = (
+  playlistTracks: PlaylistTracks,
+  ratioConfig: RatioConfig,
+  options: MixOptions
+): MixedTrack[] =>
+  mixPlaylistsWithResult(playlistTracks, ratioConfig, options).tracks;

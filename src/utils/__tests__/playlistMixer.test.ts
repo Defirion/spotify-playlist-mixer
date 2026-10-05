@@ -1,14 +1,9 @@
 import { mixPlaylists, validateInputs, createMixingContext } from '../mixer';
 import { MixOptions, RatioConfig } from '../../types/mixer';
 
-// Minimal fake track including artists to satisfy logging in mixingCalculations
-const track = (id: string, duration = 180000) => ({
-  id,
-  uri: `spotify:track:${id}`,
-  name: `Track ${id}`,
-  duration_ms: duration,
-  artists: [{ id: 'artist-' + id, name: 'Artist ' + id }],
-});
+import { makeTrack } from '../mixer/__tests__/fixtures';
+const track = (id: string, durationMs = 180000) =>
+  makeTrack(id, { id, durationMs });
 
 const baseOptions: MixOptions = {
   totalSongs: 5,

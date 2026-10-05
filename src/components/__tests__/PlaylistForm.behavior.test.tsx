@@ -143,7 +143,7 @@ describe('PlaylistForm behavior', () => {
     expect(screen.getByText(/P 1/)).toBeInTheDocument();
 
     const checkbox = screen.getByLabelText(
-      /Continue mixing until all songs are used up/i
+      /Continue with remaining playlists when one runs out/i
     );
     expect(checkbox).not.toBeChecked();
 

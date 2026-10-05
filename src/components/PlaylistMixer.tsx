@@ -11,7 +11,13 @@ import PlaylistForm from './features/mixer/PlaylistForm';
 import MixPreview from './features/mixer/MixPreview';
 import MixControls from './features/mixer/MixControls';
 import ErrorBoundary from './ui/ErrorBoundary';
-import { SpotifyPlaylist, MixOptions, RatioConfig, MixedTrack } from '../types';
+import {
+  SpotifyPlaylist,
+  MixOptions,
+  RatioConfig,
+  RatioConfigItem,
+  MixedTrack,
+} from '../types';
 import styles from './PlaylistMixer.module.css';
 
 interface PlaylistMixerProps {
@@ -20,6 +26,7 @@ interface PlaylistMixerProps {
   ratioConfig: RatioConfig;
   mixOptions: MixOptions;
   updateMixOptions: (updates: Partial<MixOptions>) => void;
+  onRatioUpdate?: (playlistId: string, config: RatioConfigItem) => void;
   onMixedPlaylist?: (result: SpotifyPlaylist) => void;
   onError?: (error: string) => void;
 }
@@ -30,6 +37,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   ratioConfig,
   mixOptions,
   updateMixOptions,
+  onRatioUpdate,
   onMixedPlaylist,
   onError,
 }) => {
@@ -380,6 +388,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
           selectedPlaylists={selectedPlaylists}
           exceedsLimit={exceedsLimit}
           ratioImbalance={ratioImbalance}
+          onRatioUpdate={onRatioUpdate}
         />
 
         {mixPreview.state.preview && (

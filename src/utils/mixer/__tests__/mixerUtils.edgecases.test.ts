@@ -35,8 +35,8 @@ describe('mixerUtils edge cases', () => {
     expect(calculateTotalDuration({} as any)).toBe(0);
 
     const tracks = [
-      { id: '1', uri: 'u', name: 't', duration_ms: 1000 },
-      { id: '2', uri: 'u2', name: 't2' } as any,
+      { id: '1', uri: 'u', title: 't', durationMs: 1000 },
+      { id: '2', uri: 'u2', title: 't2' } as any,
     ];
     expect(calculateTotalDuration(tracks as any)).toBe(1000);
     expect(warn).toHaveBeenCalled();
@@ -45,11 +45,11 @@ describe('mixerUtils edge cases', () => {
   test('cleanPlaylistTracks normalizes different playlist shapes', () => {
     process.env.NODE_ENV = 'development';
     const input = {
-      p1: [{ id: '1', uri: 'u', name: 'n', duration_ms: 1 }],
+      p1: [{ id: '1', uri: 'u', title: 'n', durationMs: 1 }],
       p2: {
         tracks: [
-          { id: '', uri: '', name: '' },
-          { id: '2', uri: 'u2', name: 'n2' },
+          { id: '', uri: '', title: '' },
+          { id: '2', uri: 'u2', title: 'n2' },
         ],
       },
       p3: 'invalid',

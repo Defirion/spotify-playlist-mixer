@@ -286,7 +286,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
             </div>
             {showSearchButton && (
               <button
-                onClick={onManualSearch}
+                onClick={() => onManualSearch?.()}
                 disabled={loading || !searchQuery.trim()}
                 className={styles.searchButton}
                 title="Search manually (searches automatically as you type)"

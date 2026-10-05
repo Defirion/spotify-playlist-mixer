@@ -1,3 +1,4 @@
+import SpotifyGateway from '../../services/spotifyGateway';
 import React from 'react';
 import { render, act } from '@testing-library/react';
 import * as mixer from '../../utils/mixer';
@@ -52,6 +53,9 @@ describe('useMixGeneration', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.spyOn(SpotifyGateway.prototype, 'toDisplayTracks').mockImplementation(
+      tracks => tracks as any
+    );
 
     // Silence benign console output for passing test runs
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -82,6 +86,7 @@ describe('useMixGeneration', () => {
     consoleLogSpy?.mockRestore?.();
     consoleWarnSpy?.mockRestore?.();
     consoleErrorSpy?.mockRestore?.();
+    vi.mocked(SpotifyGateway.prototype.toDisplayTracks).mockRestore();
   });
 
   test('throws when spotify service not available (no access token)', async () => {
@@ -166,7 +171,9 @@ describe('useMixGeneration', () => {
       });
 
     const mixed = [{ uri: 'u1', duration_ms: 1000 }];
-    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixed as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult(mixed as any)
+    );
 
     const onSuccess = vi.fn();
     const ref: any = { current: null };
@@ -193,7 +200,7 @@ describe('useMixGeneration', () => {
           {}
         )
       ).rejects.toThrow('Could not load Fail');
-      expect(mixer.mixPlaylists).not.toHaveBeenCalled();
+      expect(mixer.mixPlaylistsWithResult).not.toHaveBeenCalled();
       expect(onSuccess).not.toHaveBeenCalled();
     });
   });
@@ -208,7 +215,9 @@ describe('useMixGeneration', () => {
       exhaustedPlaylists: ['p1'],
       stoppedEarly: true,
     };
-    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixObj as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult(mixObj as any)
+    );
 
     const ref: any = { current: null };
     render(<HookHost token="t" capture={(h: any) => (ref.current = h)} />);
@@ -240,9 +249,9 @@ describe('useMixGeneration', () => {
     spotifyInstance.getPlaylistTracks.mockResolvedValue({
       tracks: [{ id: 't1', uri: 'u1', duration_ms: 1000 }],
     });
-    vi.mocked(mixer.mixPlaylists).mockReturnValue([
-      { uri: 'u1', duration_ms: 1000 },
-    ] as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult([{ uri: 'u1', duration_ms: 1000 }] as any)
+    );
 
     const ref: any = { current: null };
     render(<HookHost token="t" capture={(h: any) => (ref.current = h)} />);
@@ -354,7 +363,9 @@ describe('useMixGeneration', () => {
       exhaustedPlaylists: ['p1'],
       stoppedEarly: true,
     };
-    vi.mocked(mixer.mixPlaylists).mockReturnValue(mixObj as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult(mixObj as any)
+    );
 
     const events: any[] = [];
     const ref: any = { current: null };
@@ -384,7 +395,7 @@ describe('useMixGeneration', () => {
     const types = events.map(e => e.type);
     expect(types).toContain('playlistEmpty');
     expect(types).toContain('playlistFetchFailed');
-    expect(mixer.mixPlaylists).not.toHaveBeenCalled();
+    expect(mixer.mixPlaylistsWithResult).not.toHaveBeenCalled();
   });
 
   test('createPlaylist emits skippingTrackMissingUri and noValidTrackUris', async () => {
@@ -416,14 +427,16 @@ describe('useMixGeneration', () => {
     expect(types).toContain('noValidTrackUris');
   });
 
-  test('handles plain-array return from mixPlaylists (back-compat)', async () => {
+  test('successful canonical result updates tracks and calls onSuccess', async () => {
     spotifyInstance.getPlaylistTracks
       .mockResolvedValueOnce({ tracks: [{ id: 't1', uri: 'u1' }] })
       .mockResolvedValueOnce({ tracks: [{ id: 't2', uri: 'u2' }] });
 
-    // mixer returns a plain array (old behavior)
+    // Successful canonical mix fixture
     const plainMix = [{ uri: 'plain1', duration_ms: 1000 }];
-    vi.mocked(mixer.mixPlaylists).mockReturnValue(plainMix as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult(plainMix as any)
+    );
 
     const onSuccess = vi.fn();
     const ref: any = { current: null };
@@ -498,7 +511,9 @@ describe('useMixGeneration', () => {
     });
 
     // mixer returns an empty tracks shape
-    vi.mocked(mixer.mixPlaylists).mockReturnValue({ tracks: [] } as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult({ tracks: [] } as any)
+    );
 
     const onError = vi.fn();
     const ref: any = { current: null };
@@ -546,10 +561,16 @@ describe('useMixGeneration', () => {
 
     const mixA = [{ uri: 'u1' }];
     const mixB = [{ uri: 'u2' }];
-    (mixer.mixPlaylists as import('vitest').Mock).mockImplementation(
+    (mixer.mixPlaylistsWithResult as import('vitest').Mock).mockImplementation(
       (playlistTracks: any) => {
         const allTracks = Object.values(playlistTracks).flat();
-        return allTracks.find((t: any) => t && t.uri === 'u2') ? mixB : mixA;
+        return makeMixResult(
+          allTracks.find(
+            (t: any) => t && t.sourceRefs.some((ref: any) => ref.uri === 'u2')
+          )
+            ? mixB
+            : mixA
+        );
       }
     );
 
@@ -606,7 +627,9 @@ describe('useMixGeneration', () => {
           )
         )
     );
-    vi.mocked(mixer.mixPlaylists).mockReturnValue([{ uri: 'u' }] as any);
+    vi.mocked(mixer.mixPlaylistsWithResult).mockReturnValue(
+      makeMixResult([{ uri: 'u' }] as any)
+    );
     const events: any[] = [];
     const ref: any = { current: null };
     // We simulate token change by re-rendering HookHost with different token before first finishes
@@ -658,3 +681,10 @@ describe('useMixGeneration', () => {
     expect(Array.isArray(events)).toBe(true);
   });
 });
+
+// Unit fixtures use display tracks; the presentation conversion is mocked above.
+function makeMixResult(tracksOrResult: any): any {
+  return Array.isArray(tracksOrResult)
+    ? { tracks: tracksOrResult, exhaustedPlaylists: [], stoppedEarly: false }
+    : { exhaustedPlaylists: [], stoppedEarly: false, ...tracksOrResult };
+}

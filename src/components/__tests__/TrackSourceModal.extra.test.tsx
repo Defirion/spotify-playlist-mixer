@@ -61,6 +61,22 @@ describe('TrackSourceModal branches', () => {
     expect(onManual).toHaveBeenCalled();
   });
 
+  test('clicking manual search does not replace the query with the click event', () => {
+    const onManualSearch = vi.fn();
+    render(
+      <TrackSourceModal
+        {...baseProps}
+        searchQuery="Diamante SONCE"
+        showSearchButton
+        onManualSearch={onManualSearch}
+      />
+    );
+    fireEvent.click(
+      screen.getByTitle('Search manually (searches automatically as you type)')
+    );
+    expect(onManualSearch).toHaveBeenCalledWith();
+  });
+
   test('regenerates instance id for dragged track when event dispatched', () => {
     // two tracks to initialize the instance id mapping
     const tracks = [

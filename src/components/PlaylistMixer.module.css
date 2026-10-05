@@ -136,6 +136,24 @@
   line-height: 1.4;
 }
 
+.exhaustionContent {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.suggestedRatios {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: var(--mindaro);
+  font-size: 13px;
+}
+
+.exhaustionContent .button {
+  margin-bottom: 12px;
+  white-space: normal;
+}
+
 .warningOption {
   margin-top: 12px;
   padding-top: 12px;
