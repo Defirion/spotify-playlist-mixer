@@ -118,55 +118,12 @@ export interface SpotifyPlaylistTrackItem {
 /** A playlist item that this application can mix (tracks only). */
 export type SpotifyPlaylistItem = SpotifyPlaylistTrackItem;
 
-export interface SpotifyUserProfile {
-  id: string;
-  /** Stable pseudoanonymous account identifier added by Spotify in May 2026. */
-  account_id?: string;
-  display_name: string;
-  email?: string;
-  country?: string;
-  product?: 'free' | 'premium';
-  images: SpotifyImage[];
-  followers: {
-    total: number;
-  };
-  external_urls: SpotifyExternalUrls;
-  href?: string;
-  type?: 'user';
-  uri?: string;
-}
-
-// API Response types
-export interface SpotifyPaginatedResponse<T> {
-  items: T[];
-  total: number;
-  limit: number;
-  offset: number;
-  next: string | null;
-  previous: string | null;
-  href: string;
-}
-
-export interface SpotifySearchResponse {
-  tracks: SpotifyPaginatedResponse<SpotifyTrack>;
-  artists?: SpotifyPaginatedResponse<SpotifyArtist>;
-  albums?: SpotifyPaginatedResponse<SpotifyAlbum>;
-  playlists?: SpotifyPaginatedResponse<SpotifyPlaylist>;
-}
-
-export interface SpotifyPlaylistTracksResponse extends SpotifyPaginatedResponse<SpotifyPlaylistTrackItem> {}
-
-export interface SpotifyUserPlaylistsResponse extends SpotifyPaginatedResponse<SpotifyPlaylist> {}
-
 export interface SpotifyCreatePlaylistRequest {
   name: string;
   description?: string;
   public?: boolean;
   collaborative?: boolean;
 }
-
-// Alias for compatibility
-export type CreatePlaylistRequest = SpotifyCreatePlaylistRequest;
 
 export interface SpotifyCreatePlaylistResponse extends SpotifyPlaylist {}
 
@@ -175,50 +132,6 @@ export interface SpotifyAddTracksRequest {
   position?: number;
 }
 
-// Alias for compatibility
-export type AddTracksRequest = SpotifyAddTracksRequest;
-
 export interface SpotifyAddTracksResponse {
   snapshot_id: string;
-}
-
-export interface SpotifyRemoveTracksRequest {
-  /** Current Spotify API field for DELETE /playlists/{id}/items. */
-  items: Array<{
-    uri: string;
-    positions?: number[];
-  }>;
-  snapshot_id?: string;
-}
-
-// Alias for compatibility
-export type RemoveTracksRequest = SpotifyRemoveTracksRequest;
-
-export interface SpotifyRemoveTracksResponse {
-  snapshot_id: string;
-}
-
-// Authentication types
-export interface SpotifyAuthToken {
-  access_token: string;
-  token_type: 'Bearer';
-  expires_in: number;
-  refresh_token?: string;
-  scope: string;
-}
-
-// Error types
-export interface SpotifyApiError {
-  error: {
-    status: number;
-    message: string;
-  };
-}
-
-export interface SpotifyRateLimitError extends SpotifyApiError {
-  error: {
-    status: 429;
-    message: string;
-    retry_after?: number;
-  };
 }

@@ -1,0 +1,938 @@
+[
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyUserProfile"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyPaginatedResponse"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifySearchResponse"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyPlaylistTracksResponse"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyUserPlaylistsResponse"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "CreatePlaylistRequest"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "AddTracksRequest"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyRemoveTracksRequest"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "RemoveTracksRequest"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyRemoveTracksResponse"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyAuthToken"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyApiError"
+  },
+  {
+    "file": "src/types/spotify.ts",
+    "name": "SpotifyRateLimitError"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "PlaylistMixResult"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "PlaylistSelectionItem"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "PlaylistMixerState"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "VirtualItem"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "VirtualRange"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "VirtualizationOptions"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "TrackItemProps"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "TrackListProps"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "ModalProps"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "UseSpotifySearchReturn"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "UsePlaylistTracksReturn"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "UseUserPlaylistsReturn"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "UseVirtualizationReturn"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "AppState"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "AppAction"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "DeepPartial"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "RequiredFields"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "OptionalFields"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "PlaylistSelectHandler"
+  },
+  {
+    "file": "src/types/mixer.ts",
+    "name": "PresetApplyHandler"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ButtonVariant"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ButtonSize"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ButtonProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "TrackListProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PlaylistItemProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PlaylistListProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "SearchInputProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ErrorBoundaryProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ErrorBoundaryFallbackProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ErrorBoundaryState"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ToastType"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ToastPosition"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ToastProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ToastContextValue"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "FormFieldProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "InputProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "SelectProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "CheckboxProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "RadioProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "VirtualListProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "HeaderProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "SidebarProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "MainLayoutProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PlaylistMixerProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "MixOptionsFormProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "RatioConfigFormProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "SpotifySearchModalProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "AddUnselectedModalProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "AuthContextValue"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PlaylistContextValue"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "TrackEvent"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PlaylistEvent"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "SearchEvent"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "ConditionalWrapperProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "PortalProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "FocusTrapProps"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "TransitionState"
+  },
+  {
+    "file": "src/types/components.ts",
+    "name": "TransitionProps"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "GetUserPlaylistsOptions"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "SpotifyServiceUserPlaylistsResult"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "ApiErrorType"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "ApiError"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "ApiErrorHandlerOptions"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "HttpClientConfig"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "HttpClientRequest"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "HttpClientResponse"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "IHttpClient"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "CacheEntry"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "CacheOptions"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "ICache"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "QueuedRequest"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "RequestQueueOptions"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "IRequestQueue"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "BatchRequest"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "BatchResult"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "PaginationState"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "PaginatedRequest"
+  },
+  {
+    "file": "src/types/api.ts",
+    "name": "PaginatedResult"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "AsyncHookState"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "AsyncHookActions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "AsyncHookReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseAuthReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UsePlaylistTracksOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UsePlaylistTracksReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseUserPlaylistsOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseUserPlaylistsReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixOptionsReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseRatioConfigReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UsePlaylistSelectionReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseAppStateReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseVirtualizationReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "NavigationDirection"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "NavigationOrientation"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "AnnouncementPriority"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseKeyboardNavigationOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseKeyboardNavigationReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseDebounceOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseDebounceReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseThrottleOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseThrottleReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseLocalStorageReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseSessionStorageReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMediaQueryReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseIntersectionObserverOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseIntersectionObserverReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseClickOutsideReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseFocusTrapReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseErrorHandlerOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseErrorHandlerReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseApiErrorHandlerOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "ErrorInfo"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseApiErrorHandlerReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseAsyncOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseAsyncReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UsePreviousReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseToggleReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseCounterReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseArrayReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseVirtualScrollOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseVirtualScrollReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMemoizedCallbackReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseRenderCountReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixGenerationOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixGenerationState"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixGenerationReturn"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixPreviewOptions"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixPreviewState"
+  },
+  {
+    "file": "src/types/hooks.ts",
+    "name": "UseMixPreviewReturn"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Nullable"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Optional"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "NonEmptyArray"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ValueOf"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "KeysOfType"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Mutable"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "DeepReadonly"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AsyncFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "SyncFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "EventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ChangeHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ErrorHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "VoidFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ComponentWithChildren"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ComponentWithoutChildren"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "RefCallback"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ForwardRefComponent"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PolymorphicComponentProps"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PolymorphicRef"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PolymorphicComponentPropsWithRef"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "StateUpdater"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "StateSetterFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ReducerAction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ReducerFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ApiResponse"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ApiErrorResponse"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PaginatedApiResponse"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "FormFieldValue"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "FormValues"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "FormErrors"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "FormTouched"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ValidationRule"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ValidationRules"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "KeyboardEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "MouseEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "TouchEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "FocusEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ChangeEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "SubmitEventHandler"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSLength"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSColor"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSPosition"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSDisplay"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSFlexDirection"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSJustifyContent"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CSSAlignItems"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AnimationDuration"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AnimationEasing"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AnimationDirection"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AnimationFillMode"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ThemeMode"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ThemeColor"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ThemeSpacing"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ThemeBreakpoint"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "TreeNode"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ListNode"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "GraphNode"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Graph"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ValidationResult"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "ValidatorFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "AsyncValidatorFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CacheKey"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CacheValue"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "CacheStrategy"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PerformanceMetric"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PerformanceEntry"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "MockFunction"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "MockedClass"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "TestProps"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "RenderResult"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "If"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "IsEqual"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "IsNever"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "IsAny"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "IsUnknown"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "StringLiteral"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Split"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Join"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Capitalize"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Uncapitalize"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Increment"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Decrement"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Head"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Tail"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Last"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Length"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Reverse"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PickByType"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "OmitByType"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "PartialBy"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "RequiredBy"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "Flatten"
+  },
+  {
+    "file": "src/types/utils.ts",
+    "name": "DeepFlatten"
+  }
+]
