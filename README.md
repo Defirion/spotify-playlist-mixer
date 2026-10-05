@@ -65,11 +65,14 @@ OAuth login before enforcing those requirements at the Web API, which appears
 in the app as HTTP 403. Spotify later postponed the reduced endpoint-access
 rollout for existing integrations; the Premium requirement and five-user cap
 still apply. A later July 2026 update raised the Client ID limit from one to 25
-per developer account and made Development Mode quota account-wide. The
-authenticated app includes a user-triggered Spotify diagnostics panel that
-compares `/me/playlists` and `/search` without displaying token or profile
-data. It intentionally avoids `/me`, which requires the unrelated
-`user-read-private` scope.
+per developer account and made Development Mode quota account-wide. Spotify's
+current scopes documentation lists Search and `GET /me` under
+`user-read-private`, so the mixer requests that scope in addition to its
+playlist scopes. The authenticated app includes a user-triggered Spotify
+diagnostics panel that compares `/me`, `/me/playlists`, and `/search`, shows the
+scope names Spotify reports as granted, and never displays access tokens or
+profile fields. It also provides an explicit fresh-approval reconnect for
+troubleshooting previously authorized sessions.
 
 ## Using the app
 

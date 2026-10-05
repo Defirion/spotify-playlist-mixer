@@ -8,7 +8,7 @@ const mockClientId = 'test-client-id';
 const originalEnv = process.env;
 
 const DEFAULT_SCOPE =
-  'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
+  'user-read-private playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
 
 /** Waits for the redirect and returns the parsed authorize URL. */
 const waitForRedirect = async (): Promise<URL> => {

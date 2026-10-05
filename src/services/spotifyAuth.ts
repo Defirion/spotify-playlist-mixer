@@ -23,6 +23,7 @@ const VERIFIER_STORAGE_KEY = 'spotify_pkce_code_verifier';
 const STATE_STORAGE_KEY = 'spotify_auth_state';
 
 export const DEFAULT_SCOPES = [
+  'user-read-private',
   'playlist-read-private',
   'playlist-read-collaborative',
   'playlist-modify-public',
@@ -34,6 +35,8 @@ export interface TokenResponse {
   refreshToken: string | null;
   /** Epoch milliseconds at which the access token expires. */
   expiresAt: number;
+  /** Scopes Spotify reports as granted for this access token. */
+  grantedScopes: string[];
 }
 
 const base64UrlEncode = (bytes: Uint8Array): string => {
@@ -69,6 +72,8 @@ export interface BeginAuthorizationOptions {
   clientId: string;
   redirectUri: string;
   scopes?: string[];
+  /** Force Spotify to show the approval screen even for a previously approved app. */
+  showDialog?: boolean;
 }
 
 /**
@@ -79,6 +84,7 @@ export const beginAuthorization = async ({
   clientId,
   redirectUri,
   scopes = DEFAULT_SCOPES,
+  showDialog = false,
 }: BeginAuthorizationOptions): Promise<string> => {
   const verifier = generateRandomString(64);
   const state = generateRandomString(32);
@@ -96,6 +102,7 @@ export const beginAuthorization = async ({
     state,
     scope: scopes.join(' '),
   });
+  if (showDialog) params.set('show_dialog', 'true');
 
   return `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;
 };
@@ -106,11 +113,16 @@ const parseTokenResponse = (data: any): TokenResponse => {
   }
   const expiresInSeconds =
     typeof data.expires_in === 'number' ? data.expires_in : 3600;
+  const grantedScopes =
+    typeof data.scope === 'string'
+      ? data.scope.split(/\s+/).filter(Boolean)
+      : [];
   return {
     accessToken: data.access_token,
     refreshToken:
       typeof data.refresh_token === 'string' ? data.refresh_token : null,
     expiresAt: Date.now() + expiresInSeconds * 1000,
+    grantedScopes,
   };
 };
 
@@ -185,7 +197,8 @@ export const completeAuthorization = async ({
 
 export const refreshAccessToken = async (
   clientId: string,
-  refreshToken: string
+  refreshToken: string,
+  currentGrantedScopes: string[] = []
 ): Promise<TokenResponse> => {
   const result = await postTokenRequest(
     new URLSearchParams({
@@ -195,5 +208,14 @@ export const refreshAccessToken = async (
     })
   );
   // Spotify may omit refresh_token on refresh; keep using the current one.
-  return { ...result, refreshToken: result.refreshToken ?? refreshToken };
+  // Keep the previously reported scope list too if a provider response ever
+  // omits it, even though Spotify normally returns it for refreshed tokens.
+  return {
+    ...result,
+    refreshToken: result.refreshToken ?? refreshToken,
+    grantedScopes:
+      result.grantedScopes.length > 0
+        ? result.grantedScopes
+        : currentGrantedScopes,
+  };
 };

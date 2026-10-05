@@ -7,6 +7,8 @@ export interface AuthSlice {
   refreshToken: string | null;
   /** Epoch milliseconds at which the access token expires (null = unknown). */
   tokenExpiresAt: number | null;
+  /** Scopes Spotify reported as granted for the current access token. */
+  grantedScopes: string[];
   isAuthenticated: boolean;
 
   // Actions
@@ -27,6 +29,7 @@ export const createAuthSlice: StateCreator<
   accessToken: null,
   refreshToken: null,
   tokenExpiresAt: null,
+  grantedScopes: [],
   isAuthenticated: false,
 
   // Actions
@@ -36,7 +39,9 @@ export const createAuthSlice: StateCreator<
     set({
       accessToken: token,
       isAuthenticated: !!token,
-      ...(token ? {} : { refreshToken: null, tokenExpiresAt: null }),
+      ...(token
+        ? {}
+        : { refreshToken: null, tokenExpiresAt: null, grantedScopes: [] }),
     });
   },
 
@@ -45,6 +50,7 @@ export const createAuthSlice: StateCreator<
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       tokenExpiresAt: tokens.expiresAt,
+      grantedScopes: tokens.grantedScopes,
       isAuthenticated: !!tokens.accessToken,
     }),
 
@@ -62,6 +68,7 @@ export const createAuthSlice: StateCreator<
         accessToken: null,
         refreshToken: null,
         tokenExpiresAt: null,
+        grantedScopes: [],
         isAuthenticated: false,
       };
     }),

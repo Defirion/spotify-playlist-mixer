@@ -131,3 +131,9 @@ The user completed local authorization and the authorized save. No collaborative
 SM3's supported-flow checks are complete for the available sources. The successful third-party access in this session is an observed capability, not a guarantee for other Development Mode apps or accounts.
 
 Work stops at the plan's optional SM3 stopping point. SM4's canonical provider/result models, consolidation of the remaining endpoint-building hooks, complete exhaustion metadata, and selective dead-code/generated-artifact cleanup remain follow-up work. Local-library adapters, matching, playback, broad UI work, and another bundler migration remain outside this slice.
+
+## Deployment integration follow-up
+
+The user authorized production deployment via the existing GitHub-to-Netlify integration. Before pushing, `origin/master` was fetched and three newer commits through `e07c2c313ad3e4f96feb3c6c6455bf7da00cdcd2` were merged with the local correctness release. Their additional `user-read-private` request, granted-scope metadata, account diagnostic, and fresh-approval reconnect were retained together with the manual/automatic refresh callback. An outdated login-component test caused the existing remote CI failure; its expected scope list was updated without weakening the assertion.
+
+The merged tree passes 1,066 tests in 136 files, production build, lint, and the coverage threshold. Coverage is 95.61% statements, 87.36% branches, 95.75% functions, and 96.31% lines. The earlier live four-scope authorization and refresh evidence remains historical; a new authorization with the merged scope request has not been exercised. GitHub CI and the published production asset are checked after the push. Unrelated local README edits, the pre-existing `big_idea.txt` deletion, local agent configuration, and screenshots are excluded from the deployment commit.

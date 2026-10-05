@@ -28,6 +28,8 @@ Live verification created [Mixer verification — delete later](https://open.spo
 
 Token renewal now preserves a completed edited preview while canceling pending loading; logout still clears the preview. The diagnostic “Refresh connection” action uses the same renewal callback as the automatic timer. A real Spotify refresh succeeded at `2026-10-05T12:49:19.644Z`; the five-track edited preview retained its exact order, and refreshed owned-playlist/search requests returned 200. Timer scheduling and renewal transitions also pass automated regressions; a naturally elapsed timer was not separately waited for.
 
+Deployment follow-up: the user requested production deployment through the existing GitHub-to-Netlify integration. Three newer `origin/master` commits were integrated, preserving their `user-read-private` request, granted-scope metadata, account probe, and fresh-approval reconnect alongside the verified refresh action. A stale login-test scope expectation was corrected. The combined tree passes 1,066 tests in 136 files, coverage (95.61% statements), lint, and production build. The earlier authenticated evidence predates this merged scope change; it does not claim a newly granted scope. Production publication is verified separately after pushing `master`.
+
 The dated observations below are retained as the starting snapshot. The execution record supersedes their implementation status, including the all-song cap, ambiguous duration name, and missing CI build step.
 
 ## Outcome
