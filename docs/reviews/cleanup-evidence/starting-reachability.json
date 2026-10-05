@@ -99,9 +99,7 @@
     },
     {
       "file": "src/components/TrackList.tsx",
-      "consumers": [
-        "src/components/__tests__/TrackList.test.tsx"
-      ]
+      "consumers": ["src/components/__tests__/TrackList.test.tsx"]
     },
     {
       "file": "src/components/ui/TrackList.tsx",
@@ -115,15 +113,11 @@
     },
     {
       "file": "src/components/ui/withErrorBoundary.tsx",
-      "consumers": [
-        "src/components/ui/__tests__/withErrorBoundary.test.tsx"
-      ]
+      "consumers": ["src/components/ui/__tests__/withErrorBoundary.test.tsx"]
     },
     {
       "file": "src/hooks/useApiErrorHandler.ts",
-      "consumers": [
-        "src/hooks/__tests__/useApiErrorHandler.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/useApiErrorHandler.test.ts"]
     },
     {
       "file": "src/hooks/useAutoScroll.ts",
@@ -134,33 +128,23 @@
     },
     {
       "file": "src/hooks/useCustomTouchEvents.ts",
-      "consumers": [
-        "src/hooks/__tests__/useCustomTouchEvents.test.tsx"
-      ]
+      "consumers": ["src/hooks/__tests__/useCustomTouchEvents.test.tsx"]
     },
     {
       "file": "src/hooks/useDropPosition.ts",
-      "consumers": [
-        "src/hooks/__tests__/useDropPosition.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/useDropPosition.test.ts"]
     },
     {
       "file": "src/hooks/useErrorHandler.ts",
-      "consumers": [
-        "src/hooks/__tests__/useErrorHandler.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/useErrorHandler.test.ts"]
     },
     {
       "file": "src/hooks/useKeyboardNavigation.ts",
-      "consumers": [
-        "src/hooks/__tests__/useKeyboardNavigation.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/useKeyboardNavigation.test.ts"]
     },
     {
       "file": "src/hooks/usePlaylistSelection.ts",
-      "consumers": [
-        "src/hooks/__tests__/usePlaylistSelection.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/usePlaylistSelection.test.ts"]
     },
     {
       "file": "src/hooks/usePlaylistTracks.ts",
@@ -171,15 +155,11 @@
     },
     {
       "file": "src/hooks/useTrackOperations.ts",
-      "consumers": [
-        "src/hooks/__tests__/useTrackOperations.test.tsx"
-      ]
+      "consumers": ["src/hooks/__tests__/useTrackOperations.test.tsx"]
     },
     {
       "file": "src/hooks/useUserPlaylists.ts",
-      "consumers": [
-        "src/hooks/__tests__/useUserPlaylists.test.ts"
-      ]
+      "consumers": ["src/hooks/__tests__/useUserPlaylists.test.ts"]
     },
     {
       "file": "src/hooks/useVirtualization.ts",

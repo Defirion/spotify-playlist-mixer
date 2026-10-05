@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan - Clean Slate Approach
 
 ## Task Overview
@@ -203,9 +208,10 @@ This implementation plan includes specific safeguards to prevent over-engineerin
 ## File Size Enforcement Rules
 
 Each task MUST enforce these limits (accounting for Prettier formatting):
+
 - `SortableWrapper.tsx`: MAX 60 lines
 - `DraggableTrackList.tsx`: MAX 60 lines
-- `TrackList.tsx`: MAX 30 lines  
+- `TrackList.tsx`: MAX 30 lines
 - Sensor configuration: MAX 40 lines
 - Zustand integration: MAX 50 lines
 - Error boundary: MAX 25 lines
@@ -216,33 +222,39 @@ Each task MUST enforce these limits (accounting for Prettier formatting):
 **NEVER mark a task complete unless ALL gates pass:**
 
 ### Gate 1: TypeScript Compilation
+
 1. Run `npx tsc --noEmit` (exact command from project-commands.md)
 2. Zero TypeScript errors allowed
 3. Fix all type issues immediately
 
 ### Gate 2: Build Success
+
 1. Run `npm run build` (exact command from project-commands.md)
 2. Build must complete successfully
 3. Fix any build errors immediately
 
 ### Gate 3: Test Success
+
 1. Run `npm test -- --watchAll=false` (exact command from project-commands.md)
 2. ALL tests must pass (existing + new)
 3. Fix failing tests immediately
 4. Never leave failing tests behind
 
 ### Gate 4: Pre-commit Quality Check
+
 1. Run `npm run lint:fix` to auto-fix issues
 2. Run `npm run lint` - zero errors allowed
 3. Run `npm run format:check` - must pass
 4. Pre-commit hooks must pass (test with `git add . && git commit --dry-run`)
 
 ### Gate 5: File Size Limits
+
 1. Check file size against task limits
 2. If approaching limit, split functionality
 3. Use `wc -l filename` to verify
 
 ### Gate 6: Function Size Check
+
 1. No function over 45 lines (target: 35-40, accounting for Prettier formatting)
 2. If over 45 lines, split or simplify
 3. Event handlers get slight leeway for related event handling
@@ -252,6 +264,7 @@ Each task MUST enforce these limits (accounting for Prettier formatting):
 ## Key dnd-kit Patterns to Follow
 
 ### Basic Setup Pattern
+
 ```typescript
 const sensors = useSensors(
   useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -267,6 +280,7 @@ const sensors = useSensors(
 ```
 
 ### SortableItem Pattern
+
 ```typescript
 const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 const style = { transform: CSS.Transform.toString(transform), transition };
@@ -274,11 +288,14 @@ return <div ref={setNodeRef} style={style} {...attributes} {...listeners}>Conten
 ```
 
 ### ArrayMove Pattern
+
 ```typescript
-const handleDragEnd = (event) => {
+const handleDragEnd = event => {
   const { active, over } = event;
   if (active.id !== over.id) {
-    setItems(items => arrayMove(items, items.indexOf(active.id), items.indexOf(over.id)));
+    setItems(items =>
+      arrayMove(items, items.indexOf(active.id), items.indexOf(over.id))
+    );
   }
 };
 ```
@@ -286,6 +303,7 @@ const handleDragEnd = (event) => {
 ## Emergency Rollback Plan
 
 If any issues arise:
+
 1. **Git history preserves** the original implementation
 2. **Use git revert** to rollback to any previous working state
 3. **Each task is a commit** allowing granular rollback

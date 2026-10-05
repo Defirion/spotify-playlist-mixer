@@ -1,11 +1,11 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan
 
 - [x] 1. Create type definitions and foundational architecture
-
-
-
-
-
   - Create comprehensive TypeScript interfaces in `src/types/dragAndDrop.ts` for all drag operations
   - Define `DragSourceType`, `DraggedItemPayload`, `DraggedItem`, and `DragState` interfaces
   - Add `ScrollPositionState` interface for scroll position management
@@ -13,11 +13,6 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
 - [x] 2. Implement Zustand drag slice for centralized state management
-
-
-
-
-
   - Create `src/store/slices/dragSlice.ts` with complete drag state management
   - Implement `startDrag`, `endDrag`, and `cancelDrag` actions with concurrent drag prevention
   - Add scroll position management methods: `captureScrollPosition`, `restoreScrollPosition`, `clearScrollPosition`
@@ -26,11 +21,6 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
 - [x] 3. Integrate drag slice into main store
-
-
-
-
-
   - Update `src/store/index.ts` to include the new `DragSlice` in the combined store type
   - Add drag slice to store creation with proper devtools integration
   - Create selector hooks: `useDragState()` and `useScrollPosition()` with shallow comparison optimization
@@ -41,20 +31,12 @@
 
 - [x] 4.1 Implement core drag state hook
 
-
-
-
-
   - Create `src/hooks/drag/useDragState.ts` for store integration
   - Provide `isCurrentlyDragged` utility function for item-specific drag state
   - Ensure proper subscription management and performance optimization
   - _Requirements: 5.1, 5.2, 7.1_
 
 - [x] 4.2 Implement drag handlers hook
-
-
-
-
 
   - Create `src/hooks/drag/useDragHandlers.ts` for HTML5 drag event management
   - Implement `createDragItem` function with proper payload creation for different drag types
@@ -64,10 +46,6 @@
 
 - [x] 4.3 Extract and modularize existing touch drag logic
 
-
-
-
-
   - Extract touch handling from existing `useDraggable.ts` into `src/hooks/drag/useTouchDrag.ts`
   - Preserve existing long-press detection, movement threshold, and haptic feedback
   - Maintain current touch event cleanup and memory management
@@ -75,10 +53,6 @@
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
 - [x] 4.4 Extract and modularize existing keyboard drag logic
-
-
-
-
 
   - Extract keyboard handling from existing `useDraggable.ts` into `src/hooks/drag/useKeyboardDrag.ts`
   - Preserve existing spacebar, arrow key, and escape key functionality
@@ -88,10 +62,6 @@
 
 - [x] 4.5 Extract and modularize existing auto-scroll logic
 
-
-
-
-
   - Extract auto-scroll functionality from existing `useDraggable.ts` into `src/hooks/drag/useAutoScroll.ts`
   - Preserve existing dynamic scroll speed calculation and out-of-bounds scrolling
   - Maintain current requestAnimationFrame optimization and cleanup logic
@@ -100,10 +70,6 @@
 
 - [x] 4.6 Extract and modularize existing visual feedback logic
 
-
-
-
-
   - Extract scroll locking and visual feedback from existing `useDraggable.ts` into `src/hooks/drag/useDragVisualFeedback.ts`
   - Preserve existing body scroll locking, CSS class management, and cleanup logic
   - Maintain current scroll position restoration with requestAnimationFrame
@@ -111,11 +77,6 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
 - [x] 5. Create main orchestrator hook
-
-
-
-
-
   - Refactor `src/hooks/useDraggable.ts` to use modular hook architecture
   - Integrate all sub-hooks: drag state, handlers, touch, keyboard, auto-scroll, and visual feedback
   - Implement unified event handler creation with proper prop spreading
@@ -124,12 +85,6 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
 - [x] 6. Remove legacy DragContext implementation
-
-
-
-
-
-
   - Delete `src/components/DragContext.js` file completely
   - Remove all imports and usage of `DragProvider` and `useDrag` from components
   - Update any remaining references to use the new Zustand-based system
@@ -138,11 +93,7 @@
 
 - [x] 7. Refactor DraggableTrackList component for new architecture
 
-
-
 - [x] 7.1 Implement scroll position preservation
-
-
 
   - Update `src/components/DraggableTrackList.tsx` to use `useScrollPosition` hook
   - Implement capture-and-restore pattern in `handleInternalReorder` and `handleExternalAdd`
@@ -152,10 +103,6 @@
 
 - [x] 7.2 Integrate new drag system
 
-
-
-
-
   - Replace existing drag logic with new `useDraggable` hook
   - Implement proper drop handling for internal reordering and external track addition
   - Add drop position calculation and visual feedback during drag operations
@@ -163,10 +110,6 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4_
 
 - [x] 7.3 Add comprehensive drop zone handling
-
-
-
-
 
   - Implement intelligent drop index calculation based on mouse/touch position
   - Add visual drop indicators and feedback during drag operations
@@ -176,13 +119,7 @@
 
 - [x] 8. Implement modal coordination system
 
-
-
-
-
-
 - [x] 8.1 Update AddUnselectedModal for drag coordination
-
 
   - Modify `src/components/AddUnselectedModal.tsx` to use `useDragState` hook
   - Implement automatic visual muting when external drag operations are active
@@ -192,7 +129,6 @@
 
 - [x] 8.2 Update SpotifySearchModal for drag coordination
 
-
   - Modify `src/components/SpotifySearchModal.tsx` to use `useDragState` hook
   - Implement same visual coordination system as AddUnselectedModal
   - Add proper drag source identification to prevent self-muting
@@ -201,14 +137,7 @@
 
 - [x] 9. Update individual track components
 
-
-
-
-
-
-
 - [x] 9.1 Refactor TrackListItem component
-
 
   - Update track item components to use new `useDraggable` hook
   - Implement proper drag handle props and visual feedback
@@ -218,7 +147,6 @@
 
 - [x] 9.2 Update modal track items
 
-
   - Ensure track items in modals use appropriate drag types ('modal-track', 'search-track')
   - Implement proper payload creation with source identification
   - Add visual feedback for draggable items in modal contexts
@@ -227,13 +155,7 @@
 
 - [x] 9.5. Eliminate modal UI duplication through abstraction
 
-
-
-
-
-
 - [x] 9.5.1 Create useModalDragInteraction hook
-
 
   - Extract duplicated modal drag coordination logic from AddUnselectedModal and SpotifySearchModal
   - Create `src/hooks/useModalDragInteraction.ts` that consumes useDragState and returns modalStyles and backdropStyles
@@ -242,7 +164,6 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
 - [x] 9.5.2 Create useTrackSelection hook
-
 
   - Extract duplicated track selection state management from both modal components
   - Create `src/hooks/useTrackSelection.ts` that manages selectedTracksToAdd Set state
@@ -253,7 +174,6 @@
 
 - [x] 9.5.3 Create useUnselectedTracks hook
 
-
   - Extract data-fetching logic from AddUnselectedModal into dedicated hook
   - Create `src/hooks/useUnselectedTracks.ts` following the pattern of useSpotifySearch
   - Handle playlist track fetching, deduplication, and filtering logic
@@ -262,7 +182,6 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
 - [x] 9.5.4 Create generic TrackSourceModal component
-
 
   - Create `src/components/TrackSourceModal.tsx` as a generic modal component
   - Handle shared layout structure: header info, search input, track list, and footer
@@ -274,7 +193,6 @@
 
 - [x] 9.5.5 Refactor modal components to use generic TrackSourceModal
 
-
   - Update AddUnselectedModal to become a thin wrapper around TrackSourceModal
   - Update SpotifySearchModal to become a thin wrapper around TrackSourceModal
   - Each modal should only be responsible for calling its data hook and passing results to TrackSourceModal
@@ -285,13 +203,7 @@
 
 - [x] 10. Implement comprehensive error handling and cleanup
 
-
-
-
-
-
 - [x] 10.1 Add drag operation error boundaries
-
 
   - Create error boundary component specifically for drag operations
   - Implement automatic drag state cleanup on JavaScript errors
@@ -300,7 +212,6 @@
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
 - [x] 10.2 Implement robust cleanup mechanisms
-
 
   - Ensure all timers, event listeners, and animation frames are properly cleaned up
   - Add component unmount safety for active drag operations

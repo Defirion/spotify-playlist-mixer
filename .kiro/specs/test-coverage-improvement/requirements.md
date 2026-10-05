@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Test Coverage Improvement Requirements
 
 ## Introduction
@@ -7,13 +12,15 @@ This feature aims to increase the test coverage from the current 63.57% to a tar
 ## Scope and Exclusions
 
 **Included in Coverage Goals:**
+
 - All source files in src/ directory
 - Custom React components and hooks
 - Business logic and utility functions
 - Service layer and API interactions
 
 **Excluded from Coverage Requirements:**
-- Type definition files (*.d.ts)
+
+- Type definition files (\*.d.ts)
 - Configuration files (config.ts, index.ts exports)
 - Test files and mocks
 - Third-party library code

@@ -14,13 +14,13 @@ Updated 5 October 2026. Repository: `C:/Users/defir/Documents/fun_with_Copilot/K
 
 Local correctness work and the authenticated load/mix/edit/save/refresh flow are verified. **SM3 verification is complete for the available sources.** Detailed evidence, supported behavior, recovery instructions, and provider limitations are in [the correctness verification record](docs/correctness-release-2026-10-05.md). This is a local correctness result; no deployment was performed.
 
-| Milestone | Current status |
-|---|---|
-| SM0 | Runtime paths and baseline verified; Development Mode confirmed by user; local OAuth redirect and owned/third-party source access verified live; no collaborative source available; exact granted scope list/dashboard configuration not inspected |
-| SM1 | Duration seconds and preset values, mode precedence, exhaustion semantics, occurrence editing, and state playlist limit implemented; automated regressions pass |
-| SM2 | Pagination, cancellation, bounded retry waits, partial-save reporting, write replay protection, toast IDs, and privacy corrections implemented; automated regressions pass; live loading, occurrence editing, ordered save, and toast dismissal verified |
-| SM3 | Complete for available sources: 1,063 tests pass across 136 files; coverage, lint, and production build pass; production build added to CI; local production startup/deep link and authenticated mix/save/refresh flow checked; deployed `/privacy` returns HTTP 200 with the app shell |
-| SM4 | First end-to-end provider boundary and selective cleanup implemented and live verified; 1,061 tests and coverage pass, lint and build pass; remaining UI/store DTO migration and additional cleanup deferred |
+| Milestone | Current status                                                                                                                                                                                                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SM0       | Runtime paths and baseline verified; Development Mode confirmed by user; local OAuth redirect and owned/third-party source access verified live; no collaborative source available; exact granted scope list/dashboard configuration not inspected                                      |
+| SM1       | Duration seconds and preset values, mode precedence, exhaustion semantics, occurrence editing, and state playlist limit implemented; automated regressions pass                                                                                                                         |
+| SM2       | Pagination, cancellation, bounded retry waits, partial-save reporting, write replay protection, toast IDs, and privacy corrections implemented; automated regressions pass; live loading, occurrence editing, ordered save, and toast dismissal verified                                |
+| SM3       | Complete for available sources: 1,063 tests pass across 136 files; coverage, lint, and production build pass; production build added to CI; local production startup/deep link and authenticated mix/save/refresh flow checked; deployed `/privacy` returns HTTP 200 with the app shell |
+| SM4       | Provider boundary and six-stage cleanup implemented and live verified; final cleanup: 788 tests in 109 files, 95.90% statement coverage, lint and build pass; UI/store DTO migration remains deferred; CI-runner performance baseline remains pending                                   |
 
 Baseline was 1,029 passing tests across 131 files and a passing build. Final statement coverage is 95.83%, above CI's 60% threshold. No persisted mix settings or saved user-preset implementation was found, so no speculative duration migration was added. Existing automatic generation removes duplicate Spotify track IDs; manually added occurrences remain independently editable and retain repeated URI order when saved.
 
@@ -36,6 +36,7 @@ Fresh SM4 acceptance verified both supplied sources, all three mix modes, both r
 
 Mixer usability follow-up: exhaustion guidance now accounts for different source song lengths, offers opt-in source-size ratio suggestions, and keeps the stop/continue choice available even without a warning. Applying suggestions preserves group sizes and invalidates the old preview. The full suite passes 1,074 tests across 138 files with 95.73% statement coverage; build, lint and changed-file formatting pass. Whole-tree formatting still flags 21 untouched CSS files. This change remains local; broader provider/local-library expansion remains deferred. See [exhaustion guidance and verification](docs/mixer-exhaustion-guidance.md).
 
+Repository cleanup completed on `codex/repository-cleanup`, after first committing the pre-existing feature work as `511e5019` at the user's request. The [six-stage cleanup plan](docs/repository-cleanup-plan.md) and [implementation/evidence record](docs/reviews/2026-10-05-cleanup-implementation.md) detail removals, retained/moved behavior assertions and exceptions. Final checks pass: 788 tests across 109 files, 95.90% statement coverage with the unchanged 60% threshold, build, lint, tooling tests and a compatible local performance comparison (+3.47%, unchanged 10% threshold). Static production reachability has no inactive or unresolved modules in its scope. Fresh load/mix/edit/refresh checks pass; no external save was initiated during cleanup. Eighteen untouched CSS formatting files and four unused test parameters remain documented. The local benchmark baseline is deliberately incompatible with GitHub's Linux/Node 22 context; that runner still needs its own approved baseline. This work has not been pushed or deployed, and the UI/store DTO migration remains deferred.
 The dated observations below are retained as the starting snapshot. The execution record supersedes their implementation status, including the all-song cap, ambiguous duration name, and missing CI build step.
 
 ## Outcome
@@ -125,16 +126,16 @@ Local scanning, fuzzy matching, databases, Navidrome/Jellyfin adapters, playback
 
 ## Files to start from
 
-`PLAN.md`, `docs/reviews/2026-09-full-code-review.md`, `docs/local-library-direction.md`, `src/services/spotify.ts`, `src/services/fetchClient.ts`, `src/services/_helpers/`, `src/hooks/usePlaylistSearch.ts`, `usePlaylistTracks.ts`, `useMixPreview.ts`, `useMixGeneration.ts`, `src/utils/mixer/`, `src/utils/trackUtils.ts`, `src/store/slices/mixingSlice.ts`, `src/components/features/mixer/PlaylistForm.tsx`, `src/components/PresetTemplates.tsx`, `.github/workflows/ci.yml`.
+`PLAN.md`, `docs/reviews/2026-09-full-code-review.md`, `docs/local-library-direction.md`, `src/services/spotify.ts`, `src/services/fetchClient.ts`, `src/services/_helpers/`, `src/hooks/usePlaylistSearch.ts`, `useMixPreview.ts`, `useMixGeneration.ts`, `src/utils/mixer/`, `src/utils/trackUtils.ts`, `src/store/slices/mixingSlice.ts`, `src/components/features/mixer/PlaylistForm.tsx`, `src/components/PresetTemplates.tsx`, `.github/workflows/ci.yml`.
 
 Read active source before applying the old review. These plans require no new agent-role workflow or full audit ceremony.
 
 ## Previous scope carried forward
 
-| Previous scope | Current execution milestone |
-|---|---|
-| PR 1 correctness | SM0 identifies surviving findings; SM1/SM2 repair them; SM3 verifies the release |
-| PR 2 provider boundary | SM4 introduces canonical models, gateway, and minimal source/destination contracts |
-| PR 3 cleanup | SM3 adds production-build CI; SM4 removes confirmed-dead code/fixtures and generated outputs |
+| Previous scope         | Current execution milestone                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| PR 1 correctness       | SM0 identifies surviving findings; SM1/SM2 repair them; SM3 verifies the release             |
+| PR 2 provider boundary | SM4 introduces canonical models, gateway, and minimal source/destination contracts           |
+| PR 3 cleanup           | SM3 adds production-build CI; SM4 removes confirmed-dead code/fixtures and generated outputs |
 
 Seeded randomness, a broad accessibility redesign, a unified error hierarchy, speculative CSP/header work, local music-server implementation, and local-library matching remain deferred. Lint changes are bounded by the existing tree; they do not authorize unrelated cleanup. Vite migration and the existing SPA fallback are present and need verification rather than reimplementation.

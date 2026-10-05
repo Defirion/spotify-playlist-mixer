@@ -1,6 +1,5 @@
 /**
  * Factories to create mock modules for useMixPreview and useMixGeneration.
- * Moved out of `__tests__` so Jest won't auto-discover it as a test file.
  */
 import React from 'react';
 import type { SpotifyTrack } from '../../types/spotify';
@@ -21,24 +20,6 @@ type UseMixPreviewImpl = (
 ) => Promise<PreviewResult> | PreviewResult;
 
 export const makeUseMixPreviewModule = (impl?: UseMixPreviewImpl) => {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  const _previewFn = vi.fn(
-    async (...args: Parameters<UseMixPreviewImpl>): Promise<PreviewResult> => {
-      if (impl) {
-        return (await Promise.resolve(impl(...args))) as PreviewResult;
-      }
-      // Default to returning fixture tracks so integration tests render preview
-      return {
-        tracks: mockTracks,
-        stats: {},
-        totalDuration: mockTracks.reduce(
-          (acc: number, t: any) => acc + (t.duration_ms || 0),
-          0
-        ),
-      } as PreviewResult;
-    }
-  );
-  /* eslint-enable @typescript-eslint/no-unused-vars */
   return {
     __esModule: true,
     useMixPreview: () => {

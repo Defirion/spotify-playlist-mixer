@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Design Document
 
 ## Overview
@@ -17,16 +22,19 @@ The simplified unified drag system will replace the current complex implementati
 ### Component Interaction Flows
 
 **Mouse Flow:**
+
 ```
 Mouse Down → HTML5 Drag Start → Drag Over → Drop → Drag End
 ```
 
 **Touch Flow:**
+
 ```
 Touch Start → Long Press (300ms) → Touch Move → Drop Zone Detection → Touch End → Drop
 ```
 
 **Keyboard Flow:**
+
 ```
 Focus → Arrow Keys → Space/Enter → Move → Space/Enter → Drop
 ```
@@ -98,17 +106,20 @@ interface UseDraggableReturn {
 ### Event Handler Design
 
 **Mouse Handlers:**
+
 - Use native HTML5 drag events for optimal desktop experience
 - Disable touch handlers when mouse drag is active
 - Standard dragstart, dragover, drop event handling
 
 **Touch Handlers:**
+
 - Disable HTML5 draggable when touch is detected
 - Start long press timer (300ms) on touch start
 - Use direct drop zone detection on touch end
 - Re-enable HTML5 draggable after touch sequence
 
 **Keyboard Handlers:**
+
 - Use arrow keys for navigation
 - Space/Enter to start/end drag operations
 - Visual focus indicators for accessibility
@@ -117,6 +128,7 @@ interface UseDraggableReturn {
 ### Visual Feedback System
 
 **Drag Start Feedback:**
+
 ```css
 .touch-dragging {
   opacity: 0.7;
@@ -127,6 +139,7 @@ interface UseDraggableReturn {
 ```
 
 **Global Drag State Feedback:**
+
 ```css
 body.drag-active {
   background-color: rgba(0, 0, 0, 0.05);
@@ -141,6 +154,7 @@ body.drag-active {
 ```
 
 **Drop Zone Container Feedback:**
+
 ```css
 .drop-zone-active {
   background-color: rgba(0, 255, 0, 0.1);
@@ -149,6 +163,7 @@ body.drag-active {
 ```
 
 **Drop Line Between Tracks:**
+
 ```css
 .drop-line {
   height: 3px;
@@ -160,8 +175,12 @@ body.drag-active {
 }
 
 @keyframes pulse {
-  from { opacity: 0.7; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .drop-line-first {
@@ -187,21 +206,25 @@ const calculateDropPosition = (clientY: number, container: HTMLElement) => {
   const tracks = container.querySelectorAll('[data-track-item]');
   const containerRect = container.getBoundingClientRect();
   const relativeY = clientY - containerRect.top;
-  
+
   // Find the closest track and determine if we're above or below it
   for (let i = 0; i < tracks.length; i++) {
     const track = tracks[i] as HTMLElement;
     const trackRect = track.getBoundingClientRect();
     const trackRelativeTop = trackRect.top - containerRect.top;
     const trackRelativeBottom = trackRect.bottom - containerRect.top;
-    
-    if (relativeY < trackRelativeTop + (trackRect.height / 2)) {
+
+    if (relativeY < trackRelativeTop + trackRect.height / 2) {
       return { index: i, position: 'before', element: track };
     }
   }
-  
+
   // If we're past all tracks, drop at the end
-  return { index: tracks.length, position: 'after', element: tracks[tracks.length - 1] };
+  return {
+    index: tracks.length,
+    position: 'after',
+    element: tracks[tracks.length - 1],
+  };
 };
 ```
 
@@ -222,7 +245,7 @@ interface SimpleDragSlice {
   isDragging: boolean;
   draggedItem: any;
   inputMethod: 'mouse' | 'touch' | 'keyboard' | null;
-  
+
   // Actions
   startDrag: (item: any, method: 'mouse' | 'touch' | 'keyboard') => void;
   endDrag: () => void;
@@ -235,7 +258,7 @@ interface SimpleDragSlice {
 ```typescript
 interface DropTarget {
   element: HTMLElement;
-  index: number;           // Drop position index
+  index: number; // Drop position index
   type: 'before' | 'after' | 'replace';
 }
 ```
@@ -302,19 +325,19 @@ describe('useDraggable', () => {
   it('should start drag after 300ms long press on touch', () => {
     // Test touch long press detection
   });
-  
+
   it('should use HTML5 drag events for mouse input', () => {
     // Test mouse drag functionality
   });
-  
+
   it('should support keyboard navigation', () => {
     // Test keyboard accessibility
   });
-  
+
   it('should detect drop zones correctly', () => {
     // Test drop zone detection
   });
-  
+
   it('should reset state on errors', () => {
     // Test error handling
   });
@@ -324,22 +347,26 @@ describe('useDraggable', () => {
 ## Implementation Plan
 
 ### Phase 1: Unified Hook Implementation
+
 - Create new `useDraggable` hook with input method separation
 - Implement mouse handlers using HTML5 drag events
 - Implement touch handlers with 300ms long press detection
 - Implement keyboard handlers for accessibility
 
 ### Phase 2: Input Method Switching
+
 - Add logic to enable/disable input methods cleanly
 - Prevent conflicts between mouse and touch
 - Ensure keyboard works independently
 
 ### Phase 3: Drop Zone Integration
+
 - Implement drop zone detection for all input methods
 - Add visual feedback that works across input types
 - Integrate with existing track list drop logic
 
 ### Phase 4: Component Integration and Testing
+
 - Replace existing complex `useDraggable` with simplified `useSimpleDraggable` version
 - Test on desktop (mouse), mobile (touch), and keyboard navigation
 - Ensure no regression in existing functionality

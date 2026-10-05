@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Test Coverage Improvement Design
 
 ## Overview
@@ -21,16 +26,16 @@ The improvement process follows a data-driven approach:
 Files are classified into impact categories:
 
 **High Impact (Target: 95% coverage)**
+
 - `src/services/` - API interactions and external service calls
 - `src/hooks/` - Custom React hooks with business logic
 - `src/store/` - State management and data flow
 - `src/utils/mixer/` - Core playlist mixing algorithms
 
 **Medium Impact (Target: 88% coverage)**
+
 - `src/components/` - React components with user interactions
 - `src/utils/` - General utility functions
-
-
 
 ## Components and Interfaces
 
@@ -39,6 +44,7 @@ Files are classified into impact categories:
 Based on current coverage report, priority files identified:
 
 **Critical Priority (0-50% coverage):**
+
 - `src/utils/accessibility.ts` (0%)
 - `src/utils/haptics.ts` (0%)
 - `src/utils/migrateError.ts` (0%)
@@ -48,6 +54,7 @@ Based on current coverage report, priority files identified:
 - `src/services/spotify.ts` (10%)
 
 **High Priority (50-70% coverage):**
+
 - `src/App.tsx` (50%)
 - `src/components/DndProvider.tsx` (55.55%)
 - `src/components/DragErrorBoundary.tsx` (60%)
@@ -56,6 +63,7 @@ Based on current coverage report, priority files identified:
 - `src/hooks/useVirtualization.ts` (54.38%)
 
 **Medium Priority (70-90% coverage):**
+
 - `src/AppShell.tsx` (80%)
 - `src/components/PlaylistSelector.tsx` (71.71%)
 - `src/components/SpotifySearchModal.tsx` (72.72%)
@@ -64,24 +72,28 @@ Based on current coverage report, priority files identified:
 ### Testing Strategy by File Type
 
 **React Components:**
+
 - Unit tests for component rendering and props
 - User interaction testing with @testing-library/user-event
 - Error boundary and edge case testing
 - Accessibility testing where applicable
 
 **Custom Hooks:**
+
 - Hook behavior testing with @testing-library/react renderHook utility
 - State management and side effect testing
 - Error handling and cleanup testing
 - Integration with React lifecycle
 
 **Services and APIs:**
+
 - Mock-based testing for external API calls
 - Error response handling
 - Data transformation testing
 - Authentication and authorization flows
 
 **Utilities and Pure Functions:**
+
 - Input/output testing with various data types
 - Edge case and boundary testing
 - Error condition testing
@@ -112,6 +124,7 @@ interface TestingStrategy {
 ### Progress Tracking
 
 Coverage improvements will be tracked through:
+
 - Before/after coverage percentages per file
 - Overall coverage metrics progression
 - Test suite execution time impact
@@ -122,18 +135,21 @@ Coverage improvements will be tracked through:
 ### Test Failure Management
 
 **Flaky Test Prevention:**
+
 - Use deterministic test data
 - Avoid time-dependent assertions
 - Proper async/await handling
 - Clean test isolation
 
 **Mock Management:**
+
 - Reuse existing mock infrastructure
 - Maintain mock consistency across tests
 - Clear mock state between tests
 - Document mock behavior expectations
 
 **Coverage Measurement Accuracy:**
+
 - Exclude test files from coverage reports
 - Handle dynamic imports properly
 - Account for conditional code paths
@@ -144,11 +160,13 @@ Coverage improvements will be tracked through:
 ### Phase 1: Critical Priority Files (0-50% coverage)
 
 **Focus Areas:**
+
 1. Core service files (`spotify.ts`, `fetchClient.ts`)
 2. Essential hooks (`useMixGeneration.ts`, `useMixPreview.ts`)
 3. Utility functions (`accessibility.ts`, `haptics.ts`, `migrateError.ts`, `playlistMixer.ts`)
 
 **Approach:**
+
 - Start with pure functions and utilities (easier to test)
 - Add service layer tests with comprehensive mocking
 - Implement hook tests with proper React testing patterns
@@ -156,11 +174,13 @@ Coverage improvements will be tracked through:
 ### Phase 2: High Priority Files (50-70% coverage)
 
 **Focus Areas:**
+
 1. Complex components (`App.tsx`, `DndProvider.tsx`)
 2. Interactive components (`TrackList.tsx`)
 3. Advanced hooks (`useCustomTouchEvents.ts`, `useVirtualization.ts`)
 
 **Approach:**
+
 - Enhance existing test suites with missing scenarios
 - Add user interaction testing
 - Test error boundaries and edge cases
@@ -169,11 +189,13 @@ Coverage improvements will be tracked through:
 ### Phase 3: Medium Priority Files (70-90% coverage)
 
 **Focus Areas:**
+
 1. Well-tested components needing final coverage push
 2. Modal and overlay components
 3. Search and selection components
 
 **Approach:**
+
 - Fill remaining coverage gaps
 - Add comprehensive edge case testing
 - Enhance error handling coverage
@@ -182,16 +204,17 @@ Coverage improvements will be tracked through:
 ### Testing Patterns and Best Practices
 
 **Component Testing Pattern:**
+
 ```typescript
 describe('ComponentName', () => {
   it('should render with default props when mounted', () => {
     // Test basic rendering
   });
-  
+
   it('should handle user interactions when clicked', () => {
     // Test user interactions
   });
-  
+
   it('should display error state when error occurs', () => {
     // Test error scenarios
   });
@@ -199,16 +222,17 @@ describe('ComponentName', () => {
 ```
 
 **Hook Testing Pattern:**
+
 ```typescript
 describe('useHookName', () => {
   it('should return initial state when first called', () => {
     // Test initial state
   });
-  
+
   it('should update state when action is triggered', () => {
     // Test state changes
   });
-  
+
   it('should cleanup resources when unmounted', () => {
     // Test cleanup
   });
@@ -216,16 +240,17 @@ describe('useHookName', () => {
 ```
 
 **Service Testing Pattern:**
+
 ```typescript
 describe('ServiceName', () => {
   it('should return data when API call succeeds', () => {
     // Test success scenarios
   });
-  
+
   it('should handle errors when API call fails', () => {
     // Test error scenarios
   });
-  
+
   it('should transform data when processing response', () => {
     // Test data transformation
   });
@@ -235,6 +260,7 @@ describe('ServiceName', () => {
 ### Quality Assurance
 
 **Test Quality Metrics:**
+
 - Test names follow "should [behavior] when [condition]" pattern
 - Each test focuses on single behavior
 - Proper use of arrange-act-assert pattern
@@ -242,6 +268,7 @@ describe('ServiceName', () => {
 - Fast execution (unit tests <100ms each)
 
 **Coverage Quality:**
+
 - Meaningful assertions over coverage percentage
 - Test both happy path and error conditions
 - Cover edge cases and boundary conditions

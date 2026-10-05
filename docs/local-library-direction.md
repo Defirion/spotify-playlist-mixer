@@ -12,7 +12,9 @@ The intended flow is:
 4. create a local playlist from confirmed matches
 5. retain missing and ambiguous tracks as unresolved metadata
 
-This document records architectural direction only. It is not an implementation commitment for the current repair cycle.
+The canonical model and Spotify source/destination boundary were implemented on
+5 October 2026. Local scanning, matching, playback, additional adapters and local
+playlist output remain future direction. See [provider-boundary verification](provider-boundary-2026-10-05.md).
 
 ## Architectural Principle
 
@@ -28,14 +30,14 @@ mixer or library matcher
 destination adapter
 ```
 
-The mixer should be able to operate on canonical domain tracks regardless of where those tracks originated.
+The mixer now operates on canonical domain tracks. The editor still uses display DTOs through the gateway presentation bridge.
 
 ## Canonical Track Direction
 
-The eventual internal track model should contain provider-neutral metadata such as:
+The implemented subset in `src/types/domain.ts` contains:
 
 ```ts
-type TrackSourceRef = {
+type SourceRef = {
   provider: string;
   id: string;
   uri?: string;
@@ -50,8 +52,7 @@ type Track = {
   isrc?: string;
   releaseDate?: string;
   artworkUrl?: string;
-  popularity?: number;
-  sourceRefs: TrackSourceRef[];
+  sourceRefs: SourceRef[];
 };
 ```
 
@@ -64,10 +65,8 @@ type Playlist = {
   id: string;
   name: string;
   tracks: Track[];
-  source?: {
-    provider: string;
-    id: string;
-  };
+  source?: SourceRef;
+  sourceTotal?: number;
 };
 ```
 
@@ -75,24 +74,32 @@ A source playlist may therefore come from Spotify, a local library, an exported 
 
 ## Source and Destination Contracts
 
-The current repair may introduce minimal contracts similar to:
+The implemented contracts are in `src/types/domain.ts`: reads accept a small
+playlist reference plus optional cancellation/progress; saves accept a canonical
+playlist and an optional session-continuity check. Their current signatures are:
 
 ```ts
 interface PlaylistSource {
-  getPlaylist(reference: string): Promise<Playlist>;
+  getPlaylist(
+    reference: Pick<Playlist, 'id' | 'name' | 'source'>,
+    options?: PlaylistReadOptions
+  ): Promise<Playlist>;
 }
 
 interface PlaylistDestination {
-  createPlaylist(
+  savePlaylist(
     playlist: Playlist,
-    resolvedTracks: readonly ResolvedTrack[]
+    options?: { isSessionCurrent?: () => boolean }
   ): Promise<CreatedPlaylist>;
 }
 ```
 
 These are intentionally small. Do not build a generic plugin platform around them.
 
-## Matching Model
+Current mixing uses ratios, durations, order and optional shuffling. It does not
+rank tracks by popularity or fabricate provider metadata.
+
+## Future matching model
 
 A source track resolves as one of:
 

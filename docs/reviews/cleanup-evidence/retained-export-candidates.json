@@ -1,0 +1,2056 @@
+[
+  {
+    "file": "src/App.tsx",
+    "reportedLine": 21,
+    "name": "MainApp",
+    "declarations": [
+      {
+        "file": "src/App.tsx",
+        "line": 21
+      }
+    ],
+    "references": [
+      {
+        "file": "src/App.tsx",
+        "line": 177
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 69
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 89
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 97
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 108
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 125
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 140
+      },
+      {
+        "file": "src/__tests__/App.test.tsx",
+        "line": 171
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/hooks/useRatioCalculation.ts",
+    "reportedLine": 5,
+    "name": "ExampleMixData",
+    "declarations": [
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 17
+      },
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 58
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/hooks/useRatioCalculation.ts",
+    "reportedLine": 16,
+    "name": "UseRatioCalculationReturn",
+    "declarations": [
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 16
+      }
+    ],
+    "references": [
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 31
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/mocks/fixtures.ts",
+    "reportedLine": 1,
+    "name": "mockUserProfile",
+    "declarations": [
+      {
+        "file": "src/mocks/fixtures.ts",
+        "line": 1
+      }
+    ],
+    "references": [
+      {
+        "file": "src/__tests__/integration/CompleteMixingWorkflow.test.tsx",
+        "line": 30
+      },
+      {
+        "file": "src/test-utils/__tests__/json-serializability.test.ts",
+        "line": 114
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/mocks/fixtures.ts",
+    "reportedLine": 19,
+    "name": "mockPlaylists",
+    "declarations": [
+      {
+        "file": "src/mocks/fixtures.ts",
+        "line": 19
+      }
+    ],
+    "references": [
+      {
+        "file": "src/__tests__/integration/CompleteMixingWorkflow.test.tsx",
+        "line": 91
+      },
+      {
+        "file": "src/test-utils/__tests__/json-serializability.test.ts",
+        "line": 115
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/mocks/fixtures.ts",
+    "reportedLine": 298,
+    "name": "mockAuthToken",
+    "declarations": [
+      {
+        "file": "src/mocks/fixtures.ts",
+        "line": 298
+      }
+    ],
+    "references": [
+      {
+        "file": "src/test-utils/__tests__/json-serializability.test.ts",
+        "line": 117
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/fetchClient.ts",
+    "reportedLine": 8,
+    "name": "FetchClientOptions",
+    "declarations": [
+      {
+        "file": "src/services/fetchClient.ts",
+        "line": 8
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/fetchClient.ts",
+        "line": 17
+      },
+      {
+        "file": "src/services/fetchClient.ts",
+        "line": 117
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/fetchClient.ts",
+    "reportedLine": 117,
+    "name": "createFetchClient",
+    "declarations": [
+      {
+        "file": "src/services/fetchClient.ts",
+        "line": 117
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/fetchClient.ts",
+        "line": 120
+      },
+      {
+        "file": "src/utils/spotify.ts",
+        "line": 32
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 31
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 58
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 79
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 107
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 140
+      },
+      {
+        "file": "src/services/__tests__/fetchClient.test.ts",
+        "line": 169
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/spotifyAuth.ts",
+    "reportedLine": 19,
+    "name": "SPOTIFY_AUTHORIZE_URL",
+    "declarations": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 19
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 107
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/spotifyAuth.ts",
+    "reportedLine": 71,
+    "name": "BeginAuthorizationOptions",
+    "declarations": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 71
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 88
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/spotifyAuth.ts",
+    "reportedLine": 154,
+    "name": "CompleteAuthorizationOptions",
+    "declarations": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 154
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/spotifyAuth.ts",
+        "line": 172
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/store/index.ts",
+    "reportedLine": 17,
+    "name": "AppStore",
+    "declarations": [
+      {
+        "file": "src/store/index.ts",
+        "line": 17
+      }
+    ],
+    "references": [
+      {
+        "file": "src/store/index.ts",
+        "line": 20
+      },
+      {
+        "file": "src/store/index.ts",
+        "line": 37
+      },
+      {
+        "file": "src/store/index.ts",
+        "line": 50
+      },
+      {
+        "file": "src/store/index.ts",
+        "line": 62
+      },
+      {
+        "file": "src/store/index.ts",
+        "line": 75
+      },
+      {
+        "file": "src/store/index.ts",
+        "line": 85
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/domain.ts",
+    "reportedLine": 2,
+    "name": "SourceRef",
+    "declarations": [
+      {
+        "file": "src/types/domain.ts",
+        "line": 2
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/domain.ts",
+        "line": 14
+      },
+      {
+        "file": "src/types/domain.ts",
+        "line": 25
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 3,
+    "name": "SpotifyImage",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 3
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 25
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 87
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 9,
+    "name": "SpotifyExternalUrls",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 9
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 17
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 30
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 47
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 63
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 96
+      },
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 9
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 13,
+    "name": "SpotifyArtist",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 13
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 34
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 40
+      },
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 13
+      },
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 21
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 22,
+    "name": "SpotifyAlbum",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 22
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 41
+      },
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 24
+      },
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 33
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 60,
+    "name": "SpotifyPlaylistOwner",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 60
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 92
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 114
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 69,
+    "name": "SpotifyPlaylistTracks",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 69
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 91
+      },
+      {
+        "file": "src/test-utils/fixtures/playlistFactory.ts",
+        "line": 29
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 77,
+    "name": "SpotifyPlaylistItems",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 77
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 89
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 108,
+    "name": "SpotifyPlaylistTrackItem",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 108
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 73
+      },
+      {
+        "file": "src/types/spotify.ts",
+        "line": 119
+      },
+      {
+        "file": "src/test-utils/fixtures/playlistFactory.ts",
+        "line": 30
+      },
+      {
+        "file": "src/test-utils/fixtures/playlistFactory.ts",
+        "line": 34
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 119,
+    "name": "SpotifyPlaylistItem",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 119
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 80
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 128,
+    "name": "SpotifyCreatePlaylistResponse",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 128
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 52
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 135,
+    "name": "SpotifyAddTracksResponse",
+    "declarations": [
+      {
+        "file": "src/types/spotify.ts",
+        "line": 135
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 56
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 5,
+    "name": "WeightType",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 21
+      },
+      {
+        "file": "src/hooks/useRatioCalculation.ts",
+        "line": 30
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 16
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 67
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 84
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 99
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 113
+      },
+      {
+        "file": "src/components/RatioConfig.tsx",
+        "line": 185
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 36,
+    "name": "SearchOptions",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 36
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 27
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 43,
+    "name": "SearchResult",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 43
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 32
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 51,
+    "name": "SearchState",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 51
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/hooks.ts",
+        "line": 16
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 62,
+    "name": "PresetSettings",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 62
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 74
+      },
+      {
+        "file": "src/types/mixer.ts",
+        "line": 79
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 40
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 60
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 80
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 69,
+    "name": "PresetTemplate",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 69
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 19
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 84
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 112
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 137
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 77,
+    "name": "PresetApplyData",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 77
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 114
+      },
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 101
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 84,
+    "name": "TrackSelectHandler",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 84
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 37
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 85,
+    "name": "TrackRemoveHandler",
+    "declarations": [
+      {
+        "file": "src/types/mixer.ts",
+        "line": 85
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 38
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 32,
+    "name": "SpotifyServiceSearchResult",
+    "declarations": [
+      {
+        "file": "src/types/api.ts",
+        "line": 32
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 62
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 36,
+    "name": "SpotifyServicePlaylistTracksResult",
+    "declarations": [
+      {
+        "file": "src/types/api.ts",
+        "line": 36
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/api.ts",
+        "line": 49
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 9,
+    "name": "BaseComponentProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 9
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 18
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 35
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 69
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 79
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 107
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 112
+      },
+      {
+        "file": "src/types/components.ts",
+        "line": 118
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 16,
+    "name": "ModalSize",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 16
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 22
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 62,
+    "name": "ErrorDetails",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 62
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/ErrorHandler.tsx",
+        "line": 74
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 69,
+    "name": "ErrorHandlerProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 69
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/ErrorHandler.tsx",
+        "line": 11
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 76,
+    "name": "LoadingSize",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 76
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 80
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 77,
+    "name": "LoadingVariant",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 77
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 81
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 79,
+    "name": "LoadingProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 79
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/LoadingOverlay.tsx",
+        "line": 5
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 88,
+    "name": "MixedPlaylistToast",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 88
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/components.ts",
+        "line": 108
+      },
+      {
+        "file": "src/components/__tests__/SuccessToast.test.tsx",
+        "line": 13
+      },
+      {
+        "file": "src/components/__tests__/SuccessToast.test.tsx",
+        "line": 14
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 107,
+    "name": "SuccessToastProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 107
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/SuccessToast.tsx",
+        "line": 6
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 112,
+    "name": "PresetTemplatesProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 112
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/PresetTemplates.tsx",
+        "line": 13
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/types/index.ts",
+    "reportedLine": 118,
+    "name": "SpotifyAuthProps",
+    "declarations": [
+      {
+        "file": "src/types/components.ts",
+        "line": 118
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/SpotifyAuth.tsx",
+        "line": 7
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/exhaustionPrediction.ts",
+    "reportedLine": 4,
+    "name": "RatioSuggestion",
+    "declarations": [
+      {
+        "file": "src/utils/exhaustionPrediction.ts",
+        "line": 4
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/exhaustionPrediction.ts",
+        "line": 17
+      },
+      {
+        "file": "src/utils/exhaustionPrediction.ts",
+        "line": 89
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/components/ui/ApiErrorDisplay.tsx",
+    "reportedLine": 5,
+    "name": "ApiErrorType",
+    "declarations": [
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 17
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 60
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 61
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 71
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 76
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 77
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 87
+      },
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 91
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/components/ui/ApiErrorDisplay.tsx",
+    "reportedLine": 32,
+    "name": "ApiErrorDisplayProps",
+    "declarations": [
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 32
+      }
+    ],
+    "references": [
+      {
+        "file": "src/components/ui/ApiErrorDisplay.tsx",
+        "line": 46
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/__mocks__/spotify.ts",
+    "reportedLine": 4,
+    "name": "default",
+    "declarations": [
+      {
+        "file": "src/services/__mocks__/spotify.ts",
+        "line": 4
+      }
+    ],
+    "references": [],
+    "retention": "Vitest automatic module mock retained for vi.mock of its corresponding service/mixer module."
+  },
+  {
+    "file": "src/services/__mocks__/spotify.ts",
+    "reportedLine": 15,
+    "name": "mockGetPlaylistTracks",
+    "declarations": [
+      {
+        "file": "src/services/__mocks__/spotify.ts",
+        "line": 2
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/__mocks__/spotify.ts",
+        "line": 11
+      }
+    ],
+    "retention": "Vitest automatic module mock retained for vi.mock of its corresponding service/mixer module."
+  },
+  {
+    "file": "src/services/_helpers/batching.ts",
+    "reportedLine": 5,
+    "name": "chunkArray",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/batching.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/batching.ts",
+        "line": 22
+      },
+      {
+        "file": "src/services/spotify.ts",
+        "line": 369
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 5
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 6
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 7
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 12
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 14
+      },
+      {
+        "file": "src/services/_helpers/batching.test.ts",
+        "line": 16
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/pagination.ts",
+    "reportedLine": 35,
+    "name": "paginate",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/pagination.ts",
+        "line": 35
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/pagination.ts",
+        "line": 51
+      },
+      {
+        "file": "src/services/spotify.ts",
+        "line": 241
+      },
+      {
+        "file": "src/services/_helpers/pagination.test.ts",
+        "line": 13
+      },
+      {
+        "file": "src/services/_helpers/pagination.test.ts",
+        "line": 20
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/pagination.ts",
+    "reportedLine": 1,
+    "name": "Page",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/pagination.ts",
+        "line": 1
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/pagination.ts",
+        "line": 36
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/requestBody.ts",
+    "reportedLine": 14,
+    "name": "buildAddRequestBody",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/requestBody.ts",
+        "line": 14
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/requestBody.ts",
+        "line": 26
+      },
+      {
+        "file": "src/services/spotify.ts",
+        "line": 372
+      },
+      {
+        "file": "src/services/_helpers/requestBody.test.ts",
+        "line": 6
+      },
+      {
+        "file": "src/services/_helpers/requestBody.test.ts",
+        "line": 12
+      },
+      {
+        "file": "src/services/_helpers/requestBody.test.ts",
+        "line": 17
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/requestBody.ts",
+    "reportedLine": 1,
+    "name": "AddRequestBody",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/requestBody.ts",
+        "line": 1
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/requestBody.ts",
+        "line": 17
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/retry.ts",
+    "reportedLine": 37,
+    "name": "retryWithBackoff",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/retry.ts",
+        "line": 37
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/retry.ts",
+        "line": 62
+      },
+      {
+        "file": "src/services/_helpers/retry.test.ts",
+        "line": 6
+      },
+      {
+        "file": "src/services/_helpers/retry.test.ts",
+        "line": 23
+      },
+      {
+        "file": "src/services/_helpers/retry.test.ts",
+        "line": 40
+      },
+      {
+        "file": "src/services/_helpers/retry.test.ts",
+        "line": 71
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/services/_helpers/retry.ts",
+    "reportedLine": 1,
+    "name": "RetryOptions",
+    "declarations": [
+      {
+        "file": "src/services/_helpers/retry.ts",
+        "line": 1
+      }
+    ],
+    "references": [
+      {
+        "file": "src/services/_helpers/retry.ts",
+        "line": 39
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/store/slices/playlistSlice.ts",
+    "reportedLine": 5,
+    "name": "MAX_PLAYLISTS",
+    "declarations": [
+      {
+        "file": "src/store/slices/playlistSlice.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/store/slices/playlistSlice.ts",
+        "line": 56
+      },
+      {
+        "file": "src/store/slices/playlistSlice.ts",
+        "line": 92
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/store/slices/uiSlice.ts",
+    "reportedLine": 5,
+    "name": "MixedPlaylistToast",
+    "declarations": [
+      {
+        "file": "src/store/slices/uiSlice.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/store/slices/uiSlice.ts",
+        "line": 13
+      },
+      {
+        "file": "src/store/slices/uiSlice.ts",
+        "line": 63
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/test-utils/mocks/spotify.ts",
+    "reportedLine": 13,
+    "name": "makeArtist",
+    "declarations": [
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 13
+      }
+    ],
+    "references": [
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 37
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/test-utils/mocks/spotify.ts",
+    "reportedLine": 24,
+    "name": "makeAlbum",
+    "declarations": [
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 24
+      }
+    ],
+    "references": [
+      {
+        "file": "src/test-utils/mocks/spotify.ts",
+        "line": 38
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/__mocks__/mixer.ts",
+    "reportedLine": 1,
+    "name": "mixPlaylistsWithResult",
+    "declarations": [
+      {
+        "file": "src/utils/__mocks__/mixer.ts",
+        "line": 1
+      }
+    ],
+    "references": [],
+    "retention": "Vitest automatic module mock retained for vi.mock of its corresponding service/mixer module."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 5,
+    "name": "PlaylistTracks",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/types.ts",
+        "line": 5
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/types.ts",
+        "line": 18
+      },
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 86
+      },
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 101
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 57
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 103
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 25
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 45
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 79
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 9,
+    "name": "MixedTrack",
+    "declarations": [
+      {
+        "file": "src/types/domain.ts",
+        "line": 29
+      }
+    ],
+    "references": [
+      {
+        "file": "src/types/domain.ts",
+        "line": 36
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 13
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 56
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 104
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 34
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 249
+      },
+      {
+        "file": "src/services/spotifyGateway.ts",
+        "line": 57
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 11,
+    "name": "DebugInfo",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/types.ts",
+        "line": 11
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 167
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 18,
+    "name": "PlaylistQueues",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/types.ts",
+        "line": 18
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 26
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 10,
+    "name": "safeObjectKeys",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 10
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 103
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 16
+      },
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 39
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 49
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 82
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 85
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 109
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 131
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 45,
+    "name": "calculateTotalDuration",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 45
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 27
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 209
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 17
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 48
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 51
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 5
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 9
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 13
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 71,
+    "name": "validateTrack",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 71
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 127
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 18
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 64
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 62
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 66
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 70
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 71
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts",
+        "line": 75
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 86,
+    "name": "cleanPlaylistTracks",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 86
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 108
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 19
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 37
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 57
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 53
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 62
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 74
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 83
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 151,
+    "name": "formatDuration",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 151
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 20
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 59
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 60
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 65
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 66
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 67
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 9
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 10
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 166,
+    "name": "logDebugInfo",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixerUtils.ts",
+        "line": 166
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 144
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 201
+      },
+      {
+        "file": "src/utils/mixer/__tests__/integration.test.ts",
+        "line": 21
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 73
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts",
+        "line": 78
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 101
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 111
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts",
+        "line": 121
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 10,
+    "name": "shuffleArray",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/trackShuffler.ts",
+        "line": 10
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/trackShuffler.ts",
+        "line": 26
+      },
+      {
+        "file": "src/utils/mixer/__tests__/trackShuffler.test.ts",
+        "line": 10
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 20,
+    "name": "shufflePlaylistTracks",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/trackShuffler.ts",
+        "line": 20
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 57
+      },
+      {
+        "file": "src/utils/mixer/__tests__/trackShuffler.test.ts",
+        "line": 22
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 24,
+    "name": "MixingContext",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 24
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 48
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 224
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 11,
+    "name": "shouldContinueMixing",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 11
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 148
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts",
+        "line": 24
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts",
+        "line": 32
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 34,
+    "name": "shouldStopDueToExhaustion",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 34
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 157
+      },
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 180
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts",
+        "line": 39
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts",
+        "line": 40
+      },
+      {
+        "file": "src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts",
+        "line": 42
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 50,
+    "name": "getNextPlaylistId",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 50
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 166
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  },
+  {
+    "file": "src/utils/mixer/index.ts",
+    "reportedLine": 99,
+    "name": "addSongsFromPlaylist",
+    "declarations": [
+      {
+        "file": "src/utils/mixer/mixingCalculations.ts",
+        "line": 99
+      }
+    ],
+    "references": [
+      {
+        "file": "src/utils/mixer/playlistMixer.ts",
+        "line": 188
+      },
+      {
+        "file": "src/utils/mixer/__tests__/playlistMixer.edgecases.test.ts",
+        "line": 83
+      }
+    ],
+    "retention": "Concrete type or runtime references shown; barrel imports alone excluded."
+  }
+]

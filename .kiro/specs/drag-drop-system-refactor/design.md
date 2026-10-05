@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Design Document
 
 ## Overview
@@ -20,12 +25,14 @@ The refactor will replace the existing React Context-based approach with a Zusta
 ### Current State Analysis
 
 #### Existing Implementation Issues
+
 - **DragContext.js**: Currently manages global state but lacks type safety and proper integration
 - **useDraggable.ts**: Complex hook managing both state and events, leading to coupling issues
 - **DraggableTrackList.tsx**: Contains legacy drag logic alongside new hook usage
 - **Modal Components**: No coordination during external drag operations
 
 #### Proposed Architecture Changes
+
 - **Remove DragContext.js**: Replace with Zustand slice for better performance
 - **Simplify useDraggable.ts**: Focus on event handling only, delegate state to store
 - **Enhance DraggableTrackList.tsx**: Complete integration with new architecture
@@ -76,12 +83,20 @@ export interface ScrollPositionState {
 ```typescript
 // src/store/slices/dragSlice.ts
 import { StateCreator } from 'zustand';
-import { DragState, DraggedItem, DragSourceType, ScrollPositionState } from '../../types/dragAndDrop';
+import {
+  DragState,
+  DraggedItem,
+  DragSourceType,
+  ScrollPositionState,
+} from '../../types/dragAndDrop';
 import { AppStore } from '..';
 
 export interface DragSlice extends DragState, ScrollPositionState {}
 
-export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, get) => ({
+export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (
+  set,
+  get
+) => ({
   // Drag state
   isDragging: false,
   draggedItem: null,
@@ -93,15 +108,17 @@ export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, 
   // Drag actions
   startDrag: <T extends DragSourceType>(item: DraggedItem<T>) => {
     const currentState = get();
-    
+
     // Prevent concurrent drags
     if (currentState.isDragging) {
-      console.warn('[DragSlice] Attempted to start drag while already dragging');
+      console.warn(
+        '[DragSlice] Attempted to start drag while already dragging'
+      );
       return;
     }
 
     console.log(`[DragSlice] Starting drag: type=${item.type}, id=${item.id}`);
-    
+
     set(
       {
         isDragging: true,
@@ -115,14 +132,14 @@ export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, 
 
   endDrag: () => {
     const currentState = get();
-    
+
     if (!currentState.isDragging) {
       console.warn('[DragSlice] Attempted to end drag when not dragging');
       return;
     }
 
     console.log('[DragSlice] Ending drag successfully');
-    
+
     set(
       {
         isDragging: false,
@@ -136,14 +153,14 @@ export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, 
 
   cancelDrag: () => {
     const currentState = get();
-    
+
     if (!currentState.isDragging) {
       console.warn('[DragSlice] Attempted to cancel drag when not dragging');
       return;
     }
 
     console.log('[DragSlice] Canceling drag');
-    
+
     set(
       {
         isDragging: false,
@@ -159,36 +176,26 @@ export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, 
   captureScrollPosition: (container: HTMLElement) => {
     const scrollTop = container.scrollTop;
     console.log(`[DragSlice] Capturing scroll position: ${scrollTop}`);
-    
-    set(
-      { scrollTop },
-      false,
-      'drag/captureScrollPosition'
-    );
+
+    set({ scrollTop }, false, 'drag/captureScrollPosition');
   },
 
   restoreScrollPosition: (container: HTMLElement) => {
     const currentState = get();
-    
+
     if (currentState.scrollTop !== null) {
-      console.log(`[DragSlice] Restoring scroll position: ${currentState.scrollTop}`);
-      container.scrollTop = currentState.scrollTop;
-      
-      // Clear after restoration
-      set(
-        { scrollTop: null },
-        false,
-        'drag/clearScrollPosition'
+      console.log(
+        `[DragSlice] Restoring scroll position: ${currentState.scrollTop}`
       );
+      container.scrollTop = currentState.scrollTop;
+
+      // Clear after restoration
+      set({ scrollTop: null }, false, 'drag/clearScrollPosition');
     }
   },
 
   clearScrollPosition: () => {
-    set(
-      { scrollTop: null },
-      false,
-      'drag/clearScrollPosition'
-    );
+    set({ scrollTop: null }, false, 'drag/clearScrollPosition');
   },
 });
 ```
@@ -200,7 +207,11 @@ export const createDragSlice: StateCreator<AppStore, [], [], DragSlice> = (set, 
 import { createDragSlice, DragSlice } from './slices/dragSlice';
 
 // Add DragSlice to the combined store type
-export type AppStore = AuthSlice & PlaylistSlice & MixingSlice & UISlice & DragSlice;
+export type AppStore = AuthSlice &
+  PlaylistSlice &
+  MixingSlice &
+  UISlice &
+  DragSlice;
 
 // Add the slice to the store creation
 export const useAppStore = create<AppStore>()(
@@ -249,7 +260,7 @@ export const useScrollPosition = () =>
 The drag-and-drop system will be broken down into focused, single-responsibility hooks:
 
 1. **useDragState** - Store integration and state management
-2. **useDragHandlers** - Event handler creation and management  
+2. **useDragHandlers** - Event handler creation and management
 3. **useTouchDrag** - Touch-specific drag logic
 4. **useKeyboardDrag** - Keyboard accessibility
 5. **useAutoScroll** - Auto-scroll functionality
@@ -266,10 +277,10 @@ import { DraggedItem, DragSourceType } from '../../types/dragAndDrop';
 
 export const useDragState = () => {
   const storeState = useStoreDragState();
-  
+
   return {
     ...storeState,
-    isCurrentlyDragged: (itemId: string) => 
+    isCurrentlyDragged: (itemId: string) =>
       storeState.isDragging && storeState.draggedItem?.id === itemId,
   };
 };
@@ -295,41 +306,51 @@ export const useDragHandlers = <T extends DragSourceType>({
   onDragStart,
   onDragEnd,
 }: UseDragHandlersOptions<T>) => {
-  const createDragItem = useCallback((): DraggedItem<T> => ({
-    id: data?.id || `${type}-${Date.now()}`,
-    type,
-    payload: {
-      [type]: type === 'internal-track' 
-        ? { track: data, index: data?.index || 0 }
-        : type === 'modal-track'
-        ? { track: data, source: data?.sourcePlaylist || 'unknown' }
-        : { track: data, query: data?.searchQuery || '' }
-    } as any,
-    timestamp: Date.now(),
-  }), [type, data]);
+  const createDragItem = useCallback(
+    (): DraggedItem<T> => ({
+      id: data?.id || `${type}-${Date.now()}`,
+      type,
+      payload: {
+        [type]:
+          type === 'internal-track'
+            ? { track: data, index: data?.index || 0 }
+            : type === 'modal-track'
+              ? { track: data, source: data?.sourcePlaylist || 'unknown' }
+              : { track: data, query: data?.searchQuery || '' },
+      } as any,
+      timestamp: Date.now(),
+    }),
+    [type, data]
+  );
 
-  const handleHTML5DragStart = useCallback((e: React.DragEvent<HTMLElement>) => {
-    if (disabled) {
-      e.preventDefault();
-      return;
-    }
+  const handleHTML5DragStart = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      if (disabled) {
+        e.preventDefault();
+        return;
+      }
 
-    const dragItem = createDragItem();
-    
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/json', JSON.stringify(dragItem));
-    
-    onDragStart?.(dragItem);
-    return dragItem;
-  }, [disabled, createDragItem, onDragStart]);
+      const dragItem = createDragItem();
 
-  const handleHTML5DragEnd = useCallback((e: React.DragEvent<HTMLElement>, draggedItem: DraggedItem<T> | null) => {
-    const wasSuccessful = e.dataTransfer.dropEffect !== 'none';
-    
-    setTimeout(() => {
-      onDragEnd?.(draggedItem, wasSuccessful);
-    }, 0);
-  }, [onDragEnd]);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/json', JSON.stringify(dragItem));
+
+      onDragStart?.(dragItem);
+      return dragItem;
+    },
+    [disabled, createDragItem, onDragStart]
+  );
+
+  const handleHTML5DragEnd = useCallback(
+    (e: React.DragEvent<HTMLElement>, draggedItem: DraggedItem<T> | null) => {
+      const wasSuccessful = e.dataTransfer.dropEffect !== 'none';
+
+      setTimeout(() => {
+        onDragEnd?.(draggedItem, wasSuccessful);
+      }, 0);
+    },
+    [onDragEnd]
+  );
 
   return {
     createDragItem,
@@ -385,92 +406,105 @@ export const useTouchDrag = <T extends DragSourceType>({
 
   const dragItemRef = useRef<DraggedItem<T> | null>(null);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLElement>) => {
-    if (disabled) return;
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLElement>) => {
+      if (disabled) return;
 
-    const touch = e.touches[0];
-    
-    touchStateRef.current = {
-      isActive: true,
-      startTime: Date.now(),
-      startX: touch.clientX,
-      startY: touch.clientY,
-      currentX: touch.clientX,
-      currentY: touch.clientY,
-      longPressTimer: setTimeout(() => {
-        if (touchStateRef.current.isActive) {
-          const deltaX = Math.abs(touchStateRef.current.currentX - touchStateRef.current.startX);
-          const deltaY = Math.abs(touchStateRef.current.currentY - touchStateRef.current.startY);
-          
-          if (deltaX < movementThreshold && deltaY < movementThreshold) {
-            touchStateRef.current.isLongPress = true;
-            
-            const dragItem = createDragItem();
-            dragItemRef.current = dragItem;
-            
-            onDragStart?.(dragItem);
-            
-            // Haptic feedback
-            if (navigator.vibrate) {
-              navigator.vibrate(100);
+      const touch = e.touches[0];
+
+      touchStateRef.current = {
+        isActive: true,
+        startTime: Date.now(),
+        startX: touch.clientX,
+        startY: touch.clientY,
+        currentX: touch.clientX,
+        currentY: touch.clientY,
+        longPressTimer: setTimeout(() => {
+          if (touchStateRef.current.isActive) {
+            const deltaX = Math.abs(
+              touchStateRef.current.currentX - touchStateRef.current.startX
+            );
+            const deltaY = Math.abs(
+              touchStateRef.current.currentY - touchStateRef.current.startY
+            );
+
+            if (deltaX < movementThreshold && deltaY < movementThreshold) {
+              touchStateRef.current.isLongPress = true;
+
+              const dragItem = createDragItem();
+              dragItemRef.current = dragItem;
+
+              onDragStart?.(dragItem);
+
+              // Haptic feedback
+              if (navigator.vibrate) {
+                navigator.vibrate(100);
+              }
             }
           }
+        }, longPressDelay),
+        isLongPress: false,
+      };
+    },
+    [disabled, longPressDelay, movementThreshold, createDragItem, onDragStart]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLElement>) => {
+      if (!touchStateRef.current.isActive) return;
+
+      const touch = e.touches[0];
+      touchStateRef.current.currentX = touch.clientX;
+      touchStateRef.current.currentY = touch.clientY;
+
+      // Cancel long press if user moves too much before it triggers
+      if (!touchStateRef.current.isLongPress) {
+        const deltaX = Math.abs(touch.clientX - touchStateRef.current.startX);
+        const deltaY = Math.abs(touch.clientY - touchStateRef.current.startY);
+
+        if (deltaX > movementThreshold || deltaY > movementThreshold) {
+          if (touchStateRef.current.longPressTimer) {
+            clearTimeout(touchStateRef.current.longPressTimer);
+            touchStateRef.current.longPressTimer = null;
+          }
         }
-      }, longPressDelay),
-      isLongPress: false,
-    };
-  }, [disabled, longPressDelay, movementThreshold, createDragItem, onDragStart]);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLElement>) => {
-    if (!touchStateRef.current.isActive) return;
-
-    const touch = e.touches[0];
-    touchStateRef.current.currentX = touch.clientX;
-    touchStateRef.current.currentY = touch.clientY;
-
-    // Cancel long press if user moves too much before it triggers
-    if (!touchStateRef.current.isLongPress) {
-      const deltaX = Math.abs(touch.clientX - touchStateRef.current.startX);
-      const deltaY = Math.abs(touch.clientY - touchStateRef.current.startY);
-      
-      if (deltaX > movementThreshold || deltaY > movementThreshold) {
-        if (touchStateRef.current.longPressTimer) {
-          clearTimeout(touchStateRef.current.longPressTimer);
-          touchStateRef.current.longPressTimer = null;
-        }
+        return;
       }
-      return;
-    }
 
-    // Prevent scrolling during drag
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-  }, [movementThreshold]);
+      // Prevent scrolling during drag
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    },
+    [movementThreshold]
+  );
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLElement>) => {
-    if (touchStateRef.current.longPressTimer) {
-      clearTimeout(touchStateRef.current.longPressTimer);
-    }
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLElement>) => {
+      if (touchStateRef.current.longPressTimer) {
+        clearTimeout(touchStateRef.current.longPressTimer);
+      }
 
-    if (touchStateRef.current.isLongPress) {
-      setTimeout(() => {
-        onDragEnd?.(dragItemRef.current, true);
-        dragItemRef.current = null;
-      }, 0);
-    }
+      if (touchStateRef.current.isLongPress) {
+        setTimeout(() => {
+          onDragEnd?.(dragItemRef.current, true);
+          dragItemRef.current = null;
+        }, 0);
+      }
 
-    touchStateRef.current = {
-      isActive: false,
-      startTime: 0,
-      startX: 0,
-      startY: 0,
-      currentX: 0,
-      currentY: 0,
-      longPressTimer: null,
-      isLongPress: false,
-    };
-  }, [onDragEnd]);
+      touchStateRef.current = {
+        isActive: false,
+        startTime: 0,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+        longPressTimer: null,
+        isLongPress: false,
+      };
+    },
+    [onDragEnd]
+  );
 
   return {
     touchState: touchStateRef.current,
@@ -505,45 +539,55 @@ export const useKeyboardDrag = <T extends DragSourceType>({
 }: UseKeyboardDragOptions<T>) => {
   const dragItemRef = useRef<DraggedItem<T> | null>(null);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-    if (disabled) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLElement>) => {
+      if (disabled) return;
 
-    switch (e.key) {
-      case ' ': // Spacebar - toggle drag
-        e.preventDefault();
-        if (!isCurrentlyDragged) {
-          const dragItem = createDragItem();
-          dragItemRef.current = dragItem;
-          onDragStart?.(dragItem);
-        } else {
-          onDragEnd?.(dragItemRef.current, true);
-          dragItemRef.current = null;
-        }
-        break;
-      
-      case 'ArrowUp':
-        if (isCurrentlyDragged) {
+      switch (e.key) {
+        case ' ': // Spacebar - toggle drag
           e.preventDefault();
-          onMove?.('up');
-        }
-        break;
-      
-      case 'ArrowDown':
-        if (isCurrentlyDragged) {
-          e.preventDefault();
-          onMove?.('down');
-        }
-        break;
-      
-      case 'Escape':
-        if (isCurrentlyDragged) {
-          e.preventDefault();
-          onDragEnd?.(dragItemRef.current, false);
-          dragItemRef.current = null;
-        }
-        break;
-    }
-  }, [disabled, isCurrentlyDragged, createDragItem, onDragStart, onDragEnd, onMove]);
+          if (!isCurrentlyDragged) {
+            const dragItem = createDragItem();
+            dragItemRef.current = dragItem;
+            onDragStart?.(dragItem);
+          } else {
+            onDragEnd?.(dragItemRef.current, true);
+            dragItemRef.current = null;
+          }
+          break;
+
+        case 'ArrowUp':
+          if (isCurrentlyDragged) {
+            e.preventDefault();
+            onMove?.('up');
+          }
+          break;
+
+        case 'ArrowDown':
+          if (isCurrentlyDragged) {
+            e.preventDefault();
+            onMove?.('down');
+          }
+          break;
+
+        case 'Escape':
+          if (isCurrentlyDragged) {
+            e.preventDefault();
+            onDragEnd?.(dragItemRef.current, false);
+            dragItemRef.current = null;
+          }
+          break;
+      }
+    },
+    [
+      disabled,
+      isCurrentlyDragged,
+      createDragItem,
+      onDragStart,
+      onDragEnd,
+      onMove,
+    ]
+  );
 
   return {
     handleKeyDown,
@@ -571,24 +615,32 @@ export const useAutoScroll = ({
   const autoScrollRef = useRef<number | null>(null);
   const currentScrollSpeed = useRef<number>(0);
 
-  const calculateScrollSpeed = useCallback((
-    distanceFromEdge: number,
-    maxDistance: number,
-    isOutOfBounds = false
-  ): number => {
-    if (isOutOfBounds) {
-      const outOfBoundsDistance = Math.abs(distanceFromEdge);
-      const baseSpeed = 30;
-      const maxOutOfBoundsSpeed = 60;
-      const acceleration = Math.min(1, outOfBoundsDistance / 100);
-      return baseSpeed + (maxOutOfBoundsSpeed - baseSpeed) * acceleration;
-    }
+  const calculateScrollSpeed = useCallback(
+    (
+      distanceFromEdge: number,
+      maxDistance: number,
+      isOutOfBounds = false
+    ): number => {
+      if (isOutOfBounds) {
+        const outOfBoundsDistance = Math.abs(distanceFromEdge);
+        const baseSpeed = 30;
+        const maxOutOfBoundsSpeed = 60;
+        const acceleration = Math.min(1, outOfBoundsDistance / 100);
+        return baseSpeed + (maxOutOfBoundsSpeed - baseSpeed) * acceleration;
+      }
 
-    const normalizedDistance = Math.max(0, Math.min(1, distanceFromEdge / maxDistance));
-    const proximity = 1 - normalizedDistance;
-    const accelerationFactor = Math.pow(proximity, 2);
-    return minScrollSpeed + (maxScrollSpeed - minScrollSpeed) * accelerationFactor;
-  }, [minScrollSpeed, maxScrollSpeed]);
+      const normalizedDistance = Math.max(
+        0,
+        Math.min(1, distanceFromEdge / maxDistance)
+      );
+      const proximity = 1 - normalizedDistance;
+      const accelerationFactor = Math.pow(proximity, 2);
+      return (
+        minScrollSpeed + (maxScrollSpeed - minScrollSpeed) * accelerationFactor
+      );
+    },
+    [minScrollSpeed, maxScrollSpeed]
+  );
 
   const stopAutoScroll = useCallback(() => {
     if (autoScrollRef.current) {
@@ -598,77 +650,113 @@ export const useAutoScroll = ({
     currentScrollSpeed.current = 0;
   }, []);
 
-  const startAutoScroll = useCallback((direction: 'up' | 'down', targetSpeed: number) => {
-    if (!scrollContainer) return;
+  const startAutoScroll = useCallback(
+    (direction: 'up' | 'down', targetSpeed: number) => {
+      if (!scrollContainer) return;
 
-    currentScrollSpeed.current = targetSpeed;
+      currentScrollSpeed.current = targetSpeed;
 
-    if (autoScrollRef.current) return; // Already scrolling
+      if (autoScrollRef.current) return; // Already scrolling
 
-    const scroll = () => {
-      const container = scrollContainer;
-      if (!container) return;
+      const scroll = () => {
+        const container = scrollContainer;
+        if (!container) return;
 
-      const scrollAmount = currentScrollSpeed.current;
-      const currentScrollTop = container.scrollTop;
-      const maxScrollTop = container.scrollHeight - container.clientHeight;
+        const scrollAmount = currentScrollSpeed.current;
+        const currentScrollTop = container.scrollTop;
+        const maxScrollTop = container.scrollHeight - container.clientHeight;
 
-      if (direction === 'up' && currentScrollTop > 0) {
-        container.scrollTop = Math.max(0, currentScrollTop - scrollAmount);
-      } else if (direction === 'down' && currentScrollTop < maxScrollTop) {
-        container.scrollTop = Math.min(maxScrollTop, currentScrollTop + scrollAmount);
-      }
+        if (direction === 'up' && currentScrollTop > 0) {
+          container.scrollTop = Math.max(0, currentScrollTop - scrollAmount);
+        } else if (direction === 'down' && currentScrollTop < maxScrollTop) {
+          container.scrollTop = Math.min(
+            maxScrollTop,
+            currentScrollTop + scrollAmount
+          );
+        }
 
+        if (
+          (direction === 'up' && container.scrollTop > 0) ||
+          (direction === 'down' && container.scrollTop < maxScrollTop)
+        ) {
+          autoScrollRef.current = requestAnimationFrame(scroll);
+        } else {
+          stopAutoScroll();
+        }
+      };
+
+      autoScrollRef.current = requestAnimationFrame(scroll);
+    },
+    [scrollContainer, stopAutoScroll]
+  );
+
+  const checkAutoScroll = useCallback(
+    (clientY: number) => {
+      if (!scrollContainer) return;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const outOfBoundsBuffer = 5;
+
+      const distanceFromTop = clientY - containerRect.top;
+      const distanceFromBottom = containerRect.bottom - clientY;
+
+      // Check for out-of-bounds scrolling
       if (
-        (direction === 'up' && container.scrollTop > 0) ||
-        (direction === 'down' && container.scrollTop < maxScrollTop)
+        clientY < containerRect.top + outOfBoundsBuffer &&
+        scrollContainer.scrollTop > 0
       ) {
-        autoScrollRef.current = requestAnimationFrame(scroll);
+        const speed = calculateScrollSpeed(
+          distanceFromTop,
+          scrollThreshold,
+          true
+        );
+        startAutoScroll('up', speed);
+      } else if (
+        clientY > containerRect.bottom - outOfBoundsBuffer &&
+        scrollContainer.scrollTop <
+          scrollContainer.scrollHeight - scrollContainer.clientHeight
+      ) {
+        const speed = calculateScrollSpeed(
+          distanceFromBottom,
+          scrollThreshold,
+          true
+        );
+        startAutoScroll('down', speed);
+      } else if (
+        distanceFromTop < scrollThreshold &&
+        distanceFromTop >= outOfBoundsBuffer &&
+        scrollContainer.scrollTop > 0
+      ) {
+        const speed = calculateScrollSpeed(
+          distanceFromTop,
+          scrollThreshold,
+          false
+        );
+        startAutoScroll('up', speed);
+      } else if (
+        distanceFromBottom < scrollThreshold &&
+        distanceFromBottom >= outOfBoundsBuffer &&
+        scrollContainer.scrollTop <
+          scrollContainer.scrollHeight - scrollContainer.clientHeight
+      ) {
+        const speed = calculateScrollSpeed(
+          distanceFromBottom,
+          scrollThreshold,
+          false
+        );
+        startAutoScroll('down', speed);
       } else {
         stopAutoScroll();
       }
-    };
-
-    autoScrollRef.current = requestAnimationFrame(scroll);
-  }, [scrollContainer, stopAutoScroll]);
-
-  const checkAutoScroll = useCallback((clientY: number) => {
-    if (!scrollContainer) return;
-
-    const containerRect = scrollContainer.getBoundingClientRect();
-    const outOfBoundsBuffer = 5;
-
-    const distanceFromTop = clientY - containerRect.top;
-    const distanceFromBottom = containerRect.bottom - clientY;
-
-    // Check for out-of-bounds scrolling
-    if (clientY < containerRect.top + outOfBoundsBuffer && scrollContainer.scrollTop > 0) {
-      const speed = calculateScrollSpeed(distanceFromTop, scrollThreshold, true);
-      startAutoScroll('up', speed);
-    } else if (
-      clientY > containerRect.bottom - outOfBoundsBuffer &&
-      scrollContainer.scrollTop < scrollContainer.scrollHeight - scrollContainer.clientHeight
-    ) {
-      const speed = calculateScrollSpeed(distanceFromBottom, scrollThreshold, true);
-      startAutoScroll('down', speed);
-    } else if (
-      distanceFromTop < scrollThreshold &&
-      distanceFromTop >= outOfBoundsBuffer &&
-      scrollContainer.scrollTop > 0
-    ) {
-      const speed = calculateScrollSpeed(distanceFromTop, scrollThreshold, false);
-      startAutoScroll('up', speed);
-    } else if (
-      distanceFromBottom < scrollThreshold &&
-      distanceFromBottom >= outOfBoundsBuffer &&
-      scrollContainer.scrollTop < scrollContainer.scrollHeight - scrollContainer.clientHeight
-    ) {
-      const speed = calculateScrollSpeed(distanceFromBottom, scrollThreshold, false);
-      startAutoScroll('down', speed);
-    } else {
-      stopAutoScroll();
-    }
-  }, [scrollContainer, scrollThreshold, calculateScrollSpeed, startAutoScroll, stopAutoScroll]);
+    },
+    [
+      scrollContainer,
+      scrollThreshold,
+      calculateScrollSpeed,
+      startAutoScroll,
+      stopAutoScroll,
+    ]
+  );
 
   return {
     checkAutoScroll,
@@ -784,23 +872,25 @@ export const useDraggable = <T extends DragSourceType>({
   onDragEnd,
   onMove,
 }: UseDraggableOptions<T>) => {
-  const { isDragging, draggedItem, startDrag, endDrag, isCurrentlyDragged } = useDragState();
+  const { isDragging, draggedItem, startDrag, endDrag, isCurrentlyDragged } =
+    useDragState();
   const isThisItemDragged = isCurrentlyDragged(data?.id);
 
   // Initialize sub-hooks
-  const { createDragItem, handleHTML5DragStart, handleHTML5DragEnd } = useDragHandlers({
-    type,
-    data,
-    disabled,
-    onDragStart,
-    onDragEnd,
-  });
+  const { createDragItem, handleHTML5DragStart, handleHTML5DragEnd } =
+    useDragHandlers({
+      type,
+      data,
+      disabled,
+      onDragStart,
+      onDragEnd,
+    });
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchDrag({
     disabled,
     longPressDelay,
     createDragItem,
-    onDragStart: (item) => {
+    onDragStart: item => {
       startDrag(item);
       onDragStart?.(item);
     },
@@ -814,7 +904,7 @@ export const useDraggable = <T extends DragSourceType>({
     disabled,
     createDragItem,
     isCurrentlyDragged: isThisItemDragged,
-    onDragStart: (item) => {
+    onDragStart: item => {
       startDrag(item);
       onDragStart?.(item);
     },
@@ -837,36 +927,48 @@ export const useDraggable = <T extends DragSourceType>({
   });
 
   // HTML5 drag event handlers with store integration
-  const handleDragStart = useCallback((e: React.DragEvent<HTMLElement>) => {
-    const dragItem = handleHTML5DragStart(e);
-    if (dragItem) {
-      startDrag(dragItem);
-    }
-  }, [handleHTML5DragStart, startDrag]);
+  const handleDragStart = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      const dragItem = handleHTML5DragStart(e);
+      if (dragItem) {
+        startDrag(dragItem);
+      }
+    },
+    [handleHTML5DragStart, startDrag]
+  );
 
-  const handleDragEnd = useCallback((e: React.DragEvent<HTMLElement>) => {
-    handleHTML5DragEnd(e, draggedItem);
-    endDrag();
-  }, [handleHTML5DragEnd, draggedItem, endDrag]);
+  const handleDragEnd = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      handleHTML5DragEnd(e, draggedItem);
+      endDrag();
+    },
+    [handleHTML5DragEnd, draggedItem, endDrag]
+  );
 
   // Drop zone handlers
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLElement>) => {
-    if (disabled || !isDragging) return;
-    
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    checkAutoScroll(e.clientY);
-  }, [disabled, isDragging, checkAutoScroll]);
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      if (disabled || !isDragging) return;
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLElement>) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    stopAutoScroll();
-    
-    // Drop handling is delegated to the component
-  }, [disabled, stopAutoScroll]);
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      checkAutoScroll(e.clientY);
+    },
+    [disabled, isDragging, checkAutoScroll]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      if (disabled) return;
+
+      e.preventDefault();
+      stopAutoScroll();
+
+      // Drop handling is delegated to the component
+    },
+    [disabled, stopAutoScroll]
+  );
 
   const handleDragLeave = useCallback(() => {
     // Visual feedback cleanup
@@ -891,7 +993,9 @@ export const useDraggable = <T extends DragSourceType>({
       tabIndex: disabled ? -1 : 0,
       role: 'button',
       'aria-grabbed': isThisItemDragged,
-      className: Object.keys(dragClasses).filter(key => dragClasses[key]).join(' '),
+      className: Object.keys(dragClasses)
+        .filter(key => dragClasses[key])
+        .join(' '),
       style: dragStyles,
     },
     dropZoneProps: {
@@ -936,7 +1040,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     const newTracks = [...tracks];
     const [movedTrack] = newTracks.splice(fromIndex, 1);
     newTracks.splice(toIndex, 0, movedTrack);
-    
+
     onTrackOrderChange?.(newTracks);
   }, [tracks, onTrackOrderChange, captureScrollPosition]);
 
@@ -948,7 +1052,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
     // Add track logic
     const newTracks = [...tracks];
     newTracks.splice(insertIndex, 0, track);
-    
+
     onTrackOrderChange?.(newTracks);
   }, [tracks, onTrackOrderChange, captureScrollPosition]);
 
@@ -962,7 +1066,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
   // Drop handler
   const handleDrop = useCallback((e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
-    
+
     if (!draggedItem) return;
 
     // Calculate drop position
@@ -973,7 +1077,7 @@ const DraggableTrackList: React.FC<DraggableTrackListProps> = ({
         const sourceIndex = draggedItem.payload.index;
         handleInternalReorder(sourceIndex, dropIndex);
         break;
-      
+
       case 'modal-track':
       case 'search-track':
         handleExternalAdd(draggedItem.payload.track, dropIndex);
@@ -1021,17 +1125,17 @@ const AddUnselectedModal: React.FC<AddUnselectedModalProps> = ({
   // ... other props
 }) => {
   const { isDragging, draggedItem } = useDragState();
-  
+
   // Determine if this modal should be muted
   const shouldBeMuted = isDragging && draggedItem?.type !== 'modal-track';
-  
+
   return (
     <Modal
       isOpen={isOpen}
       className={`${styles.modal} ${shouldBeMuted ? styles.muted : ''}`}
       // ... other props
     >
-      <div 
+      <div
         className={shouldBeMuted ? styles.uninteractable : ''}
         style={{
           opacity: shouldBeMuted ? 0.5 : 1,
@@ -1062,9 +1166,9 @@ sequenceDiagram
     useDraggable->>DragSlice: startDrag(dragItem)
     DragSlice-->>useDraggable: State updated
     useDraggable-->>Component: isDragging = true
-    
+
     Note over Component,DraggableTrackList: Visual feedback activated
-    
+
     User->>DraggableTrackList: Drop on target
     DraggableTrackList->>DragSlice: captureScrollPosition()
     DraggableTrackList->>DraggableTrackList: handleDrop()
@@ -1085,7 +1189,7 @@ stateDiagram-v2
     ScrollCaptured --> DropProcessed : handleDrop()
     DropProcessed --> ScrollRestored : restoreScrollPosition()
     ScrollRestored --> Idle : endDrag()
-    
+
     DragActive --> Cancelled : cancelDrag() / Escape key
     Cancelled --> Idle : State cleared
 ```
@@ -1120,17 +1224,17 @@ stateDiagram-v2
 // Error boundary for drag operations
 const DragErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { cancelDrag } = useDragState();
-  
+
   useEffect(() => {
     const handleError = (error: ErrorEvent) => {
       console.error('[DragErrorBoundary] Drag operation error:', error);
       cancelDrag();
     };
-    
+
     window.addEventListener('error', handleError);
     return () => window.removeEventListener('error', handleError);
   }, [cancelDrag]);
-  
+
   return <>{children}</>;
 };
 ```
@@ -1161,13 +1265,13 @@ const DragErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }
 describe('DragSlice', () => {
   it('should prevent concurrent drags', () => {
     const store = createTestStore();
-    
+
     const item1 = createMockDragItem('internal-track');
     const item2 = createMockDragItem('modal-track');
-    
+
     store.getState().startDrag(item1);
     expect(store.getState().isDragging).toBe(true);
-    
+
     store.getState().startDrag(item2);
     expect(store.getState().draggedItem).toEqual(item1); // Should not change
   });
@@ -1202,24 +1306,28 @@ describe('DragSlice', () => {
 ## Migration Strategy
 
 ### Phase 1: Foundation Setup (Week 1)
+
 1. Create drag-and-drop type definitions
 2. Implement DragSlice in Zustand store
 3. Add selector hooks for drag state
 4. Set up comprehensive test suite
 
 ### Phase 2: Hook Refactoring (Week 1-2)
+
 1. Refactor useDraggable hook to use store
 2. Remove DragContext.js completely
 3. Update all components using drag functionality
 4. Implement scroll position management
 
 ### Phase 3: Component Integration (Week 2)
+
 1. Enhance DraggableTrackList with new architecture
 2. Add modal coordination system
 3. Implement visual feedback mechanisms
 4. Test cross-platform compatibility
 
 ### Phase 4: Testing & Polish (Week 2-3)
+
 1. Comprehensive testing of all drag scenarios
 2. Performance optimization and profiling
 3. Accessibility testing and improvements
@@ -1228,18 +1336,21 @@ describe('DragSlice', () => {
 ## Success Metrics
 
 ### Functional Requirements
+
 - ✅ Internal track reordering works with visual feedback
 - ✅ External track transfers from modals function correctly
 - ✅ Scroll locking isolates to intended components
 - ✅ Scroll position preserved after all operations
 
 ### Technical Requirements
+
 - ✅ Complete TypeScript type safety
 - ✅ Centralized state management with Zustand
 - ✅ Simplified component architecture
 - ✅ Cross-platform compatibility (mouse, touch, keyboard)
 
 ### Performance Requirements
+
 - ✅ No memory leaks from drag operations
 - ✅ Smooth performance with large track lists
 - ✅ Minimal re-renders during drag operations
@@ -1248,11 +1359,13 @@ describe('DragSlice', () => {
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Breaking Changes**: Maintain backward compatibility during migration
 - **Performance Regression**: Benchmark before and after changes
 - **State Corruption**: Implement comprehensive error boundaries
 
 ### Mitigation Strategies
+
 - **Incremental Migration**: Phase-by-phase implementation with rollback capability
 - **Comprehensive Testing**: Unit, integration, and manual testing at each phase
 - **Feature Flags**: Ability to toggle between old and new implementations

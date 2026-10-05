@@ -6,8 +6,8 @@ component.
 
 ## Slices
 
-- `authSlice.ts` — access token, current user, and login/logout state.
-- `playlistSlice.ts` — loaded and selected playlists plus ratio settings.
+- `authSlice.ts` — in-memory tokens, expiration, granted scopes, and login/logout state.
+- `playlistSlice.ts` — selected playlists plus ratio settings.
 - `mixingSlice.ts` — count/time targets, playlist name, and `shuffleTracks`.
 - `uiSlice.ts` — normalized errors and success notifications.
 
@@ -28,6 +28,9 @@ shapes are normalized consistently. Do not mutate store state directly.
 Spotify access tokens are intentionally kept in memory only. The PKCE
 verifier and OAuth state use `sessionStorage` for the redirect round trip; the
 store does not persist credentials to `localStorage`.
+
+Preview tracks and occurrence order remain owned by `useMixPreview`. The store
+has no track slice; `StoreProvider` is a composition wrapper without persistence.
 
 ## Testing
 

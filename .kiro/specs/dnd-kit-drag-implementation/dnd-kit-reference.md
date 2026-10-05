@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # dnd-kit Reference Documentation
 
 ## Core Concepts
@@ -5,6 +10,7 @@
 dnd-kit is a modern, lightweight, performant, accessible and extensible drag & drop toolkit for React.
 
 ### Key Features
+
 - **10KB bundle size** - Lightweight and performant
 - **Battle-tested mobile touch handling** - Proven TouchSensor implementation
 - **Built-in accessibility** - KeyboardSensor with screen reader support
@@ -16,7 +22,7 @@ dnd-kit is a modern, lightweight, performant, accessible and extensible drag & d
 ### 1. Basic Setup
 
 ```javascript
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -47,11 +53,10 @@ function App() {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={items}
-        strategy={verticalListSortingStrategy}
-      >
-        {items.map(id => <SortableItem key={id} id={id} />)}
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        {items.map(id => (
+          <SortableItem key={id} id={id} />
+        ))}
       </SortableContext>
     </DndContext>
   );
@@ -59,7 +64,7 @@ function App() {
   function handleDragEnd(event) {
     const { active, over } = event;
     if (active.id !== over.id) {
-      setItems((items) => {
+      setItems(items => {
         const oldIndex = items.indexOf(active.id);
         const newIndex = items.indexOf(over.id);
         return arrayMove(items, oldIndex, newIndex);
@@ -97,17 +102,12 @@ const sensors = useSensors(
 
 ```javascript
 import React from 'react';
-import {useSortable} from '@dnd-kit/sortable';
-import {CSS} from '@dnd-kit/utilities';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export function SortableItem(props) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({id: props.id});
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -125,31 +125,38 @@ export function SortableItem(props) {
 ## TouchSensor API Details
 
 ### Purpose
+
 Responds to Touch events (finger or stylus activity on touch screens).
 
 ### Activator
+
 The `onTouchStart` event handler.
 
 ### Initialization
+
 The sensor is initialized if there is no more than a single touch on the `event.touches` property.
 
 ### Activation Constraints (Mutually Exclusive)
 
 #### Distance Constraint
+
 ```typescript
 interface DistanceConstraint {
   distance: number;
 }
 ```
+
 The `distance` property specifies the minimum distance, in pixels, that the touch input must move before a drag start event is emitted.
 
 #### Delay Constraint (Recommended for Mobile)
+
 ```typescript
 interface DelayConstraint {
   delay: number;
   tolerance: number;
 }
 ```
+
 - **delay**: Duration in milliseconds that a draggable item must be held before drag starts
 - **tolerance**: Distance in pixels of motion tolerated during delay before aborting drag
 
@@ -178,7 +185,7 @@ import {
 } from '@dnd-kit/sortable';
 
 // Utilities
-import {CSS} from '@dnd-kit/utilities';
+import { CSS } from '@dnd-kit/utilities';
 ```
 
 ## Installation
@@ -209,22 +216,23 @@ dnd-kit works seamlessly with external state management:
 
 ```javascript
 // In your Zustand store
-const useTrackStore = create((set) => ({
+const useTrackStore = create(set => ({
   tracks: ['track1', 'track2', 'track3'],
-  reorderTracks: (activeId, overId) => set((state) => ({
-    tracks: arrayMove(
-      state.tracks,
-      state.tracks.indexOf(activeId),
-      state.tracks.indexOf(overId)
-    )
-  })),
+  reorderTracks: (activeId, overId) =>
+    set(state => ({
+      tracks: arrayMove(
+        state.tracks,
+        state.tracks.indexOf(activeId),
+        state.tracks.indexOf(overId)
+      ),
+    })),
 }));
 
 // In your component
 function TrackList() {
   const { tracks, reorderTracks } = useTrackStore();
-  
-  const handleDragEnd = (event) => {
+
+  const handleDragEnd = event => {
     const { active, over } = event;
     if (active.id !== over.id) {
       reorderTracks(active.id, over.id);
@@ -234,7 +242,9 @@ function TrackList() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <SortableContext items={tracks}>
-        {tracks.map(id => <SortableItem key={id} id={id} />)}
+        {tracks.map(id => (
+          <SortableItem key={id} id={id} />
+        ))}
       </SortableContext>
     </DndContext>
   );
@@ -252,7 +262,7 @@ import { useDroppable } from '@dnd-kit/core';
 function App() {
   const sensors = useSensors(/* sensor config */);
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event;
     if (!over) return;
 
@@ -278,7 +288,7 @@ function App() {
           ))}
         </SortableContext>
       </Modal>
-      
+
       <DroppablePreview />
     </DndContext>
   );
@@ -315,15 +325,12 @@ import { useDroppable } from '@dnd-kit/core';
 
 ```javascript
 // Pass custom data with draggable items
-<SortableWrapper 
-  id={track.id} 
-  data={{ track, type: 'source' }}
->
+<SortableWrapper id={track.id} data={{ track, type: 'source' }}>
   <TrackItem track={track} />
-</SortableWrapper>
+</SortableWrapper>;
 
 // Access data in onDragEnd
-const handleDragEnd = (event) => {
+const handleDragEnd = event => {
   const trackData = event.active.data.current?.track;
   const itemType = event.active.data.current?.type;
 };

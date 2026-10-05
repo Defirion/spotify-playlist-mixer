@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Test Infrastructure Repair Design
 
 ## Overview
@@ -41,11 +46,13 @@ Test Infrastructure
 ### MSW Handler Consolidation
 
 **Primary Handler File**: `src/mocks/handlers.ts`
+
 - Single source of truth for all MSW handlers
 - Proper Spotify API response format
 - No circular references
 
 **Response Format Standardization**:
+
 ```typescript
 // Search endpoint should return:
 {
@@ -61,6 +68,7 @@ Test Infrastructure
 ### MSW Setup Simplification
 
 **Setup Pattern**:
+
 - Use single MSW setup in `src/test-utils/msw-setup.ts`
 - Remove duplicate setup files
 - Ensure proper cleanup between tests
@@ -68,6 +76,7 @@ Test Infrastructure
 ### Search Hook Fix
 
 **usePlaylistSearch Hook**:
+
 - Expect `response.data.playlists.items` format
 - Remove fallback to `tracks.items` which was causing confusion
 - Proper error handling for malformed responses

@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan
 
 ## Task Overview
@@ -9,7 +14,7 @@ Convert the feature design into a series of implementation tasks for creating a 
 This implementation plan includes specific safeguards to prevent creating another monolithic solution:
 
 1. **File Size Limits**: No single file should exceed 150 lines
-2. **Function Size Limits**: Target 25 lines per function (see anti-over-engineering steering for guidelines)  
+2. **Function Size Limits**: Target 25 lines per function (see anti-over-engineering steering for guidelines)
 3. **Separation of Concerns**: Each input method (mouse/touch/keyboard) gets its own dedicated handler file
 4. **Incremental Testing**: Each task must have passing tests before marking complete
 5. **Legacy Isolation**: Preserve existing complex system in isolated folder for reference
@@ -56,7 +61,7 @@ This implementation plan includes specific safeguards to prevent creating anothe
   - _Requirements: 1.1, 4.1, 4.4_
 
 - [ ] 4. Create separate touch drag handler (MAX 80 lines)
-  - Create new `src/hooks/drag-handlers/useTouchDrag.ts` file  
+  - Create new `src/hooks/drag-handlers/useTouchDrag.ts` file
   - Implement ONLY touch event handlers (onTouchStart, onTouchMove, onTouchEnd)
   - Use simpleDragSlice's startDrag/endDrag/resetDrag actions (NOT scroll management)
   - Add simple 300ms long press detection using setTimeout
@@ -178,10 +183,11 @@ This implementation plan includes specific safeguards to prevent creating anothe
 ## File Size Enforcement Rules
 
 Each task MUST enforce these limits:
+
 - `simpleDragSlice.ts`: MAX 40 lines (new simplified store)
 - `useScrollLock.ts`: MAX 60 lines (dedicated scroll management)
 - `useSimpleDraggable.ts`: MAX 80 lines
-- `useMouseDrag.ts`: MAX 50 lines  
+- `useMouseDrag.ts`: MAX 50 lines
 - `useTouchDrag.ts`: MAX 80 lines
 - `useKeyboardDrag.ts`: MAX 50 lines
 - `dragVisualFeedback.ts`: MAX 40 lines
@@ -190,8 +196,9 @@ Each task MUST enforce these limits:
 ## Task Completion Rules
 
 All tasks must follow the **Task Completion Gates** defined in the anti-over-engineering steering file:
+
 - TypeScript compilation must pass
-- Build must succeed  
+- Build must succeed
 - All tests must pass
 - File size limits must be respected
 - Function size guidelines must be followed

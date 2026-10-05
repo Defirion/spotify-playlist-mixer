@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan
 
 - [x] 1. Set up project foundation and directory structure
@@ -249,10 +254,6 @@
 
 - [x] 14.2 Fully refactor DraggableTrackList component (HIGH PRIORITY)
 
-
-
-
-
   - Convert DraggableTrackList.js to DraggableTrackList.tsx with proper drag-and-drop type definitions
   - Complete integration with useDraggable.ts hook and remove all legacy drag logic
   - Replace all inline styles with CSS modules (already partially done, complete the migration)
@@ -263,9 +264,6 @@
 
 - [x] 14.3 Fully refactor RatioConfig component
 
-
-
-
   - Convert RatioConfig.js to RatioConfig.tsx with proper ratio configuration types
   - Remove embedded `<style>` tag and replace with CSS modules (RatioConfig.module.css)
   - Extract ratio calculation logic into custom hook (useRatioCalculation)
@@ -274,11 +272,6 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 14.4 Fully refactor AddUnselectedModal component
-
-
-
-
-
 
   - Convert AddUnselectedModal.js to AddUnselectedModal.tsx with proper prop and state types
   - Replace all inline styles with CSS modules (AddUnselectedModal.module.css)
@@ -289,10 +282,6 @@
 
 - [x] 14.5 Fully refactor SpotifySearchModal component
 
-
-
-
-
   - Convert SpotifySearchModal.js to SpotifySearchModal.tsx with search-specific types
   - Replace all inline styles with CSS modules (SpotifySearchModal.module.css)
   - Integrate with useDraggable.ts hook and remove legacy touch handling
@@ -301,11 +290,6 @@
   - _Requirements: 1.2, 2.1, 3.2, 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 14.6 Fully refactor PlaylistSelector component
-
-
-
-
-
 
   - Convert PlaylistSelector.js to PlaylistSelector.tsx with playlist selection types
   - Replace all inline styles with CSS modules (PlaylistSelector.module.css)
@@ -317,9 +301,6 @@
 - [ ] 15. Migrate remaining individual components (atomic migrations)
 - [x] 15.1 Migrate PresetTemplates component
 
-
-
-
   - Convert PresetTemplates.js to PresetTemplates.tsx with preset configuration types
   - Replace all inline styles with CSS modules (PresetTemplates.module.css)
   - Update and verify all related unit and integration tests
@@ -327,10 +308,6 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.2 Migrate ErrorHandler component
-
-
-
-
 
   - Convert ErrorHandler.js to ErrorHandler.tsx with error handling types
   - Replace all inline styles with CSS modules (ErrorHandler.module.css)
@@ -340,11 +317,6 @@
 
 - [x] 15.3 Migrate LoadingOverlay component
 
-
-
-
-
-
   - Convert LoadingOverlay.js to LoadingOverlay.tsx with loading state types
   - Replace all inline styles with CSS modules (LoadingOverlay.module.css)
   - Update and verify all related unit and integration tests
@@ -353,23 +325,15 @@
 
 - [x] 15.4 Migrate SpotifyAuth component
 
-
-
-
-
-
   - Convert SpotifyAuth.js to SpotifyAuth.tsx with authentication types
   - Replace all inline styles with CSS modules (SpotifyAuth.module.css)
   - Update and verify all related unit and integration tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate SpotifyAuth to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
+
 -
 
 - [x] 15.5 Migrate SuccessToast component
-
-
-
-
 
   - Convert SuccessToast.js to SuccessToast.tsx with toast notification types
   - Replace all inline styles with CSS modules (SuccessToast.module.css)
@@ -379,25 +343,15 @@
 
 - [x] 15.6 Migrate TermsOfService component
 
-
-
-
-
-
-
-
-
-
   - Convert TermsOfService.js to TermsOfService.tsx with proper types
   - Replace all inline styles with CSS modules (TermsOfService.module.css)
   - Update and verify all related unit and integration tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate TermsOfService to TSX with CSS modules"`
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
+
 -
 
 - [x] 15.7 Migrate ToastError component
-
-
 
   - Convert ToastError.js to ToastError.tsx with error notification types
   - Replace all inline styles with CSS modules (ToastError.module.css)
@@ -407,13 +361,6 @@
 
 - [x] 15.8 Migrate ApiErrorDisplay component
 
-
-
-
-
-
-
-
   - Convert ApiErrorDisplay.js to ApiErrorDisplay.tsx with API error types
   - Replace all inline styles with CSS modules (ApiErrorDisplay.module.css)
   - Update and verify all related unit and integration tests
@@ -422,7 +369,6 @@
 
 - [x] 15.9 Migrate ErrorBoundary component
 
-
   - Convert ErrorBoundary.js to ErrorBoundary.tsx with error boundary types
   - Replace all inline styles with CSS modules (ErrorBoundary.module.css)
   - Update and verify all related unit and integration tests
@@ -430,10 +376,6 @@
   - _Requirements: 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.10 Migrate withErrorBoundary component
-
-
-
-
 
   - Convert withErrorBoundary.js to withErrorBoundary.tsx with HOC types
   - Replace all inline styles with CSS modules if applicable
@@ -444,20 +386,12 @@
 - [ ] 15.11 Migrate remaining hooks to TypeScript (atomic migrations)
 - [x] 15.11.1 Migrate useAppState hook
 
-
-
-
-
   - Convert useAppState.js to useAppState.ts with proper state types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useAppState to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.11.2 Migrate useMixOptions hook
-
-
-
-
 
   - Convert useMixOptions.js to useMixOptions.ts with mix configuration types
   - Update and verify all related unit tests
@@ -466,20 +400,12 @@
 
 - [x] 15.11.3 Migrate usePlaylistSelection hook
 
-
-
-
-
   - Convert usePlaylistSelection.js to usePlaylistSelection.ts with playlist types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate usePlaylistSelection to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.11.4 Migrate usePlaylistTracks hook
-
-
-
-
 
   - Convert usePlaylistTracks.js to usePlaylistTracks.ts with track types
   - Update and verify all related unit tests
@@ -488,20 +414,12 @@
 
 - [x] 15.11.5 Migrate useUserPlaylists hook
 
-
-
-
-
   - Convert useUserPlaylists.js to useUserPlaylists.ts with user playlist types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useUserPlaylists to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [x] 15.11.6 Migrate useApiErrorHandler hook
-
-
-
-
 
   - Convert useApiErrorHandler.js to useApiErrorHandler.ts with error handling types
   - Update and verify all related unit tests
@@ -510,10 +428,6 @@
 
 - [x] 15.11.7 Migrate useErrorHandler hook
 
-
-
-
-
   - Convert useErrorHandler.js to useErrorHandler.ts with error types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useErrorHandler to TypeScript"`
@@ -521,18 +435,12 @@
 
 - [x] 15.11.8 Migrate useKeyboardNavigation hook
 
-
-
-
-
   - Convert useKeyboardNavigation.js to useKeyboardNavigation.ts with navigation types
   - Update and verify all related unit tests
   - **Commit changes**: `git add . && git commit -m "refactor: migrate useKeyboardNavigation to TypeScript"`
   - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2_
 
 - [-] 15.11.9 Migrate useRatioConfig hook
-
-
 
   - Convert useRatioConfig.js to useRatioConfig.ts with ratio configuration types
   - Update and verify all related unit tests
@@ -575,27 +483,19 @@
 - [ ] 16. Critical architectural improvements (HIGH PRIORITY)
 - [x] 16.1 Refactor App.js "God Component" and implement centralized state management
 
-
-
-
-
   - Evaluate and implement a robust state management solution (Redux Toolkit or Zustand)
   - Break down App.js state into logical domains (auth, playlists, mixing, UI)
   - Eliminate prop drilling by providing state directly to components that need it
   - Create proper state management patterns for complex operations
-  -   - _Requirements: 6.1, 6.2, 6.3, 6.4_
+  - - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
 - [x] 16.2 Complete useDraggable hook integration (HIGH PRIORITY)
-
-
-
-
 
   - Remove all legacy drag-and-drop logic from DraggableTrackList.js
   - Remove manual touch event handling and scroll position management
   - Integrate useDraggable.ts hook throughout all drag-enabled components
   - Simplify and standardize drag-and-drop behavior across the application
-  -   - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
 - [ ] 16.3 Apply error boundaries to critical UI sections
   - Wrap PlaylistSelector component with ErrorBoundary
@@ -604,14 +504,14 @@
   - Wrap DraggableTrackList component with ErrorBoundary
   - Wrap modal components (AddUnselectedModal, SpotifySearchModal) with ErrorBoundary
   - Test error boundary functionality with simulated errors
-  -   - _Requirements: 9.1, 9.2, 9.3, 9.4_
+  - - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
 - [x] 16.4 Establish consistent design system
   - Create global CSS variables for colors, fonts, spacing, and breakpoints
   - Develop a consistent component library with standardized styling patterns
   - Remove all embedded `<style>` tags and replace with CSS modules
   - Implement consistent responsive design patterns using CSS media queries only
-  - 
+  -
   - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 16.5 Update TypeScript configuration and linting
@@ -619,14 +519,14 @@
   - Update ESLint rules to enforce TypeScript best practices and catch common errors
   - Fix any TypeScript compilation errors or warnings
   - Add type checking to CI/CD pipeline
-  - 
+  -
   - _Requirements: 8.1, 8.4, 10.1_
 
 - [ ] 16.3 Performance optimization and bundle analysis
   - Analyze bundle size and identify optimization opportunities
   - Implement code splitting for heavy components
   - Add performance monitoring for large playlist operations
-  - 
+  -
   - _Requirements: 4.1, 4.2, 4.3_
 
 - [ ] 17. Final integration and production readiness

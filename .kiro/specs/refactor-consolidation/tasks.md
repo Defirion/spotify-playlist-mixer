@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan
 
 ## Task Overview
@@ -128,32 +133,38 @@ This plan consolidates the remaining incomplete tasks from multiple refactor spe
 **NEVER mark a task complete unless ALL gates pass:**
 
 ### Gate 1: TypeScript Compilation
+
 1. Run `npx tsc --noEmit`
 2. Zero TypeScript errors allowed
 3. Fix all type issues immediately
 
 ### Gate 2: Build Success
+
 1. Run `npm run build`
 2. Build must complete successfully
 3. Fix any build errors immediately
 
 ### Gate 3: Test Success
+
 1. Run `npm test -- --watchAll=false`
 2. ALL tests must pass (existing + new)
 3. Fix failing tests immediately
 4. Never leave failing tests behind
 
 ### Gate 4: Pre-commit Quality Check
+
 1. Run `npm run lint:fix` to auto-fix issues
 2. Run `npm run lint` - zero errors allowed
 3. Run `npm run format:check` - must pass
 
 ### Gate 5: File Size Limits
+
 1. Check file size against task limits
 2. If approaching limit, split functionality
 3. Use line count tools to verify
 
 ### Gate 6: Function Size Check
+
 1. No function over 45 lines (target: 35-40)
 2. If over 45 lines, split or simplify
 3. Event handlers get slight leeway for related event handling

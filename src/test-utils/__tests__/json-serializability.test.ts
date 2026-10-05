@@ -1,9 +1,9 @@
 /**
  * JSON Serializability Gate Test
  *
- * This test ensures all MSW fixture objects can be safely serialized to JSON
+ * This test ensures shared fixture objects can be safely serialized to JSON
  * without circular references, DOM nodes, Date objects, or other problematic types.
- * This prevents Jest worker crashes from "Converting circular structure to JSON" errors.
+ * This catches fixture shapes that cannot safely be serialized.
  */
 
 import {
@@ -13,7 +13,7 @@ import {
   mockAuthToken,
 } from '../../mocks/fixtures';
 
-describe('Legacy JSON Serializability Gate (MSW removed)', () => {
+describe('Fixture JSON serializability', () => {
   const testSerializability = (obj: any, name: string) => {
     it(`${name} should be JSON serializable`, () => {
       expect(() => {
@@ -115,19 +115,4 @@ describe('Legacy JSON Serializability Gate (MSW removed)', () => {
   testSerializability(mockPlaylists, 'mockPlaylists');
   testSerializability(mockTracks, 'mockTracks');
   testSerializability(mockAuthToken, 'mockAuthToken');
-
-  // Placeholder assertion: confirm removed MSW handlers are absent
-  it('no MSW handlers module present (expected)', async () => {
-    let threw = false;
-    try {
-      // computed specifier so Vite does not try to resolve it at build time;
-      // the module is intentionally absent
-      // eslint-disable-next-line no-useless-concat
-      const missing = '../../test-utils/mocks/' + 'mswHandlers';
-      await import(/* @vite-ignore */ missing);
-    } catch {
-      threw = true;
-    }
-    expect(threw).toBe(true);
-  });
 });

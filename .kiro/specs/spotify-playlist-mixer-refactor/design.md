@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Design Document
 
 ## Overview
@@ -492,6 +497,7 @@ const useKeyboardNavigation = ({
 Based on the recent refactor analysis, the project has achieved a **5/10** score with the following status:
 
 ### Completed Successfully ✅
+
 - Project Foundation & Directory Structure
 - Core UI Components (Modal.tsx, TrackItem.tsx, TrackList.tsx)
 - Centralized API Service Layer (spotify.ts)
@@ -500,10 +506,12 @@ Based on the recent refactor analysis, the project has achieved a **5/10** score
 - Error Handling Components and Services
 
 ### Partially Complete ⚠️
+
 - **TypeScript Migration**: Core UI components migrated, but many critical components remain in JavaScript
 - **CSS Modules Adoption**: Some components use CSS modules, but many still rely on inline styles
 
 ### Major Gaps Identified 🚨
+
 - **"God Component" Anti-pattern**: App.js manages excessive state and creates complex prop drilling
 - **Incomplete TypeScript Migration**: Components like App.js, PlaylistMixer.js, DraggableTrackList.js, AddUnselectedModal.js, SpotifySearchModal.js and many hooks remain in JavaScript
 - **Inconsistent Styling**: Mix of CSS modules, inline styles, and even embedded `<style>` tags (e.g., RatioConfig.js)
@@ -515,16 +523,19 @@ Based on the recent refactor analysis, the project has achieved a **5/10** score
 Based on impact analysis, the following order is recommended:
 
 ### Phase 1: Critical Architectural Fixes (Highest Impact)
+
 1. **App.js Refactor & State Management**: Eliminate God component and implement Redux Toolkit/Zustand
 2. **Complete useDraggable Integration**: Remove legacy drag-and-drop logic
 3. **CSS Modules Migration**: Establish consistent styling architecture
 
 ### Phase 2: TypeScript Migration (High Impact)
+
 1. **Complex Components First**: PlaylistMixer.js, DraggableTrackList.js (most benefit)
 2. **Modal Components**: AddUnselectedModal.js, SpotifySearchModal.js
 3. **Remaining Components**: Systematic migration of all JavaScript files
 
 ### Phase 3: Polish & Optimization
+
 1. **Component Decomposition**: Break down large components
 2. **Performance Optimization**: Bundle analysis and code splitting
 3. **Testing & Documentation**: Comprehensive coverage and production readiness

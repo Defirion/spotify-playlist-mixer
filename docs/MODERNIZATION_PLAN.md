@@ -11,7 +11,20 @@
 > The deletion of `big_idea.txt` and the `.claude/` directory are unrelated
 > working-tree changes — keep them out of this work.
 
-## Current Spotify API refresh — 2026-09-12
+## Current guidance — 5 October 2026
+
+The active roadmap is [PLAN](../PLAN.md). Cleanup implementation and verification
+are recorded in [the cleanup plan](repository-cleanup-plan.md) and
+[cleanup results](reviews/2026-10-05-cleanup-implementation.md).
+
+Use `npm test` for one run, `npm run test:watch` for watch mode,
+`npm run test:coverage`, `npm run build`, and `npm run lint`.
+`npm run test:tooling` checks the performance comparator;
+`npm run report:reachability` distinguishes app imports from test consumers. Node is pinned
+to 22.18.0. Dated endpoint descriptions, test counts, and migration tasks below
+are historical. Store/UI DTO migration and local-library matching remain deferred.
+
+## Historical Spotify API refresh — 2026-09-12
 
 The implementation now follows Spotify's [February 2026 Web API
 changelog](https://developer.spotify.com/documentation/web-api/references/changes/february-2026):
@@ -29,7 +42,7 @@ changelog](https://developer.spotify.com/documentation/web-api/references/change
 The detailed endpoint mapping and upgrade checklist are in
 [SPOTIFY_API_MIGRATION.md](SPOTIFY_API_MIGRATION.md).
 
-## Project snapshot
+## Historical project snapshot — 12 September 2026
 
 - **App**: Spotify Playlist Mixer — React 18.3 + TypeScript 4.9 SPA, built
   with **Vite 8 / Vitest** (migrated from CRA in Phase B), zustand store,
@@ -40,7 +53,7 @@ The detailed endpoint mapping and upgrade checklist are in
   clean; `npm audit` reports 0 vulnerabilities. Auth is Spotify
   Authorization Code + PKCE (`src/services/spotifyAuth.ts`); don't disturb
   it.
-- **Commands**: `npm test` (vitest watch) / `npx vitest run` (one-shot),
+- **Commands**: `npm test` / `npx vitest run` (one-shot), `npm run test:watch` (watch mode),
   `npm start` (dev server on http://127.0.0.1:3000/ — host/port are pinned
   in vite.config.ts to match the Spotify app's registered redirect URI),
   `npm run build`, `npm run lint`, `npm run test:coverage`. Node pinned
@@ -108,10 +121,9 @@ Completed as planned. Lessons that matter for later phases:
   `function (this: unknown) {...}`); the `globalThis.jest = vi` shim in
   `src/setupTests.ts` is REQUIRED for RTL fake-timer detection — never
   remove it.
-- **Canonical mock template** for Phase C consolidation:
-  `src/__tests__/hooks/useMixGeneration.{unit,extra}.test.tsx` and
-  `useMixPreview.{unit,extra}.test.tsx` (vi.unmock + static import +
-  vi.hoisted for factory closures).
+- **Current mock examples**: `src/hooks/__tests__/mixRequests.correctness.test.tsx`
+  and `src/hooks/__tests__/useMixGeneration.test.tsx` (local mocks,
+  `vi.unmock` plus static imports, and `vi.hoisted` for factory closures).
 - `define: { 'process.env': {} }` in vite.config.ts is required (shipped
   code reads `process.env.TEST_VERBOSE` / `DEBUG_*` at runtime).
 - The global `vi.mock('./hooks/useMix*')` calls live in setupTests.ts;
@@ -276,7 +288,7 @@ exposes selector hooks for everything.
    `ratioConfig: RatioConfig` from src/types). Delete prop types that become
    unused in `src/types/components.ts`.
 4. Update tests as you go: component tests that passed props now mock the
-   store hooks instead (the pattern in `App.behavior.test.tsx` —
+   store hooks instead (the pattern in `src/__tests__/App.test.tsx` —
    `jest.mock('../store')` / `vi.mock` — already does this; reuse the Phase C
    helper).
 

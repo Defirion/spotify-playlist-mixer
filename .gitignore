@@ -53,3 +53,10 @@ config.js
 
 # Fresh benchmark output is regenerated; approved baseline records remain tracked.
 src/__tests__/performance/baselines/current-run.json
+
+# Disposable test snapshots; live screenshots and perf baselines stay visible.
+/test-output.txt
+/test-metrics.json
+/coverage-history.json
+/test-results/jest-*.json
+/test-results/jest-*.txt

@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Design Document
 
 ## Overview
@@ -9,18 +14,21 @@ This design document outlines the implementation of a reliable drag-and-drop sys
 The system supports two distinct types of drag operations within a single shared DndContext:
 
 ### 1. Drag-to-Add (FROM modals TO preview panel)
+
 - **Source**: TrackSourceModal, SpotifySearchModal, AddUnselectedModal
 - **Target**: MixPreview component (droppable zone)
 - **Purpose**: Add new tracks to the mix by dragging from selection modals
 - **Implementation**: Tracks in modals are wrapped with SortableWrapper, preview panel uses useDroppable
 
 ### 2. Drag-to-Reorder (WITHIN preview panel)
+
 - **Source**: Tracks already in MixPreview
 - **Target**: Different positions within the same MixPreview
 - **Purpose**: Reorder existing tracks within the mix
 - **Implementation**: SortableContext within the shared DndContext for internal reordering
 
 ### Shared Context Architecture
+
 - **Single DndContext**: Located at PlaylistMixer level, wraps all drag operations
 - **Cross-Component Communication**: Enables drag operations between modals and preview
 - **Event Routing**: Single onDragEnd handler distinguishes between add vs reorder operations
@@ -61,6 +69,7 @@ User Input → Sensor Detection → Shared DndContext → Route Operation Type
 ### Eliminated Components
 
 All complex custom logic is replaced by dnd-kit:
+
 - Custom touch handling and timing logic
 - State coordination between multiple hooks
 - Custom event dispatching systems
@@ -115,7 +124,7 @@ function PlaylistMixer({ /* existing props */ }) {
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className={styles.container}>
         {/* Existing PlaylistMixer content */}
-        
+
         {/* Modals - now participate in shared context */}
         {modalState.isOpen && (
           <TrackSourceModal
@@ -150,12 +159,12 @@ function DroppableMixPreview({ tracks, ...props }) {
   });
 
   return (
-    <div 
+    <div
       ref={setNodeRef}
       className={`mix-preview ${isOver ? 'drag-over' : ''}`}
     >
-      <SortableContext 
-        items={tracks.map(t => t.id)} 
+      <SortableContext
+        items={tracks.map(t => t.id)}
         strategy={verticalListSortingStrategy}
       >
         {tracks.map(track => (
@@ -181,14 +190,14 @@ function TrackSourceModal({ tracks, ...props }) {
 
   return (
     <Modal {...modalProps}>
-      <SortableContext 
-        items={tracks.map(t => t.id)} 
+      <SortableContext
+        items={tracks.map(t => t.id)}
         strategy={verticalListSortingStrategy}
       >
         <div className={styles.trackList}>
           {tracks.map(track => (
-            <SortableWrapper 
-              key={track.id} 
+            <SortableWrapper
+              key={track.id}
               id={track.id}
               data={{ track }} // Pass track data for drag-to-add
             >
@@ -286,7 +295,7 @@ function TrackList({ tracks }: TrackListProps) {
 
 function TrackListContainer() {
   const { tracks, reorderTracks } = useTrackStore();
-  
+
   return (
     <DraggableTrackList tracks={tracks.map(t => t.id)} onReorder={reorderTracks}>
       <TrackList tracks={tracks} />
@@ -356,27 +365,27 @@ interface TrackStore {
 
 const useTrackStore = create<TrackStore>((set, get) => ({
   tracks: [],
-  
+
   reorderTracks: (activeId: string, overId: string) => {
     const { tracks } = get();
     const oldIndex = tracks.indexOf(activeId);
     const newIndex = tracks.indexOf(overId);
-    
+
     set({
       tracks: arrayMove(tracks, oldIndex, newIndex)
     });
   },
-  
+
   setTracks: (tracks: string[]) => set({ tracks }),
 }));
 
 // Usage in component (CORRECT PATTERN - Logic in Store)
 function TrackListContainer() {
   const { tracks, reorderTracks } = useTrackStore();
-  
+
   return (
-    <DraggableTrackList 
-      tracks={tracks.map(t => t.id)} 
+    <DraggableTrackList
+      tracks={tracks.map(t => t.id)}
       onReorder={reorderTracks}  // Pass store action directly
     >
       <TrackList tracks={tracks} />
@@ -388,34 +397,38 @@ function TrackListContainer() {
 ## Sensor Configuration
 
 ### MouseSensor Configuration
+
 ```typescript
 useSensor(MouseSensor, {
   activationConstraint: {
     distance: 10, // Prevents accidental drags on click
   },
-})
+});
 ```
 
 ### TouchSensor Configuration (Mobile Optimized)
+
 ```typescript
 useSensor(TouchSensor, {
   activationConstraint: {
-    delay: 250,    // Proven delay for mobile reliability
-    tolerance: 5,  // Allows slight finger movement during delay
+    delay: 250, // Proven delay for mobile reliability
+    tolerance: 5, // Allows slight finger movement during delay
   },
-})
+});
 ```
 
 ### KeyboardSensor Configuration (Accessibility)
+
 ```typescript
 useSensor(KeyboardSensor, {
   coordinateGetter: sortableKeyboardCoordinates, // Built-in sortable navigation
-})
+});
 ```
 
 ## Visual Feedback System
 
 ### Transform Application
+
 ```css
 /* dnd-kit handles transforms automatically */
 .track-item {
@@ -423,13 +436,14 @@ useSensor(KeyboardSensor, {
   transition: transform 200ms ease;
 }
 
-.track-item[data-dragging="true"] {
+.track-item[data-dragging='true'] {
   opacity: 0.5;
   z-index: 1000;
 }
 ```
 
 ### Existing Visual Feedback Integration
+
 ```typescript
 // Existing drop line logic can be enhanced with dnd-kit's collision detection
 const { isOver } = useDroppable({
@@ -443,6 +457,7 @@ const className = `track-list ${isOver ? 'drag-over' : ''}`;
 ## Data Models
 
 ### DragEndEvent Interface
+
 ```typescript
 interface DragEndEvent {
   active: {
@@ -457,6 +472,7 @@ interface DragEndEvent {
 ```
 
 ### Track Item Data
+
 ```typescript
 interface TrackItemData {
   id: string;
@@ -470,13 +486,16 @@ interface TrackItemData {
 ## Error Handling
 
 ### dnd-kit Built-in Error Handling
+
 dnd-kit handles most error scenarios internally:
+
 - Sensor conflicts and race conditions
 - Touch event coordination
 - Memory leaks from event listeners
 - Focus management edge cases
 
 ### Custom Error Boundaries (Minimal)
+
 ```typescript
 function DragErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
@@ -496,13 +515,16 @@ function DragErrorBoundary({ children }: { children: React.ReactNode }) {
 ## Accessibility Features
 
 ### Built-in Accessibility
+
 dnd-kit provides:
+
 - Automatic ARIA attributes
 - Keyboard navigation with arrow keys
 - Screen reader announcements
 - Focus management
 
 ### Custom Announcements (Optional)
+
 ```typescript
 const announcements = {
   onDragStart({active}) {
@@ -522,19 +544,23 @@ const announcements = {
 ## Performance Considerations
 
 ### Bundle Size Impact
+
 - **@dnd-kit/core**: ~4KB
-- **@dnd-kit/sortable**: ~3KB  
+- **@dnd-kit/sortable**: ~3KB
 - **@dnd-kit/utilities**: ~1KB
 - **Total**: ~8KB (much smaller than current custom implementation)
 
 ### Runtime Performance
+
 - Efficient collision detection algorithms
 - Optimized touch event handling
 - Minimal re-renders during drag operations
 - Automatic cleanup of resources
 
 ### Memory Management
+
 dnd-kit handles:
+
 - Event listener cleanup
 - Timer management
 - Reference cleanup
@@ -543,21 +569,25 @@ dnd-kit handles:
 ## Migration Strategy
 
 ### Phase 1: Installation and Setup
+
 ```bash
 npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
 ### Phase 2: Component Creation
+
 1. Create `SortableTrackItem` component using `useSortable`
 2. Create `TrackList` component with `DndContext` and `SortableContext`
 3. Test basic drag functionality
 
 ### Phase 3: Integration
+
 1. Connect to existing Zustand store
 2. Integrate with existing `TrackItem` components
 3. Apply existing CSS classes and styling
 
 ### Phase 4: Cleanup
+
 1. Remove custom drag hooks and logic
 2. Remove complex state coordination
 3. Remove custom touch handling
@@ -566,12 +596,13 @@ npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ## Testing Strategy
 
 ### Unit Tests
+
 ```typescript
 describe('SortableTrackItem', () => {
   it('should render with drag attributes', () => {
     // Test useSortable hook integration
   });
-  
+
   it('should apply transform styles correctly', () => {
     // Test CSS.Transform.toString usage
   });
@@ -581,7 +612,7 @@ describe('TrackList', () => {
   it('should handle drag end events', () => {
     // Test onDragEnd callback
   });
-  
+
   it('should reorder tracks correctly', () => {
     // Test arrayMove integration
   });
@@ -589,16 +620,17 @@ describe('TrackList', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 describe('Drag and Drop Integration', () => {
   it('should work with mouse input', () => {
     // Test MouseSensor functionality
   });
-  
+
   it('should work with touch input', () => {
     // Test TouchSensor with delay/tolerance
   });
-  
+
   it('should work with keyboard input', () => {
     // Test KeyboardSensor with sortableKeyboardCoordinates
   });
@@ -606,6 +638,7 @@ describe('Drag and Drop Integration', () => {
 ```
 
 ### Mobile Testing
+
 - Test on actual iOS and Android devices
 - Verify 250ms delay feels responsive
 - Confirm 5px tolerance prevents accidental cancellation
@@ -614,16 +647,19 @@ describe('Drag and Drop Integration', () => {
 ## Success Metrics
 
 ### Reliability Metrics
+
 - **Mobile drag success rate**: >95% (vs current ~60%)
 - **Error rate**: <1% (vs current ~15%)
 - **Code complexity**: <100 lines (vs current 1000+ lines)
 
 ### Performance Metrics
+
 - **Touch response time**: <250ms (configurable)
 - **Bundle size increase**: ~8KB
 - **Memory usage**: Reduced due to better cleanup
 
 ### User Experience Metrics
+
 - **Cross-platform compatibility**: iOS, Android, Desktop
 - **Accessibility compliance**: WCAG 2.1 AA (built-in)
 - **Developer experience**: Simple API, good TypeScript support
@@ -631,11 +667,13 @@ describe('Drag and Drop Integration', () => {
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Library dependency**: dnd-kit is actively maintained with 9.3 trust score
 - **API changes**: Stable API with semantic versioning
 - **Performance**: Battle-tested in thousands of applications
 
 ### Migration Risks
+
 - **Functionality gaps**: dnd-kit covers all current functionality
 - **Integration issues**: Clean integration with existing Zustand store
 - **Rollback plan**: Keep old system until new system is fully verified

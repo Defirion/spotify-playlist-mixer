@@ -1,14 +1,9 @@
 {
   "total": {
-    "lines": { "total": 3137, "covered": 3026, "skipped": 0, "pct": 96.46 },
-    "statements": {
-      "total": 3309,
-      "covered": 3168,
-      "skipped": 0,
-      "pct": 95.73
-    },
-    "functions": { "total": 744, "covered": 714, "skipped": 0, "pct": 95.96 },
-    "branches": { "total": 2559, "covered": 2241, "skipped": 0, "pct": 87.57 },
+    "lines": { "total": 2242, "covered": 2163, "skipped": 0, "pct": 96.47 },
+    "statements": { "total": 2367, "covered": 2270, "skipped": 0, "pct": 95.9 },
+    "functions": { "total": 549, "covered": 528, "skipped": 0, "pct": 96.17 },
+    "branches": { "total": 1965, "covered": 1728, "skipped": 0, "pct": 87.93 },
     "branchesTrue": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\App.tsx": {
@@ -46,18 +41,6 @@
     "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
     "statements": { "total": 18, "covered": 18, "skipped": 0, "pct": 100 },
     "branches": { "total": 13, "covered": 12, "skipped": 0, "pct": 92.3 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\DragErrorBoundary.tsx": {
-    "lines": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "statements": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "branches": { "total": 2, "covered": 1, "skipped": 0, "pct": 50 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\DraggableTrackList.tsx": {
-    "lines": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ErrorHandler.tsx": {
     "lines": { "total": 29, "covered": 29, "skipped": 0, "pct": 100 },
@@ -149,16 +132,10 @@
     "statements": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
     "branches": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 }
   },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\TrackList.tsx": {
-    "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "functions": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "statements": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\TrackSourceModal.tsx": {
-    "lines": { "total": 64, "covered": 60, "skipped": 0, "pct": 93.75 },
-    "functions": { "total": 22, "covered": 21, "skipped": 0, "pct": 95.45 },
-    "statements": { "total": 67, "covered": 62, "skipped": 0, "pct": 92.53 },
+    "lines": { "total": 64, "covered": 61, "skipped": 0, "pct": 95.31 },
+    "functions": { "total": 22, "covered": 22, "skipped": 0, "pct": 100 },
+    "statements": { "total": 67, "covered": 63, "skipped": 0, "pct": 94.02 },
     "branches": { "total": 70, "covered": 60, "skipped": 0, "pct": 85.71 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\features\\mixer\\ExhaustionWarning.tsx": {
@@ -204,64 +181,16 @@
     "branches": { "total": 58, "covered": 50, "skipped": 0, "pct": 86.2 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\TrackItem.tsx": {
-    "lines": { "total": 32, "covered": 31, "skipped": 0, "pct": 96.87 },
-    "functions": { "total": 7, "covered": 6, "skipped": 0, "pct": 85.71 },
-    "statements": { "total": 32, "covered": 31, "skipped": 0, "pct": 96.87 },
-    "branches": { "total": 57, "covered": 53, "skipped": 0, "pct": 92.98 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\TrackList.tsx": {
     "lines": { "total": 32, "covered": 29, "skipped": 0, "pct": 90.62 },
-    "functions": { "total": 16, "covered": 13, "skipped": 0, "pct": 81.25 },
+    "functions": { "total": 7, "covered": 6, "skipped": 0, "pct": 85.71 },
     "statements": { "total": 32, "covered": 29, "skipped": 0, "pct": 90.62 },
-    "branches": { "total": 64, "covered": 60, "skipped": 0, "pct": 93.75 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\components\\ui\\withErrorBoundary.tsx": {
-    "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "branches": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useApiErrorHandler.ts": {
-    "lines": { "total": 45, "covered": 44, "skipped": 0, "pct": 97.77 },
-    "functions": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
-    "statements": { "total": 47, "covered": 44, "skipped": 0, "pct": 93.61 },
-    "branches": { "total": 20, "covered": 17, "skipped": 0, "pct": 85 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useAutoScroll.ts": {
-    "lines": { "total": 48, "covered": 47, "skipped": 0, "pct": 97.91 },
-    "functions": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "statements": { "total": 51, "covered": 49, "skipped": 0, "pct": 96.07 },
-    "branches": { "total": 34, "covered": 30, "skipped": 0, "pct": 88.23 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useCustomTouchEvents.ts": {
-    "lines": { "total": 27, "covered": 27, "skipped": 0, "pct": 100 },
-    "functions": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "statements": { "total": 28, "covered": 28, "skipped": 0, "pct": 100 },
-    "branches": { "total": 8, "covered": 8, "skipped": 0, "pct": 100 }
+    "branches": { "total": 57, "covered": 50, "skipped": 0, "pct": 87.71 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useDragSensors.ts": {
     "lines": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
     "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
     "statements": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useDropPosition.ts": {
-    "lines": { "total": 16, "covered": 16, "skipped": 0, "pct": 100 },
-    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 16, "covered": 16, "skipped": 0, "pct": 100 },
-    "branches": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useErrorHandler.ts": {
-    "lines": { "total": 30, "covered": 30, "skipped": 0, "pct": 100 },
-    "functions": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "statements": { "total": 30, "covered": 30, "skipped": 0, "pct": 100 },
-    "branches": { "total": 7, "covered": 7, "skipped": 0, "pct": 100 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useKeyboardNavigation.ts": {
-    "lines": { "total": 135, "covered": 129, "skipped": 0, "pct": 95.55 },
-    "functions": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "statements": { "total": 139, "covered": 131, "skipped": 0, "pct": 94.24 },
-    "branches": { "total": 118, "covered": 94, "skipped": 0, "pct": 79.66 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useMixGeneration.ts": {
     "lines": { "total": 126, "covered": 124, "skipped": 0, "pct": 98.41 },
@@ -287,18 +216,6 @@
     "statements": { "total": 106, "covered": 102, "skipped": 0, "pct": 96.22 },
     "branches": { "total": 81, "covered": 71, "skipped": 0, "pct": 87.65 }
   },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\usePlaylistSelection.ts": {
-    "lines": { "total": 20, "covered": 20, "skipped": 0, "pct": 100 },
-    "functions": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "statements": { "total": 26, "covered": 26, "skipped": 0, "pct": 100 },
-    "branches": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\usePlaylistTracks.ts": {
-    "lines": { "total": 82, "covered": 78, "skipped": 0, "pct": 95.12 },
-    "functions": { "total": 17, "covered": 17, "skipped": 0, "pct": 100 },
-    "statements": { "total": 86, "covered": 82, "skipped": 0, "pct": 95.34 },
-    "branches": { "total": 52, "covered": 45, "skipped": 0, "pct": 86.53 }
-  },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useRatioCalculation.ts": {
     "lines": { "total": 44, "covered": 44, "skipped": 0, "pct": 100 },
     "functions": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
@@ -317,12 +234,6 @@
     "statements": { "total": 77, "covered": 74, "skipped": 0, "pct": 96.1 },
     "branches": { "total": 37, "covered": 33, "skipped": 0, "pct": 89.18 }
   },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useTrackOperations.ts": {
-    "lines": { "total": 45, "covered": 44, "skipped": 0, "pct": 97.77 },
-    "functions": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "statements": { "total": 52, "covered": 51, "skipped": 0, "pct": 98.07 },
-    "branches": { "total": 22, "covered": 22, "skipped": 0, "pct": 100 }
-  },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useTrackSelection.ts": {
     "lines": { "total": 17, "covered": 17, "skipped": 0, "pct": 100 },
     "functions": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
@@ -335,23 +246,11 @@
     "statements": { "total": 78, "covered": 75, "skipped": 0, "pct": 96.15 },
     "branches": { "total": 34, "covered": 28, "skipped": 0, "pct": 82.35 }
   },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useUserPlaylists.ts": {
-    "lines": { "total": 89, "covered": 88, "skipped": 0, "pct": 98.87 },
-    "functions": { "total": 23, "covered": 23, "skipped": 0, "pct": 100 },
-    "statements": { "total": 94, "covered": 93, "skipped": 0, "pct": 98.93 },
-    "branches": { "total": 61, "covered": 56, "skipped": 0, "pct": 91.8 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\hooks\\useVirtualization.ts": {
-    "lines": { "total": 57, "covered": 54, "skipped": 0, "pct": 94.73 },
-    "functions": { "total": 10, "covered": 9, "skipped": 0, "pct": 90 },
-    "statements": { "total": 57, "covered": 54, "skipped": 0, "pct": 94.73 },
-    "branches": { "total": 33, "covered": 28, "skipped": 0, "pct": 84.84 }
-  },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\apiErrorHandler.ts": {
-    "lines": { "total": 104, "covered": 99, "skipped": 0, "pct": 95.19 },
-    "functions": { "total": 18, "covered": 16, "skipped": 0, "pct": 88.88 },
-    "statements": { "total": 106, "covered": 101, "skipped": 0, "pct": 95.28 },
-    "branches": { "total": 94, "covered": 87, "skipped": 0, "pct": 92.55 }
+    "lines": { "total": 102, "covered": 98, "skipped": 0, "pct": 96.07 },
+    "functions": { "total": 17, "covered": 16, "skipped": 0, "pct": 94.11 },
+    "statements": { "total": 104, "covered": 100, "skipped": 0, "pct": 96.15 },
+    "branches": { "total": 93, "covered": 87, "skipped": 0, "pct": 93.54 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\fetchClient.ts": {
     "lines": { "total": 39, "covered": 35, "skipped": 0, "pct": 89.74 },
@@ -360,10 +259,10 @@
     "branches": { "total": 31, "covered": 27, "skipped": 0, "pct": 87.09 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\spotify.ts": {
-    "lines": { "total": 154, "covered": 142, "skipped": 0, "pct": 92.2 },
-    "functions": { "total": 28, "covered": 26, "skipped": 0, "pct": 92.85 },
-    "statements": { "total": 154, "covered": 142, "skipped": 0, "pct": 92.2 },
-    "branches": { "total": 137, "covered": 123, "skipped": 0, "pct": 89.78 }
+    "lines": { "total": 94, "covered": 87, "skipped": 0, "pct": 92.55 },
+    "functions": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
+    "statements": { "total": 94, "covered": 87, "skipped": 0, "pct": 92.55 },
+    "branches": { "total": 94, "covered": 85, "skipped": 0, "pct": 90.42 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\services\\spotifyAuth.ts": {
     "lines": { "total": 55, "covered": 55, "skipped": 0, "pct": 100 },
@@ -414,9 +313,9 @@
     "branches": { "total": 26, "covered": 21, "skipped": 0, "pct": 80.76 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\StoreProvider.tsx": {
-    "lines": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "statements": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
+    "lines": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
+    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
+    "statements": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\slices\\authSlice.ts": {
@@ -437,29 +336,11 @@
     "statements": { "total": 42, "covered": 42, "skipped": 0, "pct": 100 },
     "branches": { "total": 11, "covered": 10, "skipped": 0, "pct": 90.9 }
   },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\slices\\trackSlice.ts": {
-    "lines": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
-    "functions": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "statements": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "branches": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 }
-  },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\store\\slices\\uiSlice.ts": {
     "lines": { "total": 12, "covered": 11, "skipped": 0, "pct": 91.66 },
     "functions": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
     "statements": { "total": 14, "covered": 13, "skipped": 0, "pct": 92.85 },
     "branches": { "total": 4, "covered": 2, "skipped": 0, "pct": 50 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\accessibility.ts": {
-    "lines": { "total": 102, "covered": 100, "skipped": 0, "pct": 98.03 },
-    "functions": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
-    "statements": { "total": 111, "covered": 102, "skipped": 0, "pct": 91.89 },
-    "branches": { "total": 55, "covered": 43, "skipped": 0, "pct": 78.18 }
-  },
-  "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\dropPositionCalculator.ts": {
-    "lines": { "total": 28, "covered": 27, "skipped": 0, "pct": 96.42 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 28, "covered": 27, "skipped": 0, "pct": 96.42 },
-    "branches": { "total": 17, "covered": 15, "skipped": 0, "pct": 88.23 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\exhaustionPrediction.ts": {
     "lines": { "total": 41, "covered": 40, "skipped": 0, "pct": 97.56 },
@@ -510,21 +391,21 @@
     "branches": { "total": 92, "covered": 82, "skipped": 0, "pct": 89.13 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\mixingCalculations.ts": {
-    "lines": { "total": 83, "covered": 83, "skipped": 0, "pct": 100 },
-    "functions": { "total": 18, "covered": 18, "skipped": 0, "pct": 100 },
-    "statements": { "total": 90, "covered": 90, "skipped": 0, "pct": 100 },
-    "branches": { "total": 70, "covered": 59, "skipped": 0, "pct": 84.28 }
+    "lines": { "total": 54, "covered": 54, "skipped": 0, "pct": 100 },
+    "functions": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
+    "statements": { "total": 60, "covered": 60, "skipped": 0, "pct": 100 },
+    "branches": { "total": 48, "covered": 44, "skipped": 0, "pct": 91.66 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\playlistMixer.ts": {
-    "lines": { "total": 64, "covered": 63, "skipped": 0, "pct": 98.43 },
+    "lines": { "total": 63, "covered": 62, "skipped": 0, "pct": 98.41 },
     "functions": { "total": 16, "covered": 16, "skipped": 0, "pct": 100 },
-    "statements": { "total": 68, "covered": 66, "skipped": 0, "pct": 97.05 },
+    "statements": { "total": 67, "covered": 65, "skipped": 0, "pct": 97.01 },
     "branches": { "total": 51, "covered": 49, "skipped": 0, "pct": 96.07 }
   },
   "C:\\Users\\defir\\Documents\\fun_with_Copilot\\Kiro vibes\\src\\utils\\mixer\\trackShuffler.ts": {
-    "lines": { "total": 27, "covered": 23, "skipped": 0, "pct": 85.18 },
-    "functions": { "total": 7, "covered": 6, "skipped": 0, "pct": 85.71 },
-    "statements": { "total": 28, "covered": 24, "skipped": 0, "pct": 85.71 },
-    "branches": { "total": 17, "covered": 13, "skipped": 0, "pct": 76.47 }
+    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
+    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
+    "statements": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   }
 }

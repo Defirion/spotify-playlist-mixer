@@ -1,11 +1,11 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Implementation Plan
 
 - [x] 1. Set up modular directory structure and types
-
-
-
-
-
   - Create `src/utils/mixer/` directory structure
   - Create `src/utils/mixer/types.ts` with internal interfaces and types
   - Create `src/utils/mixer/index.ts` as main export barrel
@@ -13,11 +13,6 @@
   - _Requirements: 1.1, 2.1, 2.2, 2.3_
 
 - [x] 2. Extract and implement utility functions module
-
-
-
-
-
   - Create `src/utils/mixer/mixerUtils.ts` with utility functions
   - Move `safeObjectKeys`, `calculateTotalDuration` functions from original file
   - Implement `validateTrack`, `cleanPlaylistTracks`, `formatDuration` functions
@@ -26,11 +21,6 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 7.1, 7.2_
 
 - [x] 3. Implement track shuffling module
-
-
-
-
-
   - Create `src/utils/mixer/trackShuffler.ts` with shuffling algorithms
   - Move `shuffleArray` function from original file with Fisher-Yates implementation
   - Implement `shuffleQuadrants` function for shuffling within popularity groups
@@ -40,11 +30,6 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 7.1, 7.2_
 
 - [x] 4. Implement popularity calculator module
-
-
-
-
-
   - Create `src/utils/mixer/popularityCalculator.ts` with popularity logic
   - Move `getAdjustedPopularity` function from original file
   - Implement `calculateRecencyBonus` function for date-based calculations
@@ -54,11 +39,6 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 7.1, 7.2_
 
 - [x] 5. Implement popularity quadrants module
-
-
-
-
-
   - Create `src/utils/mixer/popularityQuadrants.ts` with quadrant management
   - Move `createPopularityQuadrants` function from original file
   - Move `createPopularityPools` function from original file
@@ -68,12 +48,7 @@
   - Write unit tests for quadrant creation, validation, and statistics
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 7.1, 7.2_
 
-
-
 - [x] 6. Implement mixing strategies module using strategy pattern
-
-
-
   - Create `src/utils/mixer/mixingStrategies.ts` with strategy implementations
   - Move `getTracksForPosition` logic from original file
   - Implement `MixingStrategy` interface and individual strategy classes
@@ -84,11 +59,6 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 7.1, 7.2_
 
 - [x] 7. Refactor main playlist mixer orchestrator
-
-
-
-
-
   - Create new streamlined `src/utils/mixer/playlistMixer.ts` (target ~200 lines)
   - Implement `createMixingContext` function for initialization
   - Implement `validateInputs` function for input validation
@@ -99,11 +69,6 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 8.1, 8.2_
 
 - [x] 8. Update main export and maintain backward compatibility
-
-
-
-
-
   - Update `src/utils/mixer/index.ts` to export main `mixPlaylists` function
   - Create compatibility layer in original `src/utils/playlistMixer.ts` location
   - Ensure exact same function signature and behavior as original implementation

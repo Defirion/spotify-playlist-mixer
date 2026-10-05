@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "elapsedMs": 91.8098,
-  "heapDelta": 4023352,
+  "elapsedMs": 94.99770000000012,
+  "heapDelta": 4630512,
   "mixedCount": 1200,
   "timings": [
-    106.0338999999999, 104.19249999999988, 91.8098, 90.95730000000003,
-    87.36440000000016
+    106.06630000000018, 97.69139999999993, 88.44029999999998, 84.04960000000005,
+    94.99770000000012
   ],
   "workload": {
     "mode": "all",
@@ -57,9 +57,9 @@
     "invocation": "test:perf"
   },
   "provenance": {
-    "runId": "456d9d47-0f21-4149-b421-c622c5935d59",
-    "timestamp": "2026-10-05T17:54:08.744Z",
-    "commit": "9fdffe68ff33be14325b3cc37f6f339e72856da8",
+    "runId": "dc3c6e02-6224-4cfa-bc17-27dc693bc3b2",
+    "timestamp": "2026-10-05T18:07:52.268Z",
+    "commit": "df727caa2a225a43d39d7d867561be631890f64b",
     "sourceHash": "d71a69683ae70b7d265ddf37a55b494afd4e459065c8faba17adb2257dae72b1"
   }
 }

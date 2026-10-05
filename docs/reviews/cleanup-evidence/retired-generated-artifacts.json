@@ -1,0 +1,98 @@
+[
+  {
+    "file": "llm_prompt.txt",
+    "bytes": 946,
+    "sha256": "e1cbe08a4643d8bc2caac04bc1347c630a686cedb117e8440765752ab21d757a",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-output.txt",
+    "bytes": 1067356,
+    "sha256": "9ba9bf1f7337a9848384a4e43ebe72ff845c2a41179ec3e68d405025e5f85086",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-metrics.json",
+    "bytes": 1747,
+    "sha256": "4bd7babf8bdcd7d4396ec869e97a3ad8e489380bf253fcc81d1e866aa6c58c05",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "coverage-history.json",
+    "bytes": 4395,
+    "sha256": "a1491c272c907798880a00fd78bb44969405cd8b8fb94771d7dc701f1b047b91",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchB-output.json",
+    "bytes": 16515,
+    "sha256": "d284dd3e41a8aca7ada067b1c0a1f5677a29ad9d075bb09fa2607198effd4e04",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchB-stdout.txt",
+    "bytes": 12700,
+    "sha256": "98a3784a5a7c859715f41e9f0a1a87d95b1200629eb538c30a983bc0313e0051",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchB-test1-output.json",
+    "bytes": 3750,
+    "sha256": "9f01675ef6ad3c03b0cc66e40a00dd534fdfaa060384b476d37c80ec7db85b10",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchB-test1-stdout.txt",
+    "bytes": 3814,
+    "sha256": "60804d1b46165601bebfba435b719b3facfa846fb02e6342eea8dc3526e18c46",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchF-output.json",
+    "bytes": 10586,
+    "sha256": "9f469e5769532b7cb7a1b4a60505c8346ddfeedbdf9ef75dcb40bb949dd8204a",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-batchF-stdout.txt",
+    "bytes": 16952,
+    "sha256": "15a2bfeba9b17a3f6cfd7f142283f685d339571b8c41c05b8b9a01c6cbcaf550",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-latest-output.txt",
+    "bytes": 47818,
+    "sha256": "3fbcef82004d1a20690586a6f121b3a72aa9c1433abc6bbaa5a6a749f0b5b644",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-measurements.json",
+    "bytes": 67685,
+    "sha256": "e11ce22953ede509d846d445f7b95b4393cd48c6ef71266672f9aba9631c0474",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-output.json",
+    "bytes": 1188377,
+    "sha256": "403203a498d8834e6a3e2c5d9de745efc770858ee2cf4e04db12cffeec931c05",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-stdout.txt",
+    "bytes": 314404,
+    "sha256": "11c30eaf322f4e552e98a5a7077b91b3d914c3258269922e23000190a056d49f",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-task4-output.txt",
+    "bytes": 880,
+    "sha256": "e03d4520531144d0eb95063a21887ec4383551857fd40bcb0d0fe20ab6b5e673",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  },
+  {
+    "file": "test-results/jest-timings.json",
+    "bytes": 346063,
+    "sha256": "5bc527fd2b44806df54058f5afbcc09b1f9010f93a15e498c617adf84027d5e5",
+    "retention": "Available in feature checkpoint commit 511e5019; no active script/workflow consumer."
+  }
+]

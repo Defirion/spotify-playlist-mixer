@@ -1,11 +1,13 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Test Infrastructure Repair Implementation Plan
 
 ## Phase 1: Audit and Safety Gates
 
 - [x] 1. Audit MSW handler files and imports
-
-
-
   - Find all MSW handler files in the codebase
   - List all imports of handler files across test files
   - Identify all references to "tracks.items" vs "playlists.items" in tests
@@ -22,12 +24,6 @@
   - _Requirements: 1.1, 1.3_
 
 - [x] 3. Create MSW environment safety rules
-
-
-
-
-
-
   - Document Node vs browser MSW usage (setupServer vs worker)
   - Add rule to never call both setupServer and worker in same bootstrap
   - Ensure tests running in Node use setupServer only

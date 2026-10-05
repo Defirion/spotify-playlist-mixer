@@ -1,3 +1,8 @@
+> Historical specification, retained for design context. As of 5 October 2026,
+> [PLAN](../../../PLAN.md) and the cleanup implementation record are authoritative.
+> Earlier implementation descriptions and task checkboxes reflect the original
+> proposal; they do not describe the current drag system or execution status.
+
 # Design Document
 
 ## Overview
@@ -31,11 +36,11 @@ graph TD
     A --> D[mixingStrategies.ts]
     A --> E[trackShuffler.ts]
     A --> F[mixerUtils.ts]
-    
+
     C --> B
     D --> C
     D --> E
-    
+
     B --> F
     C --> F
     E --> F
@@ -67,6 +72,7 @@ export interface MixingContext {
 ```
 
 **Key Functions:**
+
 - `mixPlaylists()` - Main entry point (orchestrator)
 - `createMixingContext()` - Initialize mixing context
 - `validateInputs()` - Input validation
@@ -82,12 +88,10 @@ export interface PopularityCalculator {
     track: SpotifyTrack,
     recencyBoost: boolean
   ): PopularityData;
-  
+
   calculateRecencyBonus(releaseDate: Date): number;
-  
-  sortTracksByPopularity(
-    tracks: TrackWithPopularity[]
-  ): TrackWithPopularity[];
+
+  sortTracksByPopularity(tracks: TrackWithPopularity[]): TrackWithPopularity[];
 }
 
 export interface PopularityData {
@@ -99,6 +103,7 @@ export interface PopularityData {
 ```
 
 **Key Functions:**
+
 - `calculateAdjustedPopularity()` - Calculate popularity with optional recency boost
 - `calculateRecencyBonus()` - Calculate recency bonus based on release date
 - `sortTracksByPopularity()` - Sort tracks by adjusted popularity
@@ -114,7 +119,7 @@ export interface QuadrantManager {
     tracks: SpotifyTrack[],
     recencyBoost: boolean
   ): PopularityQuadrants;
-  
+
   createPopularityPools(
     playlistTracks: PlaylistTracks,
     options: QuadrantOptions
@@ -135,6 +140,7 @@ export interface PopularityQuadrants {
 ```
 
 **Key Functions:**
+
 - `createPopularityQuadrants()` - Divide tracks into four popularity tiers
 - `createPopularityPools()` - Create quadrants for all playlists
 - `getQuadrantStats()` - Get statistics about quadrant distribution
@@ -162,12 +168,14 @@ export interface StrategyManager {
 ```
 
 **Strategy Implementations:**
+
 - `MixedStrategy` - Random mix of all quadrants
 - `FrontLoadedStrategy` - Popular songs first, fade to deep cuts
 - `MidPeakStrategy` - Build to peak in middle, then fade
 - `CrescendoStrategy` - Build from deep cuts to biggest hits
 
 **Key Functions:**
+
 - `createStrategyManager()` - Factory for strategy manager
 - `getTracksForPosition()` - Get tracks based on strategy and position
 - `addFallbackTracks()` - Add fallback tracks when strategy pools are exhausted
@@ -180,13 +188,12 @@ export interface StrategyManager {
 export interface TrackShuffler {
   shuffleArray<T>(array: T[]): T[];
   shuffleQuadrants(quadrants: PopularityQuadrants): PopularityQuadrants;
-  shuffleWithinGroups(
-    popularityPools: PopularityPools
-  ): PopularityPools;
+  shuffleWithinGroups(popularityPools: PopularityPools): PopularityPools;
 }
 ```
 
 **Key Functions:**
+
 - `shuffleArray()` - Fisher-Yates shuffle implementation
 - `shuffleQuadrants()` - Shuffle tracks within each quadrant
 - `shuffleWithinGroups()` - Shuffle tracks within popularity groups
@@ -206,6 +213,7 @@ export interface MixerUtils {
 ```
 
 **Key Functions:**
+
 - `safeObjectKeys()` - Defensive Object.keys implementation
 - `calculateTotalDuration()` - Calculate total duration of tracks
 - `validateTrack()` - Validate track object structure
@@ -275,6 +283,7 @@ export interface MixingState {
 ### State Management
 
 The mixing process maintains state through a `MixingState` object that tracks:
+
 - Current mixed tracks
 - Songs added from each playlist
 - Duration added from each playlist
@@ -284,17 +293,20 @@ The mixing process maintains state through a `MixingState` object that tracks:
 ## Error Handling
 
 ### Input Validation Errors
+
 - Invalid or empty `playlistTracks`
 - Invalid or empty `ratioConfig`
 - Missing required options
 
 ### Runtime Errors
+
 - Playlist exhaustion handling
 - Strategy fallback mechanisms
 - Track validation failures
 - Infinite loop protection
 
 ### Error Recovery
+
 - Graceful degradation when playlists are exhausted
 - Fallback to all quadrants when strategy pools are empty
 - Defensive programming for array operations
@@ -339,16 +351,19 @@ The mixing process maintains state through a `MixingState` object that tracks:
 ## Performance Considerations
 
 ### Memory Optimization
+
 - Avoid unnecessary array copies
 - Use efficient sorting algorithms
 - Clean up temporary objects
 
 ### Computational Efficiency
+
 - Cache popularity calculations where possible
 - Optimize quadrant creation for large playlists
 - Use efficient random selection algorithms
 
 ### Scalability
+
 - Handle playlists with 1000+ tracks efficiently
 - Maintain responsive performance during mixing
 - Optimize for common use cases
@@ -356,31 +371,37 @@ The mixing process maintains state through a `MixingState` object that tracks:
 ## Migration Strategy
 
 ### Phase 1: Extract Utility Functions
+
 - Move `safeObjectKeys`, `shuffleArray`, `calculateTotalDuration` to `mixerUtils.ts`
 - Update imports in main file
 - Ensure all tests pass
 
 ### Phase 2: Extract Popularity Calculator
+
 - Move `getAdjustedPopularity` and related functions to `popularityCalculator.ts`
 - Create proper interfaces and types
 - Update main file to use new module
 
 ### Phase 3: Extract Quadrant Manager
+
 - Move `createPopularityQuadrants` and `createPopularityPools` to `popularityQuadrants.ts`
 - Integrate with popularity calculator
 - Update main file
 
 ### Phase 4: Extract Mixing Strategies
+
 - Move `getTracksForPosition` to `mixingStrategies.ts`
 - Implement strategy pattern
 - Create individual strategy classes
 
 ### Phase 5: Refactor Main Orchestrator
+
 - Simplify main `mixPlaylists` function
 - Focus on orchestration rather than implementation
 - Ensure backward compatibility
 
 ### Phase 6: Testing and Validation
+
 - Comprehensive testing of all modules
 - Performance testing with large datasets
 - Validation that output matches original implementation
@@ -388,16 +409,19 @@ The mixing process maintains state through a `MixingState` object that tracks:
 ## Backward Compatibility
 
 ### API Compatibility
+
 - Maintain exact same function signature for `mixPlaylists`
 - Ensure same input/output behavior
 - Preserve all existing functionality
 
 ### Behavioral Compatibility
+
 - Same mixing results for identical inputs
 - Same error handling behavior
 - Same performance characteristics
 
 ### Migration Safety
+
 - Gradual migration with rollback capability
 - Comprehensive test coverage before each phase
 - Feature flags for new vs old implementation during transition
