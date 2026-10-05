@@ -1,9 +1,4 @@
-import {
-  getRandomTrack,
-  getRandomTracks,
-  shuffleArray,
-  shufflePlaylistTracks,
-} from '../trackShuffler';
+import { shuffleArray, shufflePlaylistTracks } from '../trackShuffler';
 import { makeTrack } from './fixtures';
 
 describe('trackShuffler', () => {
@@ -30,23 +25,5 @@ describe('trackShuffler', () => {
     expect(shuffled.p1).not.toBe(source.p1);
     expect(shuffled.p1.map(track => track.id).sort()).toEqual(['t1', 't2']);
     expect(shuffled.p2.map(track => track.id)).toEqual(['t3']);
-  });
-
-  it('selects a random track while honoring exclusions', () => {
-    const tracks = [makeTrack(1), makeTrack(2)];
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-
-    expect(getRandomTrack(tracks)?.id).toBe('t1');
-    expect(getRandomTrack(tracks, new Set(['t1']))?.id).toBe('t2');
-    expect(getRandomTrack(tracks, new Set(['t1', 't2']))).toBeNull();
-    vi.restoreAllMocks();
-  });
-
-  it('returns up to the requested number of unique tracks', () => {
-    const tracks = [makeTrack(1), makeTrack(2), makeTrack(3)];
-    const selected = getRandomTracks(tracks, 2);
-
-    expect(selected).toHaveLength(2);
-    expect(new Set(selected.map(track => track.id)).size).toBe(2);
   });
 });

@@ -1,4 +1,4 @@
-import { mixPlaylists, validateInputs, createMixingContext } from '../mixer';
+import { mixPlaylists, validateInputs } from '../mixer';
 import { MixOptions, RatioConfig } from '../../types/mixer';
 
 import { makeTrack } from '../mixer/__tests__/fixtures';
@@ -56,18 +56,5 @@ describe('mixPlaylists basic behavior', () => {
   test('returns empty array for invalid inputs', () => {
     const result = mixPlaylists({}, {}, baseOptions);
     expect(result).toEqual([]);
-  });
-});
-
-describe('createMixingContext integration', () => {
-  test('target counts sum > 0', () => {
-    const playlists = { p1: [track('1'), track('2')], p2: [track('3')] } as any;
-    const ratios: RatioConfig = {
-      p1: { min: 0, max: 1, weight: 2, weightType: 'frequency' },
-      p2: { min: 0, max: 1, weight: 1, weightType: 'frequency' },
-    };
-    const ctx = createMixingContext(playlists, ratios, baseOptions);
-    const total = Object.values(ctx.targetCounts).reduce((s, v) => s + v, 0);
-    expect(total).toBeGreaterThan(0);
   });
 });

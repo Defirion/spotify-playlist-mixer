@@ -15,7 +15,6 @@ import {
 } from './mixerUtils';
 import { shufflePlaylistTracks } from './trackShuffler';
 import {
-  calculateTargetCounts,
   shouldContinueMixing,
   shouldStopDueToExhaustion,
   getNextPlaylistId,
@@ -29,8 +28,6 @@ export interface MixingContext {
   options: MixOptions;
   playlistIds: string[];
   totalWeight: number;
-  estimatedTotalSongs: number;
-  targetCounts: { [key: string]: number };
 }
 
 interface MixingState {
@@ -61,13 +58,6 @@ export const createMixingContext = (
     : Object.fromEntries(
         Object.entries(playlistTracks).map(([id, tracks]) => [id, [...tracks]])
       );
-  const { estimatedTotalSongs, targetCounts } = calculateTargetCounts(
-    playlistQueues,
-    ratioConfig,
-    options,
-    playlistIds,
-    totalWeight
-  );
 
   return {
     playlistTracks,
@@ -76,8 +66,6 @@ export const createMixingContext = (
     options,
     playlistIds,
     totalWeight,
-    estimatedTotalSongs,
-    targetCounts,
   };
 };
 
@@ -129,8 +117,6 @@ export const validateInputs = (
   };
 };
 
-export { calculateTargetCounts } from './mixingCalculations';
-
 export const mixPlaylistsWithResult = (
   playlistTracks: PlaylistTracks,
   ratioConfig: RatioConfig,
@@ -162,7 +148,6 @@ export const mixPlaylistsWithResult = (
     shouldContinueMixing(
       context.options,
       state.mixedTracks,
-      context.estimatedTotalSongs,
       state.playlistExhausted
     );
 

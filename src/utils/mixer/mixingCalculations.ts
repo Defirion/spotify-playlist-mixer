@@ -8,94 +8,9 @@ import {
   logDebugInfo,
 } from './mixerUtils';
 
-export const calculateTargetCounts = (
-  playlistTracks: PlaylistTracks,
-  ratioConfig: RatioConfig,
-  options: MixOptions,
-  playlistIds: string[],
-  totalWeight: number
-): {
-  estimatedTotalSongs: number;
-  targetCounts: { [key: string]: number };
-} => {
-  const { totalSongs, targetDurationSeconds, useTimeLimit, useAllSongs } =
-    options;
-  const estimatedTotalSongs = useAllSongs
-    ? calculateOptimalMixLength(
-        playlistTracks,
-        ratioConfig,
-        playlistIds,
-        totalWeight
-      )
-    : useTimeLimit
-      ? Math.ceil(targetDurationSeconds / 210)
-      : totalSongs;
-
-  const targetCounts: { [key: string]: number } = {};
-  playlistIds.forEach(playlistId => {
-    const weight = ratioConfig[playlistId].weight || 1;
-    targetCounts[playlistId] = Math.round(
-      estimatedTotalSongs * (weight / totalWeight)
-    );
-  });
-
-  return { estimatedTotalSongs, targetCounts };
-};
-
-const calculateOptimalMixLength = (
-  playlistTracks: PlaylistTracks,
-  ratioConfig: RatioConfig,
-  playlistIds: string[],
-  totalWeight: number
-): number => {
-  const hasTimeBasedWeighting = playlistIds.some(
-    id => ratioConfig[id].weightType === 'time'
-  );
-
-  if (hasTimeBasedWeighting) {
-    let minPossibleDuration = Infinity;
-
-    playlistIds.forEach(playlistId => {
-      const tracks = playlistTracks[playlistId] || [];
-      const weight = ratioConfig[playlistId].weight || 1;
-      const targetRatio = weight / totalWeight;
-      const totalDuration = calculateTotalDuration(tracks) / 1000;
-      const averageDuration = tracks.length
-        ? totalDuration / tracks.length
-        : 210;
-      minPossibleDuration = Math.min(
-        minPossibleDuration,
-        (tracks.length * averageDuration) / targetRatio
-      );
-    });
-
-    const allTracks = playlistIds.flatMap(id => playlistTracks[id] || []);
-    const averageDuration = allTracks.length
-      ? calculateTotalDuration(allTracks) / 1000 / allTracks.length
-      : 210;
-    return Math.max(
-      1,
-      Math.floor((minPossibleDuration / averageDuration) * 1.05)
-    );
-  }
-
-  let minPossibleSongs = Infinity;
-  playlistIds.forEach(playlistId => {
-    const weight = ratioConfig[playlistId].weight || 1;
-    const targetRatio = weight / totalWeight;
-    minPossibleSongs = Math.min(
-      minPossibleSongs,
-      Math.floor((playlistTracks[playlistId] || []).length / targetRatio)
-    );
-  });
-
-  return Math.max(1, Math.floor(minPossibleSongs * 1.05));
-};
-
 export const shouldContinueMixing = (
   options: MixOptions,
   mixedTracks: MixedTrack[],
-  estimatedTotalSongs: number,
   playlistExhausted: { [key: string]: boolean }
 ): boolean => {
   const hasAvailableTracks = safeObjectKeys(playlistExhausted).some(

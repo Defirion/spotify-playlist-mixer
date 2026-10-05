@@ -6,6 +6,5 @@ describe('playlistMixer compatibility re-exports', () => {
     expect(compat.mixPlaylists).toBe(mixer.mixPlaylists);
     expect(compat.validateInputs).toBe(mixer.validateInputs);
     expect(compat.createMixingContext).toBe(mixer.createMixingContext);
-    expect(compat.calculateTargetCounts).toBe(mixer.calculateTargetCounts);
   });
 });

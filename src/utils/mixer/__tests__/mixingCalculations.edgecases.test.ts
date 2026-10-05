@@ -1,5 +1,4 @@
 import {
-  calculateTargetCounts,
   shouldContinueMixing,
   shouldStopDueToExhaustion,
 } from '../mixingCalculations';
@@ -12,71 +11,6 @@ describe('mixingCalculations edge cases', () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
-  test('calculateTargetCounts uses time-based path when weightType=time', () => {
-    const playlistTracks: any = {
-      p1: Array.from({ length: 5 }, (_, i) => ({
-        id: String(i),
-        uri: 'u',
-        title: 'n',
-        durationMs: 180000,
-      })),
-      p2: Array.from({ length: 10 }, (_, i) => ({
-        id: String(i + 10),
-        uri: 'u',
-        title: 'n',
-        durationMs: 240000,
-      })),
-    };
-    const ratioConfig: any = {
-      p1: { weight: 1, weightType: 'time' },
-      p2: { weight: 3, weightType: 'time' },
-    };
-    const options: any = {
-      totalSongs: 10,
-      targetDurationSeconds: 30,
-      useTimeLimit: false,
-      useAllSongs: true,
-    };
-    const playlistIds = ['p1', 'p2'];
-
-    const res = calculateTargetCounts(
-      playlistTracks,
-      ratioConfig,
-      options,
-      playlistIds,
-      4
-    );
-    expect(typeof res.estimatedTotalSongs).toBe('number');
-    expect(res.targetCounts.p1).toBeDefined();
-    expect(res.targetCounts.p2).toBeDefined();
-  });
-
-  test('calculateTargetCounts uses frequency-based path when no time weighting', () => {
-    const playlistTracks: any = {
-      a: new Array(3).fill({
-        id: '1',
-        uri: 'u',
-        title: 'n',
-        durationMs: 200000,
-      }),
-    };
-    const ratioConfig: any = { a: { weight: 1 } };
-    const options: any = {
-      totalSongs: 5,
-      targetDurationSeconds: 10,
-      useTimeLimit: false,
-      useAllSongs: true,
-    };
-    const res = calculateTargetCounts(
-      playlistTracks,
-      ratioConfig,
-      options,
-      ['a'],
-      1
-    );
-    expect(res.estimatedTotalSongs).toBeGreaterThan(0);
-    expect(res.targetCounts.a).toBeGreaterThanOrEqual(0);
-  });
 
   test('shouldContinueMixing respects useTimeLimit and totalSongs', () => {
     const optionsTime: any = {
@@ -87,7 +21,7 @@ describe('mixingCalculations edge cases', () => {
     };
     const mixedTracks = [{ durationMs: 30 * 1000 }]; // 0.5 min
     expect(
-      shouldContinueMixing(optionsTime, mixedTracks as any, 0, { p1: false })
+      shouldContinueMixing(optionsTime, mixedTracks as any, { p1: false })
     ).toBe(true);
 
     const optionsCount: any = {
@@ -95,7 +29,7 @@ describe('mixingCalculations edge cases', () => {
       useTimeLimit: false,
       totalSongs: 1,
     };
-    expect(shouldContinueMixing(optionsCount, mixedTracks as any, 0, {})).toBe(
+    expect(shouldContinueMixing(optionsCount, mixedTracks as any, {})).toBe(
       false
     );
   });

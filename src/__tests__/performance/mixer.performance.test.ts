@@ -1,9 +1,5 @@
 import { performance } from 'perf_hooks';
-import {
-  mixPlaylists,
-  calculateTargetCounts,
-  validateInputs,
-} from '../../utils/mixer';
+import { mixPlaylists, validateInputs } from '../../utils/mixer';
 
 // Performance test template for playlist mixer
 // - This test targets the real `mixPlaylists` export from `src/utils/mixer`.
@@ -71,85 +67,8 @@ test('mixPlaylists performance - 1000 tracks', async () => {
       continueWhenPlaylistEmpty: false,
     };
 
-    // Probe estimatedTotalSongs when using `useAllSongs` to ensure we actually have a target.
-    let estimatedSongsProbe = 0;
-    try {
-      // Run validation to surface any input cleaning/errors
-      try {
-        const validation = validateInputs(playlistTracks, ratioConfig, options);
-        if (debugEnabled) {
-          // eslint-disable-next-line no-console
-          console.log(
-            'validation.isValid:',
-            validation.isValid,
-            'errors:',
-            validation.errors
-          );
-          // eslint-disable-next-line no-console
-          console.log(
-            'cleaned playlist sizes:',
-            Object.keys(validation.cleanedPlaylistTracks).map(k => ({
-              id: k,
-              count: validation.cleanedPlaylistTracks[k].length,
-            }))
-          );
-        }
-        if (!validation.isValid) {
-          // If validation fails, don't proceed to heavy mixing; let the test fail with context.
-          if (debugEnabled) {
-            // eslint-disable-next-line no-console
-            console.log('Validation failed; aborting mix run');
-          }
-        }
-      } catch (vErr: any) {
-        if (debugEnabled) {
-          // eslint-disable-next-line no-console
-          console.log('validation error', vErr && vErr.message);
-        }
-      }
-      const playlistIds = Object.keys(ratioConfig).filter(
-        id => playlistTracks[id] && playlistTracks[id].length > 0
-      );
-      const totalWeight = playlistIds.reduce(
-        (sum, id) => sum + (ratioConfig[id].weight || 1),
-        0
-      );
-      const probe = calculateTargetCounts(
-        playlistTracks,
-        ratioConfig,
-        options,
-        playlistIds,
-        totalWeight as any
-      );
-      estimatedSongsProbe = probe.estimatedTotalSongs || 0;
-      if (debugEnabled) {
-        // eslint-disable-next-line no-console
-        console.log('probeEstimatedSongs:', estimatedSongsProbe);
-      }
-    } catch (err: any) {
-      // ignore probe failures
-      if (debugEnabled) {
-        // eslint-disable-next-line no-console
-        console.log('probeEstimateError', err && err.message);
-      }
-    }
-
-    // If probe reports zero estimated songs, fallback to explicit totalSongs mode
-    if (
-      options.useAllSongs &&
-      (!estimatedSongsProbe || estimatedSongsProbe <= 0)
-    ) {
-      if (debugEnabled) {
-        // eslint-disable-next-line no-console
-        console.log(
-          'Fallback: estimatedTotalSongs is zero; switching to explicit totalSongs mode'
-        );
-      }
-      options.useAllSongs = false;
-      options.totalSongs = Number(
-        process.env.PERF_TOTAL_SONGS || Math.max(1500, Math.floor(TOTAL * 0.75))
-      );
-    }
+    const validation = validateInputs(playlistTracks, ratioConfig, options);
+    expect(validation.isValid).toBe(true);
 
     // Warmup
     mixPlaylists(playlistTracks, ratioConfig, options);

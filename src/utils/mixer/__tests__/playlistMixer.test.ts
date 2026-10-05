@@ -4,7 +4,6 @@ import {
   mixPlaylists,
   validateInputs,
   createMixingContext,
-  calculateTargetCounts,
 } from '../playlistMixer';
 import { PlaylistTracks } from '../types';
 import { MixOptions, RatioConfig } from '../../../types/mixer';
@@ -92,27 +91,6 @@ describe('Playlist Mixer Orchestrator', () => {
       expect(context.options).toEqual(mockOptions);
       expect(context.playlistQueues).toBeDefined();
       expect(context.totalWeight).toBe(3); // 2 + 1
-      expect(context.estimatedTotalSongs).toBe(3);
-      expect(context.targetCounts).toBeDefined();
-    });
-  });
-
-  describe('calculateTargetCounts', () => {
-    it('should calculate correct target counts for frequency-based weighting', () => {
-      const playlistIds = ['playlist1', 'playlist2'];
-      const totalWeight = 3; // 2 + 1
-
-      const result = calculateTargetCounts(
-        mockPlaylistTracks,
-        mockRatioConfig,
-        mockOptions,
-        playlistIds,
-        totalWeight
-      );
-
-      expect(result.estimatedTotalSongs).toBe(3);
-      expect(result.targetCounts['playlist1']).toBe(2); // 3 * (2/3) = 2
-      expect(result.targetCounts['playlist2']).toBe(1); // 3 * (1/3) = 1
     });
   });
 
