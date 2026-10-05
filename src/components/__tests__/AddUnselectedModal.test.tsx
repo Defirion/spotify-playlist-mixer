@@ -58,66 +58,6 @@ vi.mock('../ui/Modal', () => ({
     ) : null;
   },
 }));
-vi.mock('../ui/TrackList', () => ({
-  __esModule: true,
-  default: ({
-    tracks,
-    onTrackSelect,
-    selectedTracks,
-    onTrackTouchStart,
-    emptyMessage,
-    containerHeight,
-    ...props
-  }: any) => {
-    // Filter out non-DOM props
-    const {
-      selectable,
-      showCheckbox,
-      showAlbumArt,
-      showPopularity,
-      showDuration,
-      showSourcePlaylist,
-      virtualized,
-      onTrackTouchMove,
-      onTrackTouchEnd,
-      onTrackDragEnd,
-      ...domProps
-    } = props;
-
-    return (
-      <div
-        data-testid="track-list"
-        className="track-list-container"
-        {...domProps}
-      >
-        {tracks && tracks.length > 0 ? (
-          tracks.map((track: SpotifyTrack, _index: number) => (
-            <div
-              key={track.id}
-              data-testid={`track-item-${track.id}`}
-              onClick={() => onTrackSelect?.(track)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  onTrackSelect?.(track);
-                }
-              }}
-              onTouchStart={e => onTrackTouchStart?.(e, track)}
-              role="button"
-              tabIndex={0}
-            >
-              {track.name} - {track.artists[0]?.name}
-              {selectedTracks?.has(track.id) && (
-                <span data-testid="selected">Selected</span>
-              )}
-            </div>
-          ))
-        ) : (
-          <div data-testid="empty-message">{emptyMessage}</div>
-        )}
-      </div>
-    );
-  },
-}));
 
 // Mock data (use factories to ensure correct shape)
 const mockTracks: SpotifyTrack[] = [
