@@ -50,3 +50,6 @@ tools/coverage_report.js
 
 # Spotify credentials (if we move them to env file)
 config.js
+
+# Fresh benchmark output is regenerated; approved baseline records remain tracked.
+src/__tests__/performance/baselines/current-run.json

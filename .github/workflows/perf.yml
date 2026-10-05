@@ -2,13 +2,15 @@ name: Performance Tests
 
 on:
   push:
-    branches: [ main, final-refactor ]
+    branches: [main, master, final-refactor]
   workflow_dispatch: {}
 
 jobs:
   perf:
     name: Run perf test and compare
     runs-on: ubuntu-latest
+    env:
+      PERF_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.18.0'
 
       - name: Install dependencies
         run: npm ci
@@ -28,6 +30,7 @@ jobs:
 
       - name: Upload perf artifacts (baselines + current-run)
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: perf-baselines
           path: src/__tests__/performance/baselines

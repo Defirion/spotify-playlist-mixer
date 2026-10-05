@@ -2,15 +2,13 @@ name: CI — tests + static analysis reports
 
 on:
   push:
-    branches: [ main, final-refactor ]
+    branches: [main, master, final-refactor]
   pull_request:
-    branches: [ main, final-refactor ]
+    branches: [main, master, final-refactor]
 
 jobs:
   build-and-report:
     runs-on: ubuntu-latest
-    env:
-      MSW_HERMETIC: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.18.0'
           cache: 'npm'
 
       - name: Install dependencies
@@ -34,8 +32,11 @@ jobs:
 
       - name: Run ts-prune (report only)
         run: |
-          npx ts-prune --json > ts-prune.json || true
-          echo "Saved ts-prune output to ts-prune.json"
+          npx --no-install ts-prune > ts-prune.txt
+          echo "Saved ts-prune output to ts-prune.txt"
+
+      - name: Report application reachability separately from test consumers
+        run: node scripts/report-reachability.js > production-reachability.json
 
       - name: Upload static analysis reports
         uses: actions/upload-artifact@v4
@@ -43,4 +44,5 @@ jobs:
           name: static-analysis-reports
           path: |
             depcheck.json
-            ts-prune.json
+            ts-prune.txt
+            production-reachability.json

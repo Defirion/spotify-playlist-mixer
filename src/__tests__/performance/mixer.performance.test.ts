@@ -1,129 +1,116 @@
 import { performance } from 'perf_hooks';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import { cpus } from 'os';
+import { randomUUID } from 'crypto';
+import { execFileSync } from 'child_process';
 import { mixPlaylists, validateInputs } from '../../utils/mixer';
+import { Track } from '../../types/domain';
+import { MixOptions, RatioConfig } from '../../types/mixer';
+import { version as vitestVersion } from 'vitest/package.json';
+import { sourceHash } from '../../../scripts/perfRecord';
 
-// Performance test template for playlist mixer
-// - This test targets the real `mixPlaylists` export from `src/utils/mixer`.
-// - Vitest includes this test in the full suite and CI; test:perf runs it alone.
-
-// Invoke an async block and await it (call sites kept from the old silenceIfPass helper).
-const run = <T>(fn: () => Promise<T>) => fn();
-
-function makeTracks(n: number, prefix = '') {
-  return Array.from({ length: n }, (_, i) => ({
-    id: `${prefix}t${i}`,
-    title: `Track ${prefix}${i}`,
+function makeTracks(count: number, prefix: string): Track[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}-${index}`,
+    title: `Track ${index}`,
     durationMs: 180000,
-    artists: [`Artist ${i}`],
+    artists: [`Artist ${index}`],
     sourceRefs: [],
-    album: `Album ${i}`,
   }));
 }
 
-test('mixPlaylists performance - 1000 tracks', async () => {
-  let logSpy: import('vitest').MockInstance | undefined;
-  let errorSpy: import('vitest').MockInstance | undefined;
-  // Silence verbose logs for passing runs but allow opt-in via PERF_DEBUG
-  const debugEnabled = process.env.PERF_DEBUG === '1';
-  if (!debugEnabled) {
-    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  }
-  await run(async () => {
-    // Total desired tracks across all playlists (default 2000 for a stress test)
-    const TOTAL = Number(process.env.PERF_TOTAL || 2000);
-
-    // Distribute total across 3 playlists (rough split: 50% / 30% / 20%)
-    const p1Count = Math.ceil(TOTAL * 0.5);
-    const p2Count = Math.floor(TOTAL * 0.3);
-    const p3Count = TOTAL - p1Count - p2Count;
-
-    // Construct playlistTracks as expected by mixer types: { [playlistId]: Track[] }
-    const playlistTracks: any = {
-      p1: makeTracks(p1Count, 'p1-'),
-      p2: makeTracks(p2Count, 'p2-'),
-      p3: makeTracks(p3Count, 'p3-'),
-    };
-
-    // Simple ratioConfig: equal weights
-    const ratioConfig: any = {
-      p1: { min: 0, max: 1, weight: 1, weightType: 'frequency' },
-      p2: { min: 0, max: 1, weight: 1, weightType: 'frequency' },
-      p3: { min: 0, max: 1, weight: 1, weightType: 'frequency' },
-    };
-
-    // Configure how many songs the mixer should attempt to produce.
-    // All-song mode ignores this count target; the fallback uses it.
-    const PERF_TOTAL_SONGS = Number(
-      process.env.PERF_TOTAL_SONGS || Math.max(1500, Math.floor(TOTAL * 0.75))
-    );
-
-    const options: any = {
-      totalSongs: PERF_TOTAL_SONGS,
-      targetDurationSeconds: 3600,
-      useTimeLimit: false,
-      useAllSongs: true,
-      playlistName: 'perf-test',
-      shuffleTracks: true,
-      continueWhenPlaylistEmpty: false,
-    };
-
-    const validation = validateInputs(playlistTracks, ratioConfig, options);
-    expect(validation.isValid).toBe(true);
-
-    // Warmup
+// Included in the full Vitest suite and CI. Compare standalone runs on the same hardware.
+test('all-song mixing with equal count ratios stops at the first exhausted source', () => {
+  const total = Number(process.env.PERF_TOTAL || 2000);
+  expect(Number.isInteger(total) && total >= 10).toBe(true);
+  const sourceSizes = {
+    p1: Math.ceil(total * 0.5),
+    p2: Math.floor(total * 0.3),
+    p3: 0,
+  };
+  sourceSizes.p3 = total - sourceSizes.p1 - sourceSizes.p2;
+  const playlistTracks = Object.fromEntries(
+    Object.entries(sourceSizes).map(([id, count]) => [
+      id,
+      makeTracks(count, id),
+    ])
+  );
+  const ratioConfig: RatioConfig = Object.fromEntries(
+    Object.keys(sourceSizes).map(id => [
+      id,
+      { min: 1, max: 1, weight: 1, weightType: 'frequency' },
+    ])
+  );
+  const options: MixOptions = {
+    totalSongs: 1,
+    targetDurationSeconds: 0,
+    useTimeLimit: false,
+    useAllSongs: true,
+    playlistName: 'perf-test',
+    shuffleTracks: true,
+    continueWhenPlaylistEmpty: false,
+  };
+  expect(validateInputs(playlistTracks, ratioConfig, options).isValid).toBe(
+    true
+  );
+  const warmups = 2,
+    samples = 5;
+  for (let index = 0; index < warmups; index++)
     mixPlaylists(playlistTracks, ratioConfig, options);
-
-    const memBefore = process.memoryUsage();
-    const t0 = performance.now();
-
+  const heapBefore = process.memoryUsage().heapUsed;
+  const timings: number[] = [];
+  const counts: number[] = [];
+  for (let index = 0; index < samples; index++) {
+    const start = performance.now();
     const result = mixPlaylists(playlistTracks, ratioConfig, options);
-
-    const t1 = performance.now();
-    const memAfter = process.memoryUsage();
-    const elapsedMs = t1 - t0;
-    const heapDelta = memAfter.heapUsed - memBefore.heapUsed;
-
-    // Log metrics so developers can capture them from test output
-    const metrics = {
-      elapsedMs,
-      heapDelta,
-      createdTracks: {
-        total:
-          playlistTracks.p1.length +
-          playlistTracks.p2.length +
-          playlistTracks.p3.length,
-        p1: playlistTracks.p1.length,
-        p2: playlistTracks.p2.length,
-        p3: playlistTracks.p3.length,
-      },
-      mixedCount: Array.isArray(result) ? result.length : 0,
-    };
-    // Write current-run.json for comparisons
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const outPath = path.join(__dirname, 'baselines', 'current-run.json');
-      fs.writeFileSync(outPath, JSON.stringify(metrics, null, 2));
-    } catch (e: any) {
-      if (debugEnabled) {
-        // eslint-disable-next-line no-console
-        console.log('Failed to write current-run.json', e && e.message);
-      }
-    }
-    if (debugEnabled) {
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(metrics));
-    }
-
-    expect(Array.isArray(result)).toBe(true);
-    // Fail the test if the mixer produced no tracks - indicates misconfiguration
-    const mixedCount = Array.isArray(result) ? result.length : 0;
-    expect(mixedCount).toBeGreaterThan(0);
-
-    // Conservative runtime/memory thresholds; adjust after collecting baselines
-    expect(elapsedMs).toBeLessThan(120000);
-    expect(heapDelta).toBeLessThan(1024 * 1024 * 1024); // 1GB
-  });
-  logSpy?.mockRestore?.();
-  errorSpy?.mockRestore?.();
+    timings.push(performance.now() - start);
+    counts.push(result.length);
+  }
+  const elapsedMs = [...timings].sort((a, b) => a - b)[Math.floor(samples / 2)];
+  const heapDelta = process.memoryUsage().heapUsed - heapBefore;
+  // The third source is smallest and is selected last in each equal-ratio round.
+  for (const count of counts) expect(count).toBe(sourceSizes.p3 * 3);
+  expect(counts[0]).toBeGreaterThan(0);
+  expect(elapsedMs).toBeLessThan(120000);
+  expect(heapDelta).toBeLessThan(1024 * 1024 * 1024);
+  const metrics = {
+    schemaVersion: 2,
+    elapsedMs,
+    heapDelta,
+    mixedCount: counts[0],
+    timings,
+    workload: {
+      mode: 'all',
+      sourceSizes,
+      ratioConfig,
+      options,
+      trackDurationMs: 180000,
+      samples,
+      warmups,
+    },
+    context: {
+      node: process.version,
+      vitest: vitestVersion,
+      platform: process.platform,
+      arch: process.arch,
+      cpu: cpus()[0]?.model || 'unknown',
+      runner:
+        process.env.GITHUB_ACTIONS === 'true' ? 'github-actions' : 'local',
+      invocation: process.env.npm_lifecycle_event || 'direct-vitest',
+    },
+    provenance: {
+      runId: process.env.PERF_RUN_ID || randomUUID(),
+      timestamp: new Date().toISOString(),
+      commit: execFileSync('git', ['rev-parse', 'HEAD'], {
+        encoding: 'utf8',
+      }).trim(),
+      sourceHash: sourceHash(),
+    },
+  };
+  writeFileSync(
+    join(__dirname, 'baselines/current-run.json'),
+    JSON.stringify(metrics, null, 2) + '\n'
+  );
+  if (process.env.PERF_DEBUG === '1') console.log(metrics);
 }, 120000);

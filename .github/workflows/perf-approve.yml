@@ -1,53 +1,39 @@
 name: Approve Perf Baseline
 
 on:
-  workflow_dispatch:
-    inputs:
-      baseline_name:
-        description: 'Baseline filename to create (e.g. baseline-2025-08-17-2000.json)'
-        required: true
-        default: 'baseline-{{ github.run_id }}.json'
+  workflow_dispatch: {}
 
 jobs:
   create-baseline-pr:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
-      - name: Ensure current-run exists
-        run: |
-          if [ ! -f src/__tests__/performance/baselines/current-run.json ]; then
-            echo "current-run.json not found"; exit 1;
-          fi
-
-      - name: Create branch and commit baseline
+          node-version: '22.18.0'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate selected run and update both baseline records
         env:
-          BRANCH: perf/baseline-${{ github.run_id }}
-          FILE: src/__tests__/performance/baselines/${{ github.event.inputs.baseline_name }}
+          PERF_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
-          cp src/__tests__/performance/baselines/current-run.json "$FILE"
-          git add "$FILE"
-          git commit -m "chore(perf): add baseline $FILE"
-          git push --set-upstream origin "$BRANCH"
-
+          npm run test:perf
+          node scripts/approvePerfBaseline.js "baseline-$(date -u +%Y-%m-%d)-${PERF_RUN_ID}.json" "$PERF_RUN_ID"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(perf): add baseline ${{ github.event.inputs.baseline_name }}"
-          branch: perf/baseline-${{ github.run_id }}
-          title: "perf(baseline): add ${{ github.event.inputs.baseline_name }}"
+          commit-message: 'chore(perf): approve fresh baseline'
+          branch: perf/baseline-${{ github.run_id }}-${{ github.run_attempt }}
+          add-paths: src/__tests__/performance/baselines/*.json
+          title: 'perf(baseline): approve fresh run ${{ github.run_id }}'
           body: |
-            This PR adds a new performance baseline created by workflow run ${{ github.run_id }}.
-            Please review and merge to update the repository baseline.
+            Updates the timestamped baseline and last-baseline.json from a fresh benchmark
+            on Node 22.18.0. The record includes workload, source digest, commit, run ID,
+            timing samples and runner context. Review hardware comparability before merging.

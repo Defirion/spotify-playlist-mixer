@@ -1,55 +1,65 @@
-![Perf workflow status](https://github.com/Defirion/spotify-playlist-mixer/actions/workflows/perf.yml/badge.svg)
+# Mixer performance checks
 
-Performance tests and baselines
+The Vitest benchmark runs in the normal suite and coverage CI. `npm run test:perf`
+runs it alone. It creates 2,000 unique 180-second tracks by default, split across
+three sources (1,000 / 600 / 400), with equal song-count ratios, shuffled source
+order, all-song mode, and continuation disabled. Source exhaustion governs the
+output: the default mix contains 1,200 tracks. Count and duration targets are
+ignored in this mode; `PERF_TOTAL_SONGS` is no longer an input.
 
-Overview
+Two warmups precede five timed samples. The reported runtime is their median.
+The test retains nonempty-output, exact source-exhaustion count, runtime, and
+memory checks. Heap delta is informational for comparisons because garbage
+collection can make it negative.
 
-This folder contains a performance test for the playlist mixer and a small baseline comparison workflow.
-
-Files
-
-- `mixer.performance.test.ts` - Vitest test that runs the mixer on synthetic playlists and writes `current-run.json` to `baselines/`.
-- `baselines/last-baseline.json` - The most recent saved baseline.
-- `baselines/current-run.json` - Written by the perf test after each run.
-- `baselines/*.json` - Timestamped baseline artifacts.
-- `scripts/comparePerf.js` - Node script that compares `current-run.json` to `last-baseline.json` and exits non-zero when regressions exceed the configured threshold.
-
-How to run
-
-Run the perf test alone (it also runs in the full suite and CI):
+## Run and compare
 
 ```powershell
 npm run test:perf
-```
-
-To run a larger test, set environment variables in PowerShell before running:
-
-```powershell
-$env:PERF_TOTAL=5000; $env:PERF_TOTAL_SONGS=3000; npm run test:perf
-```
-
-Compare
-
-After running the perf test, compare the current run to the baseline:
-
-```powershell
 npm run perf:compare
+# Optional larger source catalog; its workload needs its own matching baseline:
+$env:PERF_TOTAL = '5000'
+npm run test:perf
+Remove-Item Env:PERF_TOTAL
 ```
 
-The default regression threshold is 10% and can be changed by setting `PERF_REGRESS_THRESHOLD` before running the compare script.
+`current-run.json` is generated and ignored. Approved baselines remain tracked.
+Version-2 records contain workload options, source sizes, ratios, Node/Vitest
+versions, CPU/platform/architecture, invocation context, commit, source digest,
+timestamp, and run ID. The comparator rejects missing metrics, incompatible
+workloads or runner contexts, stale runs (over 24 hours), and source mismatches.
+CI sets an explicit run ID to prevent selecting a different run accidentally.
 
-Notes
+The comparator uses `last-baseline.json`. Exit 0 means a compatible run passes,
+1 means correctness changed or runtime exceeded the **unchanged 10% threshold**,
+and 2 means a valid comparison is unavailable. Output count equality is a
+correctness requirement independent of timing. `PERF_REGRESS_THRESHOLD` remains
+an explicit override; do not adjust it to hide a regression.
 
-- The perf test writes `current-run.json` into `src/__tests__/performance/baselines/`.
-- If you want to update the baseline after a trusted run, copy `current-run.json` to a timestamped file and update `last-baseline.json` accordingly.
-- Compare timing only on consistent hardware and runner settings to reduce noise.
-- The current default creates 2,000 source tracks. All-song mode ignores count targets, including PERF_TOTAL_SONGS, and stops according to source exhaustion.
+`PERF_BASELINE_PATH` and `PERF_CURRENT_PATH` select explicit records for diagnostics.
+`npm run test:tooling` verifies timing regressions, correctness differences,
+incompatibility, missing metrics, and stale/wrong-source provenance.
 
-Tuning the threshold
+## Approve a baseline
 
-- Observe the `perf` workflow for a few runs and note variance in `mixedCount` and `elapsedMs`.
-- Set `PERF_REGRESS_THRESHOLD` in the workflow or locally when running `npm run perf:compare` to a conservative value (10% default). Tune down after you have a stable runner.
+After a standalone run on consistent hardware:
 
-Backlog
+```powershell
+$run = Get-Content src/__tests__/performance/baselines/current-run.json -Raw | ConvertFrom-Json
+node scripts/approvePerfBaseline.js baseline-YYYY-MM-DD-local.json $run.provenance.runId
+```
 
-See `docs/PERF_BACKLOG.md` for follow-ups like long-term S3 storage and dashboards.
+Choose a unique dated filename. Approval verifies the selected fresh run and
+updates **both** the dated file and `last-baseline.json`; it refuses to overwrite
+historical records. The August 2025 files are retained as historical evidence and
+are incompatible with the new workload record.
+
+The 5 October 2026 baseline was measured locally on Windows/Node 24.4.1. A GitHub
+Ubuntu/Node 22.18.0 comparison needs a matching baseline: manually run **Approve
+Perf Baseline** on GitHub to generate a fresh run and open a baseline PR. That
+workflow installs dependencies, generates its own selected run, and lets the PR
+action manage branch/commit creation. No GitHub run is claimed by local checks.
+Shared hosted runners can vary; review CPU/context and variance before approving.
+
+See [performance backlog](../../../docs/PERF_BACKLOG.md) for future stable-runner
+and long-term artifact storage work.
