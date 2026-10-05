@@ -6,7 +6,7 @@ export type WeightType = 'frequency' | 'time';
 
 export interface MixOptions {
   totalSongs: number;
-  targetDuration: number; // in seconds
+  targetDurationSeconds: number; // in seconds
   useTimeLimit: boolean;
   useAllSongs: boolean;
   playlistName: string;
@@ -261,7 +261,7 @@ export type OptionalFields<T, K extends keyof T> = Omit<T, K> &
 export interface PresetSettings {
   shuffleTracks: boolean;
   useTimeLimit: boolean;
-  targetDuration: number; // in minutes
+  targetDurationSeconds: number; // in seconds
   useAllSongs: boolean;
 }
 

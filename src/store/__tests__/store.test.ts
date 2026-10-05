@@ -59,7 +59,7 @@ describe('Zustand Store', () => {
       ratioConfig: {},
       mixOptions: {
         totalSongs: 100,
-        targetDuration: 240,
+        targetDurationSeconds: 240,
         useTimeLimit: false,
         useAllSongs: true,
         playlistName: 'My Mixed Playlist',

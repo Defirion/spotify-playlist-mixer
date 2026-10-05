@@ -54,14 +54,19 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
   // Clear preview when mix options change (but avoid infinite loops)
   const prevMixOptionsRef = useRef(mixOptions);
+  const prevSourcesRef = useRef(
+    JSON.stringify({ selectedPlaylists, ratioConfig })
+  );
   useEffect(() => {
     const prev = prevMixOptionsRef.current;
     const current = mixOptions;
+    const sources = JSON.stringify({ selectedPlaylists, ratioConfig });
 
     // Only clear if meaningful options that affect mixing have changed
     const shouldClearPreview =
+      prevSourcesRef.current !== sources ||
       prev.totalSongs !== current.totalSongs ||
-      prev.targetDuration !== current.targetDuration ||
+      prev.targetDurationSeconds !== current.targetDurationSeconds ||
       prev.useTimeLimit !== current.useTimeLimit ||
       prev.useAllSongs !== current.useAllSongs ||
       prev.shuffleTracks !== current.shuffleTracks ||
@@ -69,9 +74,11 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
 
     if (shouldClearPreview) {
       mixPreview.clearPreview();
+      mixGeneration.reset();
       prevMixOptionsRef.current = current;
+      prevSourcesRef.current = sources;
     }
-  }, [mixOptions, mixPreview]);
+  }, [mixOptions, selectedPlaylists, ratioConfig, mixPreview, mixGeneration]);
 
   // Generate preview
   const handleGeneratePreview = useCallback(async () => {
@@ -291,7 +298,7 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
       const previewTracks = mixPreview.getPreviewTracks();
 
       let finalTracks: MixedTrack[];
-      if (previewTracks.length > 0) {
+      if (mixPreview.state.preview) {
         // User has generated a preview (possibly with custom ordering)
         // Use these tracks as the definitive final list
         finalTracks = previewTracks;

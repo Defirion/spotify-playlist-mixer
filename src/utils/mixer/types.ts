@@ -6,9 +6,7 @@ export interface PlaylistTracks {
   [playlistId: string]: SpotifyTrack[];
 }
 
-export interface MixedTrack extends SpotifyTrack {
-  sourcePlaylist: string;
-}
+export type { MixedTrack } from '../../types/mixer';
 
 export interface DebugInfo {
   level: 'info' | 'warn' | 'error';

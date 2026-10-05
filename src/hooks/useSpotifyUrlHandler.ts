@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { SpotifyPlaylist } from '../types';
 import { getSpotifyApi } from '../utils/spotify';
+import { getNextPlaylistOffset } from '../services/_helpers/pagination';
 
 interface UseSpotifyUrlHandlerOptions {
   accessToken: string | null;
@@ -26,6 +27,13 @@ export const useSpotifyUrlHandler = ({
   onPlaylistSelect,
   onError,
 }: UseSpotifyUrlHandlerOptions): UseSpotifyUrlHandlerReturn => {
+  const requestRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    requestRef.current?.abort();
+    return () => {
+      requestRef.current?.abort();
+    };
+  }, [accessToken]);
   const extractPlaylistId = useCallback((url: string): string | null => {
     // Spotify playlist IDs are 22-char base62 (alphanumeric). Be strict so
     // short or malformed strings (e.g. 'short', 'invalid-url') are rejected.
@@ -62,6 +70,9 @@ export const useSpotifyUrlHandler = ({
 
   const handleAddPlaylistByUrl = useCallback(
     async (input: string): Promise<void> => {
+      requestRef.current?.abort();
+      const controller = new AbortController();
+      requestRef.current = controller;
       if (!accessToken) {
         onError('No access token available');
         return;
@@ -83,7 +94,10 @@ export const useSpotifyUrlHandler = ({
 
       try {
         const api = getSpotifyApi(accessToken);
-        const response = await api.get(`/playlists/${playlistId}`);
+        const response = await api.get(`/playlists/${playlistId}`, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
         const playlist = response.data;
 
         // Fetch all tracks to calculate real average duration
@@ -93,23 +107,35 @@ export const useSpotifyUrlHandler = ({
 
         while (true) {
           const tracksResponse = await api.get(
-            `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`
+            `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`,
+            { signal: controller.signal }
           );
+          if (controller.signal.aborted) return;
           const items = tracksResponse.data.items || [];
           const tracks = items
+            .map((item: any) =>
+              item?.item !== undefined ? item.item : item?.track
+            )
             .filter(
-              (item: any) =>
-                (item.item ?? item.track)?.id &&
-                (item.item ?? item.track)?.duration_ms
-            ) // Filter out null tracks and those without duration
-            .map((item: any) => item.item ?? item.track);
+              (track: any) =>
+                track?.id &&
+                track.duration_ms &&
+                track.type !== 'episode' &&
+                !track.is_local &&
+                track.is_playable !== false
+            );
 
           allTracks = [...allTracks, ...tracks];
 
           // Page size is based on raw playlist items, not playable tracks:
           // Spotify can include unavailable items that are filtered above.
-          if (items.length < limit) break;
-          offset += limit;
+          const nextOffset = getNextPlaylistOffset(
+            tracksResponse.data,
+            offset,
+            limit
+          );
+          if (nextOffset === null) break;
+          offset = nextOffset;
         }
 
         // Calculate real average duration
@@ -134,12 +160,15 @@ export const useSpotifyUrlHandler = ({
 
         onPlaylistSelect(playlistWithRealData);
       } catch (err: any) {
+        if (controller.signal.aborted) return;
         if (err.response?.status === 404) {
           onError(
             'Playlist not found. Make sure the playlist is public or you have access to it.'
           );
         } else if (err.response?.status === 403) {
-          onError('Access denied. The playlist might be private.');
+          onError(
+            'Access denied. Check this app’s Spotify access mode and whether you own or collaborate on this playlist.'
+          );
         } else {
           onError(
             'Failed to load playlist. Please check the URL and try again.'

@@ -354,8 +354,16 @@ describe('useTrackOperations', () => {
 
       expect(mockOnTrackOrderChange).toHaveBeenCalledWith([
         tracks[0],
-        { ...unselectedTracks[0], sourcePlaylist: 'playlist2' },
-        { ...unselectedTracks[1], sourcePlaylist: 'playlist3' },
+        {
+          ...unselectedTracks[0],
+          sourcePlaylist: 'playlist2',
+          instanceId: expect.any(String),
+        },
+        {
+          ...unselectedTracks[1],
+          sourcePlaylist: 'playlist3',
+          instanceId: expect.any(String),
+        },
       ]);
     });
 
@@ -376,7 +384,11 @@ describe('useTrackOperations', () => {
 
       expect(mockOnTrackOrderChange).toHaveBeenCalledWith([
         tracks[0],
-        { ...unselectedTracks[0], sourcePlaylist: 'unknown' },
+        {
+          ...unselectedTracks[0],
+          sourcePlaylist: 'unknown',
+          instanceId: expect.any(String),
+        },
       ]);
     });
 
@@ -420,8 +432,16 @@ describe('useTrackOperations', () => {
 
       expect(mockOnTrackOrderChange).toHaveBeenCalledWith([
         tracks[0],
-        { ...spotifyTracks[0], sourcePlaylist: 'existingPlaylist' },
-        { ...spotifyTracks[1], sourcePlaylist: 'search' },
+        {
+          ...spotifyTracks[0],
+          sourcePlaylist: 'existingPlaylist',
+          instanceId: expect.any(String),
+        },
+        {
+          ...spotifyTracks[1],
+          sourcePlaylist: 'search',
+          instanceId: expect.any(String),
+        },
       ]);
     });
 

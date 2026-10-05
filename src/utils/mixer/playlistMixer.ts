@@ -47,8 +47,8 @@ export const createMixingContext = (
   ratioConfig: RatioConfig,
   options: MixOptions
 ): MixingContext => {
-  const playlistIds = safeObjectKeys(ratioConfig).filter(
-    id => playlistTracks[id] && playlistTracks[id].length > 0
+  const playlistIds = safeObjectKeys(ratioConfig).filter(id =>
+    Array.isArray(playlistTracks[id])
   );
   const totalWeight = playlistIds.reduce(
     (sum, id) => sum + (ratioConfig[id].weight || 1),
@@ -98,10 +98,13 @@ export const validateInputs = (
   if (!options) {
     errors.push('options is required');
   } else if (
+    !options.useAllSongs &&
     options.useTimeLimit &&
-    (!options.targetDuration || options.targetDuration <= 0)
+    (!options.targetDurationSeconds || options.targetDurationSeconds <= 0)
   ) {
-    errors.push('targetDuration must be positive when useTimeLimit is true');
+    errors.push(
+      'targetDurationSeconds must be positive when useTimeLimit is true'
+    );
   } else if (
     !options.useTimeLimit &&
     !options.useAllSongs &&
@@ -135,16 +138,22 @@ export const mixPlaylists = (
   if (!validation.isValid) return [];
 
   const context = createMixingContext(
-    validation.cleanedPlaylistTracks,
+    Object.fromEntries(
+      safeObjectKeys(playlistTracks).map(id => [
+        id,
+        validation.cleanedPlaylistTracks[id] || [],
+      ])
+    ),
     ratioConfig,
     options
   );
   const state = initializeMixingState(context);
   const maxAttempts = Math.max(
     1,
-    context.options.useAllSongs
-      ? context.estimatedTotalSongs * 2
-      : (context.options.totalSongs || 100) * 2
+    Object.values(context.playlistQueues).reduce(
+      (sum, tracks) => sum + tracks.length,
+      0
+    ) + context.playlistIds.length
   );
   const shouldContinue = () =>
     shouldContinueMixing(
@@ -177,6 +186,16 @@ export const mixPlaylists = (
       context.playlistIds
     );
     if (!playlistId) break;
+    // Selection also discovers exhausted sources; honor the policy before
+    // taking another group from a surviving source.
+    if (
+      shouldStopDueToExhaustion(
+        context.options.continueWhenPlaylistEmpty,
+        state.playlistExhausted,
+        context.playlistIds.length
+      )
+    )
+      break;
 
     const songsAdded = addSongsFromPlaylist(
       playlistId,
@@ -203,7 +222,7 @@ const initializeMixingState = (context: MixingContext): MixingState => {
   context.playlistIds.forEach(id => {
     playlistCounts[id] = 0;
     playlistDurations[id] = 0;
-    playlistExhausted[id] = false;
+    playlistExhausted[id] = context.playlistQueues[id].length === 0;
   });
 
   return {

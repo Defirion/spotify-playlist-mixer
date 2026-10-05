@@ -1,5 +1,35 @@
 export type RetryOptions = { maxRetries?: number; baseMs?: number };
 
+/** Spotify Retry-After is seconds; support native and legacy header shapes. */
+export function readRetryAfterSeconds(headers: any): number | null {
+  const value =
+    typeof headers?.get === 'function'
+      ? headers.get('retry-after')
+      : (headers?.['retry-after'] ?? headers?.['Retry-After']);
+  if (value == null || value === '') return null;
+  const seconds = Number(value);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+}
+
+export function abortableDelay(
+  ms: number,
+  signal?: AbortSignal
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+      reject(new DOMException('Request canceled', 'AbortError'));
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', abort);
+      resolve();
+    }, ms);
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) abort();
+  });
+}
+
 function sleep(ms: number) {
   return new Promise(res => setTimeout(res, ms));
 }

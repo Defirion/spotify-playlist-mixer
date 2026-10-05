@@ -24,6 +24,7 @@ let _trackIdCounter = 0;
 const _genTrackId = () => `track_mock_id_${++_trackIdCounter}`;
 
 vi.mock('../../utils/trackUtils', () => ({
+  getTrackDragId: (track: any) => track.instanceId ?? track.id,
   formatDuration: vi.fn(
     ms =>
       `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
@@ -237,7 +238,8 @@ describe('AddUnselectedModal', () => {
     });
 
     expect(mockApiGet).toHaveBeenCalledWith(
-      '/playlists/playlist1/items?offset=0&limit=50'
+      '/playlists/playlist1/items?offset=0&limit=50',
+      { signal: expect.any(AbortSignal) }
     );
   });
 

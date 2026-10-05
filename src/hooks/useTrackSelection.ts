@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { SpotifyTrack } from '../types';
+import { getTrackDragId } from '../utils/trackUtils';
 
 interface UseTrackSelectionOptions {
   availableTracks: SpotifyTrack[];
@@ -18,22 +19,19 @@ export const useTrackSelection = ({
     new Set()
   );
 
-  const handleTrackSelect = useCallback(
-    (track: SpotifyTrack) => {
-      const newSelected = new Set(selectedTracksToAdd);
-      if (newSelected.has(track.id)) {
-        newSelected.delete(track.id);
-      } else {
-        newSelected.add(track.id);
-      }
-      setSelectedTracksToAdd(newSelected);
-    },
-    [selectedTracksToAdd]
-  );
+  const handleTrackSelect = useCallback((track: SpotifyTrack) => {
+    const id = getTrackDragId(track);
+    setSelectedTracksToAdd(previous => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const handleAddSelected = useCallback(() => {
     const tracksToAdd = availableTracks.filter(track =>
-      selectedTracksToAdd.has(track.id)
+      selectedTracksToAdd.has(getTrackDragId(track))
     );
     onAddTracks(tracksToAdd);
 

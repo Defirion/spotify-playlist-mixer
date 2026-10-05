@@ -7,7 +7,7 @@ import Modal from './ui/Modal';
 import TrackItem from './ui/TrackItem';
 import SortableWrapper from './SortableWrapper';
 import { useTrackSelection } from '../hooks/useTrackSelection';
-import { generateTrackInstanceId } from '../utils/trackUtils';
+import { generateTrackInstanceId, getTrackDragId } from '../utils/trackUtils';
 import { SpotifyTrack } from '../types';
 import styles from './TrackSourceModal.module.css';
 import ErrorHandler from './ErrorHandler';
@@ -341,7 +341,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                     <TrackItem
                       track={track}
                       onSelect={handleTrackSelect}
-                      selected={selectedTracksToAdd.has(track.id)}
+                      selected={selectedTracksToAdd.has(getTrackDragId(track))}
                       showCheckbox={true}
                       showAlbumArt={true}
                       showDuration={true}

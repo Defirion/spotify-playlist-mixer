@@ -91,40 +91,6 @@ export const usePlaylistSearch = ({
         if (market) params.set('market', market);
         const requestUrl = `/search?${params.toString()}`;
 
-        // Debug: surface request info to help diagnose live-app failures
-        try {
-          // Only log in development to avoid leaking tokens or affecting tests
-          if (process.env.NODE_ENV === 'development') {
-            const maskedToken = accessToken
-              ? accessToken.length > 10
-                ? `${accessToken.slice(0, 6)}...${accessToken.slice(-4)}`
-                : accessToken
-              : null;
-            const defaultAuthHeader =
-              api?.defaults?.headers?.Authorization ||
-              api?.defaults?.headers?.common?.Authorization;
-            // eslint-disable-next-line no-console
-            console.debug('DEBUG (usePlaylistSearch): performing request', {
-              url: requestUrl,
-              accessTokenPresent: !!accessToken,
-              maskedToken,
-              defaultAuthHeader,
-            });
-            try {
-              // Extra inspection: show all default headers shape to catch bundler/runtime differences
-              // eslint-disable-next-line no-console
-              console.debug(
-                'DEBUG (usePlaylistSearch): api.defaults.headers =',
-                api?.defaults?.headers
-              );
-            } catch (e) {
-              // ignore
-            }
-          }
-        } catch (e) {
-          // swallow debug errors
-        }
-
         // Perform request and capture network errors for debugging
         let response;
         try {
@@ -140,10 +106,9 @@ export const usePlaylistSearch = ({
               // eslint-disable-next-line no-console
               console.error('DEBUG (usePlaylistSearch): request failed', {
                 url: requestUrl,
-                error: err,
+
                 status: maybeResponse?.status,
                 responseData: maybeResponse?.data,
-                responseHeaders: maybeResponse?.headers,
               });
             }
           } catch (e) {
@@ -209,7 +174,10 @@ export const usePlaylistSearch = ({
             if (maybeResponse) {
               // Log the response object separately to avoid changing the
               // original error call signature asserted in tests.
-              console.error('Spotify API response:', maybeResponse);
+              console.error('Spotify API response:', {
+                status: maybeResponse.status,
+                data: maybeResponse.data,
+              });
             }
           }
 
@@ -253,13 +221,15 @@ export const usePlaylistSearch = ({
 
   // Debounced search effect
   useEffect(() => {
+    abortControllerRef.current?.abort();
+    setLoading(false);
     // Clear previous timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
     // Don't search if query is empty or looks like a URL
-    if (!query.trim() || isValidSpotifyLink(query.trim())) {
+    if (!accessToken || !query.trim() || isValidSpotifyLink(query.trim())) {
       setResults([]);
       setShowResults(false);
       return;
@@ -276,7 +246,7 @@ export const usePlaylistSearch = ({
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [query, debounceMs, searchPlaylists]);
+  }, [query, debounceMs, searchPlaylists, accessToken]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -291,6 +261,9 @@ export const usePlaylistSearch = ({
   }, []);
 
   const clearResults = useCallback(() => {
+    abortControllerRef.current?.abort();
+    if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
+    setLoading(false);
     setResults([]);
     setShowResults(false);
     setError(null);

@@ -8,7 +8,10 @@ import SortableWrapper from '../../SortableWrapper';
 import TrackItem from '../../ui/TrackItem';
 import SpotifySearchModal from '../../SpotifySearchModal';
 import AddUnselectedModal from '../../AddUnselectedModal';
-import { getTrackDragId } from '../../../utils/trackUtils';
+import {
+  getTrackDragId,
+  createMixedTrackInstance,
+} from '../../../utils/trackUtils';
 import styles from '../../PlaylistMixer.module.css';
 
 interface PlaylistStats {
@@ -32,7 +35,8 @@ interface MixPreviewProps {
 const DroppableTrackList: React.FC<{
   tracks: MixedTrack[];
   containerClassName?: string;
-}> = ({ tracks, containerClassName }) => {
+  onRemove: (track: MixedTrack) => void;
+}> = ({ tracks, containerClassName, onRemove }) => {
   return (
     <div className={`${styles.trackListContainer} ${containerClassName || ''}`}>
       {tracks.length === 0 && (
@@ -47,7 +51,8 @@ const DroppableTrackList: React.FC<{
             backgroundColor: 'rgba(139, 195, 74, 0.05)',
           }}
         >
-          Drag tracks from modals to add them here
+          No playable tracks in this preview. Add tracks here or regenerate
+          after checking source access and the exhaustion setting.
         </div>
       )}
       <SortableContext
@@ -62,7 +67,7 @@ const DroppableTrackList: React.FC<{
               id={dragId}
               data={{ context: 'preview' }}
             >
-              <TrackItem track={track} />
+              <TrackItem track={track} onRemove={() => onRemove(track)} />
             </SortableWrapper>
           );
         })}
@@ -117,7 +122,12 @@ const MixPreview: React.FC<MixPreviewProps> = ({
 
   const handleAddTracks = (newTracks: any[]) => {
     // Add the new tracks to the existing mix
-    const updatedTracks = [...tracks, ...newTracks];
+    const updatedTracks = [
+      ...tracks,
+      ...newTracks.map(track =>
+        createMixedTrackInstance(track, track.sourcePlaylist || 'search')
+      ),
+    ];
     onTrackOrderChange(updatedTracks);
   };
 
@@ -134,7 +144,7 @@ const MixPreview: React.FC<MixPreviewProps> = ({
     );
   }
 
-  if (!tracks || tracks.length === 0) {
+  if (!tracks) {
     return null;
   }
 
@@ -203,6 +213,13 @@ const MixPreview: React.FC<MixPreviewProps> = ({
         {/* Track list - droppable and sortable */}
         <DroppableTrackList
           tracks={tracks}
+          onRemove={removed =>
+            onTrackOrderChange(
+              tracks.filter(
+                track => getTrackDragId(track) !== getTrackDragId(removed)
+              )
+            )
+          }
           containerClassName={isTwoRowMobile ? styles.twoRowMobile : ''}
         />
       </div>

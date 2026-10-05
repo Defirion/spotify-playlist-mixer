@@ -30,37 +30,44 @@ const MixControls: React.FC<MixControlsProps> = ({
     canGeneratePreview && playlistName.trim().length > 0;
 
   return (
-    <div className={styles.actionButtons}>
-      <button
-        className={`${styles.button} ${styles.buttonSecondary}`}
-        onClick={onGeneratePreview}
-        disabled={!canGeneratePreview || previewLoading}
-      >
-        {previewLoading ? (
-          <>
-            <span className={styles.loadingSpinner}></span>
-            {hasPreview ? 'Regenerating...' : 'Generating...'}
-          </>
-        ) : (
-          <>🔄 {hasPreview ? 'Regenerate' : 'Generate Preview'}</>
-        )}
-      </button>
+    <>
+      <p className={styles.helpText}>
+        Saved playlists stay off your Spotify profile, but anyone with the link
+        may still access them. To restrict access, open the saved playlist in
+        Spotify and choose “Make private”.
+      </p>
+      <div className={styles.actionButtons}>
+        <button
+          className={`${styles.button} ${styles.buttonSecondary}`}
+          onClick={onGeneratePreview}
+          disabled={!canGeneratePreview || previewLoading || loading}
+        >
+          {previewLoading ? (
+            <>
+              <span className={styles.loadingSpinner}></span>
+              {hasPreview ? 'Regenerating...' : 'Generating...'}
+            </>
+          ) : (
+            <>🔄 {hasPreview ? 'Regenerate' : 'Generate Preview'}</>
+          )}
+        </button>
 
-      <button
-        className={`${styles.button} ${styles.buttonPrimary}`}
-        onClick={onCreatePlaylist}
-        disabled={!canCreatePlaylist || loading}
-      >
-        {loading ? (
-          <>
-            <span className={styles.loadingSpinner}></span>
-            Creating Playlist...
-          </>
-        ) : (
-          <>✨ Create This Playlist</>
-        )}
-      </button>
-    </div>
+        <button
+          className={`${styles.button} ${styles.buttonPrimary}`}
+          onClick={onCreatePlaylist}
+          disabled={!canCreatePlaylist || loading || previewLoading}
+        >
+          {loading ? (
+            <>
+              <span className={styles.loadingSpinner}></span>
+              Creating Playlist...
+            </>
+          ) : (
+            <>✨ Create This Playlist</>
+          )}
+        </button>
+      </div>
+    </>
   );
 };
 

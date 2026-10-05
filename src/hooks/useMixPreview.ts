@@ -66,14 +66,31 @@ export const useMixPreview = (
   });
 
   const spotifyServiceRef = useRef<SpotifyService | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
 
   // Initialize Spotify service
   useEffect(() => {
+    requestRef.current?.abort();
+    // Token renewal cancels in-flight loading without discarding an edited,
+    // completed preview. Logging out still clears all preview data.
+    setState(prev =>
+      accessToken && prev.preview
+        ? { ...prev, loading: false, error: null }
+        : {
+            preview: null,
+            loading: false,
+            error: null,
+            customTrackOrder: null,
+          }
+    );
     if (accessToken) {
       spotifyServiceRef.current = new SpotifyService(accessToken);
     } else {
       spotifyServiceRef.current = null;
     }
+    return () => {
+      requestRef.current?.abort();
+    };
   }, [accessToken]);
 
   const calculatePlaylistStats = useCallback(
@@ -125,7 +142,11 @@ export const useMixPreview = (
       ratioConfig: RatioConfig,
       mixOptions: MixOptions
     ): Promise<void> => {
-      if (!spotifyServiceRef.current) {
+      requestRef.current?.abort();
+      const controller = new AbortController();
+      requestRef.current = controller;
+      const service = spotifyServiceRef.current;
+      if (!service) {
         const error = 'Spotify service not available';
         setState(prev => ({ ...prev, error }));
         if (onError) onError(error);
@@ -137,15 +158,17 @@ export const useMixPreview = (
         loading: true,
         error: null,
         preview: null,
+        customTrackOrder: null,
       }));
 
       try {
         // Fetch all tracks from selected playlists
         const playlistTracks: Record<string, SpotifyTrack[]> = {};
         for (const playlist of selectedPlaylists) {
-          const result = await spotifyServiceRef.current.getPlaylistTracks(
-            playlist.id
-          );
+          const result = await service.getPlaylistTracks(playlist.id, {
+            signal: controller.signal,
+          });
+          if (controller.signal.aborted) return;
           playlistTracks[playlist.id] = result.tracks;
         }
 
@@ -218,6 +241,7 @@ export const useMixPreview = (
           customTrackOrder: null, // Reset custom order when generating new preview
         }));
       } catch (err) {
+        if (controller.signal.aborted) return;
         const errorMessage =
           err instanceof Error ? err.message : 'Unknown error occurred';
         setState(prev => ({
@@ -291,8 +315,10 @@ export const useMixPreview = (
   );
 
   const clearPreview = useCallback(() => {
+    requestRef.current?.abort();
     setState(prev => ({
       ...prev,
+      loading: false,
       preview: null,
       customTrackOrder: null,
       error: null,
@@ -301,7 +327,7 @@ export const useMixPreview = (
 
   const getPreviewTracks = useCallback((): MixedTrack[] => {
     // Return custom order if available, otherwise return original preview tracks
-    if (state.customTrackOrder && state.customTrackOrder.length > 0) {
+    if (state.customTrackOrder !== null) {
       return state.customTrackOrder;
     }
     return state.preview?.tracks || [];

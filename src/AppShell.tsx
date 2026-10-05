@@ -31,11 +31,12 @@ type AppShellProps = {
   onPlaylistRemove?: (playlistId: string) => void;
   // callback hooks
   onAuth?: (token: string) => void;
+  onRefreshSpotifyConnection?: () => Promise<void>;
   onPlaylistSelect?: (p: any) => void;
   onClearAll?: () => void;
   onApplyPreset?: (p: any) => void;
   onDismissError?: () => void;
-  onDismissSuccess?: () => void;
+  onDismissSuccess?: (id: string) => void;
   onMixedPlaylist?: (playlist: any) => void;
   onError?: (error: unknown) => void;
 };
@@ -48,6 +49,7 @@ const AppShell: React.FC<AppShellProps> = ({
   error,
   mixedPlaylists,
   onAuth,
+  onRefreshSpotifyConnection,
   onPlaylistSelect,
   onClearAll,
   onApplyPreset,
@@ -83,25 +85,20 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className="header">
           <h1>🎵 Spotify Playlist Mixer</h1>
           <p>Mix your playlists with custom ratios</p>
-          {process.env.NODE_ENV !== 'production' && accessToken ? (
-            <div style={{ fontSize: 12, marginTop: 6, color: '#666' }}>
-              DEV: token=
-              {accessToken.length > 10
-                ? `${accessToken.slice(0, 6)}...${accessToken.slice(-4)}`
-                : accessToken}
-            </div>
-          ) : null}
         </div>
 
-        {accessToken && <SpotifyDiagnostics accessToken={accessToken} />}
+        {accessToken && (
+          <SpotifyDiagnostics
+            accessToken={accessToken}
+            onRefreshConnection={onRefreshSpotifyConnection}
+          />
+        )}
 
         <ToastError error={error} onDismiss={onDismissError ?? (() => {})} />
 
         <SuccessToast
           mixedPlaylists={mixedPlaylists ?? null}
-          onDismiss={
-            onDismissSuccess ? (id: string) => onDismissSuccess() : () => {}
-          }
+          onDismiss={onDismissSuccess || (() => {})}
         />
 
         <ErrorBoundary>

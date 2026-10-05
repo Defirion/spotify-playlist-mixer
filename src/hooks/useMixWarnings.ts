@@ -53,17 +53,17 @@ export const useMixWarnings = (
     }
     totalDurationMinutes = Math.round(totalDurationMinutes);
 
-    if (mixOptions.useTimeLimit) {
+    if (!mixOptions.useAllSongs && mixOptions.useTimeLimit) {
       if (
         totalDurationMinutes !== null &&
-        mixOptions.targetDuration > totalDurationMinutes * 60
+        mixOptions.targetDurationSeconds > totalDurationMinutes * 60
       ) {
         return {
           type: 'time' as const,
-          requested: mixOptions.targetDuration,
+          requested: mixOptions.targetDurationSeconds,
           available: totalDurationMinutes,
           availableFormatted: `${Math.round(totalDurationMinutes / 60)}h`,
-          requestedFormatted: `${Math.round(mixOptions.targetDuration / 3600)}h`,
+          requestedFormatted: `${Math.round(mixOptions.targetDurationSeconds / 3600)}h`,
         };
       }
     } else if (!mixOptions.useAllSongs) {
@@ -89,7 +89,7 @@ export const useMixWarnings = (
     const {
       totalSongs,
       useTimeLimit,
-      targetDuration,
+      targetDurationSeconds,
       continueWhenPlaylistEmpty,
       useAllSongs,
     } = mixOptions;
@@ -188,7 +188,9 @@ export const useMixWarnings = (
       };
     }
 
-    const targetLength = useTimeLimit ? targetDuration * 1000 : totalSongs;
+    const targetLength = useTimeLimit
+      ? targetDurationSeconds * 1000
+      : totalSongs;
 
     if (
       targetLength > minExhaustionPoint &&

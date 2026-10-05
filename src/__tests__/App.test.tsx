@@ -212,6 +212,24 @@ describe('MainApp', () => {
   });
 
   describe('handlers passed to AppShell', () => {
+    it('manual connection refresh uses the same token renewal path as the timer', async () => {
+      refreshAccessToken.mockResolvedValue(FAKE_TOKENS);
+      const { useAuth } = applyStoreMocks(store, {
+        useAuth: {
+          isAuthenticated: true,
+          accessToken: 'old',
+          refreshToken: 'REFRESH',
+        },
+      });
+      render(<MainApp />);
+      await appShellProps.onRefreshSpotifyConnection();
+      expect(refreshAccessToken).toHaveBeenCalledWith(
+        'test-client-id',
+        'REFRESH'
+      );
+      expect(useAuth.setTokens).toHaveBeenCalledWith(FAKE_TOKENS);
+    });
+
     it('onPlaylistSelect toggles the playlist in the store', () => {
       const { usePlaylistSelection } = applyStoreMocks(store);
 
@@ -301,8 +319,8 @@ describe('MainApp', () => {
       appShellProps.onDismissError();
       expect(useUI.dismissError).toHaveBeenCalled();
 
-      appShellProps.onDismissSuccess();
-      expect(useUI.dismissSuccessToast).toHaveBeenCalledWith('');
+      appShellProps.onDismissSuccess('saved-toast');
+      expect(useUI.dismissSuccessToast).toHaveBeenCalledWith('saved-toast');
 
       appShellProps.onMixedPlaylist({ id: 'mixed-1' });
       expect(useUI.addMixedPlaylist).toHaveBeenCalledWith({ id: 'mixed-1' });

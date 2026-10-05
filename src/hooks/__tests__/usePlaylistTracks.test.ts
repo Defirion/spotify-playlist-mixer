@@ -113,6 +113,7 @@ describe('usePlaylistTracks', () => {
           {
             market: undefined,
             onProgress: expect.any(Function),
+            signal: expect.any(AbortSignal),
           }
         );
       });
@@ -660,6 +661,7 @@ describe('usePlaylistTracks', () => {
           {
             market: 'US',
             onProgress: expect.any(Function),
+            signal: expect.any(AbortSignal),
           }
         );
       });

@@ -102,7 +102,7 @@ const mockRatioConfig: RatioConfig = {
 
 const mockOptions: MixOptions = {
   totalSongs: 3,
-  targetDuration: 10,
+  targetDurationSeconds: 10,
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'Test Mix',

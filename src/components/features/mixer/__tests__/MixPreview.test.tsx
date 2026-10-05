@@ -1,5 +1,5 @@
 // React import removed - using automatic JSX runtime
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import MixPreview from '../MixPreview';
 import { MixedTrack } from '../../../../types';
 import { makeTrack } from '../../../../test-utils/mocks/spotify';
@@ -44,6 +44,26 @@ const mockStats = {
 };
 
 describe('MixPreview Drag Integration', () => {
+  it('removes only the chosen occurrence when two tracks share a Spotify ID', () => {
+    const first = { ...mockTracks[0], instanceId: 'first' };
+    const second = { ...mockTracks[0], instanceId: 'second' };
+    const onTrackOrderChange = vi.fn();
+    render(
+      <MixPreview
+        tracks={[first, second]}
+        stats={mockStats}
+        totalDuration={360000}
+        loading={false}
+        onTrackOrderChange={onTrackOrderChange}
+        accessToken=""
+        selectedPlaylists={[]}
+      />
+    );
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Remove Track 1' })[1]
+    );
+    expect(onTrackOrderChange).toHaveBeenCalledWith([first]);
+  });
   it('should render TrackListContainer with tracks', () => {
     const mockOnTrackOrderChange = vi.fn();
 

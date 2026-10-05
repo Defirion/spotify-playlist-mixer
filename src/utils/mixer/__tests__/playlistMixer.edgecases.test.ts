@@ -15,7 +15,7 @@ describe('playlistMixer edge cases', () => {
 
     const options = {
       totalSongs: 9,
-      targetDuration: 30,
+      targetDurationSeconds: 30,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'Edge Mix',
@@ -45,7 +45,7 @@ describe('playlistMixer edge cases', () => {
 
     const options = {
       totalSongs: 4,
-      targetDuration: 10,
+      targetDurationSeconds: 10,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'Edge',
@@ -108,7 +108,7 @@ describe('playlistMixer edge cases', () => {
 
     const options = {
       totalSongs: 100,
-      targetDuration: 300,
+      targetDurationSeconds: 300,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'PerfMix',

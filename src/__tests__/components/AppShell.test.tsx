@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import AppShell from '../../AppShell';
 
 const baseProps = {
@@ -9,6 +9,29 @@ const baseProps = {
 };
 
 describe('AppShell', () => {
+  test('dismisses the selected success toast by its ID', () => {
+    const onDismissSuccess = vi.fn();
+    render(
+      <AppShell
+        {...baseProps}
+        isAuthenticated
+        mixedPlaylists={[
+          {
+            id: 'playlist',
+            name: 'Saved mix',
+            toastId: 'specific-toast',
+            createdAt: new Date(),
+            items: { total: 2 },
+          },
+        ]}
+        onDismissSuccess={onDismissSuccess}
+      />
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Dismiss notification for Saved mix' })
+    );
+    expect(onDismissSuccess).toHaveBeenCalledWith('specific-toast');
+  });
   let consoleErrorSpy: import('vitest').MockInstance;
   beforeAll(() => {
     // Prevent ErrorBoundary from spamming test output during intentional error paths

@@ -182,9 +182,13 @@ describe('useSpotifyUrlHandler', () => {
         );
       });
 
-      expect(mockGet).toHaveBeenCalledWith('/playlists/test123456789012345678');
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/items?offset=0&limit=50'
+        '/playlists/test123456789012345678',
+        { signal: expect.any(AbortSignal) }
+      );
+      expect(mockGet).toHaveBeenCalledWith(
+        '/playlists/test123456789012345678/items?offset=0&limit=50',
+        { signal: expect.any(AbortSignal) }
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
@@ -288,10 +292,12 @@ describe('useSpotifyUrlHandler', () => {
       });
 
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/items?offset=0&limit=50'
+        '/playlists/test123456789012345678/items?offset=0&limit=50',
+        { signal: expect.any(AbortSignal) }
       );
       expect(mockGet).toHaveBeenCalledWith(
-        '/playlists/test123456789012345678/items?offset=50&limit=50'
+        '/playlists/test123456789012345678/items?offset=50&limit=50',
+        { signal: expect.any(AbortSignal) }
       );
 
       expect(mockOnPlaylistSelect).toHaveBeenCalledWith({
@@ -369,7 +375,7 @@ describe('useSpotifyUrlHandler', () => {
       });
 
       expect(mockOnError).toHaveBeenCalledWith(
-        'Access denied. The playlist might be private.'
+        expect.stringContaining('Access denied. Check')
       );
     });
 

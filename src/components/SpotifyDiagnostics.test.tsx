@@ -16,6 +16,58 @@ describe('SpotifyDiagnostics', () => {
     vi.mocked(getSpotifyApi).mockReturnValue({ get } as any);
   });
 
+  it('disables diagnostics during renewal and reports completion without token data', async () => {
+    let finish!: () => void;
+    const onRefreshConnection = vi.fn(
+      () =>
+        new Promise<void>(resolve => {
+          finish = resolve;
+        })
+    );
+    render(
+      <SpotifyDiagnostics
+        accessToken="token-not-rendered"
+        onRefreshConnection={onRefreshConnection}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh connection' }));
+    expect(
+      screen.getByRole('button', { name: 'Refreshing connection...' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Run diagnostics' })
+    ).toBeDisabled();
+    finish();
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        /Connection refreshed at .* UTC/
+      )
+    );
+    expect(onRefreshConnection).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('token-not-rendered')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Refresh connection' })
+    ).toBeEnabled();
+  });
+
+  it('reports a refresh failure without exposing the underlying token error', async () => {
+    render(
+      <SpotifyDiagnostics
+        accessToken="token-not-rendered"
+        onRefreshConnection={vi
+          .fn()
+          .mockRejectedValue(new Error('sensitive-token-value'))}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh connection' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Reconnect to Spotify'
+      )
+    );
+    expect(screen.queryByText(/sensitive-token-value/)).not.toBeInTheDocument();
+  });
+
   it('probes only the playlist capabilities covered by the app scopes', async () => {
     get.mockResolvedValueOnce({ status: 200 }).mockRejectedValueOnce({
       response: {

@@ -13,7 +13,7 @@ const makePlaylist = (id: string) => ({
 
 const defaultMixOptions = {
   totalSongs: 5,
-  targetDuration: 300,
+  targetDurationSeconds: 300,
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'My Mix',

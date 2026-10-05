@@ -42,6 +42,11 @@ const SuccessToast: React.FC<SuccessToastProps> = ({
                     )}
                   .
                 </p>
+                <p className={styles.toastMessage}>
+                  To restrict access, open the playlist in Spotify and choose
+                  “Make private”. Keeping it off your profile does not restrict
+                  access through its link.
+                </p>
                 <div className={styles.toastDetails}>
                   Created {formatTimeAgo(playlist.createdAt)}
                 </div>

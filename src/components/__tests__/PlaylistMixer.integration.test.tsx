@@ -110,7 +110,7 @@ const mockSelectedPlaylists = [
 
 const baseMixOptions = {
   totalSongs: 10,
-  targetDuration: 200,
+  targetDurationSeconds: 200,
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'Integration Mix',

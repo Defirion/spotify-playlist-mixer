@@ -234,8 +234,16 @@ describe('SpotifyService', () => {
       api.get.mockResolvedValueOnce({
         data: {
           items: [
-            { added_at: 'now', added_by: {}, item: { id: 'a', name: 'A' } },
-            { added_at: 'now', added_by: {}, item: { id: 'b', name: 'B' } },
+            {
+              added_at: 'now',
+              added_by: {},
+              item: { id: 'a', uri: 'spotify:track:a', name: 'A' },
+            },
+            {
+              added_at: 'now',
+              added_by: {},
+              item: { id: 'b', uri: 'spotify:track:b', name: 'B' },
+            },
           ],
           total: 3,
           limit: 2,
@@ -245,7 +253,11 @@ describe('SpotifyService', () => {
       api.get.mockResolvedValueOnce({
         data: {
           items: [
-            { added_at: 'now', added_by: {}, item: { id: 'c', name: 'C' } },
+            {
+              added_at: 'now',
+              added_by: {},
+              item: { id: 'c', uri: 'spotify:track:c', name: 'C' },
+            },
           ],
           total: 3,
           limit: 2,
@@ -275,7 +287,7 @@ describe('SpotifyService', () => {
       });
       expect(res.tracks).toEqual([]);
       expect(progressCalls.length).toBe(1); // final enforced progress call
-      expect(progressCalls[0].percentage).toBe(0);
+      expect(progressCalls[0].percentage).toBe(100);
     });
   });
 

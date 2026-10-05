@@ -24,8 +24,10 @@ export function generateTrackInstanceId(): string {
  * Get the unique identifier for drag/drop operations
  * Uses instanceId if available, falls back to Spotify track ID
  */
-export function getTrackDragId(track: MixedTrack): string {
-  return track.instanceId || track.id;
+export function getTrackDragId(
+  track: SpotifyTrack & { instanceId?: string }
+): string {
+  return track.instanceId ?? track.id;
 }
 
 /**

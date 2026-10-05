@@ -63,7 +63,7 @@ test('mixPlaylists performance - 1000 tracks', async () => {
 
     const options: any = {
       totalSongs: PERF_TOTAL_SONGS,
-      targetDuration: 3600,
+      targetDurationSeconds: 3600,
       useTimeLimit: false,
       useAllSongs: true,
       playlistName: 'perf-test',

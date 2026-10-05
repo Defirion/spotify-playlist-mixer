@@ -10,6 +10,7 @@ const mockMixGeneration = {
   state: { loading: false },
   generateMix: vi.fn(),
   createPlaylist: vi.fn(),
+  reset: vi.fn(),
 };
 
 const mockMixPreview = {
@@ -214,6 +215,58 @@ const mockDragEndEvent = {
 };
 
 describe('PlaylistMixer behavior', () => {
+  it('keeps an edited empty preview when saving instead of generating replacement tracks', async () => {
+    mockMixPreview.state.preview = {
+      tracks: [],
+      stats: {},
+      totalDuration: 0,
+    } as any;
+    mockMixPreview.getPreviewTracks.mockReturnValue([]);
+    mockMixGeneration.createPlaylist.mockRejectedValue(
+      new Error('No tracks to add to playlist')
+    );
+    render(
+      <PlaylistMixer
+        accessToken="token"
+        selectedPlaylists={[]}
+        ratioConfig={{}}
+        mixOptions={{ playlistName: 'Test' } as any}
+        updateMixOptions={() => {}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /create playlist/i }));
+    await waitFor(() =>
+      expect(mockMixGeneration.createPlaylist).toHaveBeenCalledWith('Test', [])
+    );
+    expect(mockMixGeneration.generateMix).not.toHaveBeenCalled();
+  });
+
+  it('reorders occurrences independently when they share a Spotify ID', () => {
+    const first = { id: 'same', instanceId: 'a1' };
+    const second = { id: 'same', instanceId: 'b1' };
+    mockMixPreview.state.preview = {
+      tracks: [first, second],
+      stats: {},
+      totalDuration: 0,
+    } as any;
+    mockMixPreview.getPreviewTracks.mockReturnValue([first, second]);
+    render(
+      <PlaylistMixer
+        accessToken="token"
+        selectedPlaylists={[]}
+        ratioConfig={{}}
+        mixOptions={{ playlistName: 'Test' } as any}
+        updateMixOptions={() => {}}
+      />
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Trigger Internal Reorder' })
+    );
+    expect(mockMixPreview.updateTrackOrder).toHaveBeenCalledWith([
+      second,
+      first,
+    ]);
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     // default preview tracks empty
@@ -285,7 +338,7 @@ describe('PlaylistMixer behavior', () => {
     const initialMixOptions = {
       playlistName: 'X',
       totalSongs: 5,
-      targetDuration: 60,
+      targetDurationSeconds: 60,
       useTimeLimit: false,
       useAllSongs: false,
       shuffleTracks: false,
@@ -553,6 +606,11 @@ describe('PlaylistMixer behavior', () => {
 
   it('creates playlist using preview tracks when available', async () => {
     const resultPlaylist = { id: 'new1', name: 'New' };
+    mockMixPreview.state.preview = {
+      tracks: [{ id: 't1' }],
+      stats: {},
+      totalDuration: 0,
+    } as any;
     mockMixPreview.getPreviewTracks.mockReturnValue([{ id: 't1' }]);
     mockMixGeneration.createPlaylist.mockResolvedValue(resultPlaylist);
 
@@ -713,7 +771,7 @@ describe('PlaylistMixer behavior', () => {
     const initialMixOptions = {
       playlistName: 'X',
       totalSongs: 5,
-      targetDuration: 60,
+      targetDurationSeconds: 60,
       useTimeLimit: false,
       useAllSongs: false,
       shuffleTracks: false,

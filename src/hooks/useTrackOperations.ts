@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 // useScrollPosition import removed - scroll position hooks removed with drag system
 import { MixedTrack, SpotifyTrack } from '../types';
+import { createMixedTrackInstance } from '../utils/trackUtils';
 
 interface UseTrackOperationsOptions {
   tracks: MixedTrack[];
@@ -108,10 +109,9 @@ export const useTrackOperations = ({
       handleScrollPositionCapture();
 
       // Convert SpotifyTrack to MixedTrack by ensuring sourcePlaylist is set
-      const mixedTracks: MixedTrack[] = tracksToAdd.map(track => ({
-        ...track,
-        sourcePlaylist: track.sourcePlaylist || 'unknown',
-      }));
+      const mixedTracks = tracksToAdd.map(track =>
+        createMixedTrackInstance(track, track.sourcePlaylist || 'unknown')
+      );
       const newTracks = [...tracks, ...mixedTracks];
       onTrackOrderChange(newTracks);
     },
@@ -126,10 +126,9 @@ export const useTrackOperations = ({
       handleScrollPositionCapture();
 
       // Convert SpotifyTrack to MixedTrack by ensuring sourcePlaylist is set
-      const mixedTracks: MixedTrack[] = tracksToAdd.map(track => ({
-        ...track,
-        sourcePlaylist: track.sourcePlaylist || 'search',
-      }));
+      const mixedTracks = tracksToAdd.map(track =>
+        createMixedTrackInstance(track, track.sourcePlaylist || 'search')
+      );
       const newTracks = [...tracks, ...mixedTracks];
       onTrackOrderChange(newTracks);
     },

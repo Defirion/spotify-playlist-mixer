@@ -16,6 +16,7 @@ import { SearchOptions, SearchResult } from './mixer';
 
 // Service method options
 export interface GetPlaylistTracksOptions {
+  signal?: AbortSignal;
   limit?: number;
   offset?: number;
   fields?: string;

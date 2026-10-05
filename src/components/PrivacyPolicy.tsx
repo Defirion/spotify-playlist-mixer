@@ -6,7 +6,7 @@ const PrivacyPolicy: React.FC = () => {
       <div className="card">
         <h1>Privacy Policy</h1>
         <p>
-          <strong>Last updated:</strong> August 22, 2025
+          <strong>Last updated:</strong> October 5, 2026
         </p>
 
         <h2>Information We Collect</h2>
@@ -36,8 +36,8 @@ const PrivacyPolicy: React.FC = () => {
             preferences
           </li>
           <li>
-            All processing happens in your browser - no data sent to external
-            servers
+            Mixing happens in your browser. Authentication, playlist loading,
+            searches, and saving send requests directly to Spotify.
           </li>
         </ul>
 
@@ -46,10 +46,17 @@ const PrivacyPolicy: React.FC = () => {
           <li>We do not store any personal information</li>
           <li>All playlist mixing happens locally in your browser</li>
           <li>
-            Your Spotify access token is temporary and handled by Spotify's
-            secure OAuth flow
+            Access and refresh tokens are kept in browser memory. The temporary
+            PKCE verifier and authorization state use session storage during
+            sign-in. Saved playlists remain in your Spotify account.
           </li>
         </ul>
+
+        <p>
+          Saved playlists are kept off your Spotify profile. This does not
+          restrict access through their links. For private access, open the
+          playlist in Spotify and choose “Make private”.
+        </p>
 
         <h2>Third-Party Services</h2>
         <p>This app uses:</p>
@@ -70,7 +77,9 @@ const PrivacyPolicy: React.FC = () => {
             You can revoke app access anytime in your Spotify account settings
           </li>
           <li>You control all playlist creation and modification</li>
-          <li>No data retention - everything is processed in real-time</li>
+          <li>
+            Reloading the app clears its in-memory playlist and token data
+          </li>
         </ul>
 
         <h2>Contact</h2>

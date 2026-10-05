@@ -55,7 +55,7 @@ const mockSelectedPlaylists = [
 
 const baseMixOptions = {
   totalSongs: 3,
-  targetDuration: 120,
+  targetDurationSeconds: 120,
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'Error Mix',

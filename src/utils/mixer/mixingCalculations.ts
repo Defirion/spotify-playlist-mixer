@@ -18,7 +18,8 @@ export const calculateTargetCounts = (
   estimatedTotalSongs: number;
   targetCounts: { [key: string]: number };
 } => {
-  const { totalSongs, targetDuration, useTimeLimit, useAllSongs } = options;
+  const { totalSongs, targetDurationSeconds, useTimeLimit, useAllSongs } =
+    options;
   const estimatedTotalSongs = useAllSongs
     ? calculateOptimalMixLength(
         playlistTracks,
@@ -27,7 +28,7 @@ export const calculateTargetCounts = (
         totalWeight
       )
     : useTimeLimit
-      ? Math.ceil(targetDuration / 210)
+      ? Math.ceil(targetDurationSeconds / 210)
       : totalSongs;
 
   const targetCounts: { [key: string]: number } = {};
@@ -102,13 +103,13 @@ export const shouldContinueMixing = (
   );
 
   if (options.useAllSongs) {
-    return hasAvailableTracks && mixedTracks.length < estimatedTotalSongs;
+    return hasAvailableTracks;
   }
 
   if (options.useTimeLimit) {
     return (
       hasAvailableTracks &&
-      calculateTotalDuration(mixedTracks) / 1000 < options.targetDuration
+      calculateTotalDuration(mixedTracks) / 1000 < options.targetDurationSeconds
     );
   }
 
@@ -215,7 +216,11 @@ export const addSongsFromPlaylist = (
     if (songsAdded >= songsToTake || !shouldContinue()) break;
     if (usedTrackIds.has(track.id)) continue;
 
-    mixedTracks.push({ ...track, sourcePlaylist: playlistId });
+    mixedTracks.push({
+      ...track,
+      sourcePlaylist: playlistId,
+      instanceId: `mix:${playlistId}:${track.id}`,
+    });
     usedTrackIds.add(track.id);
     playlistCounts[playlistId]++;
     playlistDurations[playlistId] += track.duration_ms || 0;

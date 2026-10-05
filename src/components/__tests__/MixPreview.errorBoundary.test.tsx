@@ -48,7 +48,7 @@ const defaultProps: any = {
   mixOptions: {
     playlistName: 'name',
     totalSongs: 10,
-    targetDuration: 0,
+    targetDurationSeconds: 0,
     useTimeLimit: false,
     useAllSongs: true,
     shuffleTracks: false,

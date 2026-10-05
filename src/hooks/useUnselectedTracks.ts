@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getSpotifyApi } from '../utils/spotify';
 import { SpotifyTrack, SpotifyPlaylist } from '../types';
+import { getNextPlaylistOffset } from '../services/_helpers/pagination';
 
 interface TrackWithSource extends SpotifyTrack {
   sourcePlaylist?: string;
@@ -38,29 +39,47 @@ export const useUnselectedTracks = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const requestRef = useRef<AbortController | null>(null);
 
   // Memoize helper function to prevent recreation
   const fetchPlaylistTracks = useCallback(
-    async (api: any, playlistId: string): Promise<SpotifyTrack[]> => {
+    async (
+      api: any,
+      playlistId: string,
+      signal: AbortSignal
+    ): Promise<SpotifyTrack[]> => {
       let allTracks: SpotifyTrack[] = [];
       let offset = 0;
       const limit = 50;
 
       while (true) {
         const response = await api.get(
-          `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`
+          `/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`,
+          { signal }
         );
+        if (signal.aborted)
+          throw new DOMException('Request canceled', 'AbortError');
         const items = response.data.items || [];
         const tracks = items
-          .map((item: any) => item.item ?? item.track)
-          .filter((track: any) => track && track.id);
+          .map((item: any) =>
+            item?.item !== undefined ? item.item : item?.track
+          )
+          .filter(
+            (track: any) =>
+              track &&
+              track.id &&
+              track.type !== 'episode' &&
+              !track.is_local &&
+              track.is_playable !== false
+          );
 
         allTracks = [...allTracks, ...tracks];
 
         // Page size is based on raw playlist items, not playable tracks:
         // Spotify can include unavailable items that are filtered above.
-        if (items.length < limit) break;
-        offset += limit;
+        const nextOffset = getNextPlaylistOffset(response.data, offset, limit);
+        if (nextOffset === null) break;
+        offset = nextOffset;
       }
 
       return allTracks;
@@ -70,8 +89,13 @@ export const useUnselectedTracks = ({
 
   // Fetch all tracks from playlists
   const fetchAllPlaylistTracks = useCallback(async () => {
-    if (selectedPlaylists.length === 0) {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    if (!accessToken || selectedPlaylists.length === 0) {
       setAllPlaylistTracks([]);
+      setLoading(false);
+      setError(null);
       return;
     }
 
@@ -83,7 +107,12 @@ export const useUnselectedTracks = ({
       // Get all tracks from selected playlists
       const allTracks: TrackWithSource[] = [];
       for (const playlist of selectedPlaylists) {
-        const tracks = await fetchPlaylistTracks(api, playlist.id);
+        const tracks = await fetchPlaylistTracks(
+          api,
+          playlist.id,
+          controller.signal
+        );
+        if (controller.signal.aborted) return;
         tracks.forEach(track => {
           allTracks.push({
             ...track,
@@ -95,6 +124,7 @@ export const useUnselectedTracks = ({
 
       setAllPlaylistTracks(allTracks);
     } catch (err) {
+      if (controller.signal.aborted) return;
       console.error('Failed to fetch playlist tracks:', err);
       setError(
         err instanceof Error
@@ -102,7 +132,7 @@ export const useUnselectedTracks = ({
           : new Error('Failed to fetch playlist tracks')
       );
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [accessToken, selectedPlaylists, fetchPlaylistTracks]);
 
@@ -150,6 +180,9 @@ export const useUnselectedTracks = ({
   // Fetch tracks when playlists change
   useEffect(() => {
     fetchAllPlaylistTracks();
+    return () => {
+      requestRef.current?.abort();
+    };
   }, [fetchAllPlaylistTracks]);
 
   // Retry function for error recovery

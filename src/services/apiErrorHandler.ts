@@ -5,6 +5,7 @@
 
 // We previously used AxiosError here. After removing axios, treat the error
 // shape generically and rely on duck-typing for `response`/`status` checks.
+import { abortableDelay, readRetryAfterSeconds } from './_helpers/retry';
 type AxiosError = any;
 
 /**
@@ -134,9 +135,9 @@ const ERROR_MESSAGES: Record<ErrorType, ErrorMessage> = {
     title: '🚫 Access Denied',
     message: "You don't have permission to access this resource.",
     suggestions: [
-      'Make sure the playlist is public or you have access to it',
-      'Try making your playlist public temporarily',
-      'Contact the playlist owner for access',
+      'Check whether you own or collaborate on the playlist',
+      'Check the Spotify app quota mode and account allowlist',
+      'Confirm the app has the required playlist scopes',
     ],
   },
   [ERROR_TYPES.RATE_LIMIT]: {
@@ -328,6 +329,7 @@ export class ApiErrorHandler {
     error: Error | AxiosError,
     context: ErrorContext = {}
   ): ApiError {
+    if (error instanceof ApiError) return error;
     // Safely extract message for checks that may run on plain objects
     // (some tests throw plain objects without a `message` property).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -431,19 +433,39 @@ export class ApiErrorHandler {
 
     while (true) {
       try {
+        if (context.signal?.aborted)
+          throw new DOMException('Request canceled', 'AbortError');
         return await apiCall();
       } catch (error) {
+        if (context.signal?.aborted || (error as Error)?.name === 'AbortError')
+          throw error;
         const apiError = this.classifyError(error as Error | AxiosError, {
           ...context,
           attemptNumber,
         });
 
-        if (!apiError.shouldRetry(attemptNumber)) {
+        if (
+          !apiError.shouldRetry(attemptNumber) ||
+          (context.nonIdempotent && apiError.type !== ERROR_TYPES.RATE_LIMIT)
+        ) {
+          if (
+            context.nonIdempotent &&
+            (!apiError.status || apiError.status >= 500)
+          ) {
+            apiError.message +=
+              ' Spotify did not confirm this write. It may have succeeded; check your Spotify playlists before trying again.';
+          }
           this.handleError(apiError, context);
           throw apiError;
         }
 
-        const delay = apiError.getRetryDelay(attemptNumber);
+        const retryAfter = readRetryAfterSeconds(
+          (error as any)?.response?.headers
+        );
+        const delay =
+          apiError.type === ERROR_TYPES.RATE_LIMIT && retryAfter !== null
+            ? retryAfter * 1000
+            : apiError.getRetryDelay(attemptNumber);
 
         if (this.enableLogging) {
           console.warn(
@@ -452,7 +474,7 @@ export class ApiErrorHandler {
           );
         }
 
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await abortableDelay(delay, context.signal);
         attemptNumber++;
       }
     }

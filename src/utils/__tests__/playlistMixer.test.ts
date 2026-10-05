@@ -12,7 +12,7 @@ const track = (id: string, duration = 180000) => ({
 
 const baseOptions: MixOptions = {
   totalSongs: 5,
-  targetDuration: 0,
+  targetDurationSeconds: 0,
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'Test',

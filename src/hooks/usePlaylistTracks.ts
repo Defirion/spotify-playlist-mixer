@@ -79,6 +79,7 @@ const usePlaylistTracks = (
 
   // Initialize Spotify service when access token changes
   useEffect(() => {
+    abortControllerRef.current?.abort();
     if (accessToken) {
       spotifyServiceRef.current = new SpotifyService(accessToken);
     } else {
@@ -120,7 +121,8 @@ const usePlaylistTracks = (
     }
 
     // Create new abort controller
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setLoading(true);
@@ -131,12 +133,15 @@ const usePlaylistTracks = (
         playlistId,
         {
           market,
-          onProgress: handleProgress,
+          signal: controller.signal,
+          onProgress: progressData => {
+            if (!controller.signal.aborted) handleProgress(progressData);
+          },
         }
       );
 
       // Check if request was aborted
-      if (abortControllerRef.current.signal.aborted) {
+      if (controller.signal.aborted) {
         return;
       }
 
@@ -145,25 +150,30 @@ const usePlaylistTracks = (
       setTracks(playlistTracks);
       setProgress({
         loaded: playlistTracks.length,
-        total: playlistTracks.length,
-        percentage: 100,
+        total: Array.isArray(result) ? playlistTracks.length : result.total,
+        percentage: !Array.isArray(result) && result.hasMore ? 0 : 100,
       });
     } catch (err) {
       // Don't set error if request was aborted
-      if (!abortControllerRef.current?.signal.aborted) {
+      if (!controller.signal.aborted) {
         const error =
           err instanceof Error ? err : new Error('Unknown error occurred');
         setError(error);
         console.error('Error fetching playlist tracks:', error);
       }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [playlistId, market, handleProgress]);
 
   // Auto-fetch effect
   useEffect(() => {
-    if (!playlistId) {
+    abortControllerRef.current?.abort();
+    setLoading(false);
+    setTracks([]);
+    setError(null);
+    setProgress({ loaded: 0, total: 0, percentage: 0 });
+    if (!playlistId || !accessToken) {
       // Clear tracks when playlistId is null
       setTracks([]);
       setError(null);
@@ -174,7 +184,10 @@ const usePlaylistTracks = (
     if (autoFetch) {
       fetchTracks();
     }
-  }, [playlistId, autoFetch, fetchTracks]);
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, [accessToken, playlistId, autoFetch, fetchTracks]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -196,6 +209,7 @@ const usePlaylistTracks = (
    * Clear tracks and reset state
    */
   const clear = useCallback((): void => {
+    setLoading(false);
     setTracks([]);
     setError(null);
     setProgress({ loaded: 0, total: 0, percentage: 0 });

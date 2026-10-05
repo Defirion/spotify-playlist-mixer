@@ -149,13 +149,13 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
             />
           )}
 
-          {mixOptions.useTimeLimit && (
+          {!mixOptions.useAllSongs && mixOptions.useTimeLimit && (
             <input
               type="number"
-              value={Math.round(mixOptions.targetDuration / 60)}
+              value={Math.round(mixOptions.targetDurationSeconds / 60)}
               onChange={e =>
                 onMixOptionsChange({
-                  targetDuration: (parseInt(e.target.value) || 0) * 60,
+                  targetDurationSeconds: (parseInt(e.target.value) || 0) * 60,
                 })
               }
               min="1"
@@ -167,8 +167,21 @@ const PlaylistForm: React.FC<PlaylistFormProps> = ({
 
           {mixOptions.useAllSongs && (
             <p className={styles.helpText}>
-              Using all {available.totalSongs} songs (~
-              {formatTotalDuration(available.totalDurationMinutes * 60 * 1000)})
+              Up to {available.totalSongs} source songs (~
+              {formatTotalDuration(
+                available.totalDurationMinutes * 60 * 1000
+              )}){' '}
+              {mixOptions.continueWhenPlaylistEmpty
+                ? '— continue through remaining playlists.'
+                : '— stop when the first playlist runs out.'}{' '}
+              Repeated Spotify tracks are included once.
+            </p>
+          )}
+          {!mixOptions.useAllSongs && mixOptions.useTimeLimit && (
+            <p className={styles.helpText}>
+              Duration is in minutes. Whole songs are included until the target
+              is reached; the final song may go over. The preview shows the
+              actual duration.
             </p>
           )}
         </div>

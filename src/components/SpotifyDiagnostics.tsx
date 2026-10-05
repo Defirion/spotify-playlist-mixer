@@ -51,6 +51,7 @@ const runProbe = async (
 
 interface SpotifyDiagnosticsProps {
   accessToken: string;
+  onRefreshConnection?: () => Promise<void>;
 }
 
 /**
@@ -59,10 +60,31 @@ interface SpotifyDiagnosticsProps {
  */
 const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
   accessToken,
+  onRefreshConnection,
 }) => {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<ProbeResult[] | null>(null);
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState<string | null>(null);
+
+  const refreshConnection = async () => {
+    if (!onRefreshConnection || refreshing) return;
+    setRefreshing(true);
+    setRefreshStatus(null);
+    try {
+      await onRefreshConnection();
+      setRefreshStatus(
+        `Connection refreshed at ${new Date().toISOString()} UTC`
+      );
+    } catch {
+      setRefreshStatus(
+        'Could not refresh the connection. Reconnect to Spotify.'
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const runDiagnostics = useCallback(async () => {
     setRunning(true);
@@ -104,10 +126,21 @@ const SpotifyDiagnostics: React.FC<SpotifyDiagnosticsProps> = ({
         type="button"
         className="btn"
         onClick={runDiagnostics}
-        disabled={running}
+        disabled={running || refreshing}
       >
         {running ? 'Running diagnostics...' : 'Run diagnostics'}
       </button>
+      {onRefreshConnection && (
+        <button
+          type="button"
+          className="btn"
+          onClick={refreshConnection}
+          disabled={running || refreshing}
+        >
+          {refreshing ? 'Refreshing connection...' : 'Refresh connection'}
+        </button>
+      )}
+      {refreshStatus && <p role="status">{refreshStatus}</p>}
       {results && (
         <div aria-live="polite">
           {checkedAt && (

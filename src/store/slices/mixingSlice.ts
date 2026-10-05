@@ -3,7 +3,7 @@ import { MixOptions } from '../../types';
 
 const DEFAULT_MIX_OPTIONS: MixOptions = {
   totalSongs: 100,
-  targetDuration: 240,
+  targetDurationSeconds: 240 * 60,
   useTimeLimit: false,
   useAllSongs: true,
   playlistName: 'My Mixed Playlist',
@@ -40,6 +40,17 @@ export const createMixingSlice: StateCreator<
       mixOptions: {
         ...state.mixOptions,
         ...updates,
+        // Explicitly selecting a mode takes precedence over the previous mode.
+        useAllSongs:
+          updates.useAllSongs === true
+            ? true
+            : updates.useTimeLimit === true
+              ? false
+              : (updates.useAllSongs ?? state.mixOptions.useAllSongs),
+        useTimeLimit:
+          updates.useAllSongs === true
+            ? false
+            : (updates.useTimeLimit ?? state.mixOptions.useTimeLimit),
       },
     })),
 
@@ -55,13 +66,20 @@ export const createMixingSlice: StateCreator<
       mixOptions: {
         ...state.mixOptions,
         shuffleTracks: settings.shuffleTracks ?? state.mixOptions.shuffleTracks,
-        useTimeLimit: settings.useTimeLimit || false,
+        totalSongs: settings.totalSongs ?? state.mixOptions.totalSongs,
+        useTimeLimit:
+          settings.useAllSongs === true
+            ? false
+            : (settings.useTimeLimit ?? false),
         useAllSongs:
           settings.useAllSongs !== undefined
             ? settings.useAllSongs
-            : state.mixOptions.useAllSongs,
-        targetDuration:
-          settings.targetDuration || state.mixOptions.targetDuration,
+            : settings.useTimeLimit
+              ? false
+              : state.mixOptions.useAllSongs,
+        targetDurationSeconds:
+          settings.targetDurationSeconds ??
+          state.mixOptions.targetDurationSeconds,
         playlistName: `${presetName} Mix`,
         continueWhenPlaylistEmpty:
           settings.continueWhenPlaylistEmpty !== undefined

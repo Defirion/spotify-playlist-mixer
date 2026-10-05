@@ -35,7 +35,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 300,
+        targetDurationSeconds: 300 * 60,
         useAllSongs: false,
       } as PresetSettings,
     },
@@ -55,7 +55,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 60,
+        targetDurationSeconds: 60 * 60,
         useAllSongs: false,
       } as PresetSettings,
     },
@@ -75,7 +75,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 180,
+        targetDurationSeconds: 180 * 60,
         useAllSongs: false,
       } as PresetSettings,
     },

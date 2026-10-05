@@ -13,6 +13,6 @@ describe('PrivacyPolicy', () => {
     // that would falsely claim the policy changes every day).
     const labelNode = screen.getByText(/last updated:/i);
     expect(labelNode).toBeInTheDocument();
-    expect(screen.getByText(/August 22, 2025/)).toBeInTheDocument();
+    expect(screen.getByText(/October 5, 2026/)).toBeInTheDocument();
   });
 });

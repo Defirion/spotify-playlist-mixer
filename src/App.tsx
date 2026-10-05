@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import AppShell from './AppShell';
 import PrivacyPolicy from './components/PrivacyPolicy';
@@ -80,6 +80,19 @@ export function MainApp() {
       .catch(err => setUIError(err));
   }, [setTokens, isAuthenticated]);
 
+  const refreshSpotifyConnection = useCallback(async () => {
+    const clientId = getSpotifyClientId();
+    if (!clientId || !refreshToken)
+      throw new Error('Reconnect to Spotify to refresh this session');
+    try {
+      const tokens = await refreshAccessToken(clientId, refreshToken);
+      setTokens(tokens);
+    } catch (error) {
+      clearAuth();
+      throw error;
+    }
+  }, [refreshToken, setTokens, clearAuth]);
+
   // Proactively refresh the access token shortly before it expires so a
   // long mixing session doesn't start failing with 401s mid-flow.
   useEffect(() => {
@@ -90,16 +103,13 @@ export function MainApp() {
 
     const refreshIn = Math.max(tokenExpiresAt - Date.now() - 60_000, 0);
     const timer = window.setTimeout(() => {
-      refreshAccessToken(clientId, refreshToken)
-        .then(tokens => setTokens(tokens))
-        .catch(() => {
-          // Refresh failed (revoked/expired) — drop back to the connect screen.
-          clearAuth();
-        });
+      void refreshSpotifyConnection().catch(() => {
+        // The shared refresh path clears revoked/expired authentication.
+      });
     }, refreshIn);
 
     return () => window.clearTimeout(timer);
-  }, [refreshToken, tokenExpiresAt, setTokens, clearAuth]);
+  }, [refreshToken, tokenExpiresAt, refreshSpotifyConnection]);
 
   const handlePlaylistSelection = (playlist: any) => {
     togglePlaylistSelection(playlist);
@@ -141,13 +151,14 @@ export function MainApp() {
       mixOptions={mixOptions}
       updateMixOptions={updateMixOptions}
       onAuth={setAccessToken}
+      onRefreshSpotifyConnection={refreshSpotifyConnection}
       onPlaylistSelect={handlePlaylistSelection}
       onRatioUpdate={updateRatioConfig}
       onPlaylistRemove={handlePlaylistRemove}
       onClearAll={handleClearAllPlaylists}
       onApplyPreset={handleApplyPreset}
       onDismissError={dismissError}
-      onDismissSuccess={() => dismissSuccessToast('')}
+      onDismissSuccess={dismissSuccessToast}
       onMixedPlaylist={addMixedPlaylist}
       onError={err => setUIError(err)}
     />

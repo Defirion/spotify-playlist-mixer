@@ -2,6 +2,8 @@ import { StateCreator } from 'zustand';
 import { SpotifyPlaylist } from '../../types/spotify';
 import { RatioConfig, RatioConfigItem } from '../../types/mixer';
 
+export const MAX_PLAYLISTS = 10;
+
 const DEFAULT_RATIO_CONFIG: RatioConfigItem = {
   min: 1,
   max: 2,
@@ -50,7 +52,10 @@ export const createPlaylistSlice: StateCreator<
   selectPlaylist: playlist =>
     set(state => {
       // Check if playlist is already selected
-      if (!state.selectedPlaylists.find(p => p.id === playlist.id)) {
+      if (
+        state.selectedPlaylists.length < MAX_PLAYLISTS &&
+        !state.selectedPlaylists.find(p => p.id === playlist.id)
+      ) {
         return {
           ...state,
           selectedPlaylists: [...state.selectedPlaylists, playlist],
@@ -84,6 +89,7 @@ export const createPlaylistSlice: StateCreator<
           ratioConfig: newRatioConfig,
         };
       } else {
+        if (state.selectedPlaylists.length >= MAX_PLAYLISTS) return state;
         // Add playlist and default ratio config
         return {
           ...state,

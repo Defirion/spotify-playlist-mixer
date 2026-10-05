@@ -110,11 +110,13 @@ describe('MixPreview Behavior Tests', () => {
     expect(screen.queryByText('Mix Preview')).not.toBeInTheDocument();
   });
 
-  it('returns null when no tracks and not loading', () => {
+  it('shows an empty preview with recovery controls when all tracks were removed', () => {
     render(<MixPreview {...defaultProps} tracks={[]} loading={false} />);
 
-    // Component should not render any preview content when there are no tracks
-    expect(screen.queryByText('Mix Preview')).not.toBeInTheDocument();
+    expect(screen.getByText('0 tracks')).toBeInTheDocument();
+    expect(
+      screen.getByText(/No playable tracks in this preview/)
+    ).toBeInTheDocument();
   });
 
   it('displays track and duration stats correctly', () => {
@@ -197,7 +199,12 @@ describe('MixPreview Behavior Tests', () => {
 
     expect(mockOnTrackOrderChange).toHaveBeenCalledWith([
       ...mockTracks,
-      { id: 'new-track', name: 'New Track' },
+      {
+        id: 'new-track',
+        name: 'New Track',
+        sourcePlaylist: 'search',
+        instanceId: expect.any(String),
+      },
     ]);
   });
 
@@ -220,7 +227,12 @@ describe('MixPreview Behavior Tests', () => {
 
     expect(mockOnTrackOrderChange).toHaveBeenCalledWith([
       ...mockTracks,
-      { id: 'unselected-track', name: 'Unselected Track' },
+      {
+        id: 'unselected-track',
+        name: 'Unselected Track',
+        sourcePlaylist: 'search',
+        instanceId: expect.any(String),
+      },
     ]);
   });
 

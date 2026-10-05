@@ -33,7 +33,7 @@ describe('mixingCalculations edge cases', () => {
     };
     const options: any = {
       totalSongs: 10,
-      targetDuration: 30,
+      targetDurationSeconds: 30,
       useTimeLimit: false,
       useAllSongs: true,
     };
@@ -63,7 +63,7 @@ describe('mixingCalculations edge cases', () => {
     const ratioConfig: any = { a: { weight: 1 } };
     const options: any = {
       totalSongs: 5,
-      targetDuration: 10,
+      targetDurationSeconds: 10,
       useTimeLimit: false,
       useAllSongs: true,
     };
@@ -82,7 +82,7 @@ describe('mixingCalculations edge cases', () => {
     const optionsTime: any = {
       useAllSongs: false,
       useTimeLimit: true,
-      targetDuration: 60,
+      targetDurationSeconds: 60,
       totalSongs: 10,
     };
     const mixedTracks = [{ duration_ms: 30 * 1000 }]; // 0.5 min

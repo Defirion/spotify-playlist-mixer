@@ -3,8 +3,7 @@ import type { FetchInstance } from './fetchClient';
 import { ApiErrorHandler, ApiError, ERROR_TYPES } from './apiErrorHandler';
 import chunkArray from './_helpers/batching';
 import buildAddRequestBody from './_helpers/requestBody';
-import paginate from './_helpers/pagination';
-import retryWithBackoff from './_helpers/retry';
+import paginate, { getNextPlaylistOffset } from './_helpers/pagination';
 import {
   ISpotifyService,
   SpotifyTrack,
@@ -212,12 +211,14 @@ class SpotifyService implements ISpotifyService {
       );
     }
 
-    const { market, onProgress } = options;
+    const { market, onProgress, signal } = options;
     const allTracks: SpotifyTrack[] = [];
     const limit = SPOTIFY_PLAYLIST_ITEMS_LIMIT;
     let totalTracks: number | null = null;
 
     const fetchPage = async (cursor?: string | null) => {
+      if (signal?.aborted)
+        throw new DOMException('Request canceled', 'AbortError');
       const offset = cursor ? Number(cursor) : 0;
       const params = new URLSearchParams({
         offset: offset.toString(),
@@ -232,41 +233,50 @@ class SpotifyService implements ISpotifyService {
         async () => {
           return (
             await this.api.get(
-              `/playlists/${playlistId}/items?${params.toString()}`
+              `/playlists/${playlistId}/items?${params.toString()}`,
+              { signal }
             )
           ).data;
         },
-        { operation: 'getPlaylistTracks', playlistId, offset, limit }
+        { operation: 'getPlaylistTracks', playlistId, offset, limit, signal }
       );
 
       if (totalTracks === null && typeof response.total === 'number') {
         totalTracks = response.total;
       }
 
-      const items = (response.items || [])
-        .map((item: any) => ({
-          ...(item.item ?? item.track),
-          added_at: item.added_at,
-          added_by: item.added_by,
-        }))
-        .filter((t: any) => t && t.id);
+      if (!Array.isArray(response.items))
+        throw new Error(
+          'Playlist response is missing its items; loading is incomplete'
+        );
+      const items = response.items
+        .map(
+          (item: any) =>
+            item && {
+              ...(item.item !== undefined ? item.item : item.track),
+              added_at: item.added_at,
+              added_by: item.added_by,
+            }
+        )
+        .filter(
+          (t: any) =>
+            t &&
+            t.id &&
+            t.uri &&
+            t.type !== 'episode' &&
+            !t.is_local &&
+            t.is_playable !== false
+        );
 
-      const responseLimit =
-        typeof response.limit === 'number' ? response.limit : limit;
-      const responseOffset =
-        typeof response.offset === 'number' ? response.offset : offset;
-      const hasNextPage =
-        response.next !== undefined
-          ? Boolean(response.next)
-          : responseOffset + responseLimit < (response.total || 0);
-      const nextCursor = hasNextPage
-        ? String(responseOffset + responseLimit)
-        : null;
+      const nextOffset = getNextPlaylistOffset(response, offset, limit);
+      const nextCursor = nextOffset === null ? null : String(nextOffset);
 
       return { items, next_cursor: nextCursor };
     };
 
     for await (const track of paginate<SpotifyTrack>(fetchPage)) {
+      if (signal?.aborted)
+        throw new DOMException('Request canceled', 'AbortError');
       allTracks.push(track);
       if (onProgress && typeof onProgress === 'function') {
         onProgress({
@@ -285,10 +295,7 @@ class SpotifyService implements ISpotifyService {
       onProgress({
         loaded: allTracks.length,
         total: totalTracks || 0,
-        percentage:
-          totalTracks && totalTracks > 0
-            ? Math.round((allTracks.length / totalTracks) * 100)
-            : 0,
+        percentage: 100,
       });
     }
 
@@ -383,6 +390,8 @@ class SpotifyService implements ISpotifyService {
 
   /**
    * Create a new playlist for the user
+   * Spotify's public flag controls profile visibility, not access through a
+   * link. Restricting access requires Make private in the Spotify client.
    */
   async createPlaylist(
     playlistData: SpotifyCreatePlaylistRequest
@@ -410,16 +419,19 @@ class SpotifyService implements ISpotifyService {
       collaborative = false,
     } = playlistData;
 
-    return this.withRetry(async () => {
-      const response = await this.api.post('/me/playlists', {
-        name,
-        description,
-        public: isPublic,
-        collaborative,
-      });
+    return this.withRetry(
+      async () => {
+        const response = await this.api.post('/me/playlists', {
+          name,
+          description,
+          public: isPublic,
+          collaborative,
+        });
 
-      return response.data;
-    });
+        return response.data;
+      },
+      { operation: 'createPlaylist', nonIdempotent: true }
+    );
   }
 
   /**
@@ -479,39 +491,23 @@ class SpotifyService implements ISpotifyService {
         position: batchIndex === 0 ? position : undefined,
       }) as SpotifyAddTracksRequest;
 
-      // Use retryWithBackoff to honor Retry-After headers on 429 responses.
-      let lastError: any = null;
       let result: any;
       try {
-        result = await retryWithBackoff(
+        result = await this.withRetry(
           async () => {
-            try {
-              const response = await this.api.post(
-                `/playlists/${playlistId}/items`,
-                requestBody
-              );
-              return response.data;
-            } catch (err: any) {
-              lastError = err;
-              throw err;
-            }
+            const response = await this.api.post(
+              `/playlists/${playlistId}/items`,
+              requestBody
+            );
+            return response.data;
           },
           {
-            maxRetries: 3,
-            baseMs: 200,
-            getRetryAfter: () => {
-              try {
-                const ra =
-                  lastError &&
-                  lastError.response &&
-                  lastError.response.headers &&
-                  (lastError.response.headers['retry-after'] ||
-                    lastError.response.headers['Retry-After']);
-                return ra ? Number(ra) : null;
-              } catch (e) {
-                return null;
-              }
-            },
+            operation: 'addTracksToPlaylist',
+            playlistId,
+            batchIndex,
+            confirmedTracks: results.length * batchSize,
+            totalTracks: trackUris.length,
+            nonIdempotent: true,
           }
         );
       } catch (err: any) {
@@ -520,6 +516,8 @@ class SpotifyService implements ISpotifyService {
           operation: 'addTracksToPlaylist',
           playlistId,
           batchIndex,
+          confirmedTracks: results.length * batchSize,
+          totalTracks: trackUris.length,
         });
         throw apiErr;
       }

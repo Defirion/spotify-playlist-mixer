@@ -14,7 +14,7 @@ const makePlaylist = (id: string, total = 5, avgSec?: number) => ({
 
 const baseMixOptions = {
   totalSongs: 5,
-  targetDuration: 300,
+  targetDurationSeconds: 300,
   useTimeLimit: false,
   useAllSongs: false,
   playlistName: 'My Mix',
@@ -44,13 +44,17 @@ describe('PlaylistForm behavior', () => {
     expect(onMixOptionsChange).toHaveBeenCalledWith({ totalSongs: 12 });
   });
 
-  it('changes targetDuration (seconds) when Set Duration input is edited', () => {
+  it('changes targetDurationSeconds (seconds) when Set Duration input is edited', () => {
     const onMixOptionsChange = vi.fn();
 
     render(
       <PlaylistForm
         mixOptions={
-          { ...baseMixOptions, useTimeLimit: true, targetDuration: 300 } as any
+          {
+            ...baseMixOptions,
+            useTimeLimit: true,
+            targetDurationSeconds: 300,
+          } as any
         }
         onMixOptionsChange={onMixOptionsChange}
         selectedPlaylists={[makePlaylist('1', 10, 200)] as any}
@@ -65,7 +69,9 @@ describe('PlaylistForm behavior', () => {
 
     fireEvent.change(input, { target: { value: '10' } });
     // expect seconds
-    expect(onMixOptionsChange).toHaveBeenCalledWith({ targetDuration: 600 });
+    expect(onMixOptionsChange).toHaveBeenCalledWith({
+      targetDurationSeconds: 600,
+    });
   });
 
   it('shows formatted total duration when Use All Songs is active', () => {
@@ -82,7 +88,7 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    expect(screen.getByText(/Using all 4 songs/i)).toBeInTheDocument();
+    expect(screen.getByText(/Up to 4 source songs/i)).toBeInTheDocument();
     expect(screen.getByText(/13m/)).toBeInTheDocument();
   });
 
@@ -217,7 +223,7 @@ describe('PlaylistForm behavior', () => {
     );
 
     // total songs = 7, duration minutes ~= round(7 * 3.5) -> shown as ~<N>m; match any minute value to be robust
-    expect(screen.getByText(/Using all 7 songs/i)).toBeInTheDocument();
+    expect(screen.getByText(/Up to 7 source songs/i)).toBeInTheDocument();
     expect(screen.getByText(/~?\s*\d+m/)).toBeInTheDocument();
   });
 
@@ -235,7 +241,7 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    expect(screen.getByText(/Using all 100 songs/i)).toBeInTheDocument();
+    expect(screen.getByText(/Up to 100 source songs/i)).toBeInTheDocument();
     expect(screen.getByText(/3h\s*20m/)).toBeInTheDocument();
   });
 

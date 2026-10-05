@@ -49,8 +49,8 @@ describe('mixPlaylists behavior via compat layer', () => {
       options as any
     );
     expect(Array.isArray(result)).toBe(true);
-    // When useAllSongs is true, result should have at least as many tracks as total input
-    expect(result.length).toBeGreaterThanOrEqual(3);
+    // The shorter source is exhausted after the second song; stop is explicit.
+    expect(result.map(track => track.id)).toEqual(['a', 'c']);
     // Each returned item should contain an id
     expect(result.every(r => r && r.id)).toBe(true);
   });

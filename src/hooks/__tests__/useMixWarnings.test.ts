@@ -20,7 +20,7 @@ describe('useMixWarnings', () => {
   it('returns null warnings when under limits', () => {
     const mixOptions: MixOptions = {
       totalSongs: 5,
-      targetDuration: 3600,
+      targetDurationSeconds: 3600,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'x',
@@ -43,7 +43,7 @@ describe('useMixWarnings', () => {
   it('detects exceeds songs limit', () => {
     const mixOptions: MixOptions = {
       totalSongs: 1000,
-      targetDuration: 3600,
+      targetDurationSeconds: 3600,
       useTimeLimit: false,
       useAllSongs: false,
       playlistName: 'x',
@@ -66,8 +66,8 @@ describe('useMixWarnings', () => {
   it('detects ratio imbalance for time-based weightType', () => {
     const mixOptions: MixOptions = {
       totalSongs: 100,
-      // targetDuration is measured in seconds, so use one hour here.
-      targetDuration: 3600,
+      // targetDurationSeconds is measured in seconds, so use one hour here.
+      targetDurationSeconds: 3600,
       useTimeLimit: true,
       useAllSongs: false,
       playlistName: 'x',
@@ -91,7 +91,7 @@ describe('useMixWarnings', () => {
   it('returns never when useAllSongs is true and not exhausted', () => {
     const mixOptions: MixOptions = {
       totalSongs: 100,
-      targetDuration: 1,
+      targetDurationSeconds: 1,
       useTimeLimit: false,
       useAllSongs: true,
       playlistName: 'x',

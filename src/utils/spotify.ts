@@ -29,21 +29,6 @@ export const getSpotifyApi = (accessToken: string): FetchInstance => {
     ? accessToken.replace(/^Bearer\s+/i, '')
     : accessToken;
 
-  try {
-    // Only emit debug logs during development (not in tests)
-    if (process.env.NODE_ENV === 'development') {
-      const maskedToken = normalizedToken
-        ? normalizedToken.length > 10
-          ? `${normalizedToken.slice(0, 6)}...${normalizedToken.slice(-4)}`
-          : normalizedToken
-        : null;
-      // eslint-disable-next-line no-console
-      console.debug('getSpotifyApi: normalizedToken(masked)=', maskedToken);
-    }
-  } catch (_) {
-    // ignore
-  }
-
   const instance = createFetchClient({
     baseURL: SPOTIFY_API_BASE,
     headers: {

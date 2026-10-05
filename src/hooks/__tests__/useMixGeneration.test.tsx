@@ -158,7 +158,7 @@ describe('useMixGeneration', () => {
     expect(onError).toHaveBeenCalled();
   });
 
-  test('continues when one playlist fetch fails and mixes remaining', async () => {
+  test('refuses a mix when one playlist fetch fails', async () => {
     spotifyInstance.getPlaylistTracks
       .mockRejectedValueOnce(new Error('fetch-fail'))
       .mockResolvedValueOnce({
@@ -183,17 +183,18 @@ describe('useMixGeneration', () => {
     });
 
     await act(async () => {
-      const result = await ref.current.generateMix(
-        [
-          { id: 'fail', name: 'Fail' },
-          { id: 'ok', name: 'Ok' },
-        ],
-        {},
-        {}
-      );
-
-      expect(result).toEqual(mixed);
-      expect(onSuccess).toHaveBeenCalledWith(mixed);
+      await expect(
+        ref.current.generateMix(
+          [
+            { id: 'fail', name: 'Fail' },
+            { id: 'ok', name: 'Ok' },
+          ],
+          {},
+          {}
+        )
+      ).rejects.toThrow('Could not load Fail');
+      expect(mixer.mixPlaylists).not.toHaveBeenCalled();
+      expect(onSuccess).not.toHaveBeenCalled();
     });
   });
 
@@ -340,7 +341,7 @@ describe('useMixGeneration', () => {
     });
   });
 
-  test('emits events for empty playlist and fetch failure + stoppedEarly', async () => {
+  test('emits source events and refuses a mix when a playlist could not be loaded', async () => {
     spotifyInstance.getPlaylistTracks
       .mockResolvedValueOnce({ tracks: [] }) // p1 empty -> playlistEmpty
       .mockRejectedValueOnce(new Error('boom')) // p2 failure -> playlistFetchFailed
@@ -368,20 +369,22 @@ describe('useMixGeneration', () => {
       await flush();
     });
     await act(async () => {
-      await ref.current.generateMix(
-        [
-          { id: 'p1', name: 'P1' },
-          { id: 'p2', name: 'P2' },
-          { id: 'p3', name: 'P3' },
-        ],
-        {},
-        {}
-      );
+      await expect(
+        ref.current.generateMix(
+          [
+            { id: 'p1', name: 'P1' },
+            { id: 'p2', name: 'P2' },
+            { id: 'p3', name: 'P3' },
+          ],
+          {},
+          {}
+        )
+      ).rejects.toThrow('Could not load P2');
     });
     const types = events.map(e => e.type);
     expect(types).toContain('playlistEmpty');
     expect(types).toContain('playlistFetchFailed');
-    expect(types).toContain('mixingStoppedEarly');
+    expect(mixer.mixPlaylists).not.toHaveBeenCalled();
   });
 
   test('createPlaylist emits skippingTrackMissingUri and noValidTrackUris', async () => {

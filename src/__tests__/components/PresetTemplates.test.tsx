@@ -133,7 +133,7 @@ describe('PresetTemplates', () => {
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 300,
+        targetDurationSeconds: 18000,
         useAllSongs: false,
       },
       presetName: '💃 Karimctiva',
@@ -165,7 +165,7 @@ describe('PresetTemplates', () => {
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 60,
+        targetDurationSeconds: 3600,
         useAllSongs: false,
       },
       presetName: '💪 Workout Mix',
@@ -197,7 +197,7 @@ describe('PresetTemplates', () => {
       settings: {
         shuffleTracks: true,
         useTimeLimit: true,
-        targetDuration: 180,
+        targetDurationSeconds: 10800,
         useAllSongs: false,
       },
       presetName: '🚗 Road Trip',
