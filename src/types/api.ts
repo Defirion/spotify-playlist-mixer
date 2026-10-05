@@ -85,16 +85,6 @@ export interface ApiErrorHandlerOptions {
 
 // Service interface
 export interface ISpotifyService {
-  // Authentication
-  setAccessToken(token: string): void;
-  getAccessToken(): string | null;
-
-  // User methods
-  getUserProfile(): Promise<SpotifyUserProfile>;
-  getUserPlaylists(
-    options?: GetUserPlaylistsOptions
-  ): Promise<SpotifyServiceUserPlaylistsResult>;
-
   // Playlist methods
   getPlaylistTracks(
     playlistId: string,
@@ -107,10 +97,6 @@ export interface ISpotifyService {
     playlistId: string,
     request: SpotifyAddTracksRequest
   ): Promise<SpotifyAddTracksResponse>;
-  removeTracksFromPlaylist(
-    playlistId: string,
-    request: SpotifyRemoveTracksRequest
-  ): Promise<SpotifyRemoveTracksResponse>;
 
   // Search methods
   searchTracks(

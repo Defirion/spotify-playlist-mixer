@@ -65,7 +65,6 @@ describe('useMixGeneration', () => {
     // Mock SpotifyService class constructor to return an instance with stubbed methods
     spotifyInstance = {
       getPlaylistTracks: vi.fn(),
-      getUserProfile: vi.fn(),
       createPlaylist: vi.fn(),
       addTracksToPlaylist: vi.fn(),
     };
@@ -279,8 +278,6 @@ describe('useMixGeneration', () => {
   });
 
   test('createPlaylist validation and happy path', async () => {
-    // getUserProfile & createPlaylist & addTracksToPlaylist
-    spotifyInstance.getUserProfile.mockResolvedValue({ id: 'me' });
     spotifyInstance.createPlaylist.mockResolvedValue({ id: 'np', name: 'New' });
     spotifyInstance.addTracksToPlaylist.mockResolvedValue({});
 
@@ -321,7 +318,6 @@ describe('useMixGeneration', () => {
   });
 
   test('createPlaylist propagates spotify errors to onError', async () => {
-    spotifyInstance.getUserProfile.mockResolvedValue({ id: 'me' });
     spotifyInstance.createPlaylist.mockResolvedValue({ id: 'np', name: 'New' });
     spotifyInstance.addTracksToPlaylist.mockRejectedValue(
       new Error('add-fail')
@@ -399,7 +395,6 @@ describe('useMixGeneration', () => {
   });
 
   test('createPlaylist emits skippingTrackMissingUri and noValidTrackUris', async () => {
-    spotifyInstance.getUserProfile.mockResolvedValue({ id: 'me' });
     spotifyInstance.createPlaylist.mockResolvedValue({ id: 'np', name: 'New' });
     spotifyInstance.addTracksToPlaylist.mockResolvedValue({});
 
@@ -467,7 +462,6 @@ describe('useMixGeneration', () => {
   });
 
   test('createPlaylist adds only valid URIs and emits skippingTrackMissingUri for invalid ones', async () => {
-    spotifyInstance.getUserProfile.mockResolvedValue({ id: 'me' });
     spotifyInstance.createPlaylist.mockResolvedValue({
       id: 'np2',
       name: 'New2',

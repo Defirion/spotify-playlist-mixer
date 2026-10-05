@@ -8,27 +8,15 @@ import {
   ISpotifyService,
   SpotifyTrack,
   SpotifyPlaylist,
-  SpotifyUserProfile,
   SearchTracksOptions,
   GetPlaylistTracksOptions,
-  GetUserPlaylistsOptions,
   SpotifyCreatePlaylistRequest,
   SpotifyAddTracksRequest,
-  SpotifyRemoveTracksRequest,
 } from '../types';
 
 interface SearchResult {
   items: SpotifyTrack[];
   tracks: SpotifyTrack[];
-  total: number;
-  limit: number;
-  offset: number;
-  hasMore: boolean;
-}
-
-interface PlaylistsResult {
-  items: SpotifyPlaylist[];
-  playlists: SpotifyPlaylist[];
   total: number;
   limit: number;
   offset: number;
@@ -91,30 +79,6 @@ class SpotifyService implements ISpotifyService {
       new ApiErrorHandler({
         enableLogging: process.env.NODE_ENV === 'development',
       });
-  }
-
-  /**
-   * Set access token
-   */
-  setAccessToken(token: string): void {
-    this.accessToken = token;
-    // If the service was constructed with a DI client, attempt to update its headers; otherwise rebuild.
-    if (this.api && this.api.defaults && this.api.defaults.headers) {
-      try {
-        this.api.defaults.headers.Authorization = `Bearer ${token}`;
-        return;
-      } catch (_) {
-        // fall through to rebuild
-      }
-    }
-    this.api = getSpotifyApi(token);
-  }
-
-  /**
-   * Get access token
-   */
-  getAccessToken(): string | null {
-    return this.accessToken;
   }
 
   /**
@@ -307,88 +271,6 @@ class SpotifyService implements ISpotifyService {
   }
 
   /**
-   * Get user's playlists with automatic pagination
-   */
-  async getUserPlaylists(
-    options: GetUserPlaylistsOptions = {}
-  ): Promise<PlaylistsResult> {
-    const { limit = 50, offset = 0, all = false } = options;
-
-    if (limit > 50) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Limit cannot exceed 50 for playlist requests'),
-        { operation: 'getUserPlaylists', limit }
-      );
-    }
-
-    if (all) {
-      // Fetch all playlists automatically using the paginate helper
-      const allPlaylists: SpotifyPlaylist[] = [];
-      const pageLimit = 50;
-
-      const fetchPage = async (cursor?: string | null) => {
-        const offset = cursor ? Number(cursor) : 0;
-        // Use withRetry for each page fetch
-        const response = await this.withRetry(async () => {
-          return (
-            await this.api.get(
-              `/me/playlists?limit=${pageLimit}&offset=${offset}`
-            )
-          ).data;
-        });
-
-        const nextCursor =
-          response.offset + response.limit < response.total
-            ? String(response.offset + response.limit)
-            : null;
-
-        return { items: response.items, next_cursor: nextCursor };
-      };
-
-      for await (const pl of paginate<SpotifyPlaylist>(fetchPage)) {
-        allPlaylists.push(pl);
-      }
-
-      return {
-        items: allPlaylists,
-        playlists: allPlaylists,
-        total: allPlaylists.length,
-        limit: allPlaylists.length,
-        offset: 0,
-        hasMore: false,
-      };
-    }
-
-    // Fetch single page
-    return this.withRetry(async () => {
-      const response = await this.api.get(
-        `/me/playlists?limit=${limit}&offset=${offset}`
-      );
-
-      return {
-        items: response.data.items,
-        playlists: response.data.items,
-        total: response.data.total,
-        limit: response.data.limit,
-        offset: response.data.offset,
-        hasMore:
-          response.data.offset + response.data.limit < response.data.total,
-      };
-    });
-  }
-
-  /**
-   * Get user's profile information
-   */
-  async getUserProfile(): Promise<SpotifyUserProfile> {
-    return this.withRetry(async () => {
-      const response = await this.api.get('/me');
-      return response.data;
-    });
-  }
-
-  /**
    * Create a new playlist for the user
    * Spotify's public flag controls profile visibility, not access through a
    * link. Restricting access requires Make private in the Spotify client.
@@ -527,135 +409,6 @@ class SpotifyService implements ISpotifyService {
 
     // Return the last snapshot_id
     return results[results.length - 1];
-  }
-
-  /**
-   * Remove tracks from a playlist
-   */
-  async removeTracksFromPlaylist(
-    playlistId: string,
-    request: SpotifyRemoveTracksRequest
-  ): Promise<{ snapshot_id: string }> {
-    if (!playlistId) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Playlist ID is required'),
-        { operation: 'removeTracksFromPlaylist' }
-      );
-    }
-
-    const { items } = request;
-
-    if (!Array.isArray(items) || items.length === 0) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Tracks array is required and cannot be empty'),
-        { operation: 'removeTracksFromPlaylist' }
-      );
-    }
-
-    return this.withRetry(async () => {
-      const response = await this.api.delete(`/playlists/${playlistId}/items`, {
-        data: { ...request, items },
-      });
-
-      return response.data;
-    });
-  }
-
-  /**
-   * Get a specific playlist's details
-   */
-  async getPlaylist(
-    playlistId: string,
-    options: { market?: string; fields?: string } = {}
-  ): Promise<SpotifyPlaylist> {
-    if (!playlistId) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Playlist ID is required'),
-        { operation: 'getPlaylist' }
-      );
-    }
-
-    const { market, fields } = options;
-
-    return this.withRetry(async () => {
-      const params = new URLSearchParams();
-
-      if (market) {
-        params.append('market', market);
-      }
-
-      if (fields) {
-        params.append('fields', fields);
-      }
-
-      const queryString = params.toString();
-      const url = `/playlists/${playlistId}${queryString ? `?${queryString}` : ''}`;
-
-      const response = await this.api.get(url);
-      return response.data;
-    });
-  }
-
-  /**
-   * Search for playlists
-   */
-  async searchPlaylists(
-    query: string,
-    options: { limit?: number; offset?: number; market?: string } = {}
-  ): Promise<{
-    playlists: SpotifyPlaylist[];
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  }> {
-    const { limit = 5, offset = 0, market } = options;
-
-    if (!query || query.trim() === '') {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error('Search query cannot be empty'),
-        { operation: 'searchPlaylists' }
-      );
-    }
-
-    if (limit > SPOTIFY_SEARCH_LIMIT) {
-      throw new ApiError(
-        ERROR_TYPES.BAD_REQUEST,
-        new Error(
-          `Limit cannot exceed ${SPOTIFY_SEARCH_LIMIT} for search requests`
-        ),
-        { operation: 'searchPlaylists', limit }
-      );
-    }
-
-    return this.withRetry(async () => {
-      const params = new URLSearchParams({
-        q: query.trim(),
-        type: 'playlist',
-        limit: limit.toString(),
-        offset: offset.toString(),
-      });
-
-      if (market) {
-        params.append('market', market);
-      }
-
-      const response = await this.api.get(`/search?${params.toString()}`);
-
-      return {
-        playlists: response.data.playlists.items,
-        total: response.data.playlists.total,
-        limit: response.data.playlists.limit,
-        offset: response.data.playlists.offset,
-        hasMore:
-          response.data.playlists.offset + response.data.playlists.limit <
-          response.data.playlists.total,
-      };
-    });
   }
 }
 

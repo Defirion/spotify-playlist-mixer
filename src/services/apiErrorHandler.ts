@@ -516,16 +516,6 @@ export class ApiErrorHandler {
 export const defaultApiErrorHandler = new ApiErrorHandler();
 
 /**
- * Convenience function for handling errors
- */
-export const handleApiError = (
-  error: Error | AxiosError,
-  context: ErrorContext = {}
-): ApiError => {
-  return defaultApiErrorHandler.handleError(error, context);
-};
-
-/**
  * Convenience function for retry logic
  */
 export const withRetry = <T>(
