@@ -6,8 +6,6 @@ import {
   useRatioConfig,
   useMixOptions,
   useUI,
-  usePlaylistOperations,
-  useMixingState,
 } from '../index';
 import { SpotifyPlaylist } from '../../types/spotify';
 import { makePlaylist } from '../../test-utils/mocks/spotify';
@@ -281,48 +279,6 @@ describe('Zustand Store', () => {
       });
 
       expect(result.current.mixedPlaylists).toHaveLength(0);
-    });
-  });
-
-  describe('Combined Selectors', () => {
-    it('should provide playlist operations', () => {
-      const { result } = renderHook(() => usePlaylistOperations());
-
-      act(() => {
-        result.current.togglePlaylistSelection(mockPlaylist1);
-        result.current.addPlaylistToRatioConfig('playlist1');
-      });
-
-      expect(result.current.selectedPlaylists).toHaveLength(1);
-      expect(result.current.ratioConfig['playlist1']).toBeDefined();
-
-      act(() => {
-        result.current.clearAllPlaylists();
-        result.current.setRatioConfigBulk({});
-      });
-
-      expect(result.current.selectedPlaylists).toHaveLength(0);
-      expect(Object.keys(result.current.ratioConfig)).toHaveLength(0);
-    });
-
-    it('should provide mixing state', () => {
-      const { result } = renderHook(() => useMixingState());
-
-      // Set up initial state
-      act(() => {
-        useAppStore.getState().setAccessToken('test-token');
-        useAppStore.getState().selectPlaylist(mockPlaylist1);
-        useAppStore.getState().addPlaylistToRatioConfig('playlist1');
-      });
-
-      expect(result.current.accessToken).toBe('test-token');
-      expect(result.current.selectedPlaylists).toHaveLength(1);
-      expect(result.current.ratioConfig['playlist1']).toBeDefined();
-      expect(result.current.mixOptions).toBeDefined();
-      expect(typeof result.current.addMixedPlaylist).toBe('function');
-      // The raw setter is available on the store; selectors intentionally avoid
-      // exposing it to encourage use of the normalized helper in components.
-      expect(typeof useAppStore.getState().setError).toBe('function');
     });
   });
 

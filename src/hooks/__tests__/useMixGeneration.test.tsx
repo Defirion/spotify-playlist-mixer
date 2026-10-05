@@ -644,14 +644,16 @@ describe('useMixGeneration', () => {
       await flush();
     });
     // Start a mix (will be slow)
-    const p1 = ref.current.generateMix(
-      [
-        { id: 'slow', name: 'Slow' },
-        { id: 'fast1', name: 'Fast1' },
-      ],
-      {},
-      {}
-    );
+    const p1 = ref.current
+      .generateMix(
+        [
+          { id: 'slow', name: 'Slow' },
+          { id: 'fast1', name: 'Fast1' },
+        ],
+        {},
+        {}
+      )
+      .catch((error: any) => error);
     // Token changes -> rerender (aborts stale update)
     rerender(
       <HookHost
@@ -672,13 +674,19 @@ describe('useMixGeneration', () => {
       {},
       {}
     );
+    let latestResult: any;
     await act(async () => {
-      await Promise.all([p1.catch(() => {}), p2]);
+      const [canceled, latest] = await Promise.all([p1, p2]);
+      expect(canceled.name).toBe('AbortError');
+      latestResult = latest;
     });
-    // No assertion about first result; ensure we have success path for second
-    // Event types should not include duplicate playlistEmpty for stale mix if logic suppressed (best-effort)
-    // Just ensure no crash and at least one event array is present
-    expect(Array.isArray(events)).toBe(true);
+    expect(ref.current.state.mixedTracks).toEqual(latestResult);
+    expect(ref.current.state.loading).toBe(false);
+    expect(events).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'playlistFetchFailed' }),
+      ])
+    );
   });
 });
 

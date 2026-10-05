@@ -7,7 +7,6 @@ import { createAuthSlice, AuthSlice } from './slices/authSlice';
 import { createPlaylistSlice, PlaylistSlice } from './slices/playlistSlice';
 import { createMixingSlice, MixingSlice } from './slices/mixingSlice';
 import { createUISlice, UISlice } from './slices/uiSlice';
-import { createTrackSlice, TrackSlice } from './slices/trackSlice';
 
 // Migration helper: set UI error from any unknown/error shape by normalizing
 // to the DisplayError structure. This lets older call sites pass strings or
@@ -15,11 +14,7 @@ import { createTrackSlice, TrackSlice } from './slices/trackSlice';
 import { toDisplayError } from '../utils/migrateError';
 
 // Combined store type
-export type AppStore = AuthSlice &
-  PlaylistSlice &
-  MixingSlice &
-  UISlice &
-  TrackSlice;
+export type AppStore = AuthSlice & PlaylistSlice & MixingSlice & UISlice;
 
 // Create the main store with all slices
 export const useAppStore = create<AppStore>()(
@@ -29,7 +24,6 @@ export const useAppStore = create<AppStore>()(
       ...createPlaylistSlice(...args),
       ...createMixingSlice(...args),
       ...createUISlice(...args),
-      ...createTrackSlice(...args),
     })),
     {
       name: 'spotify-playlist-mixer-store',
@@ -103,39 +97,3 @@ export const useUI = () =>
 export function setUIError(err: unknown) {
   useAppStore.getState().setError(toDisplayError(err));
 }
-
-// Combined selectors for complex operations
-export const usePlaylistOperations = () =>
-  useAppStore(
-    useShallow((state: AppStore) => ({
-      selectedPlaylists: state.selectedPlaylists,
-      ratioConfig: state.ratioConfig,
-      togglePlaylistSelection: state.togglePlaylistSelection,
-      removeRatioConfig: state.removeRatioConfig,
-      addPlaylistToRatioConfig: state.addPlaylistToRatioConfig,
-      setRatioConfigBulk: state.setRatioConfigBulk,
-      clearAllPlaylists: state.clearAllPlaylists,
-    }))
-  );
-
-export const useMixingState = () =>
-  useAppStore(
-    useShallow((state: AppStore) => ({
-      selectedPlaylists: state.selectedPlaylists,
-      ratioConfig: state.ratioConfig,
-      mixOptions: state.mixOptions,
-      accessToken: state.accessToken,
-      addMixedPlaylist: state.addMixedPlaylist,
-      // Avoid exposing the raw setError setter here; use setUIError when needed.
-    }))
-  );
-
-export const useTracks = () =>
-  useAppStore(
-    useShallow((state: AppStore) => ({
-      tracks: state.tracks,
-      setTracks: state.setTracks,
-      reorderTracks: state.reorderTracks,
-      clearTracks: state.clearTracks,
-    }))
-  );
