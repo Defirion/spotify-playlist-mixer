@@ -1,4 +1,3 @@
-// React import removed - using automatic JSX runtime
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PlaylistMixer from '../PlaylistMixer';

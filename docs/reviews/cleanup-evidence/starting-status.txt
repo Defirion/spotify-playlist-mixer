@@ -1,0 +1,202 @@
+ M .gitignore
+ M PLAN.md
+ M PLAYLIST_EXHAUSTION_FEATURE.md
+ M README.md
+ D big_idea.txt
+ M docs/local-library-direction.md
+ M src/AppShell.tsx
+ M src/__tests__/integration/MixerOutputDeterminism.test.ts
+ M src/__tests__/performance/baselines/current-run.json
+ M src/__tests__/performance/mixer.performance.test.ts
+ M src/components/PlaylistMixer.module.css
+ M src/components/PlaylistMixer.tsx
+ M src/components/TrackSourceModal.tsx
+ M src/components/__tests__/PlaylistForm.behavior.test.tsx
+ M src/components/__tests__/TrackSourceModal.extra.test.tsx
+ M src/components/features/mixer/PlaylistForm.tsx
+ M src/hooks/__tests__/useMixGeneration.test.tsx
+ M src/hooks/__tests__/useMixPreview.test.tsx
+ M src/hooks/useMixGeneration.ts
+ M src/hooks/useMixPreview.ts
+ M src/hooks/useMixWarnings.ts
+ D src/services/_helpers/__tests__/errorNormalizer.test.ts
+ D src/services/_helpers/errorNormalizer.ts
+ M src/types/spotify.ts
+ M src/utils/__mocks__/mixer.ts
+ M src/utils/__tests__/playlistMixer.behavior.test.ts
+ M src/utils/__tests__/playlistMixer.test.ts
+ M src/utils/mixer/__tests__/correctness.test.ts
+ M src/utils/mixer/__tests__/fixtures.ts
+ M src/utils/mixer/__tests__/integration.test.ts
+ M src/utils/mixer/__tests__/mixerUtils.durationAndValidate.test.ts
+ M src/utils/mixer/__tests__/mixerUtils.edgecases.test.ts
+ M src/utils/mixer/__tests__/mixerUtils.formatCleanLog.test.ts
+ M src/utils/mixer/__tests__/mixerUtils.remaining.test.ts
+ M src/utils/mixer/__tests__/mixingCalculations.edgecases.test.ts
+ M src/utils/mixer/__tests__/playlistMixer.edgecases.test.ts
+ M src/utils/mixer/__tests__/playlistMixer.test.ts
+ M src/utils/mixer/mixerUtils.ts
+ M src/utils/mixer/mixingCalculations.ts
+ M src/utils/mixer/playlistMixer.ts
+ M src/utils/mixer/trackShuffler.ts
+ M src/utils/mixer/types.ts
+ D src/utils/normalizeMixResult.test.ts
+ D src/utils/normalizeMixResult.ts
+ D temp-coverage/clover.xml
+ D temp-coverage/coverage-final.json
+ D temp-coverage/lcov-report/apiErrorHandler.ts.html
+ D temp-coverage/lcov-report/base.css
+ D temp-coverage/lcov-report/block-navigation.js
+ D temp-coverage/lcov-report/favicon.png
+ D temp-coverage/lcov-report/index.html
+ D temp-coverage/lcov-report/prettify.css
+ D temp-coverage/lcov-report/prettify.js
+ D temp-coverage/lcov-report/sort-arrow-sprite.png
+ D temp-coverage/lcov-report/sorter.js
+ D temp-coverage/lcov.info
+ D tmp-coverage/clover.xml
+ D tmp-coverage/lcov-report/base.css
+ D tmp-coverage/lcov-report/block-navigation.js
+ D tmp-coverage/lcov-report/favicon.png
+ D tmp-coverage/lcov-report/index.html
+ D tmp-coverage/lcov-report/prettify.css
+ D tmp-coverage/lcov-report/prettify.js
+ D tmp-coverage/lcov-report/sort-arrow-sprite.png
+ D tmp-coverage/lcov-report/sorter.js
+ D tmp-coverage/lcov-report/src/App.tsx.html
+ D tmp-coverage/lcov-report/src/AppProviders.tsx.html
+ D tmp-coverage/lcov-report/src/AppShell.tsx.html
+ D tmp-coverage/lcov-report/src/components/AddUnselectedModal.tsx.html
+ D tmp-coverage/lcov-report/src/components/DndProvider.tsx.html
+ D tmp-coverage/lcov-report/src/components/DragErrorBoundary.tsx.html
+ D tmp-coverage/lcov-report/src/components/DraggableTrackList.tsx.html
+ D tmp-coverage/lcov-report/src/components/ErrorHandler.tsx.html
+ D tmp-coverage/lcov-report/src/components/LoadingOverlay.tsx.html
+ D tmp-coverage/lcov-report/src/components/PlaylistMixer.tsx.html
+ D tmp-coverage/lcov-report/src/components/PlaylistSelector.tsx.html
+ D tmp-coverage/lcov-report/src/components/PresetTemplates.tsx.html
+ D tmp-coverage/lcov-report/src/components/PrivacyPolicy.tsx.html
+ D tmp-coverage/lcov-report/src/components/RatioConfig.tsx.html
+ D tmp-coverage/lcov-report/src/components/ScrollToBottom.tsx.html
+ D tmp-coverage/lcov-report/src/components/SortableWrapper.tsx.html
+ D tmp-coverage/lcov-report/src/components/SpotifyAuth.tsx.html
+ D tmp-coverage/lcov-report/src/components/SpotifySearchModal.tsx.html
+ D tmp-coverage/lcov-report/src/components/SuccessToast.tsx.html
+ D tmp-coverage/lcov-report/src/components/TermsOfService.tsx.html
+ D tmp-coverage/lcov-report/src/components/ToastError.tsx.html
+ D tmp-coverage/lcov-report/src/components/TrackList.tsx.html
+ D tmp-coverage/lcov-report/src/components/TrackSourceModal.tsx.html
+ D tmp-coverage/lcov-report/src/components/features/mixer/MixControls.tsx.html
+ D tmp-coverage/lcov-report/src/components/features/mixer/MixPreview.tsx.html
+ D tmp-coverage/lcov-report/src/components/features/mixer/PlaylistForm.tsx.html
+ D tmp-coverage/lcov-report/src/components/features/mixer/index.html
+ D tmp-coverage/lcov-report/src/components/index.html
+ D tmp-coverage/lcov-report/src/components/ui/ApiErrorDisplay.tsx.html
+ D tmp-coverage/lcov-report/src/components/ui/ErrorBoundary.tsx.html
+ D tmp-coverage/lcov-report/src/components/ui/Modal.tsx.html
+ D tmp-coverage/lcov-report/src/components/ui/TrackItem.tsx.html
+ D tmp-coverage/lcov-report/src/components/ui/TrackList.tsx.html
+ D tmp-coverage/lcov-report/src/components/ui/index.html
+ D tmp-coverage/lcov-report/src/components/ui/withErrorBoundary.tsx.html
+ D tmp-coverage/lcov-report/src/hooks/index.html
+ D tmp-coverage/lcov-report/src/hooks/useApiErrorHandler.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useAppState.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useAutoScroll.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useCustomTouchEvents.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useDragSensors.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useDropPosition.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useErrorHandler.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useKeyboardNavigation.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useMixGeneration.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useMixPreview.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useMixWarnings.ts.html
+ D tmp-coverage/lcov-report/src/hooks/usePlaylistSearch.ts.html
+ D tmp-coverage/lcov-report/src/hooks/usePlaylistSelection.ts.html
+ D tmp-coverage/lcov-report/src/hooks/usePlaylistTracks.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useRatioCalculation.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useRatioConfig.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useSpotifySearch.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useSpotifyUrlHandler.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useTrackOperations.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useTrackSelection.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useUnselectedTracks.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useUserPlaylists.ts.html
+ D tmp-coverage/lcov-report/src/hooks/useVirtualization.ts.html
+ D tmp-coverage/lcov-report/src/index.html
+ D tmp-coverage/lcov-report/src/mocks/fixtures.ts.html
+ D tmp-coverage/lcov-report/src/mocks/index.html
+ D tmp-coverage/lcov-report/src/services/_helpers/batching.ts.html
+ D tmp-coverage/lcov-report/src/services/_helpers/errorNormalizer.ts.html
+ D tmp-coverage/lcov-report/src/services/_helpers/index.html
+ D tmp-coverage/lcov-report/src/services/_helpers/pagination.ts.html
+ D tmp-coverage/lcov-report/src/services/_helpers/requestBody.ts.html
+ D tmp-coverage/lcov-report/src/services/_helpers/retry.ts.html
+ D tmp-coverage/lcov-report/src/services/apiErrorHandler.ts.html
+ D tmp-coverage/lcov-report/src/services/fetchClient.ts.html
+ D tmp-coverage/lcov-report/src/services/index.html
+ D tmp-coverage/lcov-report/src/services/spotify.ts.html
+ D tmp-coverage/lcov-report/src/services/spotifyClient.ts.html
+ D tmp-coverage/lcov-report/src/store/StoreProvider.tsx.html
+ D tmp-coverage/lcov-report/src/store/index.html
+ D tmp-coverage/lcov-report/src/store/index.ts.html
+ D tmp-coverage/lcov-report/src/store/migration.ts.html
+ D tmp-coverage/lcov-report/src/store/slices/authSlice.ts.html
+ D tmp-coverage/lcov-report/src/store/slices/index.html
+ D tmp-coverage/lcov-report/src/store/slices/mixingSlice.ts.html
+ D tmp-coverage/lcov-report/src/store/slices/playlistSlice.ts.html
+ D tmp-coverage/lcov-report/src/store/slices/trackSlice.ts.html
+ D tmp-coverage/lcov-report/src/store/slices/uiSlice.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/fixtures/index.html
+ D tmp-coverage/lcov-report/src/test-utils/fixtures/playlistFactory.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/index.html
+ D tmp-coverage/lcov-report/src/test-utils/mockVisualViewport.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/mocks/index.html
+ D tmp-coverage/lcov-report/src/test-utils/mocks/mixHooks.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/mocks/mockSpotifyService.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/mocks/spotify.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/mocks/visualViewportMock.ts.html
+ D tmp-coverage/lcov-report/src/test-utils/silenceIfPass.ts.html
+ D tmp-coverage/lcov-report/src/utils/accessibility.ts.html
+ D tmp-coverage/lcov-report/src/utils/dropPositionCalculator.ts.html
+ D tmp-coverage/lcov-report/src/utils/haptics.ts.html
+ D tmp-coverage/lcov-report/src/utils/index.html
+ D tmp-coverage/lcov-report/src/utils/migrateError.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/index.html
+ D tmp-coverage/lcov-report/src/utils/mixer/index.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/mixerUtils.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/mixingCalculations.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/mixingStrategies.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/playlistMixer.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/popularityCalculator.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/popularityQuadrants.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/trackShuffler.ts.html
+ D tmp-coverage/lcov-report/src/utils/mixer/types.ts.html
+ D tmp-coverage/lcov-report/src/utils/normalizeError.ts.html
+ D tmp-coverage/lcov-report/src/utils/spotify.ts.html
+ D tmp-coverage/lcov-report/src/utils/trackUtils.ts.html
+ D tmp-coverage/lcov.info
+?? .claude/
+?? docs/mixer-exhaustion-guidance.md
+?? docs/provider-boundary-2026-10-05.md
+?? docs/repository-cleanup-plan.md
+?? docs/reviews/2026-10-05-repository-cleanup-scan.md
+?? src/__tests__/integration/ExhaustionSuggestions.test.tsx
+?? src/components/features/mixer/ExhaustionWarning.tsx
+?? src/services/__tests__/spotifyGateway.test.ts
+?? src/services/spotifyGateway.ts
+?? src/services/spotifyNormalizer.ts
+?? src/types/domain.ts
+?? src/utils/__tests__/exhaustionPrediction.test.ts
+?? src/utils/exhaustionPrediction.ts
+?? src/utils/mixer/__tests__/domain.contract.test.ts
+?? test-results/live-preview.jpg
+?? test-results/live-production-deploy.jpg
+?? test-results/live-refresh.jpg
+?? test-results/live-save.jpg
+?? test-results/live-spotify-private.jpg
+?? test-results/sm4-approval.jpg
+?? test-results/sm4-live-preview.jpg
+?? test-results/sm4-live-refresh.jpg
+?? test-results/sm4-live-save.jpg
+?? test-results/sm4-live-spotify-private.jpg
+?? test-results/sm4-verified-result.jpg

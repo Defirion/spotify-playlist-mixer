@@ -38,8 +38,6 @@ interface TrackSourceModalProps {
   showSearchButton?: boolean;
   onManualSearch?: () => void;
 
-  // Drag props removed - will be replaced with dnd-kit
-
   // Display props
   headerInfo?: string;
   emptyMessage?: string;

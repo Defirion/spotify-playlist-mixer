@@ -4,7 +4,6 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
-// NOTE: MSW has been removed from the repository. Tests should use local
 // mocks (files under `src/test-utils/mocks` or `src/__tests__/mocks`) or
 // stub `global.fetch` directly when network behavior needs to be simulated.
 
@@ -13,7 +12,7 @@ import { vi } from 'vitest';
 // (advanceTimersByTime, isMockFunction, ...).
 (globalThis as any).jest = vi;
 
-// Enable verbose test logging for handlers that conditionally emit errors.
+// Default to quiet test logging; set TEST_VERBOSE=true to inspect handler errors.
 // Some code paths only call `console.error` when TEST_VERBOSE is truthy. Set it
 // here so tests that assert on specific console calls behave consistently.
 if (typeof process !== 'undefined' && process.env) {

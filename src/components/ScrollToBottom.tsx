@@ -29,7 +29,6 @@ const ScrollToBottom: React.FC = () => {
     window.addEventListener('resize', checkScrollPosition);
 
     // -- Keyboard / visual viewport handling --
-    // (intentionally minimal keyboard-detection below; CSS-var parsing removed)
 
     const updateForKeyboard = (): void => {
       // Prefer Visual Viewport API when available

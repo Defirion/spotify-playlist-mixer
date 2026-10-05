@@ -13,7 +13,6 @@ import { createTrackSlice, TrackSlice } from './slices/trackSlice';
 // to the DisplayError structure. This lets older call sites pass strings or
 // Error objects and still populate the store with a consistent type.
 import { toDisplayError } from '../utils/migrateError';
-// Drag slice removed - will be replaced with dnd-kit implementation
 
 // Combined store type
 export type AppStore = AuthSlice &
@@ -140,5 +139,3 @@ export const useTracks = () =>
       clearTracks: state.clearTracks,
     }))
   );
-
-// Drag state hooks removed - will be replaced with dnd-kit implementation

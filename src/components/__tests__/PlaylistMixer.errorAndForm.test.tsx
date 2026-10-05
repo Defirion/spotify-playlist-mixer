@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { useMixGeneration } from '../../hooks/useMixGeneration';

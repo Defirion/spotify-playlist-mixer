@@ -68,8 +68,6 @@ export interface PlaylistMixerState {
   error: string | null;
 }
 
-// Drag and drop types removed - will be replaced with dnd-kit types
-
 // Virtualization types
 export interface VirtualItem {
   index: number;
@@ -136,7 +134,6 @@ export interface TrackListProps {
   onTrackSelect?: (track: SpotifyTrack) => void;
   onTrackRemove?: (track: SpotifyTrack) => void;
   virtualized?: boolean;
-  // draggable prop removed - will be handled by dnd-kit wrapper
   selectable?: boolean;
   renderTrackActions?: (track: SpotifyTrack) => React.ReactNode;
   className?: string;
@@ -194,8 +191,6 @@ export interface UseUserPlaylistsReturn {
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
 }
-
-// UseDraggableReturn removed - will be replaced with dnd-kit types
 
 export interface UseVirtualizationReturn {
   virtualItems: VirtualItem[];
@@ -283,5 +278,4 @@ export interface PresetApplyData {
 export type TrackSelectHandler = (track: SpotifyTrack) => void;
 export type TrackRemoveHandler = (track: SpotifyTrack) => void;
 export type PlaylistSelectHandler = (playlist: SpotifyPlaylist) => void;
-// Drag handler types removed - will be replaced with dnd-kit types
 export type PresetApplyHandler = (data: PresetApplyData) => void;

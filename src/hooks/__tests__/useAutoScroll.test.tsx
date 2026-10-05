@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, cleanup, screen } from '@testing-library/react';
 import { act } from 'react';
 import useAutoScroll from '../useAutoScroll';

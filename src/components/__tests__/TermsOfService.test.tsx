@@ -1,4 +1,3 @@
-// React import removed - using automatic JSX runtime
 import { render, screen } from '@testing-library/react';
 import TermsOfService from '../TermsOfService';
 

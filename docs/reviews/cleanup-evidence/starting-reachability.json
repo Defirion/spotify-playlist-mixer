@@ -1,0 +1,226 @@
+{
+  "entrypoint": "src/index.tsx",
+  "scope": "Static imports, re-exports, literal require/dynamic import, and test mock registrations; runtime reachability may be smaller.",
+  "reachable": [
+    "src/App.tsx",
+    "src/AppProviders.tsx",
+    "src/AppShell.tsx",
+    "src/components/AddUnselectedModal.tsx",
+    "src/components/DndProvider.tsx",
+    "src/components/ErrorHandler.tsx",
+    "src/components/features/mixer/ExhaustionWarning.tsx",
+    "src/components/features/mixer/MixControls.tsx",
+    "src/components/features/mixer/MixPreview.tsx",
+    "src/components/features/mixer/PlaylistForm.tsx",
+    "src/components/LoadingOverlay.tsx",
+    "src/components/PlaylistMixer.tsx",
+    "src/components/PlaylistSelector.tsx",
+    "src/components/PresetTemplates.tsx",
+    "src/components/PrivacyPolicy.tsx",
+    "src/components/RatioConfig.tsx",
+    "src/components/ScrollToBottom.tsx",
+    "src/components/SortableWrapper.tsx",
+    "src/components/SpotifyAuth.tsx",
+    "src/components/SpotifyDiagnostics.tsx",
+    "src/components/SpotifySearchModal.tsx",
+    "src/components/SuccessToast.tsx",
+    "src/components/TermsOfService.tsx",
+    "src/components/ToastError.tsx",
+    "src/components/TrackSourceModal.tsx",
+    "src/components/ui/ApiErrorDisplay.tsx",
+    "src/components/ui/ErrorBoundary.tsx",
+    "src/components/ui/Modal.tsx",
+    "src/components/ui/TrackItem.tsx",
+    "src/config.ts",
+    "src/hooks/useDragSensors.ts",
+    "src/hooks/useMixGeneration.ts",
+    "src/hooks/useMixPreview.ts",
+    "src/hooks/useMixWarnings.ts",
+    "src/hooks/usePlaylistSearch.ts",
+    "src/hooks/useRatioCalculation.ts",
+    "src/hooks/useSpotifySearch.ts",
+    "src/hooks/useSpotifyUrlHandler.ts",
+    "src/hooks/useTrackSelection.ts",
+    "src/hooks/useUnselectedTracks.ts",
+    "src/index.tsx",
+    "src/services/apiErrorHandler.ts",
+    "src/services/fetchClient.ts",
+    "src/services/spotify.ts",
+    "src/services/spotifyAuth.ts",
+    "src/services/spotifyGateway.ts",
+    "src/services/spotifyNormalizer.ts",
+    "src/services/_helpers/batching.ts",
+    "src/services/_helpers/pagination.ts",
+    "src/services/_helpers/requestBody.ts",
+    "src/services/_helpers/retry.ts",
+    "src/store/index.ts",
+    "src/store/slices/authSlice.ts",
+    "src/store/slices/mixingSlice.ts",
+    "src/store/slices/playlistSlice.ts",
+    "src/store/slices/trackSlice.ts",
+    "src/store/slices/uiSlice.ts",
+    "src/store/StoreProvider.tsx",
+    "src/types/api.ts",
+    "src/types/components.ts",
+    "src/types/domain.ts",
+    "src/types/hooks.ts",
+    "src/types/index.ts",
+    "src/types/mixer.ts",
+    "src/types/spotify.ts",
+    "src/types/utils.ts",
+    "src/utils/exhaustionPrediction.ts",
+    "src/utils/haptics.ts",
+    "src/utils/migrateError.ts",
+    "src/utils/mixer/index.ts",
+    "src/utils/mixer/mixerUtils.ts",
+    "src/utils/mixer/mixingCalculations.ts",
+    "src/utils/mixer/playlistMixer.ts",
+    "src/utils/mixer/trackShuffler.ts",
+    "src/utils/mixer/types.ts",
+    "src/utils/normalizeError.ts",
+    "src/utils/spotify.ts",
+    "src/utils/trackUtils.ts"
+  ],
+  "inactive": [
+    {
+      "file": "src/components/DragErrorBoundary.tsx",
+      "consumers": [
+        "src/components/TrackList.tsx",
+        "src/components/__tests__/DragErrorBoundary.test.tsx"
+      ]
+    },
+    {
+      "file": "src/components/DraggableTrackList.tsx",
+      "consumers": [
+        "src/components/TrackList.tsx",
+        "src/components/__tests__/DraggableTrackList.test.tsx",
+        "src/components/__tests__/TrackList.test.tsx"
+      ]
+    },
+    {
+      "file": "src/components/TrackList.tsx",
+      "consumers": [
+        "src/components/__tests__/TrackList.test.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/TrackList.tsx",
+      "consumers": [
+        "src/components/ui/__tests__/TrackList.test.tsx",
+        "src/components/ui/__tests__/TrackList.virtualization.test.tsx",
+        "src/components/__tests__/AddUnselectedModal.test.tsx",
+        "src/__tests__/integration/ComponentInteractions.test.tsx",
+        "src/__tests__/integration/PlaylistMixerWorkflow.test.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/withErrorBoundary.tsx",
+      "consumers": [
+        "src/components/ui/__tests__/withErrorBoundary.test.tsx"
+      ]
+    },
+    {
+      "file": "src/hooks/useApiErrorHandler.ts",
+      "consumers": [
+        "src/hooks/__tests__/useApiErrorHandler.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/useAutoScroll.ts",
+      "consumers": [
+        "src/hooks/__tests__/useAutoScroll.edge-cases.test.ts",
+        "src/hooks/__tests__/useAutoScroll.test.tsx"
+      ]
+    },
+    {
+      "file": "src/hooks/useCustomTouchEvents.ts",
+      "consumers": [
+        "src/hooks/__tests__/useCustomTouchEvents.test.tsx"
+      ]
+    },
+    {
+      "file": "src/hooks/useDropPosition.ts",
+      "consumers": [
+        "src/hooks/__tests__/useDropPosition.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/useErrorHandler.ts",
+      "consumers": [
+        "src/hooks/__tests__/useErrorHandler.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/useKeyboardNavigation.ts",
+      "consumers": [
+        "src/hooks/__tests__/useKeyboardNavigation.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/usePlaylistSelection.ts",
+      "consumers": [
+        "src/hooks/__tests__/usePlaylistSelection.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/usePlaylistTracks.ts",
+      "consumers": [
+        "src/hooks/__tests__/mixRequests.correctness.test.tsx",
+        "src/hooks/__tests__/usePlaylistTracks.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/useTrackOperations.ts",
+      "consumers": [
+        "src/hooks/__tests__/useTrackOperations.test.tsx"
+      ]
+    },
+    {
+      "file": "src/hooks/useUserPlaylists.ts",
+      "consumers": [
+        "src/hooks/__tests__/useUserPlaylists.test.ts"
+      ]
+    },
+    {
+      "file": "src/hooks/useVirtualization.ts",
+      "consumers": [
+        "src/components/ui/TrackList.tsx",
+        "src/components/ui/__tests__/TrackList.test.tsx",
+        "src/components/ui/__tests__/TrackList.virtualization.test.tsx",
+        "src/hooks/__tests__/useVirtualization.branches.test.ts",
+        "src/hooks/__tests__/useVirtualization.scroll.test.tsx",
+        "src/hooks/__tests__/useVirtualization.test.ts",
+        "src/__tests__/integration/ComponentInteractions.test.tsx",
+        "src/__tests__/integration/PlaylistMixerWorkflow.test.tsx"
+      ]
+    },
+    {
+      "file": "src/types/testing.ts",
+      "consumers": []
+    },
+    {
+      "file": "src/utils/accessibility.ts",
+      "consumers": [
+        "src/utils/__tests__/accessibility.edgecases.test.ts",
+        "src/utils/__tests__/accessibility.extra.test.ts",
+        "src/utils/__tests__/accessibility.more.test.ts",
+        "src/utils/__tests__/accessibility.test.ts"
+      ]
+    },
+    {
+      "file": "src/utils/dropPositionCalculator.ts",
+      "consumers": [
+        "src/hooks/useDropPosition.ts",
+        "src/hooks/__tests__/useDropPosition.test.ts",
+        "src/utils/__tests__/dropPositionCalculator.test.ts"
+      ]
+    }
+  ],
+  "unresolved": [],
+  "dynamic": [
+    {
+      "file": "src/test-utils/__tests__/json-serializability.test.ts",
+      "expression": "import(/* @vite-ignore */ missing)"
+    }
+  ]
+}

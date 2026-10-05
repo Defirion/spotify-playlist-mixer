@@ -5,7 +5,7 @@ playlist contributes, set a song count or listening time, and check the mix
 before saving it to Spotify.
 
 You can find playlists by search or URL, shuffle their songs or keep them in
-order, and save your settings as presets. The app is built with React and Vite.
+order, and apply built-in presets. The app is built with React and Vite.
 
 ## Using the app
 

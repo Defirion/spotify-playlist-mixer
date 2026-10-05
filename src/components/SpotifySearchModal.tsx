@@ -65,7 +65,6 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
         showSearchButton={true}
         onManualSearch={search}
         showLoadingIndicator={true}
-        // Drag props removed - will be replaced with dnd-kit
         // Display props
         emptyMessage="No tracks found. Try a different search term."
       />

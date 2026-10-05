@@ -1,12 +1,10 @@
-// React import removed - using automatic JSX runtime
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-// Jest globals are available by default in CRA
+// Vitest globals are configured in vite.config.ts
 import AddUnselectedModal from '../AddUnselectedModal';
 import { SpotifyTrack, SpotifyPlaylist } from '../../types';
 import { makeTrack, makePlaylist } from '../../test-utils/mocks/spotify';
 import * as spotifyUtils from '../../utils/spotify';
-// dragAndDrop utils import removed - will be replaced with dnd-kit
 
 // Mock dependencies
 vi.mock('../../utils/spotify', () => ({
@@ -66,7 +64,6 @@ vi.mock('../ui/TrackList', () => ({
     tracks,
     onTrackSelect,
     selectedTracks,
-    // onTrackDragStart removed
     onTrackTouchStart,
     emptyMessage,
     containerHeight,
@@ -107,7 +104,6 @@ vi.mock('../ui/TrackList', () => ({
               onTouchStart={e => onTrackTouchStart?.(e, track)}
               role="button"
               tabIndex={0}
-              // drag handlers removed
             >
               {track.name} - {track.artists[0]?.name}
               {selectedTracks?.has(track.id) && (
@@ -122,7 +118,6 @@ vi.mock('../ui/TrackList', () => ({
     );
   },
 }));
-// Legacy drag mocks removed - will be replaced with dnd-kit mocks
 
 // Mock data (use factories to ensure correct shape)
 const mockTracks: SpotifyTrack[] = [
@@ -188,7 +183,6 @@ describe('AddUnselectedModal', () => {
     // Silence console.error to reduce noisy act warnings in test output
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    // Legacy drag utils mock removed
 
     // Mock API response for playlist tracks
     mockApiGet.mockResolvedValue({
@@ -288,8 +282,6 @@ describe('AddUnselectedModal', () => {
     });
 
     await user.click(screen.getByTestId('track-item-track1'));
-
-    // Legacy drag utils expectation removed
   });
 
   it('updates selected tracks count in footer', async () => {
@@ -409,8 +401,6 @@ describe('AddUnselectedModal', () => {
     expect(screen.queryByTestId('track-item-track1')).not.toBeInTheDocument();
     expect(screen.getByTestId('track-item-track2')).toBeInTheDocument();
   });
-
-  // Drag test cases removed - will be replaced with dnd-kit tests
 
   it('displays empty message when no tracks match search', async () => {
     const user = userEvent.setup();

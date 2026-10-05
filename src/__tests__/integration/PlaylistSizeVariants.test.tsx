@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 // using inline mock factories in-place; legacy helpers omitted
 import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactory';

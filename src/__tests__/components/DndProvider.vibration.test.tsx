@@ -1,4 +1,3 @@
-import React from 'react';
 import { render } from '@testing-library/react';
 import DndProvider from '../../components/DndProvider';
 import * as useDragSensorsModule from '../../hooks/useDragSensors';

@@ -1,5 +1,4 @@
 import { useEffect, useCallback } from 'react';
-// DraggedItem import removed - will be replaced with dnd-kit types
 
 interface CustomTouchEventDetail {
   clientX: number;

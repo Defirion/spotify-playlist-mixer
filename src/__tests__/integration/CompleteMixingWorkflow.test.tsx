@@ -1,9 +1,7 @@
-import React from 'react';
 /// <reference types="@testing-library/jest-dom" />
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // using inline mock factories below; legacy helpers omitted
-// MSW removed; use local mocks only
 // Component under test (use real hooks to exercise mixing logic)
 import {
   mockPlaylists,
@@ -12,8 +10,6 @@ import {
 } from '../../mocks/fixtures';
 
 import PlaylistMixer from '../../components/PlaylistMixer';
-
-// MSW removed; no server started here
 
 // Mock the SpotifyService class used by hooks so mixing flow runs deterministically
 vi.mock('../../services/spotify', () => {

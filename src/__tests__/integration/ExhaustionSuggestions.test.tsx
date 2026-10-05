@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AppShell from '../../AppShell';
 import { MixOptions, RatioConfig, RatioConfigItem } from '../../types';

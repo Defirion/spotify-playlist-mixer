@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -562,7 +561,6 @@ describe('PlaylistMixer behavior', () => {
       true
     );
 
-    // Now cancel drag -> optimistic track should be removed (updateTrackOrder called again)
     fireEvent.click(
       screen.getByRole('button', { name: /trigger dragcancel/i })
     );

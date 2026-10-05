@@ -1,4 +1,3 @@
-import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { makePlaylistWithTracks } from '../../test-utils/fixtures/playlistFactory';
@@ -12,8 +11,6 @@ vi.mock('../../hooks/useMixPreview', async () =>
 vi.mock('../../hooks/useMixGeneration', async () =>
   (await import('../../test-utils/mocks/mixHooks')).makeUseMixGenerationModule()
 );
-
-// legacy helpers removed; use inline mocks where needed
 
 describe('Mixer error scenarios (hook-mocked)', () => {
   test('handles empty playlists with user-friendly error via hook error', async () => {

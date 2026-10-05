@@ -1,8 +1,6 @@
-import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, act } from '@testing-library/react';
 import ScrollToBottom from '../../components/ScrollToBottom';
-// import helper removed (unused): createVisualViewportMock
 import {
   mockVisualViewport,
   restoreVisualViewport,

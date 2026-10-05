@@ -1,113 +1,48 @@
-# Playlist Exhaustion Handling Feature
+# Playlist exhaustion handling
 
-## Overview
+Current behavior, verified 5 October 2026.
 
-This feature addresses the issue where the playlist mixer would continue adding songs from remaining playlists when one playlist runs out of songs, without notifying the user or giving them control over this behavior.
+The **Continue when playlist empty** checkbox controls what happens when a
+selected source has no usable, unused tracks left. It is **disabled by default**.
 
-## What's New
+- Disabled: stop when any source is exhausted. A count or duration target may
+  remain unmet, and an all-song mix can leave songs in other sources.
+- Enabled: skip exhausted sources and keep mixing from the remaining sources
+  until the count or duration target is reached, or every source is exhausted.
+  Limited available tracks can still produce a mix shorter than the target.
 
-### 1. New Mixing Option: "Continue when playlist empty"
+**Use All Songs** takes precedence over count and duration targets. Automatic
+mixing deduplicates catalog identities across sources; manual additions remain
+editable as separate occurrences. Count balancing uses song shares; listening-time
+balancing uses duration shares. Duration targets take whole songs and may overshoot.
+The exhaustion choice does not promise exact ratio adherence as sources run out.
 
-- **Location**: Mixing Behavior section in the PlaylistMixer component
-- **Default**: Enabled (maintains backward compatibility)
-- **Purpose**: Controls what happens when a playlist runs out of songs during mixing
+## Guidance before generation
 
-### 2. Behavior Options
+The form estimates the first source to run out and explains the selected policy.
+The optional **Apply suggested ratios** action uses source counts for count
+balancing and estimated source duration for time balancing. Applying suggestions
+preserves group sizes, target, and exhaustion policy, and invalidates the preview.
 
-#### When Enabled (Default)
+These are estimates: shared tracks, unavailable items, missing durations, group
+sizes, and ordering affect the actual mix. See
+[exhaustion guidance](docs/mixer-exhaustion-guidance.md) for details and verification.
+The current preview shows tracks and statistics; it does not show a separate
+post-generation exhaustion notice.
 
-- If a playlist runs out of songs, mixing continues with the remaining playlists
-- The final mix will reach the target length using available songs from other playlists
-- User gets a notification about which playlists were exhausted
+## Implementation
 
-#### When Disabled
+- `src/store/slices/mixingSlice.ts` defines the disabled continuation default.
+- `src/components/features/mixer/PlaylistForm.tsx` renders the control and guidance.
+- `src/utils/exhaustionPrediction.ts` computes advisory predictions and suggestions.
+- `src/utils/mixer/playlistMixer.ts` implements mixPlaylistsWithResult, returning
+  { tracks, exhaustedPlaylists, stoppedEarly }. The mixPlaylists convenience
+  export returns only the tracks array.
+- `src/utils/mixer/mixingCalculations.ts` applies count/time/all stopping and
+  stop/continue exhaustion policies.
 
-- If any playlist runs out of songs, mixing stops immediately
-- The final playlist will be shorter than the target length
-- User gets a warning about early termination
-
-### 3. Visual Feedback
-
-#### Preview Mode
-
-- Shows warnings when playlists are exhausted
-- Different colors for different scenarios:
-  - **Blue info**: Playlists exhausted but mixing continued
-  - **Yellow warning**: Mixing stopped early due to exhaustion
-
-#### Console Logging (Development)
-
-- Detailed logs about playlist exhaustion
-- Information about which playlists ran out of songs
-- Confirmation of mixing behavior (continue vs stop)
-
-## Technical Implementation
-
-### Core Changes
-
-1. **playlistMixer.js**:
-   - Added `continueWhenPlaylistEmpty` option
-   - Added `playlistExhausted` tracking object
-   - Enhanced `getNextPlaylistId()` to skip exhausted playlists
-   - Added `shouldStopDueToExhaustion()` helper function
-   - Added metadata to return value (`exhaustedPlaylists`, `stoppedEarly`)
-
-2. **PlaylistMixer.js**:
-   - Added new UI control in "Mixing Behavior" section
-   - Added exhaustion warnings in preview mode
-   - Enhanced preview stats to show exhaustion information
-
-3. **App.js**:
-   - Added `continueWhenPlaylistEmpty: true` to default mix options
-   - Updated preset handling to preserve the setting
-
-### Data Flow
-
-1. User toggles the "Continue when playlist empty" checkbox
-2. Setting is passed to `mixPlaylists()` function
-3. During mixing, algorithm tracks which playlists are exhausted
-4. Based on setting, either continues or stops when exhaustion occurs
-5. Result includes metadata about exhausted playlists
-6. UI displays appropriate warnings and information
-
-## User Experience
-
-### Before
-
-- Playlists would silently continue mixing when one ran out
-- No indication that ratios were no longer being maintained
-- Users might not realize their mix was imbalanced
-
-### After
-
-- Clear visual feedback about playlist exhaustion
-- User control over mixing behavior
-- Informed decision-making about playlist creation
-- Better understanding of mixing limitations
-
-## Use Cases
-
-### Continue Enabled (Default)
-
-- **Best for**: Users who want to reach their target playlist length
-- **Example**: "I want a 4-hour playlist and don't mind if some playlists contribute more when others run out"
-
-### Continue Disabled
-
-- **Best for**: Users who want strict ratio adherence
-- **Example**: "I want equal representation from all playlists, even if it means a shorter final playlist"
-
-## Future Enhancements
-
-Pre-mixing exhaustion predictions and ratio suggestions were added locally on
-5 October 2026. The warning estimates the first source to run out, explains the
-stop/continue policy, and offers source-size ratios through an explicit
-**Apply suggested ratios** button. Song-count balancing uses source counts;
-listening-time balancing uses estimated source duration. Estimates account for
-different average song lengths across sources. See
-[exhaustion guidance](docs/mixer-exhaustion-guidance.md) for limits and verification.
-
-Potential improvements could include:
-
-- Playlist-specific exhaustion handling
-- Advanced balancing algorithms when playlists are exhausted
+Reaching a requested target is completion even if the last song empties a source.
+Consuming every source in all-song mode is also completion. Stopping at the first
+exhausted source while other sources remain reports an early stop. Preview and
+generation load canonical tracks through the provider gateway; the editor keeps
+its existing display-track boundary.

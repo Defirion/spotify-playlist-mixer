@@ -2,8 +2,6 @@
  * Accessibility utilities for screen reader announcements and ARIA management
  */
 
-// ...existing code... (SpotifyTrack type removed because it's no longer used)
-
 // Live region interface
 interface LiveRegion {
   polite: HTMLElement;

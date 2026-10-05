@@ -21,8 +21,6 @@ const flushFrames = () => {
   callbacks.forEach(callback => callback());
 };
 
-// MockScrollContainer interface was removed because it was unused and caused a lint warning
-
 describe('useAutoScroll Edge Cases and Branch Coverage', () => {
   let mockScrollContainer: HTMLElement;
 

@@ -8,7 +8,7 @@ This folder contains a performance test for the playlist mixer and a small basel
 
 Files
 
-- `mixer.performance.test.ts` - Jest test that runs the mixer on synthetic playlists and writes `current-run.json` to `baselines/`.
+- `mixer.performance.test.ts` - Vitest test that runs the mixer on synthetic playlists and writes `current-run.json` to `baselines/`.
 - `baselines/last-baseline.json` - The most recent saved baseline.
 - `baselines/current-run.json` - Written by the perf test after each run.
 - `baselines/*.json` - Timestamped baseline artifacts.
@@ -16,7 +16,7 @@ Files
 
 How to run
 
-Run the perf test (skips CI by default):
+Run the perf test alone (it also runs in the full suite and CI):
 
 ```powershell
 npm run test:perf
@@ -42,7 +42,8 @@ Notes
 
 - The perf test writes `current-run.json` into `src/__tests__/performance/baselines/`.
 - If you want to update the baseline after a trusted run, copy `current-run.json` to a timestamped file and update `last-baseline.json` accordingly.
-- Keep perf tests out of CI by running them on dedicated hardware to reduce noise.
+- Compare timing only on consistent hardware and runner settings to reduce noise.
+- The current default creates 2,000 source tracks. All-song mode ignores count targets, including PERF_TOTAL_SONGS, and stops according to source exhaustion.
 
 Tuning the threshold
 

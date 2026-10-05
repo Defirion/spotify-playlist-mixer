@@ -10,12 +10,10 @@ const TrackItem = memo(
         track,
         onSelect,
         onRemove,
-        // draggable prop removed
         selected = false,
         actions,
         className = '',
         showCheckbox = false,
-        // showDragHandle prop removed
         showDuration = true,
         showAlbumArt = true,
         showSourcePlaylist = false,
@@ -25,7 +23,6 @@ const TrackItem = memo(
         onMouseLeave,
         onMouseDown,
         onMouseUp,
-        // Drag event handlers removed
         // Touch event handlers
         onTouchStart,
         onTouchMove,
@@ -111,13 +108,11 @@ const TrackItem = memo(
         <div
           ref={ref}
           className={trackItemClasses}
-          // draggable attribute removed
           onClick={handleClick}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
-          // drag event handlers removed
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -136,8 +131,6 @@ const TrackItem = memo(
           tabIndex={0}
           {...otherProps}
         >
-          {/* Drag Handle removed */}
-
           {/* Checkbox */}
           {showCheckbox && (
             <div

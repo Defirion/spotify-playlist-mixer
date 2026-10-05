@@ -8,15 +8,7 @@ import ToastError from './components/ToastError';
 import SuccessToast from './components/SuccessToast';
 import SpotifyDiagnostics from './components/SpotifyDiagnostics';
 import ScrollToBottom from './components/ScrollToBottom';
-// These imports are kept for the routes and footer links; mark unused to avoid lint noise
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import PrivacyPolicy from './components/PrivacyPolicy';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import TermsOfService from './components/TermsOfService';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-// styles are used in the footer but ESLint may warn in certain build/test environments
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './App.module.css';
 
 type AppShellProps = {
   isAuthenticated: boolean;

@@ -10,7 +10,6 @@ import {
   TrackSelectHandler,
   TrackRemoveHandler,
   PlaylistSelectHandler,
-  // Drag-related imports removed - will be replaced with dnd-kit types
 } from './mixer';
 
 // Base component props
@@ -65,7 +64,6 @@ export interface TrackItemProps extends BaseComponentProps {
   track: SpotifyTrack;
   onSelect?: TrackSelectHandler;
   onRemove?: TrackRemoveHandler;
-  // draggable prop removed - will be handled by dnd-kit wrapper
   selected?: boolean;
   actions?: React.ReactNode;
   showDuration?: boolean;
@@ -75,7 +73,6 @@ export interface TrackItemProps extends BaseComponentProps {
   index?: number;
   compact?: boolean;
   showCheckbox?: boolean;
-  // showDragHandle removed - will be handled by dnd-kit wrapper
   showAlbumArt?: boolean;
   showSourcePlaylist?: boolean;
   style?: React.CSSProperties;
@@ -84,7 +81,6 @@ export interface TrackItemProps extends BaseComponentProps {
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp?: (e: React.MouseEvent<HTMLDivElement>) => void;
-  // drag event handlers removed - will be handled by dnd-kit wrapper
   onTouchStart?: (e: React.TouchEvent<HTMLDivElement>) => void;
   onTouchMove?: (e: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd?: (e: React.TouchEvent<HTMLDivElement>) => void;
@@ -97,7 +93,6 @@ export interface TrackListProps extends BaseComponentProps {
   onTrackRemove?: TrackRemoveHandler;
   onTrackReorder?: (fromIndex: number, toIndex: number) => void;
   virtualized?: boolean;
-  // draggable prop removed - will be handled by dnd-kit wrapper
   selectable?: boolean;
   multiSelect?: boolean;
   selectedTracks?: Set<string>;
@@ -116,7 +111,6 @@ export interface TrackListProps extends BaseComponentProps {
   containerHeight?: number;
   overscan?: number;
   showCheckbox?: boolean;
-  // showDragHandle removed - will be handled by dnd-kit wrapper
   showDuration?: boolean;
   showAlbumArt?: boolean;
   showSourcePlaylist?: boolean;
@@ -145,7 +139,6 @@ export interface TrackListProps extends BaseComponentProps {
     track: SpotifyTrack,
     index: number
   ) => void;
-  // drag event handlers removed - will be handled by dnd-kit wrapper
   onTrackTouchStart?: (
     e: React.TouchEvent<HTMLDivElement>,
     track: SpotifyTrack,
@@ -352,8 +345,6 @@ export interface RadioProps extends FormFieldProps {
   name: string;
 }
 
-// Drag and Drop component types removed - will be replaced with dnd-kit types
-
 // Virtualization component types
 export interface VirtualListProps<T> extends BaseComponentProps {
   items: T[];
@@ -466,8 +457,6 @@ export interface PlaylistContextValue {
   clearSelection: () => void;
 }
 
-// DragContextValue removed - using Zustand drag slice instead
-
 // Event types
 export interface TrackEvent {
   track: SpotifyTrack;
@@ -479,8 +468,6 @@ export interface PlaylistEvent {
   playlist: SpotifyPlaylist;
   source?: string;
 }
-
-// DragEvent interface removed - will be replaced with dnd-kit types
 
 export interface SearchEvent {
   query: string;

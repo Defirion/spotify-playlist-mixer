@@ -6,7 +6,6 @@ import {
   MixOptions,
   RatioConfig,
   PlaylistMixResult,
-  // Drag-related imports removed
   SearchState,
   PlaylistSelectionItem,
 } from './mixer';
@@ -172,11 +171,6 @@ export interface UseAppStateReturn {
 }
 
 // UI hooks
-// UseDraggableOptions removed - will be replaced with dnd-kit types
-
-// UseDraggableReturn removed - will be replaced with dnd-kit types
-
-// UseDroppableOptions and UseDroppableReturn removed - will be replaced with dnd-kit types
 
 export interface UseVirtualizationReturn {
   visibleItems: any[];

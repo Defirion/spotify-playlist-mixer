@@ -1,5 +1,5 @@
 import SpotifyGateway from '../../services/spotifyGateway';
-import React from 'react';
+
 import { act, render } from '@testing-library/react';
 import { useMixPreview } from '../useMixPreview';
 

@@ -7,7 +7,7 @@ import {
 
 // Performance test template for playlist mixer
 // - This test targets the real `mixPlaylists` export from `src/utils/mixer`.
-// - The test is skipped by default to avoid CI flakiness. Run with `npm run test:perf`.
+// - Vitest includes this test in the full suite and CI; test:perf runs it alone.
 
 // Invoke an async block and await it (call sites kept from the old silenceIfPass helper).
 const run = <T>(fn: () => Promise<T>) => fn();
@@ -56,7 +56,7 @@ test('mixPlaylists performance - 1000 tracks', async () => {
     };
 
     // Configure how many songs the mixer should attempt to produce.
-    // PERF_TOTAL_SONGS can be set to control mixing target (defaults to 1500).
+    // All-song mode ignores this count target; the fallback uses it.
     const PERF_TOTAL_SONGS = Number(
       process.env.PERF_TOTAL_SONGS || Math.max(1500, Math.floor(TOTAL * 0.75))
     );

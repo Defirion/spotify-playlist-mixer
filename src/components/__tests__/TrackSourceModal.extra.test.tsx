@@ -5,7 +5,7 @@
  * - regenerating instanceId when 'trackDraggedToPreview' event fires
  * - rich error rendering path
  */
-import React from 'react';
+
 import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import TrackSourceModal from '../TrackSourceModal';

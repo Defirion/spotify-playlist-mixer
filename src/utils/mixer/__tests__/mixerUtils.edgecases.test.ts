@@ -26,8 +26,6 @@ describe('mixerUtils edge cases', () => {
     expect(safeObjectKeys(123)).toEqual([]);
   });
 
-  // Note: test for Object.keys fallback removed to avoid global mutation of Object.keys in Jest environment
-
   test('calculateTotalDuration handles non-array input and invalid tracks', () => {
     process.env.NODE_ENV = 'development';
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

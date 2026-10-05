@@ -177,8 +177,6 @@ describe('Playlist Mixer Integration Tests', () => {
       // Test removal functionality if buttons are available
       expect(removeButtons.length).toBeGreaterThanOrEqual(0);
     });
-
-    // Drag test case removed - will be replaced with dnd-kit tests
   });
 
   describe('Complex User Workflows', () => {

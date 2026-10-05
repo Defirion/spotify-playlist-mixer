@@ -18,8 +18,6 @@ export * from './hooks';
 // Utility types
 export * from './utils';
 
-// Drag and drop types removed - will be replaced with dnd-kit types
-
 // Re-export commonly used types for convenience
 export type {
   SpotifyTrack,
@@ -37,7 +35,6 @@ export type {
   TrackSelectHandler,
   TrackRemoveHandler,
   PlaylistSelectHandler,
-  // Drag-related types removed - will be replaced with dnd-kit types
 } from './mixer';
 
 export type {
@@ -51,10 +48,7 @@ export type {
   UseSpotifySearchReturn,
   UsePlaylistTracksReturn,
   UseUserPlaylistsReturn,
-  // UseDraggableReturn removed
   UseVirtualizationReturn,
 } from './hooks';
-
-// Drag-related type exports removed - will be replaced with dnd-kit types
 
 export type { ISpotifyService, ApiError, ApiErrorType } from './api';

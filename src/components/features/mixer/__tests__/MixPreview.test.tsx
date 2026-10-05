@@ -1,4 +1,3 @@
-// React import removed - using automatic JSX runtime
 import { render, screen, fireEvent } from '@testing-library/react';
 import MixPreview from '../MixPreview';
 import { MixedTrack } from '../../../../types';
