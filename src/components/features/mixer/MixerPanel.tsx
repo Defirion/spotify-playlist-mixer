@@ -8,7 +8,6 @@ import {
 import PlaylistForm from './PlaylistForm';
 import BalanceControl from './BalanceControl';
 import MasterDisplay from './MasterDisplay';
-import MixControls from './MixControls';
 import styles from '../../PlaylistMixer.module.css';
 
 export interface MixerSettingsProps {
@@ -25,10 +24,6 @@ interface MixerPanelProps extends MixerSettingsProps {
   duration: number;
   hasPreview: boolean;
   stale: boolean;
-  loading: boolean;
-  previewLoading: boolean;
-  generatePreview: () => Promise<void>;
-  createPlaylist: () => Promise<void>;
 }
 export default function MixerPanel({
   selectedPlaylists,
@@ -41,10 +36,6 @@ export default function MixerPanel({
   duration,
   hasPreview,
   stale,
-  loading,
-  previewLoading,
-  generatePreview,
-  createPlaylist,
 }: MixerPanelProps) {
   return (
     <aside className={styles.master} aria-label="Presets and mix settings">
@@ -67,15 +58,6 @@ export default function MixerPanel({
         duration={duration}
         hasPreview={hasPreview}
         stale={stale}
-      />
-      <MixControls
-        selectedPlaylists={selectedPlaylists}
-        mixOptions={mixOptions}
-        hasPreview={hasPreview}
-        loading={loading}
-        previewLoading={previewLoading}
-        onGeneratePreview={generatePreview}
-        onCreatePlaylist={createPlaylist}
       />
     </aside>
   );

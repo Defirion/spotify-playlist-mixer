@@ -51,6 +51,32 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 0 0 1px rgba(0, 0, 0, 0.14);
 }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--noise), linear-gradient(180deg, #aba89e, #9a978d);
+  background-color: var(--body);
+  box-shadow:
+    0 2px 0 #55514a,
+    0 14px 22px -8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+.actions button {
+  width: auto;
+  min-width: 150px;
+  padding-inline: 22px;
+}
+.actions p {
+  flex: 1 1 260px;
+  margin: 0;
+  text-align: right;
+}
 .preview {
   margin-top: 26px;
 }
@@ -235,6 +261,12 @@
   }
 }
 @media (max-width: 760px) {
+  .actions p {
+    text-align: left;
+  }
+  .actions button {
+    flex: 1 1 140px;
+  }
   .scr-h {
     padding: 14px;
   }

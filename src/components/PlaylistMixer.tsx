@@ -7,6 +7,7 @@ import { useMixWarnings } from '../hooks/useMixWarnings';
 import usePreviewDrag from '../hooks/usePreviewDrag';
 import DndProvider from './DndProvider';
 import MixerPanel, { MixerSettingsProps } from './features/mixer/MixerPanel';
+import MixControls from './features/mixer/MixControls';
 import MixPreview from './features/mixer/MixPreview';
 import ExampleOrder from './features/mixer/ExampleOrder';
 import ExhaustionWarning from './features/mixer/ExhaustionWarning';
@@ -175,12 +176,19 @@ export default function PlaylistMixer({
           duration={preview?.totalDuration || 0}
           hasPreview={!!preview}
           stale={stale}
-          loading={creating || mixGeneration.state.loading}
-          previewLoading={previewLoading}
-          generatePreview={generatePreview}
-          createPlaylist={createPlaylist}
         />
       </div>
+      <section className={styles.actions} aria-label="Preview and create">
+        <MixControls
+          selectedPlaylists={selectedPlaylists}
+          mixOptions={mixOptions}
+          hasPreview={!!preview}
+          loading={creating || mixGeneration.state.loading}
+          previewLoading={previewLoading}
+          onGeneratePreview={generatePreview}
+          onCreatePlaylist={createPlaylist}
+        />
+      </section>
       <ErrorBoundary>
         <MixPreview
           tracks={preview?.tracks || []}
