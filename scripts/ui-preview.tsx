@@ -7,7 +7,7 @@ import { useAppStore } from '../src/store';
 import { makePlaylist, makeTrack } from '../src/test-utils/mocks/spotify';
 import { channelColors } from '../src/components/features/mixer/channelAppearance';
 import '../src/index.css';
-import '../src/styles/console-tokens.module.css';
+import '../src/styles/console-tokens.css';
 
 const artwork = (color: string) =>
   `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44"><rect width="44" height="44" fill="#181816"/><path d="M0 0h11v11H0zm22 0h11v11H22zM11 11h11v11H11zm22 0h11v11H33zM0 22h11v11H0zm22 0h11v11H22zM11 33h11v11H11zm22 0h11v11H33z" fill="${color}"/></svg>`)}`;
