@@ -1,6 +1,5 @@
-import React from 'react';
-import { SpotifyPlaylist, MixOptions } from '../../../types';
-import styles from '../../PlaylistMixer.module.css';
+import { MixOptions, SpotifyPlaylist } from '../../../types';
+import hardware from '../../ui/Hardware.module.css';
 
 interface MixControlsProps {
   selectedPlaylists: SpotifyPlaylist[];
@@ -12,63 +11,38 @@ interface MixControlsProps {
   onCreatePlaylist: () => void;
 }
 
-const MixControls: React.FC<MixControlsProps> = ({
+export default function MixControls({
   selectedPlaylists,
   mixOptions,
-  hasPreview,
   loading,
   previewLoading,
   onGeneratePreview,
   onCreatePlaylist,
-}) => {
-  const canGeneratePreview = selectedPlaylists.length >= 2;
-  const playlistName =
-    mixOptions && typeof mixOptions.playlistName === 'string'
-      ? mixOptions.playlistName
-      : '';
-  const canCreatePlaylist =
-    canGeneratePreview && playlistName.trim().length > 0;
-
+}: MixControlsProps) {
+  const ready = selectedPlaylists.length >= 2;
+  const busy = loading || previewLoading;
   return (
     <>
-      <p className={styles.helpText}>
-        Saved playlists stay off your Spotify profile, but anyone with the link
-        may still access them. To restrict access, open the saved playlist in
-        Spotify and choose “Make private”.
+      <button
+        className={hardware.hw}
+        type="button"
+        disabled={!ready || busy}
+        onClick={onGeneratePreview}
+      >
+        {previewLoading ? 'Generating...' : 'Preview'}
+      </button>
+      <button
+        className={hardware.go}
+        type="button"
+        disabled={!ready || !mixOptions.playlistName?.trim() || busy}
+        onClick={onCreatePlaylist}
+      >
+        {loading ? 'Creating...' : 'Create on Spotify'}
+      </button>
+      <p className={hardware.privacy}>
+        Saved playlists stay off your profile, but anyone with the link can open
+        them.
       </p>
-      <div className={styles.actionButtons}>
-        <button
-          className={`${styles.button} ${styles.buttonSecondary}`}
-          onClick={onGeneratePreview}
-          disabled={!canGeneratePreview || previewLoading || loading}
-        >
-          {previewLoading ? (
-            <>
-              <span className={styles.loadingSpinner}></span>
-              {hasPreview ? 'Regenerating...' : 'Generating...'}
-            </>
-          ) : (
-            <>🔄 {hasPreview ? 'Regenerate' : 'Generate Preview'}</>
-          )}
-        </button>
-
-        <button
-          className={`${styles.button} ${styles.buttonPrimary}`}
-          onClick={onCreatePlaylist}
-          disabled={!canCreatePlaylist || loading || previewLoading}
-        >
-          {loading ? (
-            <>
-              <span className={styles.loadingSpinner}></span>
-              Creating Playlist...
-            </>
-          ) : (
-            <>✨ Create This Playlist</>
-          )}
-        </button>
-      </div>
     </>
   );
-};
-
-export default MixControls;
+}

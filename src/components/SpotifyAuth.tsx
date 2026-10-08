@@ -33,10 +33,13 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = props => {
   };
 
   return (
-    <div className={`card ${className || ''}`.trim()} data-testid={testId}>
-      <h2 className={styles.title}>Connect to Spotify</h2>
+    <div
+      className={`${styles.connect} ${className || ''}`.trim()}
+      data-testid={testId}
+    >
+      <h2 className={styles.title}>Mix playlists by ratio.</h2>
       <p className={styles.description}>
-        To get started, you'll need to connect your Spotify account.
+        Pick playlists, set the blend, save to Spotify.
       </p>
       <div className={styles.buttonContainer}>
         <button
@@ -44,17 +47,8 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = props => {
           onClick={handleLogin}
           type="button"
         >
-          Connect Spotify Account
+          Connect Spotify
         </button>
-      </div>
-      <div className={styles.infoContainer}>
-        <p className={styles.infoTitle}>
-          <strong>Ready to use!</strong>
-        </p>
-        <p className={styles.infoText}>
-          Click the button above to connect your Spotify account and start
-          mixing playlists.
-        </p>
       </div>
     </div>
   );

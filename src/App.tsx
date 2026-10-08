@@ -151,6 +151,7 @@ export function MainApp() {
       mixOptions={mixOptions}
       updateMixOptions={updateMixOptions}
       onAuth={setAccessToken}
+      onSignOut={clearAuth}
       onRefreshSpotifyConnection={refreshSpotifyConnection}
       onPlaylistSelect={handlePlaylistSelection}
       onRatioUpdate={updateRatioConfig}

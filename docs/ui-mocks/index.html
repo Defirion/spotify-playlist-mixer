@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" style="background:#131517;color-scheme:dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Playlist Mixer UI Directions</title>
+<style>
+  :root { color-scheme:dark; --bg:#131517; --ink:#E6E8EA; --mute:#A4ABB1; --line:#3A4046; --card:#1E2124; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1200px; margin:0 auto; padding:48px 24px 80px; }
+  h1 { font-size:clamp(28px,4vw,44px); line-height:1.1; margin:0 0 8px; letter-spacing:-.02em; }
+  .lede { color:var(--mute); max-width:62ch; margin:0 0 40px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+  .card a.shot { display:block; aspect-ratio:1440/1000; overflow:hidden; border-bottom:1px solid var(--line); }
+  .card img { width:100%; height:100%; object-fit:cover; object-position:top; display:block; transition:transform .4s; }
+  .card a.shot:hover img { transform:scale(1.03); }
+  .body { padding:18px 20px 20px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .tag { font:600 11px/1 ui-monospace,monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--mute); }
+  h2 { margin:0; font-size:22px; letter-spacing:-.01em; }
+  p { margin:0; color:var(--mute); font-size:14.5px; }
+  .tradeoff { border-top:1px dashed var(--line); padding-top:10px; }
+  .tradeoff b { color:var(--ink); font-weight:600; }
+  .links { margin-top:auto; padding-top:6px; display:flex; gap:10px; }
+  .links a { font-size:14px; font-weight:600; color:var(--ink); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:6px 14px; }
+  .links a:hover { background:var(--ink); color:var(--bg); }
+  h3 { margin:56px 0 12px; font-size:22px; }
+  .sheet img { width:100%; border-radius:12px; border:1px solid var(--line); }
+  .note { font-size:14px; color:var(--mute); margin-top:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Playlist Mixer: console, built from your picks</h1>
+  <p class="lede">Round 5. Round 1's warm grey hardware pulled down about a quarter, Round 2's channel layout in dark panels with Round 1's knobs and fader details, pads without the extra captions, Round 4's dialog, example order and warning, Round 1's master panel and preview screen, all on one page.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">
+    <article class="card">
+      <a class="shot" href="v5/console.html"><img src="shots/v5/blend.png" alt="Round 5 blend"></a>
+      <div class="body"><h2>Blend</h2><p>Pads, knobs, faders and LED meters on mid-tone warm grey. The master LCD and the preview carry the numbers, not each card.</p><div class="links"><a href="v5/console.html">Open mock</a><a href="v5/console.html#connect">Connect</a></div></div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v5/console.html"><img src="shots/v5/full.png" alt="Round 5 full page"></a>
+      <div class="body"><h2>Whole page</h2><p>Blend on top, the dark preview screen below. Changing a setting marks the preview out of date until you press Preview.</p></div>
+    </article>
+  </div>
+  <h3 style="margin-top:72px">Earlier rounds</h3>
+  <h2 style="font-size:28px;margin:48px 0 8px">Round 4 (all dark, minimal text)</h2>
+  <p class="lede">Round 4. Dark only, with the previous Console's look (knobs, scaled faders, LED share meters) and far less text. Names and numbers stay; sentences, captions and legends are gone. Same fully tested interactions as round 3.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">
+    <article class="card">
+      <a class="shot" href="v4/console-dark.html"><img src="shots/v4/blend.png" alt="Blend screen"></a>
+      <div class="body"><h2>Blend</h2><p>Knobs set songs in a row, the fader sets priority, the LED meter shows the share.</p><div class="links"><a href="v4/console-dark.html">Open mock</a><a href="v4/console-dark.html#review">Review step</a><a href="v4/console-dark.html#connect">Connect</a></div></div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v4/console-dark.html#review"><img src="shots/v4/review.png" alt="Review screen"></a>
+      <div class="body"><h2>Review</h2><p>Drag to reorder. One line of totals. One filled button.</p></div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v4/console-dark.html"><img src="shots/v4/blend-fine.png" alt="Fine tune open"></a>
+      <div class="body"><h2>Fine tune</h2><p>Exact numbers and the example order, only when asked.</p></div>
+    </article>
+  </div>
+  <h3 style="margin-top:72px">Earlier rounds</h3>
+  <p class="note">Round 3 (light, minimal) is next, then round 2, then round 1.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr));margin-top:16px">
+    <article class="card">
+      <a class="shot" href="v3/console-minimal.html"><img src="shots/v3/blend.png" alt="Round 3 blend"></a>
+      <div class="body"><h2>Round 3, light minimal</h2><div class="links"><a href="v3/console-minimal.html">Open mock</a></div></div>
+    </article>
+  </div>
+  <h2 style="font-size:28px;margin:56px 0 8px">Round 3 (light)</h2>
+  <p class="lede">Round 3. The Console was the only direction worth building on, and every version so far was too busy. This one keeps the vertical faders and removes almost everything else: one thing on screen at a time (Blend, then Review), exact values and the example order behind "Fine tune", and search, presets and track pickers only when you ask for them.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">
+    <article class="card">
+      <a class="shot" href="v3/console-minimal.html"><img src="shots/v3/blend.png" alt="Blend screen"></a>
+      <div class="body"><h2>Blend</h2><p>Three faders, one readout each, one primary button. Everything else is a quiet link.</p><div class="links"><a href="v3/console-minimal.html">Open mock</a><a href="v3/console-minimal.html#review">Review step</a><a href="v3/console-minimal.html#connect">Connect</a></div></div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v3/console-minimal.html#review"><img src="shots/v3/review.png" alt="Review screen"></a>
+      <div class="body"><h2>Review</h2><p>A plain list you can drag to reorder. The totals are a sentence. Save is the only filled button.</p></div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v3/console-minimal.html"><img src="shots/v3/blend-fine.png" alt="Fine tune open"></a>
+      <div class="body"><h2>Fine tune, on request</h2><p>Priority numbers, songs in a row and the example order appear only when you open this.</p></div>
+    </article>
+  </div>
+  <h3 style="margin-top:80px">Earlier rounds</h3>
+  <p class="note">Round 2 below is the anti-tell rework of all six directions. Round 1 follows it.</p>
+  <h2 style="font-size:28px;margin:40px 0 8px">Round 2: six directions</h2>
+  <p class="lede">Reworked against a list of common AI-design tells: purple gradients, Inter everywhere, gradient headlines, intro pills, glow and frosted glass, icons in rounded squares, identical card rows, coloured side stripes, hero stats, tiny labels, fake status dots, marketing copy with em dashes, and the beige-plus-italic-serif escape. Same app, same data, same features. Each file is self-contained; use its "mock controls" bar to flip Connect and Workspace and trigger toasts.</p>
+  <div class="grid">
+    <article class="card">
+      <a class="shot" href="v2/a-console.html"><img src="shots/v2/a-console-desktop.png" alt="Console mock"></a>
+      <div class="body">
+        <div class="tag">A · studio gear</div><h2>Console</h2>
+        <p>A plain analogue mixer: one channel per playlist with a real fader, two knobs for songs in a row, and a live meter. Labels are plain words, and the totals are one sentence.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Most intuitive ratio controls, but tall.</p>
+        <div class="links"><a href="v2/a-console.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v2/b-studio.html"><img src="shots/v2/b-studio-desktop.png" alt="Studio mock"></a>
+      <div class="body">
+        <div class="tag">B · pro tool, daylight</div><h2>Studio</h2>
+        <p>Light, dense working tool. A draggable share bar, a table of numeric fields, and a timeline with one lane per playlist that shows the generated sequence. Summary bar at the bottom.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Clearest picture of what the mix does, but a power-user screen.</p>
+        <div class="links"><a href="v2/b-studio.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v2/c-rundown.html"><img src="shots/v2/c-rundown-desktop.png" alt="Rundown mock"></a>
+      <div class="body">
+        <div class="tag">C · radio running order</div><h2>Rundown</h2>
+        <p>A producer's running-order sheet: white paper, ruled rows, mono start times that recompute as you drag tracks. A highlighter marks only the current selection. Replaces the beige-and-serif Liner Notes.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Very legible and fast to scan, plain by design.</p>
+        <div class="links"><a href="v2/c-rundown.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v2/d-mixtape.html"><img src="shots/v2/d-mixtape-desktop.png" alt="Mixtape mock"></a>
+      <div class="body">
+        <div class="tag">D · two-ink riso print</div><h2>Mixtape</h2>
+        <p>One flat illustrated cassette whose tape window is the live ratio meter. Two inks and overprint on cool paper, a condensed grotesque, and no stickers or badges.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Memorable and playful, but the cassette takes up the first screen.</p>
+        <div class="links"><a href="v2/d-mixtape.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v2/e-field.html"><img src="shots/v2/e-field-desktop.png" alt="Field mock"></a>
+      <div class="body">
+        <div class="tag">E · live colour field</div><h2>Field</h2>
+        <p>The page background is flat colour bands whose widths are the current mix ratio. Controls sit on opaque white panels. Replaces the purple-glass Aurora.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Ratio is visible everywhere, but the colour is loud.</p>
+        <div class="links"><a href="v2/e-field.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="v2/f-terminal.html"><img src="shots/v2/f-terminal-desktop.png" alt="Terminal mock"></a>
+      <div class="body">
+        <div class="tag">F · plain terminal</div><h2>Terminal</h2>
+        <p>A monochrome keyboard-first TUI: j/k to move, space to toggle, p to preview, s to save. One status line for real events, no fake logs, no glow.</p>
+        <p class="tradeoff"><b>Trade-off:</b> Fastest for power users, least approachable.</p>
+        <div class="links"><a href="v2/f-terminal.html">Open mock</a></div>
+      </div>
+    </article>
+  </div>
+  <h3>Round 2 at 390px wide</h3>
+  <div class="sheet"><img src="shots/mobile-sheet-v2.png" alt="All six round 2 mocks at phone width"></div>
+
+  <h3 style="margin-top:80px">Round 1, kept for comparison</h3>
+  <p class="note">These trip most of the tells above (glass and gradients in Aurora, beige serif in Liner Notes, hero stats and pills in Mixtape, dark indigo Linear look in Studio). Not recommended.</p>
+  <div style="height:16px"></div>
+<div class="grid">
+    <article class="card">
+      <a class="shot" href="a-console.html"><img src="shots/a-console-desktop.png" alt="Console mock"></a>
+      <div class="body">
+        <div class="tag">A · hardware</div><h2>Console</h2>
+        <p>A tactile mixing desk: one channel strip per playlist with a real fader, min/max knobs and a live share meter. Warm grey body, a single orange for actions, LCD readouts, pad-style presets.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the most intuitive controls for ratios, but the chunkiest, tall strips use vertical space.</p>
+        <div class="links"><a href="a-console.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="b-studio.html"><img src="shots/b-studio-desktop.png" alt="Studio mock"></a>
+      <div class="body">
+        <div class="tag">B · pro tool</div><h2>Studio</h2>
+        <p>A DAW arrangement view. Coloured clip lanes show the generated sequence on a time ruler, a draggable proportion bar sets shares, and a status footer tallies minutes against the target.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the clearest picture of what the mix will actually do, but the densest, it is a power-user screen.</p>
+        <div class="links"><a href="b-studio.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="c-editorial.html"><img src="shots/c-editorial-desktop.png" alt="Liner Notes mock"></a>
+      <div class="body">
+        <div class="tag">C · editorial</div><h2>Liner Notes</h2>
+        <p>A magazine / record-sleeve layout, no emoji. Numbered chapters, a recipe written as a sentence, a stacked proportion bar, and the preview set as a printed tracklist with dot leaders.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the most distinctive and calm, but a long scroll rather than a one-screen workspace.</p>
+        <div class="links"><a href="c-editorial.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="d-mixtape.html"><img src="shots/d-mixtape-desktop.png" alt="Mixtape mock"></a>
+      <div class="body">
+        <div class="tag">D · neo-brutalist</div><h2>Mixtape</h2>
+        <p>Playful bento with thick borders and hard shadows. A cassette is the hero: the mix name is on its label and the tape window re-proportions as you change ratios. Each playlist has its own colour and cover pattern.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the most fun and memorable; borders and shadows eat density, and the style is divisive.</p>
+        <div class="links"><a href="d-mixtape.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="e-aurora.html"><img src="shots/e-aurora-desktop.png" alt="Aurora mock"></a>
+      <div class="body">
+        <div class="tag">E · liquid glass</div><h2>Aurora</h2>
+        <p>Translucent glass panels over a drifting colour field. The background blobs are the playlists' colours and resize with the priority weights, so the backdrop itself shows the blend ratio.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the most polished and phone-like; legibility over a moving gradient needs care, and blur is GPU-heavy.</p>
+        <div class="links"><a href="e-aurora.html">Open mock</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="shot" href="f-terminal.html"><img src="shots/f-terminal-desktop.png" alt="Terminal mock"></a>
+      <div class="body">
+        <div class="tag">F · TUI / synth-wave</div><h2>Terminal</h2>
+        <p>A keyboard-first tmux-style layout with a synth-wave sunset header. j/k to move, space to select, hotkeys for presets, p to preview, s to save. The mouse still works everywhere.</p>
+        <p class="tradeoff"><b>Trade-off:</b> the fastest for power users and the wildest departure, but the least approachable for casual users.</p>
+        <div class="links"><a href="f-terminal.html">Open mock</a></div>
+      </div>
+    </article>
+  </div>
+
+    <h3>Round 1 at 390px wide</h3>
+  <div class="sheet"><img src="shots/mobile-sheet.png" alt="All six round 1 mocks at phone width"></div>
+  <p class="note">Mocks are static HTML with fake data. Nothing here touches the real app code.</p>
+</main>
+</body>
+</html>

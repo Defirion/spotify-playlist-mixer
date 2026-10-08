@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { MixOptions } from '../../types';
 
-const DEFAULT_MIX_OPTIONS: MixOptions = {
+export const DEFAULT_MIX_OPTIONS: MixOptions = {
   totalSongs: 100,
   targetDurationSeconds: 240 * 60,
   useTimeLimit: false,

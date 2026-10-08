@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { MixedTrack } from '../../../types';
+import { MixedTrack, SpotifyPlaylist, SpotifyTrack } from '../../../types';
 import SortableWrapper from '../../SortableWrapper';
 import TrackItem from '../../ui/TrackItem';
 import SpotifySearchModal from '../../SpotifySearchModal';
@@ -12,15 +12,9 @@ import {
   getTrackDragId,
   createMixedTrackInstance,
 } from '../../../utils/trackUtils';
+import PreviewHeader, { PlaylistStats } from './PreviewHeader';
+import { channelColors } from './channelAppearance';
 import styles from '../../PlaylistMixer.module.css';
-
-interface PlaylistStats {
-  [playlistId: string]: {
-    name: string;
-    count: number;
-    totalDuration: number;
-  };
-}
 
 interface MixPreviewProps {
   tracks: MixedTrack[];
@@ -29,54 +23,12 @@ interface MixPreviewProps {
   loading: boolean;
   onTrackOrderChange: (reorderedTracks: MixedTrack[]) => void;
   accessToken: string;
-  selectedPlaylists: any[];
+  selectedPlaylists: SpotifyPlaylist[];
+  stale?: boolean;
+  hasPreview?: boolean;
 }
 
-const DroppableTrackList: React.FC<{
-  tracks: MixedTrack[];
-  containerClassName?: string;
-  onRemove: (track: MixedTrack) => void;
-}> = ({ tracks, containerClassName, onRemove }) => {
-  return (
-    <div className={`${styles.trackListContainer} ${containerClassName || ''}`}>
-      {tracks.length === 0 && (
-        <div
-          style={{
-            textAlign: 'center',
-            color: 'rgba(139, 195, 74, 0.7)',
-            fontSize: '16px',
-            padding: '40px',
-            border: '2px dashed rgba(139, 195, 74, 0.3)',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(139, 195, 74, 0.05)',
-          }}
-        >
-          No playable tracks in this preview. Add tracks here or regenerate
-          after checking source access and the exhaustion setting.
-        </div>
-      )}
-      <SortableContext
-        items={tracks.map(t => getTrackDragId(t))}
-        strategy={verticalListSortingStrategy}
-      >
-        {tracks.map(track => {
-          const dragId = getTrackDragId(track);
-          return (
-            <SortableWrapper
-              key={dragId}
-              id={dragId}
-              data={{ context: 'preview' }}
-            >
-              <TrackItem track={track} onRemove={() => onRemove(track)} />
-            </SortableWrapper>
-          );
-        })}
-      </SortableContext>
-    </div>
-  );
-};
-
-const MixPreview: React.FC<MixPreviewProps> = ({
+export default function MixPreview({
   tracks,
   stats,
   totalDuration,
@@ -84,164 +36,142 @@ const MixPreview: React.FC<MixPreviewProps> = ({
   onTrackOrderChange,
   accessToken,
   selectedPlaylists,
-}) => {
-  const [isSpotifySearchOpen, setIsSpotifySearchOpen] = useState(false);
-  const [isAddUnselectedOpen, setIsAddUnselectedOpen] = useState(false);
-  const [isTwoRowMobile, setIsTwoRowMobile] = useState(false);
-  // simplified: rely on CSS for truncation and stacking behavior
-  const formatTotalDuration = (ms: number) => {
-    const totalMinutes = Math.floor(ms / 60000);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  };
-
-  // compute adaptive grid columns based on playlist count
-  const playlistIds = Object.keys(stats || {});
-  const playlistCount = playlistIds.length;
-  let gridCols = playlistCount > 0 ? playlistCount : 1;
-  if (playlistCount > 5) {
-    const top = Math.min(5, Math.ceil(playlistCount / 2));
-    const bottom = playlistCount - top;
-    gridCols = Math.max(top, bottom);
-  }
-
-  // determine whether playlist grid will use more than one row based on
-  // the computed columns and playlist count. This is deterministic and
-  // avoids measuring the DOM, preventing changes when tracks are added.
-  React.useEffect(() => {
-    const update = () => {
-      const isMobile = window.innerWidth <= 768;
-      const rows = Math.ceil(playlistCount / gridCols);
-      setIsTwoRowMobile(isMobile && rows > 1);
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [playlistCount, gridCols]);
-
-  const handleAddTracks = (newTracks: any[]) => {
-    // Add the new tracks to the existing mix
-    const updatedTracks = [
+  stale = false,
+  hasPreview = true,
+}: MixPreviewProps) {
+  const [dialog, setDialog] = useState<'search' | 'unselected' | null>(null);
+  const addTracks = (newTracks: SpotifyTrack[]) =>
+    onTrackOrderChange([
       ...tracks,
       ...newTracks.map(track =>
         createMixedTrackInstance(track, track.sourcePlaylist || 'search')
       ),
-    ];
-    onTrackOrderChange(updatedTracks);
-  };
-
-  if (loading) {
-    return (
-      <div className={styles.previewSection}>
-        <div className={styles.previewHeader}>
-          <h3 className={styles.previewTitle}>
-            <span className={styles.loadingSpinner}></span>
-            Generating Preview...
-          </h3>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tracks) {
-    return null;
-  }
-
+    ]);
+  if (!tracks) return null;
   return (
-    <div className={styles.previewSection}>
-      <div className={styles.previewHeader}>
-        <h3 className={styles.previewTitle}>🎵 Mix Preview</h3>
-        <div className={styles.previewStats}>
-          <div className={styles.previewStat}>
-            <span>📊</span>
-            <span>{tracks.length} tracks</span>
-          </div>
-          <div className={styles.previewStat}>
-            <span>⏱️</span>
-            <span>{formatTotalDuration(totalDuration)}</span>
-          </div>
-        </div>
-        <div className={styles.previewActions}>
-          <button
-            onClick={() => setIsSpotifySearchOpen(true)}
-            className={`${styles.button} ${styles.buttonSecondary}`}
-            title="Search Spotify for more tracks"
+    <section
+      className={styles.preview}
+      aria-label="Mix Preview"
+      aria-busy={loading}
+    >
+      <div className={styles.bezel}>
+        <div className={styles.screen}>
+          <PreviewHeader
+            songs={tracks.length}
+            duration={totalDuration}
+            stats={stats}
+            selectedPlaylists={selectedPlaylists}
+          />
+          {loading && (
+            <p className={styles['empty-prev']} role="status">
+              <span className={styles.loadingSpinner} /> Generating Preview...
+            </p>
+          )}
+          <div
+            className={styles.tracks}
+            role="list"
+            aria-label="Tracks in order"
           >
-            🔍 Search Spotify
-          </button>
-          <button
-            onClick={() => setIsAddUnselectedOpen(true)}
-            className={`${styles.button} ${styles.buttonSecondary}`}
-            title="Add unselected tracks from your playlists"
-          >
-            ➕ Add Unselected
-          </button>
+            {!tracks.length && !loading && (
+              <p className={styles['empty-prev']}>
+                {hasPreview
+                  ? 'No playable tracks in this preview. Add tracks here or press Preview again.'
+                  : selectedPlaylists.length < 2
+                    ? 'Add at least two playlists to preview a mix.'
+                    : 'Press Preview to hear how your sources come together.'}
+              </p>
+            )}
+            <SortableContext
+              items={tracks.map(getTrackDragId)}
+              strategy={verticalListSortingStrategy}
+            >
+              {tracks.map((track, index) => {
+                const sourceIndex = selectedPlaylists.findIndex(
+                  playlist => playlist.id === track.sourcePlaylist
+                );
+                const name =
+                  stats[track.sourcePlaylist]?.name ||
+                  track.sourcePlaylistName ||
+                  'Added track';
+                return (
+                  <SortableWrapper
+                    key={getTrackDragId(track)}
+                    id={getTrackDragId(track)}
+                    data={{ context: 'preview' }}
+                    handleLabel={`Reorder ${track.name}`}
+                  >
+                    <TrackItem
+                      track={{ ...track, sourcePlaylistName: name }}
+                      showSourcePlaylist
+                      showIndex
+                      index={index + 1}
+                      style={
+                        {
+                          '--c':
+                            sourceIndex >= 0
+                              ? channelColors[
+                                  sourceIndex % channelColors.length
+                                ]
+                              : 'var(--oled-dim)',
+                        } as CSSProperties
+                      }
+                      onRemove={() =>
+                        onTrackOrderChange(
+                          tracks.filter(
+                            item =>
+                              getTrackDragId(item) !== getTrackDragId(track)
+                          )
+                        )
+                      }
+                    />
+                  </SortableWrapper>
+                );
+              })}
+            </SortableContext>
+          </div>
+          <div className={styles['scr-f']}>
+            {stale && hasPreview && (
+              <span className={styles.stale} role="status">
+                Settings changed. Press Preview to refresh.
+              </span>
+            )}
+            <button
+              className={styles.dk}
+              type="button"
+              disabled={!hasPreview || loading}
+              onClick={() => setDialog('search')}
+            >
+              Search Spotify
+            </button>
+            <button
+              className={styles.dk}
+              type="button"
+              disabled={!hasPreview || loading}
+              onClick={() => setDialog('unselected')}
+            >
+              Add unselected
+            </button>
+          </div>
         </div>
       </div>
-
-      <div className={styles.previewContent}>
-        {/* Playlist breakdown */}
-        <div
-          className={styles.playlistBreakdown}
-          style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
-        >
-          {Object.entries(stats).map(([playlistId, stat]) => (
-            <div key={playlistId} className={styles.playlistStat}>
-              {/* show truncated name with full title on hover */}
-              <div className={styles.playlistStatName} title={stat.name}>
-                {stat.name}
-              </div>
-              <div className={styles.playlistStatDetails}>
-                {/* Render both variants and let CSS pick via .tracksFull/.tracksShort */}
-                <span className={styles.trackCount}>
-                  <span
-                    className={styles.tracksFull}
-                  >{`${stat.count} tracks`}</span>
-                  <span
-                    className={styles.tracksShort}
-                  >{`${stat.count} tr`}</span>
-                </span>
-                <span className={styles.playlistDuration}>
-                  {formatTotalDuration(stat.totalDuration)}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Track list - droppable and sortable */}
-        <DroppableTrackList
-          tracks={tracks}
-          onRemove={removed =>
-            onTrackOrderChange(
-              tracks.filter(
-                track => getTrackDragId(track) !== getTrackDragId(removed)
-              )
-            )
-          }
-          containerClassName={isTwoRowMobile ? styles.twoRowMobile : ''}
+      {dialog === 'search' && (
+        <SpotifySearchModal
+          isOpen
+          onClose={() => setDialog(null)}
+          accessToken={accessToken}
+          onAddTracks={addTracks}
         />
-      </div>
-
-      {/* Modals */}
-      <SpotifySearchModal
-        isOpen={isSpotifySearchOpen}
-        onClose={() => setIsSpotifySearchOpen(false)}
-        accessToken={accessToken}
-        onAddTracks={handleAddTracks}
-      />
-
-      <AddUnselectedModal
-        isOpen={isAddUnselectedOpen}
-        onClose={() => setIsAddUnselectedOpen(false)}
-        accessToken={accessToken}
-        selectedPlaylists={selectedPlaylists}
-        currentTracks={tracks}
-        onAddTracks={handleAddTracks}
-      />
-    </div>
+      )}
+      {dialog === 'unselected' && (
+        <AddUnselectedModal
+          isOpen
+          onClose={() => setDialog(null)}
+          accessToken={accessToken}
+          selectedPlaylists={selectedPlaylists}
+          currentTracks={tracks}
+          onAddTracks={addTracks}
+        />
+      )}
+    </section>
   );
-};
-
-export default MixPreview;
+}

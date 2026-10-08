@@ -1,0 +1,39 @@
+.row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  padding-left: 8px;
+  border-bottom: 1px solid var(--oled-line);
+  background: var(--oled);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.row[data-dragging='true'] {
+  position: relative;
+  z-index: 5;
+  background: #2a2824;
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.65),
+    0 0 0 1px var(--orange);
+  border-radius: 8px;
+}
+.grip {
+  width: 34px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+  color: var(--oled-dim);
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+}
+.grip:hover {
+  color: var(--orange-hi);
+}
+.grip:active {
+  cursor: grabbing;
+}

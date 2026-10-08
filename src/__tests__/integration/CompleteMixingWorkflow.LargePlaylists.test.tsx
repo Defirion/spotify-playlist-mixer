@@ -47,7 +47,7 @@ describe('Complete mixing workflow - large playlists (hook-mocked)', () => {
 
     // Control asserts: generate button exists and our mocked hooks are functions
     expect(
-      screen.getByRole('button', { name: /generate preview/i })
+      screen.getByRole('button', { name: /^preview$/i })
     ).toBeInTheDocument();
     expect(
       typeof (

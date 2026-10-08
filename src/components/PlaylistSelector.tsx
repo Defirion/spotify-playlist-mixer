@@ -16,6 +16,7 @@ interface PlaylistSelectorProps {
   // richer error objects (ApiError, Error, etc.) so callers can pass
   // normalized error shapes through the global UI store.
   onError: (error: unknown) => void;
+  compact?: boolean;
 }
 
 const PlaylistSelector = memo<PlaylistSelectorProps>(
@@ -25,6 +26,7 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
     onPlaylistSelect,
     onClearAll,
     onError,
+    compact = false,
   }) => {
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const [playlistInput, setPlaylistInput] = useState('');
@@ -195,6 +197,11 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
 
     const handleSearchResultClick = useCallback(
       (playlist: SpotifyPlaylist) => {
+        if (
+          selectedPlaylists.length >= 10 ||
+          selectedPlaylists.some(selected => selected.id === playlist.id)
+        )
+          return;
         setShowResults(false);
         onPlaylistSelect(playlist);
         setPlaylistInput('');
@@ -211,7 +218,7 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
           }
         }, 100);
       },
-      [onPlaylistSelect, setShowResults, clearResults]
+      [onPlaylistSelect, setShowResults, clearResults, selectedPlaylists]
     );
 
     const handleInputFocus = useCallback(() => {
@@ -227,41 +234,44 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
 
     return (
       <div
-        className={`card ${styles.container} ${
+        className={`${compact ? styles.compact : 'card'} ${styles.container} ${
           showSearchResults ? styles.containerWithResults : ''
         }`}
       >
         {loading && <LoadingOverlay />}
 
-        <div className={styles.header}>
-          <h2 className={styles.title}>Add Playlists to Mix</h2>
-          <div className={styles.headerActions}>
-            <div className={styles.playlistCounter}>
-              {selectedPlaylists.length}/10 playlists
+        {!compact && (
+          <div className={styles.header}>
+            <h2 className={styles.title}>Add Playlists to Mix</h2>
+            <div className={styles.headerActions}>
+              <div className={styles.playlistCounter}>
+                {selectedPlaylists.length}/10 playlists
+              </div>
+              {selectedPlaylists.length > 0 && (
+                <button
+                  onClick={onClearAll}
+                  className={styles.clearButton}
+                  title="Remove all playlists from mix"
+                >
+                  <span className={styles.clearButtonIcon}>🗑️</span>
+                  Clear All
+                </button>
+              )}
             </div>
-            {selectedPlaylists.length > 0 && (
-              <button
-                onClick={onClearAll}
-                className={styles.clearButton}
-                title="Remove all playlists from mix"
-              >
-                <span className={styles.clearButtonIcon}>🗑️</span>
-                Clear All
-              </button>
-            )}
           </div>
-        </div>
+        )}
 
         <div className={styles.inputSection}>
           <div className="input-group">
-            <label>Search playlists or paste URL:</label>
+            <label htmlFor="playlist-search">Search or paste a link</label>
             <div className={styles.inputGroup}>
               <input
                 ref={inputRef}
+                id="playlist-search"
                 type="text"
                 value={playlistInput}
                 onChange={handleInputChange}
-                placeholder="Try: 'salsa romantica', 'bachata sensual' or paste Spotify URL..."
+                placeholder="Search playlists or paste a Spotify link"
                 className={styles.input}
                 onKeyDown={handleKeyDown}
                 onFocus={handleInputFocus}
@@ -271,6 +281,7 @@ const PlaylistSelector = memo<PlaylistSelectorProps>(
                 className={`btn ${styles.submitButton}`}
                 onClick={handleInputSubmit}
                 disabled={
+                  selectedPlaylists.length >= 10 ||
                   searching ||
                   !playlistInput.trim() ||
                   (inputType === 'url' && !isValidPlaylistUrl(playlistInput))

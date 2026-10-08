@@ -30,7 +30,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     await waitFor(() =>
@@ -73,7 +73,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.change(input, {
       target: { value: 'https://open.spotify.com/playlist/abc' },
     });
@@ -212,7 +212,7 @@ describe('PlaylistSelector', () => {
     expect(screen.getByText(/0 tracks/i)).toBeTruthy();
 
     // simulate Enter key when highlighted result exists
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     // the highlighted branch should call handleAddPlaylistByUrl for the result
@@ -293,7 +293,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.change(input, { target: { value: 'salsa' } });
     fireEvent.focus(input);
 
@@ -332,7 +332,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.change(input, { target: { value: 'some term' } });
 
     // Click the Search button
@@ -428,7 +428,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown' });
     // go back up
     fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp' });
@@ -481,7 +481,7 @@ describe('PlaylistSelector', () => {
 
     expect(screen.getByText(/Untitled Playlist/)).toBeTruthy();
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.blur(input);
 
     // advance timers so the delayed setShowResults runs
@@ -540,7 +540,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     // ArrowDown should move highlighted to index 1
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
@@ -639,7 +639,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.change(input, {
       target: { value: 'https://open.spotify.com/not-a-playlist' },
     });
@@ -773,7 +773,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.change(input, {
       target: { value: 'https://open.spotify.com/playlist/xyz' },
     });
@@ -855,7 +855,7 @@ describe('PlaylistSelector', () => {
     const first = screen.getByText('One');
     fireEvent.mouseLeave(first);
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
@@ -938,7 +938,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     await waitFor(() =>
@@ -994,7 +994,7 @@ describe('PlaylistSelector', () => {
     // set highlighted to -1 via mouseLeave
     fireEvent.mouseLeave(container);
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     await waitFor(() =>
@@ -1103,7 +1103,7 @@ describe('PlaylistSelector', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/Try:/i);
+    const input = screen.getByPlaceholderText(/Search playlists or paste/i);
     // Enter should pick highlighted index 0 and call handleAdd
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 

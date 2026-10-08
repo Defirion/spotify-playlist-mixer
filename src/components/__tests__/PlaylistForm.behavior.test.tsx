@@ -88,7 +88,7 @@ describe('PlaylistForm behavior', () => {
     );
 
     expect(screen.getByText(/Up to 4 source songs/i)).toBeInTheDocument();
-    expect(screen.getByText(/13m/)).toBeInTheDocument();
+    expect(screen.getByText(/13 m/)).toBeInTheDocument();
   });
 
   it('renders exceedsLimit warning when provided', () => {
@@ -138,13 +138,12 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    expect(screen.getByText(/Ratio imbalance warning/i)).toBeInTheDocument();
+    expect(screen.getByText(/Running low:/i)).toBeInTheDocument();
     expect(screen.getByText(/P 1/)).toBeInTheDocument();
 
-    const checkbox = screen.getByLabelText(
-      /Continue with remaining playlists when one runs out/i
-    );
-    expect(checkbox).not.toBeChecked();
+    const checkbox = screen.getByRole('button', {
+      name: 'Continue without it',
+    });
 
     fireEvent.click(checkbox);
     expect(onMixOptionsChange).toHaveBeenCalledWith({
@@ -165,7 +164,7 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    const nameInput = screen.getByPlaceholderText(/my awesome mix/i);
+    const nameInput = screen.getByPlaceholderText(/mix name/i);
     fireEvent.change(nameInput, { target: { value: 'Party Mix' } });
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       playlistName: 'Party Mix',
@@ -185,21 +184,21 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    const useAll = screen.getByRole('button', { name: /use all songs/i });
+    const useAll = screen.getByRole('button', { name: /^all$/i });
     fireEvent.click(useAll);
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       useAllSongs: true,
       useTimeLimit: false,
     });
 
-    const setCount = screen.getByRole('button', { name: /set song count/i });
+    const setCount = screen.getByRole('button', { name: /^songs$/i });
     fireEvent.click(setCount);
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       useAllSongs: false,
       useTimeLimit: false,
     });
 
-    const setDuration = screen.getByRole('button', { name: /set duration/i });
+    const setDuration = screen.getByRole('button', { name: /^time$/i });
     fireEvent.click(setDuration);
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       useAllSongs: false,
@@ -223,7 +222,7 @@ describe('PlaylistForm behavior', () => {
 
     // total songs = 7, duration minutes ~= round(7 * 3.5) -> shown as ~<N>m; match any minute value to be robust
     expect(screen.getByText(/Up to 7 source songs/i)).toBeInTheDocument();
-    expect(screen.getByText(/~?\s*\d+m/)).toBeInTheDocument();
+    expect(screen.getByText(/~?\s*\d+ m/)).toBeInTheDocument();
   });
 
   it('formats hours correctly when total duration exceeds 60 minutes', () => {
@@ -241,7 +240,7 @@ describe('PlaylistForm behavior', () => {
     );
 
     expect(screen.getByText(/Up to 100 source songs/i)).toBeInTheDocument();
-    expect(screen.getByText(/3h\s*20m/)).toBeInTheDocument();
+    expect(screen.getByText(/3 h\s*20 m/)).toBeInTheDocument();
   });
 
   it('renders the alternate ratio imbalance message when willStopEarly is false', () => {
@@ -266,9 +265,9 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    expect(screen.getByText(/Ratio imbalance warning/i)).toBeInTheDocument();
+    expect(screen.getByText(/Running low:/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/but mixing will continue with remaining playlists/i)
+      screen.getByText(/The mix will continue with remaining playlists/i)
     ).toBeInTheDocument();
   });
 
@@ -297,7 +296,7 @@ describe('PlaylistForm behavior', () => {
     expect(screen.getByText(/3h 20m/)).toBeInTheDocument();
   });
 
-  it('sets max attribute for totalSongs input to available totalSongs', () => {
+  it('keeps an advisory target above available songs editable', () => {
     const onMixOptionsChange = vi.fn();
 
     render(
@@ -313,10 +312,11 @@ describe('PlaylistForm behavior', () => {
     );
 
     const input = screen.getByRole('spinbutton');
-    expect(input).toHaveAttribute('max', '10');
+    expect(input).toHaveAttribute('min', '1');
+    expect(input).not.toHaveAttribute('max');
   });
 
-  it('sets max attribute for time limit input to available totalDurationMinutes', () => {
+  it('keeps an advisory time target editable', () => {
     const onMixOptionsChange = vi.fn();
 
     // one playlist with 10 songs at 120s => 20 minutes
@@ -331,7 +331,8 @@ describe('PlaylistForm behavior', () => {
     );
 
     const input = screen.getByRole('spinbutton');
-    expect(input).toHaveAttribute('max', '20');
+    expect(input).toHaveAttribute('min', '1');
+    expect(input).not.toHaveAttribute('max');
   });
 
   it('toggles playlist-order shuffling', () => {
@@ -347,9 +348,7 @@ describe('PlaylistForm behavior', () => {
       />
     );
 
-    const checkbox = screen.getByLabelText(
-      /Shuffle tracks within each playlist/i
-    );
+    const checkbox = screen.getByLabelText(/^Shuffle$/i);
     expect(checkbox).toBeChecked();
     fireEvent.click(checkbox);
     expect(onMixOptionsChange).toHaveBeenCalledWith({ shuffleTracks: false });

@@ -46,65 +46,34 @@ describe('PresetTemplates', () => {
     vi.clearAllMocks();
   });
 
-  it('renders null when no playlists are selected', () => {
+  it('keeps three disabled pads visible without playlists', () => {
     render(
       <PresetTemplates
         selectedPlaylists={[]}
         onApplyPreset={mockOnApplyPreset}
       />
     );
-
-    expect(
-      screen.queryByText('🎯 Quick Start Templates')
-    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+    screen
+      .getAllByRole('button')
+      .forEach(button => expect(button).toBeDisabled());
   });
 
-  it('renders preset templates when playlists are selected', () => {
+  it('shows pad names and short hints without descriptions', () => {
     render(
       <PresetTemplates
         selectedPlaylists={mockPlaylists}
         onApplyPreset={mockOnApplyPreset}
       />
     );
-
-    // Check header
-    expect(screen.getByText('🎯 Quick Start Templates')).toBeInTheDocument();
-    expect(
-      screen.getByText('Apply proven mixing patterns for different occasions')
-    ).toBeInTheDocument();
-
-    // Check preset cards
-    expect(screen.getByText('💃 Karimctiva')).toBeInTheDocument();
-    expect(screen.getByText('💪 Workout Mix')).toBeInTheDocument();
-    expect(screen.getByText('🚗 Road Trip')).toBeInTheDocument();
-
-    // Check descriptions
-    expect(
-      screen.getByText('Balanced bachata/salsa mixing with dance flow')
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('High energy with consistent tempo')
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('A varied, evenly blended road-trip mix')
-    ).toBeInTheDocument();
-
-    // Check tip section
-    expect(
-      screen.getByText(/These templates will automatically configure/)
-    ).toBeInTheDocument();
-  });
-
-  it('displays correct playlist count in preset meta', () => {
-    render(
-      <PresetTemplates
-        selectedPlaylists={mockPlaylists}
-        onApplyPreset={mockOnApplyPreset}
-      />
-    );
-
-    const metaTexts = screen.getAllByText(/2 playlists/);
-    expect(metaTexts).toHaveLength(3); // One for each preset
+    expect(screen.getByText('Presets')).toBeInTheDocument();
+    expect(screen.getByText('Karimctiva')).toBeInTheDocument();
+    expect(screen.getByText('Workout Mix')).toBeInTheDocument();
+    expect(screen.getByText('Road Trip')).toBeInTheDocument();
+    expect(screen.getByText('5 h')).toBeInTheDocument();
+    expect(screen.getByText('1 h')).toBeInTheDocument();
+    expect(screen.getByText('3 h')).toBeInTheDocument();
+    expect(screen.queryByText(/Balanced bachata/)).not.toBeInTheDocument();
   });
 
   it('calls onApplyPreset with correct data when Karimctiva preset is clicked', async () => {
@@ -326,7 +295,7 @@ describe('PresetTemplates', () => {
     expect(presetCards).toHaveLength(3);
 
     presetCards.forEach(card => {
-      expect(card).toHaveAttribute('tabIndex', '0');
+      expect(card.tagName).toBe('BUTTON');
       expect(card).toHaveAttribute('aria-label');
     });
 
@@ -355,7 +324,7 @@ describe('PresetTemplates', () => {
     const component = screen.getByTestId('preset-templates-test');
     expect(component).toBeInTheDocument();
     expect(component).toHaveClass('custom-class');
-    expect(component).toHaveClass('card');
+    expect(component).toBeInTheDocument();
   });
 
   it('handles fallback ratio configuration correctly', async () => {

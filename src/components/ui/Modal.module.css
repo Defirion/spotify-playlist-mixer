@@ -1,146 +1,101 @@
-/* Modal backdrop */
 .backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
   z-index: 1000;
-  transition: opacity 0.2s ease;
 }
-
-/* Backdrop during drag operations */
-.backdrop.dragging {
-  opacity: 0.1;
-  pointer-events: none;
-  z-index: 998;
-}
-
-/* Modal container */
 .modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: var(--hunter-green);
-  border: 2px solid var(--fern-green);
-  border-radius: 12px;
-  max-height: 90vh;
+  background: var(--oled);
+  color: var(--oled-ink);
+  border: 0;
+  border-radius: 14px;
+  max-height: 82vh;
+  max-height: 82dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 1001;
-  transition: opacity 0.2s ease;
+  box-shadow:
+    0 22px 40px -8px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px #34332f;
   outline: none;
 }
-
-/* Adjust positioning for smaller screens */
-@media (max-width: 768px) {
-  .modal {
-    top: 55%; /* Adjust this value to align with your preview panel */
-    transform: translateX(-50%); /* Only center horizontally, align top edge */
-  }
+.modal.small {
+  width: min(400px, calc(100vw - 32px));
 }
-
-/* Modal during drag operations */
+.modal.medium {
+  width: min(520px, calc(100vw - 32px));
+}
+.modal.large {
+  width: min(760px, calc(100vw - 32px));
+}
+.modal.fullscreen {
+  width: min(1200px, calc(100vw - 32px));
+  max-height: 92dvh;
+}
+.header {
+  padding: 18px 18px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.title {
+  margin: 0;
+  color: var(--oled-ink);
+  font: 600 18px var(--sans);
+}
+.closeButton {
+  border: 0;
+  background: transparent;
+  color: var(--oled-ink);
+  font-size: 24px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 6px;
+}
+.closeButton:hover {
+  background: #34332f;
+}
+.closeButton.withTitle {
+  margin-left: auto;
+}
+.content {
+  padding: 8px 18px 18px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
 .modal.dragging {
   opacity: 0;
   pointer-events: none;
   z-index: 999;
 }
-
-.modal.dragging .content {
-  pointer-events: auto;
+.backdrop.dragging {
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 998;
 }
-
-/* Global drag state - applied to html or body during drag operations */
-/* Support both html.dnd-dragging and body.dnd-dragging because different browsers
-   and document.scrollingElement implementations may apply the class to either
-   document.documentElement (html) or document.body. */
 :global(html.dnd-dragging) .modal,
 :global(body.dnd-dragging) .modal {
   z-index: 1 !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
 :global(html.dnd-dragging) .backdrop,
 :global(body.dnd-dragging) .backdrop {
   z-index: 1 !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
 :global(html.dnd-dragging) .content,
 :global(body.dnd-dragging) .content {
   pointer-events: none !important;
-}
-
-/* Size variants */
-.modal.small {
-  width: 90%;
-  max-width: 400px;
-}
-
-.modal.medium {
-  width: 90%;
-  max-width: 600px;
-}
-
-.modal.large {
-  width: 90%;
-  max-width: 800px;
-}
-
-.modal.fullscreen {
-  width: 95%;
-  max-width: 1200px;
-  max-height: 95vh;
-}
-
-/* Modal header */
-.header {
-  padding: 20px;
-  border-bottom: 1px solid var(--fern-green);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* Modal title */
-.title {
-  margin: 0;
-  color: var(--mindaro);
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-/* Close button */
-.closeButton {
-  background: transparent;
-  border: none;
-  color: var(--mindaro);
-  font-size: 24px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.closeButton.withTitle {
-  margin-left: 16px;
-}
-
-/* Modal content */
-.content {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
 }

@@ -35,14 +35,14 @@ describe('PlaylistForm controls', () => {
     );
 
     // change playlist name
-    const input = screen.getByPlaceholderText(/my awesome mix/i);
+    const input = screen.getByPlaceholderText(/mix name/i);
     fireEvent.change(input, { target: { value: 'New Name' } });
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       playlistName: 'New Name',
     });
 
     // click Use All Songs toggle
-    const useAllBtn = screen.getByRole('button', { name: /use all songs/i });
+    const useAllBtn = screen.getByRole('button', { name: /^all$/i });
     fireEvent.click(useAllBtn);
     expect(onMixOptionsChange).toHaveBeenCalledWith({
       useAllSongs: true,
@@ -51,7 +51,7 @@ describe('PlaylistForm controls', () => {
 
     // click Set Duration toggle
     const setDurationBtn = screen.getByRole('button', {
-      name: /set duration/i,
+      name: /^time$/i,
     });
     fireEvent.click(setDurationBtn);
     expect(onMixOptionsChange).toHaveBeenCalledWith({

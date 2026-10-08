@@ -112,7 +112,7 @@ describe('MixPreview Behavior Tests', () => {
   it('shows an empty preview with recovery controls when all tracks were removed', () => {
     render(<MixPreview {...defaultProps} tracks={[]} loading={false} />);
 
-    expect(screen.getByText('0 tracks')).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
     expect(
       screen.getByText(/No playable tracks in this preview/)
     ).toBeInTheDocument();
@@ -121,31 +121,31 @@ describe('MixPreview Behavior Tests', () => {
   it('displays track and duration stats correctly', () => {
     render(<MixPreview {...defaultProps} />);
 
-    expect(screen.getByText('2 tracks')).toBeInTheDocument();
-    expect(screen.getByText('6m')).toBeInTheDocument(); // 380000ms = 6.33m ≈ 6m
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('6 m')).toBeInTheDocument(); // 380000 ms = 6.33 m ≈ 6 m
   });
 
   it('formats duration in hours and minutes for longer durations', () => {
     const longDuration = 7200000; // 2 hours
     render(<MixPreview {...defaultProps} totalDuration={longDuration} />);
 
-    expect(screen.getByText('2h 0m')).toBeInTheDocument();
+    expect(screen.getByText('2 h 0 m')).toBeInTheDocument();
   });
 
   it('displays playlist breakdown correctly', () => {
     render(<MixPreview {...defaultProps} />);
 
-    expect(screen.getByText('Playlist 1')).toBeInTheDocument();
-    expect(screen.getByText('Playlist 2')).toBeInTheDocument();
-    expect(screen.getAllByText('1 tracks')).toHaveLength(2); // One for each playlist
-    expect(screen.getAllByText('3m')).toHaveLength(2); // One for each playlist duration
+    expect(screen.getAllByText('Playlist 1')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Playlist 2')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('1 songs')).toHaveLength(2); // One for each playlist
+    expect(screen.getAllByText('3 m')).toHaveLength(2); // One for each playlist duration
   });
 
   it('opens and closes Spotify search modal', async () => {
     const user = userEvent.setup();
     render(<MixPreview {...defaultProps} />);
 
-    const searchButton = screen.getByText('🔍 Search Spotify');
+    const searchButton = screen.getByText('Search Spotify');
     await user.click(searchButton);
 
     expect(screen.getByTestId('spotify-search-modal')).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe('MixPreview Behavior Tests', () => {
     const user = userEvent.setup();
     render(<MixPreview {...defaultProps} />);
 
-    const addUnselectedButton = screen.getByText('➕ Add Unselected');
+    const addUnselectedButton = screen.getByText('Add unselected');
     await user.click(addUnselectedButton);
 
     expect(screen.getByTestId('add-unselected-modal')).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('MixPreview Behavior Tests', () => {
       />
     );
 
-    const searchButton = screen.getByText('🔍 Search Spotify');
+    const searchButton = screen.getByText('Search Spotify');
     await user.click(searchButton);
 
     const addTrackButton = screen.getByText('Add Track');
@@ -218,7 +218,7 @@ describe('MixPreview Behavior Tests', () => {
       />
     );
 
-    const addUnselectedButton = screen.getByText('➕ Add Unselected');
+    const addUnselectedButton = screen.getByText('Add unselected');
     await user.click(addUnselectedButton);
 
     const addUnselectedTrackButton = screen.getByText('Add Unselected');
@@ -271,7 +271,7 @@ describe('MixPreview Behavior Tests', () => {
     fireEvent.resize(window);
 
     // Component should handle resize, this tests the resize listener
-    expect(screen.getByText('Playlist 1')).toBeInTheDocument();
+    expect(screen.getAllByText('Playlist 1')[0]).toBeInTheDocument();
   });
 
   it('calculates grid columns correctly for many playlists', () => {
@@ -288,16 +288,16 @@ describe('MixPreview Behavior Tests', () => {
     render(<MixPreview {...defaultProps} stats={manyPlaylistsStats} />);
 
     // Should render all playlist names
-    expect(screen.getByText('P1')).toBeInTheDocument();
+    expect(screen.getAllByText('P1')[0]).toBeInTheDocument();
     expect(screen.getByText('P7')).toBeInTheDocument();
   });
 
-  it('displays track count in short format on smaller screens', () => {
+  it('shows one readable count per source', () => {
     render(<MixPreview {...defaultProps} />);
 
     // Both full and short versions should be in DOM, CSS controls visibility
-    expect(screen.getAllByText('1 tracks')).toHaveLength(2); // Two playlists
-    expect(screen.getAllByText('1 tr')).toHaveLength(2); // Two playlists short form
+    expect(screen.getAllByText('1 songs')).toHaveLength(2); // Two playlists
+    expect(screen.queryByText('1 tr')).not.toBeInTheDocument();
   });
 
   it('shows playlist name with title attribute for truncation', () => {
@@ -311,19 +311,19 @@ describe('MixPreview Behavior Tests', () => {
 
     render(<MixPreview {...defaultProps} stats={longNameStats} />);
 
-    const playlistElement = screen.getByTitle(
+    const playlistElement = screen.getAllByTitle(
       'This is a very long playlist name that should be truncated'
-    );
+    )[0];
     expect(playlistElement).toBeInTheDocument();
   });
 
   it('formats duration correctly for different time ranges', () => {
     // Test various duration formatting scenarios
     const testCases = [
-      { duration: 30000, expected: '0m' }, // 30 seconds
-      { duration: 90000, expected: '1m' }, // 1.5 minutes
-      { duration: 3600000, expected: '1h 0m' }, // 1 hour
-      { duration: 3780000, expected: '1h 3m' }, // 1 hour 3 minutes
+      { duration: 30000, expected: '0 m' }, // 30 seconds
+      { duration: 90000, expected: '1 m' }, // 1.5 minutes
+      { duration: 3600000, expected: '1 h 0 m' }, // 1 hour
+      { duration: 3780000, expected: '1 h 3 m' }, // 1 hour 3 minutes
     ];
 
     testCases.forEach(({ duration, expected }) => {

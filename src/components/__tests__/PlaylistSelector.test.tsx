@@ -133,7 +133,7 @@ describe('PlaylistSelector', () => {
       expect(screen.getByText('Add Playlists to Mix')).toBeInTheDocument();
       expect(screen.getByText('0/10 playlists')).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText(/Try: 'salsa romantica'/)
+        screen.getByPlaceholderText(/Search playlists or paste/)
       ).toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: /Search/i })
@@ -295,7 +295,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
       await user.type(input, 'https://open.spotify.com/playlist/test');
 
       expect(screen.getByRole('button', { name: /Add/i })).toBeInTheDocument();
@@ -314,7 +314,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
       const button = screen.getByRole('button');
 
       await user.type(input, 'https://open.spotify.com/playlist/test');
@@ -343,7 +343,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
 
       // Focus input and simulate arrow down
       await user.click(input);
@@ -377,7 +377,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
 
       await user.click(input);
       await user.keyboard('{Enter}');
@@ -430,7 +430,7 @@ describe('PlaylistSelector', () => {
     it('has proper ARIA attributes', () => {
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
       expect(input).toHaveAttribute('type', 'text');
 
       const button = screen.getByRole('button');
@@ -442,7 +442,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
       // Get the button by its initial accessible name "Search"
       const button = screen.getByRole('button', { name: /Search/i });
 
@@ -476,7 +476,7 @@ describe('PlaylistSelector', () => {
 
       render(<PlaylistSelector {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText(/Try: 'salsa romantica'/);
+      const input = screen.getByPlaceholderText(/Search playlists or paste/);
       await user.type(input, 'test query');
 
       expect(mockSetQuery).toHaveBeenCalledWith('test query');

@@ -38,7 +38,7 @@ interface UseMixPreviewReturn {
     selectedPlaylists: SpotifyPlaylist[],
     ratioConfig: RatioConfig,
     mixOptions: MixOptions
-  ) => Promise<void>;
+  ) => Promise<MixPreview | undefined>;
   updateTrackOrder: (reorderedTracks: MixedTrack[]) => void;
   clearPreview: () => void;
   getPreviewTracks: () => MixedTrack[];
@@ -137,7 +137,7 @@ export const useMixPreview = (
       selectedPlaylists: SpotifyPlaylist[],
       ratioConfig: RatioConfig,
       mixOptions: MixOptions
-    ): Promise<void> => {
+    ): Promise<MixPreview | undefined> => {
       requestRef.current?.abort();
       const controller = new AbortController();
       requestRef.current = controller;
@@ -153,8 +153,6 @@ export const useMixPreview = (
         ...prev,
         loading: true,
         error: null,
-        preview: null,
-        customTrackOrder: null,
       }));
 
       try {
@@ -202,6 +200,7 @@ export const useMixPreview = (
           preview,
           customTrackOrder: null, // Reset custom order when generating new preview
         }));
+        return preview;
       } catch (err) {
         if (controller.signal.aborted) return;
         const errorMessage =

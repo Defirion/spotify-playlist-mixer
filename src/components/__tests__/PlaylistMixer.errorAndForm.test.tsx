@@ -69,7 +69,7 @@ describe('PlaylistMixer edge and error flows', () => {
     );
 
     // Create button should be enabled because playlistName and two playlists present
-    const createButton = screen.getByText(/Create This Playlist/i);
+    const createButton = screen.getByText(/Create on Spotify/i);
     fireEvent.click(createButton);
 
     await waitFor(() => expect(onMixedPlaylist).toHaveBeenCalled());
@@ -93,7 +93,7 @@ describe('PlaylistMixer edge and error flows', () => {
     render(<PlaylistMixer {...defaultProps} />);
 
     // There may be multiple buttons rendered (portals); pick the first visible
-    const matches = screen.getAllByText(/Create This Playlist/i);
+    const matches = screen.getAllByText(/Create on Spotify/i);
     const visible =
       matches.find((el: HTMLElement) => el.offsetParent !== null) || matches[0];
     fireEvent.click(visible);

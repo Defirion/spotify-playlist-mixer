@@ -56,7 +56,7 @@ describe('Playlist size variants (hook-mocked)', () => {
 
     // Basic smoke assertions: form rendered and hooks are wired
     expect(
-      screen.getByRole('button', { name: /generate preview/i })
+      screen.getByRole('button', { name: /^preview$/i })
     ).toBeInTheDocument();
     expect(typeof previewFn()).toBe('function');
     expect(typeof mixFn()).toBe('function');
@@ -80,7 +80,7 @@ describe('Playlist size variants (hook-mocked)', () => {
 
     // Form present for medium mix
     expect(
-      screen.getByRole('button', { name: /generate preview/i })
+      screen.getByRole('button', { name: /^preview$/i })
     ).toBeInTheDocument();
   });
 });

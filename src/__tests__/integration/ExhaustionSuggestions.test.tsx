@@ -31,7 +31,7 @@ const initialOptions: MixOptions = {
 };
 
 describe('exhaustion suggestions in the mixer', () => {
-  it('applies only after a click, updates the ratio controls and clears the old preview', async () => {
+  it('applies only after a click, updates the ratio controls and marks the old preview out of date', async () => {
     const onUpdate = vi.fn();
     const Harness = () => {
       const [ratios, setRatios] = useState(initialRatios);
@@ -53,11 +53,9 @@ describe('exhaustion suggestions in the mixer', () => {
     expect(
       screen.getByText(/estimated to run out around 20 songs/)
     ).toBeInTheDocument();
-    expect(screen.getByText('Small source: 33.3%')).toBeInTheDocument();
-    expect(screen.getByText('Large source: 66.7%')).toBeInTheDocument();
     expect(onUpdate).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: /generate preview/i }));
-    await screen.findByText(/Mix Preview/);
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
+    await screen.findByRole('region', { name: 'Mix Preview' });
     fireEvent.click(
       screen.getByRole('button', { name: 'Apply suggested ratios' })
     );
@@ -73,16 +71,16 @@ describe('exhaustion suggestions in the mixer', () => {
       screen.getAllByRole('slider').map(slider => slider.getAttribute('value'))
     ).toEqual(['1', '2', '50', '2', '3', '100']);
     await waitFor(() =>
-      expect(screen.queryByText(/Mix Preview/)).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('region', { name: 'Mix Preview' })
+      ).toBeInTheDocument()
     );
     expect(
       screen.queryByText(/Ratio imbalance warning/)
     ).not.toBeInTheDocument();
     expect(
-      screen.getByLabelText(
-        'Continue with remaining playlists when one runs out'
-      )
-    ).not.toBeChecked();
+      screen.queryByRole('button', { name: 'Stop at first empty playlist' })
+    ).not.toBeInTheDocument();
   });
 
   it('updates the stop/continue choice without changing the target', () => {
@@ -95,11 +93,9 @@ describe('exhaustion suggestions in the mixer', () => {
       updateMixOptions: updateOptions,
     };
     const { rerender } = render(<AppShell {...props} />);
-    expect(screen.getByText(/and mixing will stop there/)).toBeInTheDocument();
+    expect(screen.getByText(/The mix will stop there/)).toBeInTheDocument();
     fireEvent.click(
-      screen.getByLabelText(
-        'Continue with remaining playlists when one runs out'
-      )
+      screen.getByRole('button', { name: 'Continue without it' })
     );
     expect(updateOptions).toHaveBeenCalledWith({
       continueWhenPlaylistEmpty: true,
@@ -111,8 +107,10 @@ describe('exhaustion suggestions in the mixer', () => {
       />
     );
     expect(
-      screen.getByText(/but mixing will continue with remaining playlists/)
+      screen.getByText(/The mix will continue with remaining playlists/)
     ).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton')).toHaveValue(25);
+    expect(screen.getByRole('spinbutton', { name: 'Song count' })).toHaveValue(
+      25
+    );
   });
 });

@@ -1,0 +1,6 @@
+<!doctype html><meta charset=utf-8><body style="margin:0;background:#888;display:flex;gap:16px;padding:16px;font:12px sans-serif">
+<script>
+for (const f of ['a-console','b-studio','c-rundown','d-mixtape','e-field','f-terminal']) {
+  const d=document.createElement('div'); d.innerHTML=`<div style="color:#fff;margin-bottom:4px">${f}</div><iframe src="../v2/${f}.html" style="width:390px;height:844px;border:0;background:#fff"></iframe>`; document.body.appendChild(d);
+}
+</script>

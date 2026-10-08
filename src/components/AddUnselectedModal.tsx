@@ -35,7 +35,7 @@ const AddUnselectedModal = memo<AddUnselectedModalProps>(
         // Modal props
         isOpen={isOpen}
         onClose={onClose}
-        title="➕ Add Unselected Tracks"
+        title="Add unselected"
         // Data props
         tracks={filteredTracks}
         loading={loading}

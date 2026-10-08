@@ -145,7 +145,7 @@ describe('AddUnselectedModal', () => {
 
     expect(screen.getByTestId('modal')).toBeInTheDocument();
     expect(screen.getByTestId('modal-title')).toHaveTextContent(
-      '➕ Add Unselected Tracks'
+      'Add unselected'
     );
   });
 

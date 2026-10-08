@@ -1,357 +1,174 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RatioConfig from '../RatioConfig';
-import { SpotifyPlaylist } from '../../types/spotify';
+import BalanceControl from '../features/mixer/BalanceControl';
 import { makePlaylist } from '../../test-utils/mocks/spotify';
-import { RatioConfig as RatioConfigType } from '../../types/mixer';
+import { RatioConfig as Config } from '../../types';
 
-// Remove mock to test with actual hook
+const playlist = makePlaylist({
+  id: 'a',
+  name: 'Bachata',
+  images: [{ url: 'cover.jpg', width: 44, height: 44 }],
+});
+const initial: Config = {
+  a: { min: 1, max: 2, weight: 25, weightType: 'frequency' },
+};
 
-// Use factory to ensure full SpotifyPlaylist shape
-const mockPlaylist: SpotifyPlaylist = makePlaylist({
-  id: '1',
-  name: 'Test Playlist',
-  description: 'A test playlist',
-  images: [{ url: 'test.jpg', height: 300, width: 300 }],
-  tracks: { total: 50, href: 'https://api.spotify.com/playlists/1/tracks' },
-  owner: {
-    id: 'user1',
-    display_name: 'Test User',
-    external_urls: { spotify: 'https://open.spotify.com/user/user1' },
-  },
-  public: true,
-  uri: 'spotify:playlist:1',
-  realAverageDurationSeconds: 180,
-  tracksWithDuration: 50,
+function Channel() {
+  const [ratioConfig, setConfig] = useState(initial);
+  return (
+    <RatioConfig
+      selectedPlaylists={[playlist]}
+      ratioConfig={ratioConfig}
+      onRatioUpdate={(id, config) =>
+        setConfig(previous => ({ ...previous, [id]: config }))
+      }
+    />
+  );
+}
+
+test('renders a compact channel with cover, knobs, fader and exact values', () => {
+  render(<Channel />);
+  expect(screen.getByRole('heading', { name: 'Bachata' })).toBeInTheDocument();
+  expect(screen.getByAltText('Bachata')).toHaveAttribute('src', 'cover.jpg');
+  expect(screen.getAllByRole('slider')).toHaveLength(3);
+  expect(screen.getAllByRole('spinbutton')).toHaveLength(3);
+  expect(screen.getByRole('meter')).toHaveAttribute('aria-valuenow', '100');
+  expect(screen.queryByText(/% of mix/)).not.toBeInTheDocument();
 });
 
-const mockRatioConfig: RatioConfigType = {
-  '1': { min: 1, max: 2, weight: 3, weightType: 'frequency' },
-};
+test('renders channels without artwork and supports removal', async () => {
+  const remove = vi.fn();
+  render(
+    <RatioConfig
+      selectedPlaylists={[{ ...playlist, images: [] }]}
+      ratioConfig={initial}
+      onRatioUpdate={vi.fn()}
+      onPlaylistRemove={remove}
+    />
+  );
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Remove Bachata' }));
+  expect(remove).toHaveBeenCalledWith('a');
+});
 
-const defaultProps = {
-  selectedPlaylists: [mockPlaylist],
-  ratioConfig: mockRatioConfig,
-  onRatioUpdate: vi.fn(),
-  onPlaylistRemove: vi.fn(),
-};
-
-describe('RatioConfig', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+test('raising the minimum also raises the maximum in one update', () => {
+  const update = vi.fn();
+  render(
+    <RatioConfig
+      selectedPlaylists={[playlist]}
+      ratioConfig={initial}
+      onRatioUpdate={update}
+    />
+  );
+  fireEvent.change(screen.getByRole('slider', { name: /minimum/ }), {
+    target: { value: 5 },
   });
+  expect(update).toHaveBeenCalledWith('a', { ...initial.a, min: 5, max: 5 });
+});
 
-  it('renders component with playlist information', () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    expect(screen.getByText('🎛️ Customize Your Mix')).toBeInTheDocument();
-    expect(screen.getByText('Test Playlist')).toBeInTheDocument();
-    expect(screen.getByText('50 tracks')).toBeInTheDocument();
-    expect(screen.getByText('• avg 3:00 per song')).toBeInTheDocument();
+test('lowering the maximum cannot cross the minimum', () => {
+  const update = vi.fn();
+  render(
+    <RatioConfig
+      selectedPlaylists={[playlist]}
+      ratioConfig={{ a: { ...initial.a, min: 3, max: 5 } }}
+      onRatioUpdate={update}
+    />
+  );
+  fireEvent.change(screen.getByRole('slider', { name: /maximum/ }), {
+    target: { value: 1 },
   });
+  expect(update).toHaveBeenCalledWith('a', { ...initial.a, min: 3, max: 3 });
+});
 
-  it('renders playlist cover image when available', () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    const image = screen.getByAltText('Test Playlist');
-    expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', 'test.jpg');
+test.each([
+  ['ArrowUp', 26],
+  ['ArrowDown', 24],
+  ['PageUp', 35],
+  ['PageDown', 15],
+  ['Home', 1],
+  ['End', 100],
+])('priority supports %s', (key, value) => {
+  render(<Channel />);
+  fireEvent.keyDown(screen.getByRole('slider', { name: 'Bachata priority' }), {
+    key,
   });
+  expect(
+    screen.getByRole('spinbutton', { name: 'Bachata priority value' })
+  ).toHaveValue(value);
+});
 
-  it('handles playlist without cover image', () => {
-    const playlistWithoutImage = {
-      ...mockPlaylist,
-      images: [],
-    };
-
-    render(
-      <RatioConfig
-        {...defaultProps}
-        selectedPlaylists={[playlistWithoutImage]}
-      />
-    );
-
-    expect(screen.queryByAltText('Test Playlist')).not.toBeInTheDocument();
-    expect(screen.getByText('Test Playlist')).toBeInTheDocument();
+test('wheel changes a knob and its LCD together', () => {
+  render(<Channel />);
+  fireEvent.wheel(screen.getByRole('slider', { name: /maximum/ }), {
+    deltaY: -100,
   });
+  expect(
+    screen.getByRole('spinbutton', { name: 'Bachata max value' })
+  ).toHaveValue(3);
+});
 
-  it('displays balance method toggle buttons', () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    expect(screen.getByText('Same Song Count')).toBeInTheDocument();
-    expect(screen.getByText('Same Play Time')).toBeInTheDocument();
+test('exact entry changes the fader and its accessible value', async () => {
+  render(<Channel />);
+  const input = screen.getByRole('spinbutton', {
+    name: 'Bachata priority value',
   });
+  fireEvent.change(input, { target: { value: '73' } });
+  expect(screen.getByRole('slider', { name: 'Bachata priority' })).toHaveValue(
+    '73'
+  );
+});
 
-  it('calls onRatioUpdate when min slider changes', async () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    const minSlider = screen.getAllByRole('slider')[0];
-    fireEvent.change(minSlider, { target: { value: '3' } });
-
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
-        min: 3,
-        max: 3, // Should be updated to match min
-        weight: 3,
-        weightType: 'frequency',
-      });
-    });
+test('LCD entry can be cleared, replaced, and restored on blur', () => {
+  render(<Channel />);
+  const input = screen.getByRole('spinbutton', {
+    name: 'Bachata priority value',
   });
+  fireEvent.change(input, { target: { value: '' } });
+  expect(input).toHaveValue(null);
+  fireEvent.change(input, { target: { value: '64' } });
+  expect(screen.getByRole('slider', { name: 'Bachata priority' })).toHaveValue(
+    '64'
+  );
+  fireEvent.change(input, { target: { value: '' } });
+  fireEvent.blur(input);
+  expect(input).toHaveValue(64);
+});
 
-  it('calls onRatioUpdate when max slider changes', async () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    const maxSlider = screen.getAllByRole('slider')[1];
-    fireEvent.change(maxSlider, { target: { value: '4' } });
-
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
-        min: 1,
-        max: 4,
-        weight: 3,
-        weightType: 'frequency',
-      });
-    });
+test('the global balance buttons update every selected channel and retain its ratios', () => {
+  const update = vi.fn();
+  const second = makePlaylist({ id: 'b', name: 'Salsa' });
+  render(
+    <BalanceControl
+      selectedPlaylists={[playlist, second]}
+      ratioConfig={initial}
+      onRatioUpdate={update}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Time' }));
+  expect(update).toHaveBeenCalledWith('a', {
+    ...initial.a,
+    weightType: 'time',
   });
-
-  it('calls onRatioUpdate when weight slider changes', async () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    const weightSlider = screen.getAllByRole('slider')[2];
-    fireEvent.change(weightSlider, { target: { value: '50' } });
-
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
-        min: 1,
-        max: 2,
-        weight: 50,
-        weightType: 'frequency',
-      });
-    });
+  expect(update).toHaveBeenCalledWith('b', {
+    min: 1,
+    max: 2,
+    weight: 1,
+    weightType: 'time',
   });
+});
 
-  it('updates all playlists when global balance method changes', async () => {
-    const multiplePlaylistsProps = {
-      ...defaultProps,
-      selectedPlaylists: [
-        mockPlaylist,
-        { ...mockPlaylist, id: '2', name: 'Playlist 2' },
-      ],
-      ratioConfig: {
-        ...mockRatioConfig,
-        '2': { min: 2, max: 3, weight: 2, weightType: 'frequency' as const },
-      },
-    };
-
-    render(<RatioConfig {...multiplePlaylistsProps} />);
-
-    const timeButton = screen.getByText('Same Play Time');
-    fireEvent.click(timeButton);
-
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
-        min: 1,
-        max: 2,
-        weight: 3,
-        weightType: 'time',
-      });
-    });
-
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('2', {
-        min: 2,
-        max: 3,
-        weight: 2,
-        weightType: 'time',
-      });
-    });
-  });
-
-  it('calls onPlaylistRemove when remove button is clicked', async () => {
-    const user = userEvent.setup();
-    render(<RatioConfig {...defaultProps} />);
-
-    const removeButton = screen.getByTitle('Remove Test Playlist');
-    await user.click(removeButton);
-
-    expect(defaultProps.onPlaylistRemove).toHaveBeenCalledWith('1');
-  });
-
-  it('does not render remove button when onPlaylistRemove is not provided', () => {
-    const propsWithoutRemove = {
-      ...defaultProps,
-      onPlaylistRemove: undefined,
-    };
-
-    render(<RatioConfig {...propsWithoutRemove} />);
-
-    expect(screen.queryByTitle('Remove Test Playlist')).not.toBeInTheDocument();
-  });
-
-  it('renders example mix display when multiple playlists are selected', () => {
-    const multiplePlaylistsProps = {
-      ...defaultProps,
-      selectedPlaylists: [
-        mockPlaylist,
-        { ...mockPlaylist, id: '2', name: 'Playlist 2' },
-      ],
-    };
-
-    render(<RatioConfig {...multiplePlaylistsProps} />);
-
-    expect(
-      screen.getByText('🎯 Example Mix (per 100 songs):')
-    ).toBeInTheDocument();
-    expect(screen.getByText(/~75 songs \(75%\)/)).toBeInTheDocument();
-  });
-
-  it('does not render example mix display for single playlist', () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    expect(
-      screen.queryByText('🎯 Example Mix (per 100 songs):')
-    ).not.toBeInTheDocument();
-  });
-
-  it('ensures max slider cannot be less than min slider', async () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    // First set min to 5
-    const minSlider = screen.getAllByRole('slider')[0];
-    fireEvent.change(minSlider, { target: { value: '5' } });
-
-    // Then try to set max to 3 (should be ignored)
-    const maxSlider = screen.getAllByRole('slider')[1];
-    fireEvent.change(maxSlider, { target: { value: '3' } });
-
-    // Only the min change should have been called, max change should be ignored
-    await waitFor(() => {
-      expect(defaultProps.onRatioUpdate).toHaveBeenCalledWith('1', {
-        min: 5,
-        max: 5, // Should be updated to match min
-        weight: 3,
-        weightType: 'frequency',
-      });
-    });
-  });
-
-  it('renders with custom className', () => {
-    render(<RatioConfig {...defaultProps} className="custom-class" />);
-
-    // Test that the component renders correctly with custom className
-    // We focus on functionality rather than implementation details
-    expect(screen.getByText('🎛️ Customize Your Mix')).toBeInTheDocument();
-    expect(
-      screen.getByText('Choose how your playlists blend together')
-    ).toBeInTheDocument();
-    expect(screen.getByText('Test Playlist')).toBeInTheDocument();
-  });
-
-  it('handles playlists without duration data', () => {
-    const playlistWithoutDuration = {
-      ...mockPlaylist,
-      realAverageDurationSeconds: undefined,
-      tracksWithDuration: undefined,
-    };
-
-    render(
-      <RatioConfig
-        {...defaultProps}
-        selectedPlaylists={[playlistWithoutDuration]}
-      />
-    );
-
-    expect(screen.getByText('50 tracks')).toBeInTheDocument();
-    expect(screen.queryByText(/avg.*per song/)).not.toBeInTheDocument();
-  });
-
-  it('shows partial duration data information', () => {
-    const playlistWithPartialDuration = {
-      ...mockPlaylist,
-      tracksWithDuration: 30, // Less than total tracks
-    };
-
-    render(
-      <RatioConfig
-        {...defaultProps}
-        selectedPlaylists={[playlistWithPartialDuration]}
-      />
-    );
-
-    expect(screen.getByText('(30 with duration data)')).toBeInTheDocument();
-  });
-
-  it('displays correct group descriptions', () => {
-    render(<RatioConfig {...defaultProps} />);
-
-    // Should show "1-2 songs" for min=1, max=2
-    expect(screen.getByText(/Play together: 1-2 songs/)).toBeInTheDocument();
-  });
-
-  it('updates global balance method based on existing ratio config', () => {
-    const timeBasedConfig: RatioConfigType = {
-      '1': { min: 1, max: 2, weight: 3, weightType: 'time' },
-    };
-
-    render(<RatioConfig {...defaultProps} ratioConfig={timeBasedConfig} />);
-
-    // The component should detect time-based config and update the toggle
-    const timeButton = screen.getByText('Same Play Time');
-    expect(timeButton).toHaveClass('active');
-  });
-
-  it('displays correct priority descriptions at weight boundaries', () => {
-    // Map of weight -> expected label fragment
-    const cases: Array<[number, RegExp]> = [
-      [20, /Low \(20\)/],
-      [21, /Normal \(21\)/],
-      [40, /Normal \(40\)/],
-      [41, /High \(41\)/],
-      [60, /High \(60\)/],
-      [61, /Top \(61\)/],
-      [80, /Top \(80\)/],
-      [81, /Max \(81\)/],
-    ];
-
-    for (const [weight, regex] of cases) {
-      const cfg: RatioConfigType = {
-        '1': { min: 1, max: 2, weight, weightType: 'frequency' },
-      };
-
-      render(
-        <RatioConfig
-          {...defaultProps}
-          ratioConfig={cfg}
-          selectedPlaylists={[mockPlaylist]}
-        />
-      );
-
-      // The priority label should contain the expected fragment. We don't
-      // assert the exact percentage text because that comes from a helper
-      // hook; we only care about the human-facing description prefix.
-      expect(screen.getByText(regex)).toBeInTheDocument();
-
-      // cleanup between renders
-      // Unmount by clearing the document body so the next render is fresh
-      document.body.innerHTML = '';
-    }
-  });
-
-  it('shows singular "song" when min and max are equal to 1, and plural otherwise', () => {
-    const cfgSingular: RatioConfigType = {
-      '1': { min: 1, max: 1, weight: 2, weightType: 'frequency' },
-    };
-
-    render(<RatioConfig {...defaultProps} ratioConfig={cfgSingular} />);
-    expect(screen.getByText(/Play together: 1 song/)).toBeInTheDocument();
-
-    document.body.innerHTML = '';
-
-    const cfgPlural: RatioConfigType = {
-      '1': { min: 3, max: 3, weight: 2, weightType: 'frequency' },
-    };
-
-    render(<RatioConfig {...defaultProps} ratioConfig={cfgPlural} />);
-    expect(screen.getByText(/Play together: 3 songs/)).toBeInTheDocument();
-  });
+test('the balance buttons reflect a time preset', () => {
+  render(
+    <BalanceControl
+      selectedPlaylists={[playlist]}
+      ratioConfig={{ a: { ...initial.a, weightType: 'time' } }}
+    />
+  );
+  expect(screen.getByRole('button', { name: 'Time' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
 });

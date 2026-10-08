@@ -104,16 +104,16 @@ describe('Complete mixing workflow (integration with MSW)', () => {
 
     // Wait for UI to render the generate button
     const generateBtn = await screen.findByRole('button', {
-      name: /generate preview/i,
+      name: /^preview$/i,
     });
     expect(generateBtn).toBeInTheDocument();
 
-    // Click generate preview to exercise the preview generation path
+    // Click Preview to exercise the preview generation path
     await user.click(generateBtn);
 
     // Now click create playlist; handleCreatePlaylist will call generateMix when no preview exists
     const createBtn = screen.getByRole('button', {
-      name: /create this playlist/i,
+      name: /create on spotify/i,
     });
     await user.click(createBtn);
 

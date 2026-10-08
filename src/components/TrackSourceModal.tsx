@@ -289,7 +289,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                 className={styles.searchButton}
                 title="Search manually (searches automatically as you type)"
               >
-                {loading ? 'Searching...' : '🔍'}
+                {loading ? 'Searching...' : 'Search'}
               </button>
             )}
           </div>
@@ -335,6 +335,7 @@ const TrackSourceModal = memo<TrackSourceModalProps>(
                     key={track.instanceId || track.id}
                     id={track.instanceId || track.id}
                     data={{ track, context: 'modal' }}
+                    handleLabel={`Drag ${track.name} to preview`}
                   >
                     <TrackItem
                       track={track}

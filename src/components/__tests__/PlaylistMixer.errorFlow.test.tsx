@@ -107,14 +107,14 @@ describe('PlaylistMixer error and edge flows', () => {
 
     // click create - should hit generateMix/createPlaylist path where createPlaylist rejects
     const createBtn = screen.getByRole('button', {
-      name: /create this playlist/i,
+      name: /create on spotify/i,
     });
     fireEvent.click(createBtn);
 
     await waitFor(() => expect(createPlaylist).toHaveBeenCalled());
     // The rejection is caught: the component stays mounted and usable.
     expect(
-      screen.getByRole('button', { name: /create this playlist/i })
+      screen.getByRole('button', { name: /create on spotify/i })
     ).toBeInTheDocument();
     consoleSpy.mockRestore();
   });

@@ -86,15 +86,13 @@ describe('SpotifyAuth Integration Tests', () => {
     render(<MockParentComponent />);
 
     // Should show the auth component initially
-    expect(screen.getByText('Connect to Spotify')).toBeInTheDocument();
+    expect(screen.getByText('Mix playlists by ratio.')).toBeInTheDocument();
     expect(
       screen.queryByTestId('authenticated-content')
     ).not.toBeInTheDocument();
 
     // Click the login button
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     // Should redirect to Spotify's authorize endpoint using the PKCE code flow
     const url = await waitForRedirect();
@@ -137,7 +135,7 @@ describe('SpotifyAuth Integration Tests', () => {
     render(<MockParentComponent />);
 
     const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
     await user.click(loginButton);
 
@@ -176,9 +174,7 @@ describe('SpotifyAuth Integration Tests', () => {
 
     render(<MockParentComponent />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.searchParams.get('client_id')).toBe(customConfig.clientId);
@@ -192,11 +188,11 @@ describe('SpotifyAuth Integration Tests', () => {
     );
 
     const container = screen.getByTestId('auth-container');
-    expect(container).toHaveClass('card');
+    expect(container).toHaveClass('connect');
     expect(container).toHaveClass('custom-theme-class');
 
     const button = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
     expect(button).toHaveClass('btn');
   });
@@ -208,17 +204,17 @@ describe('SpotifyAuth Integration Tests', () => {
     expect(container).toBeInTheDocument();
 
     const button = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
     expect(button).toHaveAttribute('type', 'button');
 
     // Check that all text content is accessible
-    expect(screen.getByText('Connect to Spotify')).toBeInTheDocument();
+    expect(screen.getByText('Mix playlists by ratio.')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "To get started, you'll need to connect your Spotify account."
-      )
+      screen.getByText('Pick playlists, set the blend, save to Spotify.')
     ).toBeInTheDocument();
-    expect(screen.getByText('Ready to use!')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Connect Spotify' })
+    ).toBeInTheDocument();
   });
 });

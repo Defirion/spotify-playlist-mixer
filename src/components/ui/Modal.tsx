@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, memo } from 'react';
+import React, { useLayoutEffect, useRef, useCallback, memo } from 'react';
 import { ModalProps } from '../../types';
 import styles from './Modal.module.css';
 
@@ -41,7 +41,7 @@ const Modal = memo<ModalProps>(
     );
 
     // Focus management
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (isOpen) {
         // Store the currently focused element
         previousActiveElement.current = document.activeElement;
@@ -86,7 +86,7 @@ const Modal = memo<ModalProps>(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Tab') {
           const focusableElements = modalRef.current?.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
           );
 
           if (focusableElements && focusableElements.length > 0) {
@@ -97,7 +97,10 @@ const Modal = memo<ModalProps>(
 
             if (event.shiftKey) {
               // Shift + Tab
-              if (document.activeElement === firstElement) {
+              if (
+                document.activeElement === firstElement ||
+                document.activeElement === modalRef.current
+              ) {
                 event.preventDefault();
                 lastElement.focus();
               }

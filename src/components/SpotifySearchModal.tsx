@@ -51,7 +51,7 @@ const SpotifySearchModal = memo<SpotifySearchModalProps>(
         // Modal props
         isOpen={isOpen}
         onClose={onClose}
-        title="🎵 Search Spotify"
+        title="Search Spotify"
         className={className}
         // Data props
         tracks={searchResults}

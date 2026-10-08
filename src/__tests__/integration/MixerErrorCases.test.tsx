@@ -55,6 +55,8 @@ describe('Mixer error scenarios (hook-mocked)', () => {
       />
     );
 
-    expect(screen.getByText(/Generated Playlist|A/)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Mix name' })).toHaveValue(
+      'Invalid Ratio'
+    );
   });
 });

@@ -1,58 +1,22 @@
-// Import React helpers explicitly to avoid unused default import
-import { memo, useState, useCallback, useEffect } from 'react';
-import { SpotifyPlaylist } from '../types/spotify';
+import { CSSProperties, memo, ReactNode } from 'react';
 import {
-  RatioConfig as RatioConfigType,
+  SpotifyPlaylist,
+  RatioConfig as Config,
   RatioConfigItem,
-  WeightType,
-} from '../types/mixer';
+} from '../types';
 import { useRatioCalculation } from '../hooks/useRatioCalculation';
+import HardwareControl from './ui/HardwareControl';
+import LcdNumber from './ui/LcdNumber';
+import { channelColors } from './features/mixer/channelAppearance';
 import styles from './RatioConfig.module.css';
-import { getPlaylistItemCount } from '../utils/spotify';
-
-interface ExampleMixDisplayProps {
-  selectedPlaylists: SpotifyPlaylist[];
-  ratioConfig: RatioConfigType;
-  globalBalanceMethod: WeightType;
-}
-
-// Memoized component for expensive example mix calculations
-const ExampleMixDisplay = memo<ExampleMixDisplayProps>(
-  ({ selectedPlaylists, ratioConfig, globalBalanceMethod }) => {
-    const { exampleMixData } = useRatioCalculation(
-      selectedPlaylists,
-      ratioConfig,
-      globalBalanceMethod
-    );
-
-    return (
-      <div className={styles.exampleMixContainer}>
-        <div className={styles.exampleMixContent}>
-          <div className={styles.exampleMixTitle}>
-            🎯 {exampleMixData.exampleTitle}
-          </div>
-          <div className={styles.exampleMixList}>
-            {exampleMixData.playlistExamples.map(example => (
-              <div key={example.id} className={styles.exampleMixItem}>
-                • <strong>{example.name}:</strong> {example.displayText},{' '}
-                {example.groupText} ({example.weightTypeText})
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
-
-ExampleMixDisplay.displayName = 'ExampleMixDisplay';
 
 interface RatioConfigProps {
   selectedPlaylists: SpotifyPlaylist[];
-  ratioConfig: RatioConfigType;
+  ratioConfig: Config;
   onRatioUpdate: (playlistId: string, config: RatioConfigItem) => void;
   onPlaylistRemove?: (playlistId: string) => void;
   className?: string;
+  addPlaylist?: ReactNode;
 }
 
 const RatioConfig = memo<RatioConfigProps>(
@@ -62,274 +26,161 @@ const RatioConfig = memo<RatioConfigProps>(
     onRatioUpdate,
     onPlaylistRemove,
     className,
+    addPlaylist,
   }) => {
-    const [globalBalanceMethod, setGlobalBalanceMethod] =
-      useState<WeightType>('frequency');
-
-    const { formatDurationFromSeconds, getPlaylistPercentage } =
-      useRatioCalculation(selectedPlaylists, ratioConfig, globalBalanceMethod);
-
-    // Update global balance method when ratioConfig changes (from presets)
-    useEffect(() => {
-      if (selectedPlaylists.length > 0 && ratioConfig) {
-        // Check if any playlist has weightType 'time'
-        const hasTimeWeighting = selectedPlaylists.some(playlist => {
-          const config = ratioConfig[playlist.id];
-          return config && config.weightType === 'time';
-        });
-
-        // Determine method based on playlist configs. Use functional set to
-        // avoid races where we optimistically set the local method then
-        // immediately read stale props and revert it.
-        const newMethod: WeightType = hasTimeWeighting ? 'time' : 'frequency';
-        setGlobalBalanceMethod(prev => (prev === newMethod ? prev : newMethod));
-      }
-    }, [ratioConfig, selectedPlaylists]);
-
-    const handleConfigChange = useCallback(
-      (
-        playlistId: string,
-        field: keyof RatioConfigItem,
-        value: string | number
-      ) => {
-        const currentConfig = ratioConfig[playlistId] || {
-          min: 1,
-          max: 2,
-          weight: 2,
-          weightType: 'frequency' as WeightType,
-        };
-
-        const newValue =
-          field === 'weightType' ? value : parseInt(value as string) || 1;
-        onRatioUpdate(playlistId, {
-          ...currentConfig,
-          [field]: newValue,
-        });
-      },
-      [ratioConfig, onRatioUpdate]
+    const method = selectedPlaylists.some(
+      playlist => ratioConfig[playlist.id]?.weightType === 'time'
+    )
+      ? 'time'
+      : 'frequency';
+    const { getPlaylistPercentage } = useRatioCalculation(
+      selectedPlaylists,
+      ratioConfig,
+      method
     );
-
-    const handleGlobalBalanceMethodChange = useCallback(
-      (method: WeightType) => {
-        setGlobalBalanceMethod(method);
-        // Update all playlists to use the new balance method
-        selectedPlaylists.forEach(playlist => {
-          handleConfigChange(playlist.id, 'weightType', method);
-        });
-      },
-      [selectedPlaylists, handleConfigChange]
-    );
-
-    const getWeightDescription = useCallback(
-      (weight: number, playlistId: string): string => {
-        const percentage = getPlaylistPercentage(playlistId);
-
-        if (weight <= 20) return `Low (${weight}) - ~${percentage}% of mix`;
-        if (weight <= 40) return `Normal (${weight}) - ~${percentage}% of mix`;
-        if (weight <= 60) return `High (${weight}) - ~${percentage}% of mix`;
-        if (weight <= 80) return `Top (${weight}) - ~${percentage}% of mix`;
-        return `Max (${weight}) - ~${percentage}% of mix`;
-      },
-      [getPlaylistPercentage]
-    );
-
-    const getGroupDescription = useCallback(
-      (min: number, max: number): string => {
-        if (min === max) {
-          return min === 1 ? '1 song' : `${min} songs`;
-        }
-        return `${min}-${max} songs`;
-      },
-      []
-    );
-
     return (
-      <div className={`card ${className || ''}`}>
-        <h2>🎛️ Customize Your Mix</h2>
-        <p>Choose how your playlists blend together</p>
-
-        {/* Universal Balance Method */}
-        <div className={styles.balanceMethodContainer}>
-          <label className={styles.balanceMethodLabel}>
-            ⚖️ Balance Method (applies to all playlists):
-          </label>
-          <div className="toggle-group">
-            <button
-              type="button"
-              className={`toggle-option ${globalBalanceMethod === 'frequency' ? 'active' : ''}`}
-              onClick={() => handleGlobalBalanceMethodChange('frequency')}
+      <div
+        className={`${styles.strips} ${className || ''}`}
+        aria-label="Playlist channels"
+      >
+        {selectedPlaylists.map((playlist, index) => {
+          const config = ratioConfig[playlist.id] || {
+            min: 1,
+            max: 2,
+            weight: 1,
+            weightType: method,
+          };
+          const update = (field: 'min' | 'max' | 'weight', value: number) =>
+            onRatioUpdate(playlist.id, {
+              ...config,
+              [field]: field === 'max' ? Math.max(config.min, value) : value,
+              max:
+                field === 'min'
+                  ? Math.max(value, config.max)
+                  : field === 'max'
+                    ? Math.max(config.min, value)
+                    : config.max,
+            });
+          const share = getPlaylistPercentage(playlist.id);
+          return (
+            <section
+              key={playlist.id}
+              className={styles.strip}
+              aria-label={playlist.name || 'Playlist'}
+              style={
+                {
+                  '--c': channelColors[index % channelColors.length],
+                } as CSSProperties
+              }
             >
-              Same Song Count
-            </button>
-            <button
-              type="button"
-              className={`toggle-option ${globalBalanceMethod === 'time' ? 'active' : ''}`}
-              onClick={() => handleGlobalBalanceMethodChange('time')}
-            >
-              Same Play Time
-            </button>
-          </div>
-          <div className={styles.balanceMethodDescription}>
-            {globalBalanceMethod === 'time'
-              ? 'Perfect for mixing genres with different song lengths (salsa vs bachata)'
-              : 'Traditional approach - equal number of songs from each playlist'}
-          </div>
-        </div>
-
-        <div className={styles.ratioControls}>
-          {selectedPlaylists.map(playlist => {
-            const config = ratioConfig[playlist.id] || {
-              min: 1,
-              max: 2,
-              weight: 1,
-              weightType: 'frequency' as WeightType,
-            };
-
-            const hasImage = Boolean(playlist.images?.[0]?.url);
-
-            return (
-              <div key={playlist.id} className={styles.playlistContainer}>
-                <div
-                  className={`${styles.ratioGrid} ${!hasImage ? styles.ratioGridNoImage : ''}`}
+              <div className={styles['s-head']}>
+                {playlist.images?.[0]?.url ? (
+                  <img
+                    className={styles.cover}
+                    src={playlist.images[0].url}
+                    alt={playlist.name}
+                  />
+                ) : (
+                  <span
+                    className={`${styles.cover} ${styles.coverFallback}`}
+                    aria-hidden="true"
+                  >
+                    {(playlist.name || 'P')[0]}
+                  </span>
+                )}
+                <h2 className={styles.sname}>{playlist.name || 'Playlist'}</h2>
+              </div>
+              {onPlaylistRemove && (
+                <button
+                  className={styles['x-btn']}
+                  title={`Remove ${playlist.name}`}
+                  aria-label={`Remove ${playlist.name}`}
+                  onClick={() => onPlaylistRemove(playlist.id)}
                 >
-                  {hasImage && (
-                    <img
-                      src={playlist.images[0].url}
-                      alt={playlist.name}
-                      className={styles.playlistCover}
-                    />
-                  )}
-                  <div className={styles.playlistInfo}>
-                    <div className={styles.playlistName}>{playlist.name}</div>
-                    <div className={styles.playlistDetails}>
-                      {getPlaylistItemCount(playlist)} tracks
-                      {playlist.realAverageDurationSeconds && (
-                        <span>
-                          {' '}
-                          • avg{' '}
-                          {formatDurationFromSeconds(
-                            playlist.realAverageDurationSeconds
-                          )}{' '}
-                          per song
-                        </span>
-                      )}
-                      {playlist.realAverageDurationSeconds &&
-                        playlist.tracksWithDuration !==
-                          getPlaylistItemCount(playlist) && (
-                          <span className={styles.playlistDurationInfo}>
-                            {' '}
-                            ({playlist.tracksWithDuration} with duration data)
-                          </span>
-                        )}
-                    </div>
-                  </div>
-
-                  {/* Inline Sliders */}
-                  <div className={styles.sliderContainer}>
-                    <div className={styles.sliderLabel}>
-                      🎵 Play together:{' '}
-                      {getGroupDescription(config.min, config.max)}
-                    </div>
-                    <div className={styles.sliderWrapper}>
-                      <span className={styles.sliderMinMax}>1</span>
-                      <div className={styles.dualRangeSlider}>
-                        <input
-                          type="range"
-                          min="1"
-                          max="8"
-                          value={config.min}
-                          onChange={e => {
-                            const newMin = parseInt(e.target.value);
-                            // If new min exceeds current max, update both in a
-                            // single call to avoid transient inconsistent states
-                            if (newMin > config.max) {
-                              onRatioUpdate(playlist.id, {
-                                min: newMin,
-                                max: newMin,
-                                weight: config.weight,
-                                weightType: config.weightType,
-                              });
-                            } else {
-                              handleConfigChange(playlist.id, 'min', newMin);
-                            }
-                          }}
-                          className={styles.rangeMin}
-                        />
-                        <input
-                          type="range"
-                          min="1"
-                          max="8"
-                          value={config.max}
-                          onChange={e => {
-                            const newMax = parseInt(e.target.value);
-                            // Ensure max never drops below current min. If it does,
-                            // clamp the max to the existing min so we don't move
-                            // the min down unexpectedly.
-                            const adjustedMax = Math.max(newMax, config.min);
-
-                            onRatioUpdate(playlist.id, {
-                              min: config.min,
-                              max: adjustedMax,
-                              weight: config.weight,
-                              weightType: config.weightType,
-                            });
-                          }}
-                          className={styles.rangeMax}
-                        />
-                      </div>
-                      <span className={styles.sliderMinMax}>8</span>
-                    </div>
-
-                    <div className={styles.sliderLabel}>
-                      🎲 Priority:{' '}
-                      {getWeightDescription(config.weight, playlist.id)}
-                    </div>
-                    <div className={styles.sliderWrapper}>
-                      <span className={styles.sliderMinMax}>Low</span>
-                      <input
-                        type="range"
-                        min="1"
-                        max="100"
-                        value={config.weight}
-                        onChange={e =>
-                          handleConfigChange(
-                            playlist.id,
-                            'weight',
-                            e.target.value
-                          )
-                        }
-                        className={styles.ratioConfigSlider}
+                  ×
+                </button>
+              )}
+              <fieldset>
+                <legend>Songs in a row</legend>
+                <div className={styles.knobs}>
+                  {(['min', 'max'] as const).map(field => (
+                    <div className={styles.knobwrap} key={field}>
+                      <HardwareControl
+                        kind="knob"
+                        label={`${playlist.name} ${field === 'min' ? 'minimum' : 'maximum'} songs in a row`}
+                        value={config[field]}
+                        min={1}
+                        max={8}
+                        onChange={value => update(field, value)}
                       />
-                      <span className={styles.sliderMinMax}>High</span>
+                      <span className={styles.klabel}>
+                        {field === 'min' ? 'Min' : 'Max'}
+                      </span>
+                      <LcdNumber
+                        label={`${playlist.name} ${field} value`}
+                        value={config[field]}
+                        min={1}
+                        max={8}
+                        onChange={value => update(field, value)}
+                      />
                     </div>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className={styles.pri}>
+                <legend>Priority</legend>
+                <div className={styles.fwrap}>
+                  <div className={styles.fscale} aria-hidden="true">
+                    {[100, 50, 1].map(value => (
+                      <span
+                        key={value}
+                        style={{ '--v': (value - 1) / 99 } as CSSProperties}
+                      >
+                        {value}
+                      </span>
+                    ))}
+                  </div>
+                  <HardwareControl
+                    kind="fader"
+                    label={`${playlist.name} priority`}
+                    value={config.weight}
+                    min={1}
+                    max={100}
+                    onChange={value => update('weight', value)}
+                  />
+                  <div
+                    className={styles.vu}
+                    role="meter"
+                    aria-label={`${playlist.name} share`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={share}
+                  >
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <i
+                        key={i}
+                        className={i < Math.round(share / 5) ? styles.lit : ''}
+                      />
+                    ))}
                   </div>
                 </div>
-                {onPlaylistRemove && (
-                  <button
-                    onClick={() => onPlaylistRemove(playlist.id)}
-                    className={styles.removeButton}
-                    title={`Remove ${playlist.name}`}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {selectedPlaylists.length > 1 && (
-          <ExampleMixDisplay
-            selectedPlaylists={selectedPlaylists}
-            ratioConfig={ratioConfig}
-            globalBalanceMethod={globalBalanceMethod}
-          />
-        )}
+                <div className={styles.pnum}>
+                  <LcdNumber
+                    label={`${playlist.name} priority value`}
+                    value={config.weight}
+                    min={1}
+                    max={100}
+                    onChange={value => update('weight', value)}
+                  />
+                </div>
+              </fieldset>
+            </section>
+          );
+        })}
+        {addPlaylist}
       </div>
     );
   }
 );
-
 RatioConfig.displayName = 'RatioConfig';
-
 export default RatioConfig;

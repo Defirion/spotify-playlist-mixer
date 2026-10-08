@@ -1,42 +1,53 @@
 .toast-error {
   position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 20px;
-  right: 20px;
-  background-color: #d32f2f;
-  color: white;
-  padding: 16px;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 280px;
-  max-width: 500px;
-  z-index: 1000;
+  width: min(520px, calc(100vw - 24px));
+  background: #7a241c;
+  color: var(--oled-ink);
+  padding: 13px 16px;
+  border-radius: 12px;
+  box-shadow:
+    0 18px 30px -6px rgba(0, 0, 0, 0.6),
+    0 0 0 1px #000;
+  z-index: 1081;
+  font: 500 14px/1.35 var(--sans);
 }
-
-.toast-content {
+.toast-main {
   display: flex;
+  gap: 16px;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
-
-.toast-content span {
-  flex-grow: 1;
-  margin-right: 12px;
+.toast-message {
+  flex: 1;
 }
-
-.toast-content button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
+.toast-actions {
   display: flex;
+  gap: 8px;
   align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 60%;
 }
-
+.toast-suggestions {
+  font-size: 13px;
+  color: var(--sil);
+}
+.toast-content button {
+  border: 0;
+  background: transparent;
+  color: var(--oled-ink);
+  min-width: 40px;
+  min-height: 40px;
+  font: 500 18px var(--sans);
+  border-radius: 6px;
+}
 .toast-content button:hover {
-  opacity: 0.8;
+  background: rgba(0, 0, 0, 0.15);
+}
+.toast-content .toast-retry {
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 0 8px;
 }

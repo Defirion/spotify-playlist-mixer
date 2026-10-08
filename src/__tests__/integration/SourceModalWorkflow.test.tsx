@@ -45,13 +45,19 @@ test('the actual source modal supports keyboard selection, additions and focus r
   await user.tab();
   expect(screen.getByRole('textbox')).toHaveFocus();
   await user.tab();
-  expect(screen.getAllByTestId('sortable-wrapper')[0]).toHaveFocus();
+  expect(
+    screen.getByRole('button', { name: 'Drag First to preview' })
+  ).toHaveFocus();
   await user.tab();
   expect(items[0]).toHaveFocus();
   await user.keyboard('{Enter}');
   expect(items[0]).toHaveClass('selected');
   await user.tab();
-  expect(screen.getAllByTestId('sortable-wrapper')[1]).toHaveFocus();
+  expect(screen.getByRole('checkbox', { name: 'Select First' })).toHaveFocus();
+  await user.tab();
+  expect(
+    screen.getByRole('button', { name: 'Drag Second to preview' })
+  ).toHaveFocus();
   await user.tab();
   await user.keyboard(' ');
   expect(items[1]).toHaveClass('selected');

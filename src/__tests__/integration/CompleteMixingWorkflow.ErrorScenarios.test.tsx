@@ -78,7 +78,7 @@ describe('Complete mixing workflow - error scenarios (hook-mocked)', () => {
 
     // Ensure the component still renders basic UI
     expect(
-      screen.getByRole('button', { name: /generate preview/i })
+      screen.getByRole('button', { name: /^preview$/i })
     ).toBeInTheDocument();
   });
 });

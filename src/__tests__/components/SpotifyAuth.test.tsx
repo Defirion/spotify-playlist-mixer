@@ -40,23 +40,16 @@ describe('SpotifyAuth', () => {
     process.env = originalEnv;
   });
 
-  it('renders the component with default content', () => {
+  it('renders the concise connect screen', () => {
     render(<SpotifyAuth />);
-
-    expect(screen.getByText('Connect to Spotify')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "To get started, you'll need to connect your Spotify account."
-      )
+      screen.getByRole('heading', { name: 'Mix playlists by ratio.' })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
+      screen.getByText('Pick playlists, set the blend, save to Spotify.')
     ).toBeInTheDocument();
-    expect(screen.getByText('Ready to use!')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Click the button above to connect your Spotify account and start mixing playlists.'
-      )
+      screen.getByRole('button', { name: 'Connect Spotify' })
     ).toBeInTheDocument();
   });
 
@@ -67,7 +60,7 @@ describe('SpotifyAuth', () => {
 
     const component = screen.getByTestId('spotify-auth-test');
     expect(component).toBeInTheDocument();
-    expect(component).toHaveClass('card');
+    expect(component).toHaveClass('connect');
     expect(component).toHaveClass('custom-auth-class');
   });
 
@@ -75,9 +68,7 @@ describe('SpotifyAuth', () => {
     const user = userEvent.setup();
     render(<SpotifyAuth />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.origin).toBe('https://accounts.spotify.com');
@@ -98,9 +89,7 @@ describe('SpotifyAuth', () => {
     const user = userEvent.setup();
     render(<SpotifyAuth />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(sessionStorage.getItem('spotify_pkce_code_verifier')).toMatch(
@@ -117,9 +106,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth redirectUri={customRedirectUri} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.searchParams.get('redirect_uri')).toBe(customRedirectUri);
@@ -131,9 +118,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth scopes={customScopes} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.searchParams.get('scope')).toBe(
@@ -147,9 +132,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth clientId={customClientId} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.searchParams.get('client_id')).toBe(customClientId);
@@ -168,9 +151,7 @@ describe('SpotifyAuth', () => {
     // Render the component without a clientId prop, so it relies on the environment variable
     render(<SpotifyAuth onError={mockOnError} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     expect(mockOnError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -199,9 +180,7 @@ describe('SpotifyAuth', () => {
     // Suppress console errors for this test
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(
@@ -222,9 +201,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth onAuth={mockOnAuth} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
     await waitForRedirect();
 
     // Note: onAuth would typically be called after successful redirect and token parsing
@@ -236,7 +213,7 @@ describe('SpotifyAuth', () => {
     render(<SpotifyAuth />);
 
     const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
     expect(loginButton).toHaveAttribute('type', 'button');
   });
@@ -246,7 +223,7 @@ describe('SpotifyAuth', () => {
     render(<SpotifyAuth />);
 
     const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
 
     // Tab to focus the button
@@ -267,7 +244,7 @@ describe('SpotifyAuth', () => {
     render(<SpotifyAuth />);
 
     const loginButton = screen.getByRole('button', {
-      name: 'Connect Spotify Account',
+      name: 'Connect Spotify',
     });
 
     // Tab to focus the button and press space
@@ -285,9 +262,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth scopes={[]} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     expect(url.searchParams.get('scope')).toBe('');
@@ -300,9 +275,7 @@ describe('SpotifyAuth', () => {
 
     render(<SpotifyAuth redirectUri={redirectUriWithSpecialChars} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     const url = await waitForRedirect();
     // URLSearchParams round-trips the encoded value back to the original
@@ -332,9 +305,7 @@ describe('SpotifyAuth', () => {
     // Suppress console errors for this test
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await user.click(
-      screen.getByRole('button', { name: 'Connect Spotify Account' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Connect Spotify' }));
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(

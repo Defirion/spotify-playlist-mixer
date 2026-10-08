@@ -1,37 +1,28 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { DragEndEvent, DragStartEvent, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { closestCenter } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useMixGeneration } from '../hooks/useMixGeneration';
 import { useMixPreview } from '../hooks/useMixPreview';
 import { useMixWarnings } from '../hooks/useMixWarnings';
+import usePreviewDrag from '../hooks/usePreviewDrag';
 import DndProvider from './DndProvider';
-import { getTrackDragId } from '../utils/trackUtils';
-import PlaylistForm from './features/mixer/PlaylistForm';
+import MixerPanel, { MixerSettingsProps } from './features/mixer/MixerPanel';
 import MixPreview from './features/mixer/MixPreview';
-import MixControls from './features/mixer/MixControls';
+import ExampleOrder from './features/mixer/ExampleOrder';
+import ExhaustionWarning from './features/mixer/ExhaustionWarning';
 import ErrorBoundary from './ui/ErrorBoundary';
-import {
-  SpotifyPlaylist,
-  MixOptions,
-  RatioConfig,
-  RatioConfigItem,
-  MixedTrack,
-} from '../types';
+import { SpotifyPlaylist } from '../types';
 import styles from './PlaylistMixer.module.css';
+import channel from './RatioConfig.module.css';
 
-interface PlaylistMixerProps {
+interface PlaylistMixerProps extends MixerSettingsProps {
   accessToken: string;
-  selectedPlaylists: SpotifyPlaylist[];
-  ratioConfig: RatioConfig;
-  mixOptions: MixOptions;
-  updateMixOptions: (updates: Partial<MixOptions>) => void;
-  onRatioUpdate?: (playlistId: string, config: RatioConfigItem) => void;
   onMixedPlaylist?: (result: SpotifyPlaylist) => void;
   onError?: (error: string) => void;
+  channels?: ReactNode;
 }
 
-const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
+export default function PlaylistMixer({
   accessToken,
   selectedPlaylists,
   ratioConfig,
@@ -40,388 +31,169 @@ const PlaylistMixer: React.FC<PlaylistMixerProps> = ({
   onRatioUpdate,
   onMixedPlaylist,
   onError,
-}) => {
-  // Ref to track optimistically added tracks for drag operations
-  const optimisticTrackRef = useRef<MixedTrack | null>(null);
-
-  // Custom hooks
-  const mixGeneration = useMixGeneration(accessToken, {
-    onError,
-  });
-
-  const mixPreview = useMixPreview(accessToken, {
-    onError,
-  });
-
-  // Calculate warnings using the dedicated hook
+  channels,
+  presets,
+}: PlaylistMixerProps) {
+  const mixGeneration = useMixGeneration(accessToken, { onError });
+  const mixPreview = useMixPreview(accessToken, { onError });
   const { exceedsLimit, ratioImbalance } = useMixWarnings(
     selectedPlaylists,
     ratioConfig,
     mixOptions
   );
-
-  // Clear preview when mix options change (but avoid infinite loops)
-  const prevMixOptionsRef = useRef(mixOptions);
-  const prevSourcesRef = useRef(
-    JSON.stringify({ selectedPlaylists, ratioConfig })
+  const [stale, setStale] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
+  const signature = JSON.stringify({
+    sources: selectedPlaylists.map(playlist => playlist.id),
+    ratioConfig,
+    totalSongs: mixOptions.totalSongs,
+    targetDurationSeconds: mixOptions.targetDurationSeconds,
+    useTimeLimit: mixOptions.useTimeLimit,
+    useAllSongs: mixOptions.useAllSongs,
+    shuffleTracks: mixOptions.shuffleTracks,
+    continueWhenPlaylistEmpty: mixOptions.continueWhenPlaylistEmpty,
+  });
+  const currentSignature = useRef(signature);
+  const previousSignature = useRef(signature);
+  const previousSourceCount = useRef(selectedPlaylists.length);
+  currentSignature.current = signature;
+  const {
+    state: { preview, loading: previewLoading },
+    clearPreview,
+  } = mixPreview;
+  const drag = usePreviewDrag(
+    mixPreview.getPreviewTracks,
+    mixPreview.updateTrackOrder
   );
+
   useEffect(() => {
-    const prev = prevMixOptionsRef.current;
-    const current = mixOptions;
-    const sources = JSON.stringify({ selectedPlaylists, ratioConfig });
-
-    // Only clear if meaningful options that affect mixing have changed
-    const shouldClearPreview =
-      prevSourcesRef.current !== sources ||
-      prev.totalSongs !== current.totalSongs ||
-      prev.targetDurationSeconds !== current.targetDurationSeconds ||
-      prev.useTimeLimit !== current.useTimeLimit ||
-      prev.useAllSongs !== current.useAllSongs ||
-      prev.shuffleTracks !== current.shuffleTracks ||
-      prev.continueWhenPlaylistEmpty !== current.continueWhenPlaylistEmpty;
-
-    if (shouldClearPreview) {
-      mixPreview.clearPreview();
-      mixGeneration.reset();
-      prevMixOptionsRef.current = current;
-      prevSourcesRef.current = sources;
+    if (signature !== previousSignature.current) {
+      if (!selectedPlaylists.length && previousSourceCount.current > 0) {
+        clearPreview();
+        setStale(false);
+      } else if (preview || previewLoading) setStale(true);
+      previousSignature.current = signature;
     }
-  }, [mixOptions, selectedPlaylists, ratioConfig, mixPreview, mixGeneration]);
+    previousSourceCount.current = selectedPlaylists.length;
+  }, [
+    signature,
+    preview,
+    selectedPlaylists.length,
+    clearPreview,
+    previewLoading,
+  ]);
 
-  // Generate preview
-  const handleGeneratePreview = useCallback(async () => {
-    await mixPreview.generatePreview(
+  const generatePreview = async () => {
+    const requestedSignature = signature;
+    const result = await mixPreview.generatePreview(
       selectedPlaylists,
       ratioConfig,
       mixOptions
     );
-  }, [selectedPlaylists, ratioConfig, mixOptions, mixPreview]);
-
-  // Handle track order changes in preview
-  const handlePreviewOrderChange = useCallback(
-    (reorderedTracks: MixedTrack[]) => {
-      mixPreview.updateTrackOrder(reorderedTracks);
-    },
-    [mixPreview]
-  );
-
-  // Enhanced drag start handler - optimistic UI for external drags
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      // log with timestamp for correlating haptics behavior
-      // eslint-disable-next-line no-console
-      console.log('Drag started - adding dnd-dragging class', {
-        time: new Date().toISOString(),
-        hr:
-          typeof performance !== 'undefined' && performance.now
-            ? performance.now()
-            : Date.now(),
-      });
-
-      // Add class to the scrolling element (preferred) to prevent auto-scroll and user scroll.
-      // Use document.scrollingElement when available, fall back to document.documentElement.
-      const scrollingElement =
-        (document.scrollingElement as HTMLElement) || document.documentElement;
-      scrollingElement.classList.add('dnd-dragging');
-
-      // haptic triggering moved to DndProvider's HapticsMonitor (uses useDndMonitor)
-
-      const { active } = event;
-      const isExternalDrag = active.data.current?.context === 'modal';
-
-      if (isExternalDrag) {
-        const trackData = active.data.current?.track;
-        if (trackData) {
-          // Create optimistic track using the SAME instance ID as the dragged track
-          // This ensures the drag system can find the track in the preview
-          const optimisticTrack: MixedTrack = {
-            ...trackData,
-            sourcePlaylist: trackData.sourcePlaylist || 'unknown',
-            instanceId: trackData.instanceId || active.id, // Use the drag ID as instance ID
-          };
-
-          // Store reference for potential cleanup
-          optimisticTrackRef.current = optimisticTrack;
-
-          // Add to end of preview for immediate visual feedback
-          const currentTracks = mixPreview.getPreviewTracks();
-          const updatedTracks = [...currentTracks, optimisticTrack];
-          mixPreview.updateTrackOrder(updatedTracks);
-
-          console.log('Added optimistic track:', optimisticTrack.instanceId);
-        }
-      }
-    },
-    [mixPreview]
-  );
-
-  const handleDragCancel = useCallback(() => {
-    console.log('Drag cancelled - removing dnd-dragging class');
-
-    // Remove class from the scrolling element (preferred) or html as fallback
-    const scrollingElement =
-      (document.scrollingElement as HTMLElement) || document.documentElement;
-    scrollingElement.classList.remove('dnd-dragging');
-
-    // Remove optimistic track if drag was cancelled
-    if (optimisticTrackRef.current) {
-      const currentTracks = mixPreview.getPreviewTracks();
-      const optimisticTrackId = getTrackDragId(optimisticTrackRef.current);
-
-      // Remove the optimistic track
-      const updatedTracks = currentTracks.filter(
-        t => getTrackDragId(t) !== optimisticTrackId
-      );
-
-      mixPreview.updateTrackOrder(updatedTracks);
-      console.log('Removed optimistic track on cancel:', optimisticTrackId);
-
-      // Clear the reference
-      optimisticTrackRef.current = null;
-    }
-  }, [mixPreview]);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      console.log('Drag ended - removing dnd-dragging class');
-
-      // Remove class from the scrolling element (preferred) or html as fallback
-      const scrollingElement =
-        (document.scrollingElement as HTMLElement) || document.documentElement;
-      scrollingElement.classList.remove('dnd-dragging');
-
-      const { active, over } = event;
-
-      console.log('Drag end event:', {
-        activeId: active.id,
-        overId: over?.id,
-        activeContext: active.data.current?.context,
-        hasTrackData: !!active.data.current?.track,
-      });
-
-      if (!over) return;
-
-      const previewTracks = mixPreview.getPreviewTracks();
-
-      // Check if this is an external drag (from modal)
-      const isExternalDrag = active.data.current?.context === 'modal';
-
-      if (isExternalDrag) {
-        // Track was already added optimistically in handleDragStart
-        // Now we just need to finalize its position
-        const trackData = active.data.current?.track;
-        if (!trackData || !optimisticTrackRef.current) return;
-
-        const optimisticTrackId = getTrackDragId(optimisticTrackRef.current);
-
-        // Find where to move the optimistic track
-        const targetIndex = previewTracks.findIndex(
-          t => getTrackDragId(t) === over.id
-        );
-
-        if (
-          targetIndex >= 0 &&
-          getTrackDragId(previewTracks[targetIndex]) !== optimisticTrackId
-        ) {
-          // Move the optimistic track to the target position
-          const currentIndex = previewTracks.findIndex(
-            t => getTrackDragId(t) === optimisticTrackId
-          );
-
-          if (currentIndex >= 0) {
-            const reorderedTracks = arrayMove(
-              previewTracks,
-              currentIndex,
-              targetIndex
-            );
-            mixPreview.updateTrackOrder(reorderedTracks);
-            console.log('Moved optimistic track to position:', targetIndex);
-          }
-        }
-        // If no target or target is the optimistic track itself, keep it where it is
-
-        // Notify that a track was successfully added via drag
-        // This will trigger regeneration of instance IDs in modals
-        window.dispatchEvent(
-          new CustomEvent('trackDraggedToPreview', {
-            detail: { trackId: trackData.id },
-          })
-        );
-
-        // Clear the optimistic reference
-        optimisticTrackRef.current = null;
-        return;
-      }
-
-      // Handle reordering within preview
-      const activeInPreview = previewTracks.find(
-        t => getTrackDragId(t) === active.id
-      );
-      const overInPreview = previewTracks.find(
-        t => getTrackDragId(t) === over.id
-      );
-
-      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
-        // eslint-disable-next-line no-console
-        console.log('Reorder debug:', {
-          activeId: active.id,
-          overId: over.id,
-          activeInPreview: !!activeInPreview,
-          overInPreview: !!overInPreview,
-          previewTrackDragIds: previewTracks.map(t => getTrackDragId(t)),
-          activeContext: active.data.current?.context,
-        });
-      }
-
-      if (activeInPreview && overInPreview) {
-        const oldIndex = previewTracks.findIndex(
-          t => getTrackDragId(t) === active.id
-        );
-        const newIndex = previewTracks.findIndex(
-          t => getTrackDragId(t) === over.id
-        );
-
-        if (oldIndex !== newIndex) {
-          const reorderedTracks = arrayMove(previewTracks, oldIndex, newIndex);
-          if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
-            // eslint-disable-next-line no-console
-            console.log('Reordering within preview:', oldIndex, '->', newIndex);
-          }
-          mixPreview.updateTrackOrder(reorderedTracks);
-        }
-      } else {
-        if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
-          // eslint-disable-next-line no-console
-          console.log('Reorder failed - tracks not found in preview');
-        }
-      }
-    },
-    [mixPreview]
-  );
-
-  // Create final playlist
-  const handleCreatePlaylist = useCallback(async () => {
+    if (result) setStale(requestedSignature !== currentSignature.current);
+  };
+  const createPlaylist = async () => {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
+    setCreating(true);
     try {
-      // Priority 1: Use preview tracks if available (includes any user reordering)
-      const previewTracks = mixPreview.getPreviewTracks();
-
-      let finalTracks: MixedTrack[];
-      if (mixPreview.state.preview) {
-        // User has generated a preview (possibly with custom ordering)
-        // Use these tracks as the definitive final list
-        finalTracks = previewTracks;
-      } else {
-        // No preview available - generate fresh mix with current settings
-        // This handles the case where user clicks "Create" without previewing
-        finalTracks = await mixGeneration.generateMix(
+      const requestedSignature = signature;
+      let tracks = mixPreview.getPreviewTracks();
+      if (preview && stale) {
+        const fresh = await mixPreview.generatePreview(
           selectedPlaylists,
           ratioConfig,
           mixOptions
         );
+        if (!fresh || requestedSignature !== currentSignature.current) return;
+        tracks = fresh.tracks;
+        setStale(false);
+      } else if (!preview) {
+        tracks = await mixGeneration.generateMix(
+          selectedPlaylists,
+          ratioConfig,
+          mixOptions
+        );
+        if (requestedSignature !== currentSignature.current) return;
       }
-
-      // Debug: log before creating playlist
-      // eslint-disable-next-line no-console
-      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
-        // eslint-disable-next-line no-console
-        console.log('handleCreatePlaylist: about to create playlist', {
-          name: mixOptions.playlistName,
-          finalTracksLength: finalTracks.length,
-        });
-      }
-
-      // Create the Spotify playlist with the final track list
+      if (process.env.DEBUG_PLAYLIST_MIXER === '1')
+        console.log('Creating preview playlist', { count: tracks.length });
       const result = await mixGeneration.createPlaylist(
         mixOptions.playlistName,
-        finalTracks
+        tracks
       );
-
-      // Debug: log create result
-      // eslint-disable-next-line no-console
-      if (process.env.DEBUG_PLAYLIST_MIXER === '1') {
-        // eslint-disable-next-line no-console
-        console.log('handleCreatePlaylist: createPlaylist result', result);
-      }
-
-      if (onMixedPlaylist) {
-        onMixedPlaylist(result);
-      }
-    } catch (err) {
-      console.error('Playlist creation error:', err);
+      onMixedPlaylist?.(result);
+    } catch (error) {
+      console.error('Playlist creation error:', error);
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
     }
-  }, [
-    selectedPlaylists,
-    ratioConfig,
-    mixOptions,
-    mixGeneration,
-    mixPreview,
-    onMixedPlaylist,
-  ]);
+  };
 
   return (
     <DndProvider
       collisionDetection={closestCenter}
       autoScroll={{
-        // Prevent the main document from being auto-scrolled by dnd-kit.
-        // We manage page scroll via the dnd-dragging class instead.
-        canScroll(element) {
-          if (element === document.scrollingElement) return false;
-          return true;
-        },
+        canScroll: element => element !== document.scrollingElement,
       }}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
+      {...drag}
       modifiers={[restrictToVerticalAxis]}
     >
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>🎵 Create Your Mix</h2>
-          <p className={styles.subtitle}>
-            Blend your playlists into the perfect mix
-          </p>
-        </div>
-
-        <PlaylistForm
-          mixOptions={mixOptions}
-          onMixOptionsChange={updateMixOptions}
-          selectedPlaylists={selectedPlaylists}
-          exceedsLimit={exceedsLimit}
-          ratioImbalance={ratioImbalance}
-          onRatioUpdate={onRatioUpdate}
-        />
-
-        {mixPreview.state.preview && (
-          <ErrorBoundary>
-            <MixPreview
-              tracks={mixPreview.state.preview.tracks}
-              stats={mixPreview.state.preview.stats}
-              totalDuration={mixPreview.state.preview.totalDuration}
-              loading={mixPreview.state.loading}
-              onTrackOrderChange={handlePreviewOrderChange}
-              accessToken={accessToken}
+      <div className={styles.desk}>
+        <div className={styles.left}>
+          <div className={channel.trough}>
+            {channels}
+            <ExampleOrder
               selectedPlaylists={selectedPlaylists}
+              ratioConfig={ratioConfig}
+              mixOptions={mixOptions}
             />
-          </ErrorBoundary>
-        )}
-
-        <MixControls
+          </div>
+          <ExhaustionWarning
+            warning={ratioImbalance}
+            mixOptions={mixOptions}
+            onMixOptionsChange={updateMixOptions}
+            onRatioUpdate={onRatioUpdate}
+          />
+          {exceedsLimit && (
+            <p className={styles.note} role="status">
+              Not enough content: {exceedsLimit.requestedFormatted} requested;{' '}
+              {exceedsLimit.availableFormatted} available.
+            </p>
+          )}
+        </div>
+        <MixerPanel
           selectedPlaylists={selectedPlaylists}
+          ratioConfig={ratioConfig}
           mixOptions={mixOptions}
-          hasPreview={!!mixPreview.state.preview}
-          loading={mixGeneration.state.loading}
-          previewLoading={mixPreview.state.loading}
-          onGeneratePreview={handleGeneratePreview}
-          onCreatePlaylist={handleCreatePlaylist}
+          updateMixOptions={updateMixOptions}
+          onRatioUpdate={onRatioUpdate}
+          presets={presets}
+          songs={preview?.tracks.length || 0}
+          duration={preview?.totalDuration || 0}
+          hasPreview={!!preview}
+          stale={stale}
+          loading={creating || mixGeneration.state.loading}
+          previewLoading={previewLoading}
+          generatePreview={generatePreview}
+          createPlaylist={createPlaylist}
         />
-
-        <p className={styles.helpText}>
-          Happy with your mix? Create the playlist or regenerate with your
-          current settings
-        </p>
       </div>
+      <ErrorBoundary>
+        <MixPreview
+          tracks={preview?.tracks || []}
+          stats={preview?.stats || {}}
+          totalDuration={preview?.totalDuration || 0}
+          loading={previewLoading}
+          onTrackOrderChange={mixPreview.updateTrackOrder}
+          accessToken={accessToken}
+          selectedPlaylists={selectedPlaylists}
+          stale={stale}
+          hasPreview={!!preview}
+        />
+      </ErrorBoundary>
     </DndProvider>
   );
-};
-
-export default PlaylistMixer;
+}

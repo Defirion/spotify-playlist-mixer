@@ -5,11 +5,13 @@ import {
   AnimateLayoutChanges,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import styles from './SortableWrapper.module.css';
 
 interface SortableWrapperProps {
   id: string;
   children: React.ReactNode;
   data?: any;
+  handleLabel?: string;
 }
 
 // Custom animation function that ensures animations work for both reordering and adding items
@@ -36,7 +38,12 @@ const customAnimateLayoutChanges: AnimateLayoutChanges = args => {
   return defaultAnimateLayoutChanges(args);
 };
 
-function SortableWrapper({ id, children, data }: SortableWrapperProps) {
+function SortableWrapper({
+  id,
+  children,
+  data,
+  handleLabel,
+}: SortableWrapperProps) {
   const {
     attributes,
     listeners,
@@ -59,12 +66,23 @@ function SortableWrapper({ id, children, data }: SortableWrapperProps) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="sortable-wrapper"
+      {...(!handleLabel ? attributes : {})}
+      {...(!handleLabel ? listeners : {})}
+      className={`sortable-wrapper ${handleLabel ? styles.row : ''}`}
       data-testid="sortable-wrapper"
       data-dragging={isDragging}
     >
+      {handleLabel && (
+        <button
+          type="button"
+          className={styles.grip}
+          {...attributes}
+          {...listeners}
+          aria-label={handleLabel}
+        >
+          ⠿
+        </button>
+      )}
       {children}
     </div>
   );

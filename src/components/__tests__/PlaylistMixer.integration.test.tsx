@@ -50,7 +50,7 @@ vi.mock('../features/mixer/MixControls', () => {
             data-testid="generate-preview-btn"
             onClick={onGeneratePreview}
           >
-            Generate Preview
+            Preview
           </button>
           <button data-testid="create-playlist-btn" onClick={onCreatePlaylist}>
             Create Playlist
@@ -187,7 +187,7 @@ describe('PlaylistMixer integration-style flow', () => {
       />
     );
 
-    // generate preview
+    // Generate the preview
     const genBtn = screen.getByTestId('generate-preview-btn');
     fireEvent.click(genBtn);
 

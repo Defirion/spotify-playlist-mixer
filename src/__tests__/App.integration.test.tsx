@@ -105,10 +105,8 @@ describe('App integration (real store)', () => {
       expect(screen.queryByText(/Connect to Spotify/i)).toBeFalsy();
     });
 
-    expect(screen.getByText(/Spotify Playlist Mixer/i)).toBeInTheDocument();
-    expect(screen.getByText(/Add Playlists to Mix/i)).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText(/paste Spotify URL|Try:/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Playlist Mixer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Add playlist/i)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

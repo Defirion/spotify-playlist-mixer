@@ -41,7 +41,7 @@ describe('AppShell', () => {
   });
   test('renders auth when not authenticated', () => {
     render(<AppShell {...baseProps} />);
-    expect(screen.getByText(/Spotify Playlist Mixer/i)).toBeTruthy();
+    expect(screen.getByText(/Playlist Mixer/i)).toBeTruthy();
     // SpotifyAuth renders a button to auth; assert its presence by role
     expect(screen.getByRole('button')).toBeTruthy();
   });
@@ -51,15 +51,13 @@ describe('AppShell', () => {
       <AppShell
         {...baseProps}
         isAuthenticated={true}
-        selectedPlaylists={[{ id: 'p1' }]}
+        selectedPlaylists={[{ id: 'p1', name: 'First' } as any]}
       />
     );
-    expect(
-      screen.getByText(/Mix your playlists with custom ratios/i)
-    ).toBeTruthy();
-    expect(screen.getByText(/Add Playlists to Mix/i)).toBeTruthy();
+    expect(screen.getByText(/Playlist Mixer/i)).toBeTruthy();
+    expect(screen.getByText(/Add playlist/i)).toBeTruthy();
     // RatioConfig should be rendered when selectedPlaylists.length > 0
-    expect(screen.getByText(/Add Playlists to Mix/i)).toBeTruthy();
+    expect(screen.getByText(/Add playlist/i)).toBeTruthy();
   });
 
   test('renders PlaylistMixer when there are >1 playlists selected', () => {
@@ -67,12 +65,13 @@ describe('AppShell', () => {
       <AppShell
         {...baseProps}
         isAuthenticated={true}
-        selectedPlaylists={[{ id: 'p1' }, { id: 'p2' }]}
+        selectedPlaylists={[
+          { id: 'p1', name: 'First' } as any,
+          { id: 'p2', name: 'Second' } as any,
+        ]}
       />
     );
     // PlaylistMixer renders children that include 'Mix' word in UI; assert presence via text
-    expect(
-      screen.getByText(/Mix your playlists with custom ratios/i)
-    ).toBeTruthy();
+    expect(screen.getByText(/Playlist Mixer/i)).toBeTruthy();
   });
 });

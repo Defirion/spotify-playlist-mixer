@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en" style="background:#131517;color-scheme:dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Preference board</title>
+<style>
+:root{color-scheme:dark;--bg:#131517;--panel:#1E2124;--line:#3A4046;--ink:#E6E8EA;--mute:#A4ABB1;--accent:#FF7A1A;--well:#0D0F10}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,"Segoe UI",sans-serif}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.page{max-width:1240px;margin:0 auto;padding:28px 24px 140px}
+h1{font-size:24px;margin:0 0 6px}
+.lede{color:var(--mute);margin:0 0 28px;max-width:70ch}
+.axis{margin:0 0 36px}
+.axis h2{font-size:18px;margin:0 0 10px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.wide .opts{grid-template-columns:repeat(auto-fit,minmax(440px,1fr))}
+.card{position:relative;display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:6px;padding:10px;cursor:pointer;min-width:0}
+.card:hover{border-color:#5C656C}
+.card[aria-pressed="true"]{border-color:var(--accent)}
+.card[aria-pressed="true"]::after{content:"Picked";position:absolute;top:10px;right:10px;background:var(--accent);color:#14181B;font-size:13px;font-weight:600;padding:2px 8px;border-radius:3px}
+.shot{background:var(--well);border-radius:3px;display:flex;justify-content:center;align-items:flex-start;gap:8px;padding:6px;min-height:120px}
+.shot img{max-width:100%;max-height:520px;width:auto;height:auto;display:block;min-width:0;flex:0 1 auto}
+.shot.two img{max-width:calc(50% - 4px)}
+.cap{font-size:14px;color:var(--mute)}
+.cap b{color:var(--ink);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.none{background:none;border:1px solid var(--line);border-radius:4px;padding:0 14px;min-height:40px;cursor:pointer;color:var(--mute)}
+.none[aria-pressed="true"]{border-color:var(--accent);color:var(--ink)}
+.note{flex:1 1 260px;background:var(--well);border:1px solid var(--line);border-radius:4px;padding:0 12px;min-height:40px;color:var(--ink)}
+.note::placeholder{color:#7F878D}
+.else textarea{width:100%;min-height:120px;background:var(--well);border:1px solid var(--line);border-radius:4px;padding:12px;color:var(--ink);resize:vertical}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;z-index:10}
+.bar .status{color:var(--mute);font-size:14px}
+.btn{min-height:44px;padding:0 18px;border:1px solid #5C656C;border-radius:4px;background:#3A4046;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:#7A3300;color:#14181B}
+dialog{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:12px;max-width:96vw;max-height:94vh;border-radius:6px}
+dialog::backdrop{background:rgba(0,0,0,.8)}
+dialog img{display:block;max-width:92vw;max-height:84vh;background:var(--well)}
+dialog .close{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Preference board</h1>
+  <p class="lede">For each row, click the version you like best. Skip rows you don't care about. Add a few words if it's close but not quite right. Double-click a picture to enlarge it. It saves as you go, so just tell Claude when you're done.</p>
+  <div id="axes"></div>
+  <section class="axis else">
+    <h2>Anything else?</h2>
+    <textarea id="else" aria-label="Anything else" placeholder="Anything that isn't covered above"></textarea>
+  </section>
+</div>
+<div class="bar">
+  <span class="status" id="status" role="status"></span>
+  <span style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn" id="reset" type="button">Clear all</button>
+    <button class="btn primary" id="copy" type="button">Copy summary</button>
+  </span>
+</div>
+<dialog id="zoom"><button class="btn close" type="button" id="zoomClose">Close</button><img id="zoomImg" alt=""></dialog>
+
+<script>
+(function(){
+'use strict';
+var P='shots/prefs/';
+var ROUNDS={r1:['Round 1','warm grey, pads, LCD'],r2:['Round 2','dark chassis on a light desk'],r3:['Round 3','light, minimal'],r4:['Round 4','all dark, minimal text']};
+function rounds(comp){return Object.keys(ROUNDS).map(function(r){return {id:r,title:ROUNDS[r][0],desc:ROUNDS[r][1],imgs:[P+comp+'-'+r+'.png']}})}
+var AXES=[
+ {id:'overview',title:'Overall look',wide:true,opts:rounds('overview')},
+ {id:'strip',title:'Playlist channel',opts:rounds('strip')},
+ {id:'presets',title:'Presets',opts:rounds('presets')},
+ {id:'search',title:'Adding playlists',opts:rounds('search')},
+ {id:'master',title:'Mix settings and length',wide:true,opts:rounds('master')},
+ {id:'sequence',title:'Example order',wide:true,opts:rounds('sequence')},
+ {id:'warning',title:'Running-out warning',wide:true,opts:rounds('warning')},
+ {id:'preview',title:'Track list',wide:true,opts:rounds('preview')},
+
+ {id:'surface',title:'Surface',wide:true,opts:[
+   {id:'flat',title:'Flat dark',desc:'Round 4. Smooth panels, nothing decorative.',imgs:[P+'surf-flat.png']},
+   {id:'texture',title:'Dark with texture',desc:'Fine grain, screws and edge highlights, in dark grey.',imgs:[P+'surf-texture.png']},
+   {id:'warm',title:'Warm grey',desc:'Round 1 as it was.',imgs:[P+'surf-warm.png']},
+   {id:'warmdark',title:'Warm grey, a few tones darker',desc:'Round 1 with the brightness pulled down.',imgs:[P+'surf-warmdark.png']}]},
+ {id:'text',title:'Amount of text',opts:[
+   {id:'full',title:'Full',desc:'A label or caption on nearly everything.',imgs:[P+'tfull.png']},
+   {id:'mid',title:'In between',desc:'Short labels on controls, no sentences.',imgs:[P+'tmid.png']},
+   {id:'min',title:'Minimal',desc:'Names and numbers only.',imgs:[P+'tmin.png']}]},
+ {id:'cover',title:'Cover art',opts:[
+   {id:'large',title:'Large tile',desc:'A big square cover on top of each channel.',imgs:[P+'cover-large.png']},
+   {id:'small',title:'Small tile',desc:'Next to the name.',imgs:[P+'cover-small.png']},
+   {id:'none',title:'None',desc:'Name only.',imgs:[P+'cover-none.png']}]},
+ {id:'readouts',title:'Readouts',opts:[
+   {id:'lcd',title:'LCD screen',desc:'Round 1. A recessed pale screen.',imgs:[P+'read-lcd.png']},
+   {id:'lcddark',title:'Dark LCD',desc:'Green on black, easy on the eyes.',imgs:[P+'read-lcddark.png']},
+   {id:'plain',title:'Plain numbers',desc:'Round 4. Just the figures.',imgs:[P+'read-plain.png']}]},
+ {id:'flow',title:'Flow',wide:true,opts:[
+   {id:'one',title:'One page',desc:'Everything stacked. The track list is further down the same page.',imgs:[P+'flow-one.png']},
+   {id:'two',title:'Two steps',desc:'Blend first, then a separate Review screen.',imgs:[P+'flow-two-a.png',P+'flow-two-b.png']}]}
+];
+var KEY='ui-prefs-v1';
+var state={picks:{},notes:{},other:''};
+try{var raw=localStorage.getItem(KEY);if(raw)state=JSON.parse(raw)}catch(e){}
+state.picks=state.picks||{};state.notes=state.notes||{};
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var root=document.getElementById('axes'),html='';
+AXES.forEach(function(a){
+  html+='<section class="axis'+(a.wide?' wide':'')+'" data-axis="'+a.id+'"><h2>'+esc(a.title)+'</h2><div class="opts">';
+  a.opts.forEach(function(o){
+    html+='<button type="button" class="card" data-pick="'+o.id+'" aria-pressed="false"><span class="shot'+(o.imgs.length>1?' two':'')+'">'
+      +o.imgs.map(function(u){return '<img loading="lazy" src="'+u+'" alt="'+esc(a.title+', '+o.title)+'">'}).join('')
+      +'</span><span class="cap"><b>'+esc(o.title)+'</b>, '+esc(o.desc)+'</span></button>';
+  });
+  html+='</div><div class="row"><button type="button" class="none" data-pick="none" aria-pressed="false">None of these</button><input class="note" type="text" data-note="'+a.id+'" placeholder="A few words, if you like" aria-label="Note for '+esc(a.title)+'"></div></section>';
+});
+root.innerHTML=html;
+
+function label(a,p){
+  if(p==='none')return 'none of these';
+  var o=a.opts.filter(function(t){return t.id===p})[0];
+  return o?o.title+' ('+o.desc.replace(/\.$/,'')+')':p;
+}
+function render(){
+  AXES.forEach(function(a){
+    var sec=document.querySelector('[data-axis="'+a.id+'"]');
+    Array.prototype.forEach.call(sec.querySelectorAll('[data-pick]'),function(b){b.setAttribute('aria-pressed',state.picks[a.id]===b.getAttribute('data-pick'))});
+    var n=sec.querySelector('[data-note]');if(document.activeElement!==n)n.value=state.notes[a.id]||'';
+  });
+  var done=AXES.filter(function(a){return state.picks[a.id]}).length;
+  var st=document.getElementById('status'),sv=st.getAttribute('data-saved');
+  st.textContent=done+' of '+AXES.length+' rows picked'+(sv?' · '+sv:'');
+  var el=document.getElementById('else');if(document.activeElement!==el)el.value=state.other||'';
+}
+function summary(){
+  var lines=AXES.map(function(a){
+    var p=state.picks[a.id],n=(state.notes[a.id]||'').trim();
+    if(!p&&!n)return null;
+    return a.title+': '+(p?label(a,p):'(no pick)')+(n?'. Note: '+n:'');
+  }).filter(Boolean);
+  if((state.other||'').trim())lines.push('Anything else: '+state.other.trim());
+  return lines.join('\n');
+}
+var timer;
+function saved(t){document.getElementById('status').setAttribute('data-saved',t);render()}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+  clearTimeout(timer);
+  timer=setTimeout(function(){
+    fetch('/save',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({updated:new Date().toISOString(),picks:state.picks,notes:state.notes,other:state.other,summary:summary()})})
+      .then(function(r){saved(r.ok?'saved':'not saved')})
+      .catch(function(){saved('not saved, use Copy summary')});
+  },350);
+}
+root.addEventListener('click',function(e){
+  var b=e.target.closest('[data-pick]');if(!b)return;
+  var axis=b.closest('[data-axis]').getAttribute('data-axis'),v=b.getAttribute('data-pick');
+  if(state.picks[axis]===v)delete state.picks[axis];else state.picks[axis]=v;
+  render();save();
+});
+root.addEventListener('dblclick',function(e){
+  var img=e.target.closest('img');if(!img)return;
+  document.getElementById('zoomImg').src=img.src;document.getElementById('zoom').showModal();
+});
+root.addEventListener('input',function(e){
+  var n=e.target.closest('[data-note]');if(!n)return;
+  state.notes[n.getAttribute('data-note')]=n.value;save();
+});
+document.getElementById('else').addEventListener('input',function(){state.other=this.value;save()});
+document.getElementById('zoomClose').addEventListener('click',function(){document.getElementById('zoom').close()});
+document.getElementById('zoom').addEventListener('click',function(e){if(e.target===this)this.close()});
+document.getElementById('reset').addEventListener('click',function(){
+  if(!window.confirm('Clear all your picks and notes?'))return;
+  state={picks:{},notes:{},other:''};render();save();
+});
+document.getElementById('copy').addEventListener('click',function(){
+  var t=summary()||'(nothing picked yet)';
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){saved('copied')}).catch(function(){window.prompt('Copy this:',t)});
+});
+render();
+})();
+</script>
+</body>
+</html>

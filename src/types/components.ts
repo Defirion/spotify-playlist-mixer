@@ -112,6 +112,8 @@ export interface SuccessToastProps extends BaseComponentProps {
 export interface PresetTemplatesProps extends BaseComponentProps {
   selectedPlaylists: SpotifyPlaylist[];
   onApplyPreset: (data: import('./mixer').PresetApplyData) => void;
+  mixOptions?: import('./mixer').MixOptions;
+  ratioConfig?: import('./mixer').RatioConfig;
 }
 
 // Authentication component types

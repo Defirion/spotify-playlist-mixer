@@ -77,7 +77,7 @@ test('a late preview cannot overwrite a newer preview', async () => {
   const slow = deferred<any>();
   getTracks.mockImplementationOnce(() => slow.promise);
   const { result } = renderHook(() => useMixPreview('token'));
-  let old!: Promise<void>;
+  let old!: Promise<unknown>;
   act(() => {
     old = result.current.generatePreview(playlists, ratios, options);
   });
@@ -119,7 +119,7 @@ test('clearing a preview cancels loading and prevents late restoration', async (
   const slow = deferred<any>();
   getTracks.mockReturnValueOnce(slow.promise);
   const { result } = renderHook(() => useMixPreview('token'));
-  let pending!: Promise<void>;
+  let pending!: Promise<unknown>;
   act(() => {
     pending = result.current.generatePreview(playlists, ratios, options);
   });
@@ -142,7 +142,7 @@ test('logout cancels an active preview and unmount cancels transport', async () 
     ({ token }) => useMixPreview(token),
     { initialProps: { token: 'token' } }
   );
-  let pending!: Promise<void>;
+  let pending!: Promise<unknown>;
   act(() => {
     pending = result.current.generatePreview(playlists, ratios, options);
   });
@@ -215,7 +215,7 @@ test('late source results cannot clear a newer preview request loading state', a
     .mockReturnValueOnce(old.promise)
     .mockReturnValueOnce(latest.promise);
   const { result } = renderHook(() => useMixPreview('token'));
-  let previous!: Promise<void>, current!: Promise<void>;
+  let previous!: Promise<unknown>, current!: Promise<unknown>;
   act(() => {
     previous = result.current.generatePreview(playlists, ratios, options);
   });

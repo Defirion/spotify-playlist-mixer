@@ -21,10 +21,10 @@ describe('End-to-end mixing flow (integration)', () => {
     );
 
     // Ensure app shell rendered
-    expect(screen.getByText(/Spotify Playlist Mixer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Playlist Mixer/i)).toBeInTheDocument();
 
     // Verify main playlist selection component is present
-    expect(screen.getByText(/Add Playlists to Mix/i)).toBeInTheDocument();
+    expect(screen.getByText(/Add playlist/i)).toBeInTheDocument();
 
     // Test passes if the app renders the main interface without errors
   });

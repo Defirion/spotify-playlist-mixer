@@ -142,7 +142,7 @@ vi.mock('../features/mixer/MixControls', () => ({
         <button
           onClick={() => props.onGeneratePreview && props.onGeneratePreview()}
         >
-          Generate Preview
+          Preview
         </button>
         <button
           onClick={() => props.onCreatePlaylist && props.onCreatePlaylist()}
@@ -297,7 +297,7 @@ describe('PlaylistMixer behavior', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /generate preview/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
 
     await waitFor(() => {
       expect(mockMixPreview.generatePreview).toHaveBeenCalled();
@@ -325,7 +325,7 @@ describe('PlaylistMixer behavior', () => {
     expect(screen.getByTestId('has-preview')).toHaveTextContent('yes');
   });
 
-  it('clears preview when mixOptions meaningful fields change', async () => {
+  it('retains preview when mixOptions meaningful fields change', async () => {
     // start with a preview
     mockMixPreview.state.preview = {
       tracks: [{ id: 'a' }],
@@ -369,7 +369,11 @@ describe('PlaylistMixer behavior', () => {
     );
 
     await waitFor(() => {
-      expect(mockMixPreview.clearPreview).toHaveBeenCalled();
+      expect(mockMixPreview.clearPreview).not.toHaveBeenCalled();
+      expect(screen.getByTestId('preview-tracks')).toHaveTextContent('1');
+      expect(screen.getByLabelText('Mix totals')).toHaveTextContent(
+        'Out of date'
+      );
     });
   });
 

@@ -76,7 +76,7 @@ vi.mock('../features/mixer/MixControls', () => {
             data-testid="generate-preview-btn"
             onClick={onGeneratePreview}
           >
-            Generate Preview
+            Preview
           </button>
           <button data-testid="create-playlist-btn" onClick={onCreatePlaylist}>
             Create Playlist
@@ -199,12 +199,11 @@ describe('PlaylistMixer', () => {
     });
   });
 
-  it('renders the component with title and subtitle', () => {
+  it('renders the combined settings panel', () => {
     render(<PlaylistMixer {...defaultProps} />);
 
-    expect(screen.getByText('🎵 Create Your Mix')).toBeInTheDocument();
     expect(
-      screen.getByText('Blend your playlists into the perfect mix')
+      screen.getByRole('complementary', { name: 'Presets and mix settings' })
     ).toBeInTheDocument();
   });
 
@@ -240,7 +239,7 @@ describe('PlaylistMixer', () => {
     });
   });
 
-  it('calls generate preview when button is clicked', () => {
+  it('generates a preview when its button is clicked', () => {
     const mockGeneratePreview = vi.fn();
     mockUseMixPreview.mockReturnValue({
       state: {
@@ -302,11 +301,7 @@ describe('PlaylistMixer', () => {
   it('displays help text', () => {
     render(<PlaylistMixer {...defaultProps} />);
 
-    expect(
-      screen.getByText(
-        'Happy with your mix? Create the playlist or regenerate with your current settings'
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText('Target All songs')).toBeInTheDocument();
   });
 
   it('displays updated mix options when props change', () => {

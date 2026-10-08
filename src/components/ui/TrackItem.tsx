@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, useMemo, useCallback } from 'react';
+import React, { forwardRef, memo } from 'react';
 import { formatDuration } from '../../utils/trackUtils';
 import { TrackItemProps } from '../../types';
 import styles from './TrackItem.module.css';
@@ -17,182 +17,134 @@ const TrackItem = memo(
         showDuration = true,
         showAlbumArt = true,
         showSourcePlaylist = false,
+        showIndex = false,
+        index,
         style = {},
         onClick,
-        onMouseEnter,
-        onMouseLeave,
-        onMouseDown,
-        onMouseUp,
-        // Touch event handlers
-        onTouchStart,
-        onTouchMove,
-        onTouchEnd,
         ...otherProps
       },
       ref
     ) => {
-      // Calculate grid template based on visible elements
-      const gridTemplate = useMemo(() => {
-        const columns = [];
-
-        // Checkbox (first column)
-        if (showCheckbox) {
-          columns.push('auto');
-        }
-
-        // Album art (second column)
-        if (showAlbumArt && track.album?.images?.[0]?.url) {
-          columns.push('auto');
-        }
-
-        // Track info (always present, takes remaining space)
-        // Use a fixed fraction to prevent expansion
-        columns.push('1fr');
-
-        // Duration (fourth column)
-        if (showDuration && track.duration_ms) {
-          columns.push('40px'); // Fixed width for duration
-        }
-
-        // Actions or remove button (last columns)
-        if (actions) {
-          columns.push('auto');
-        }
-        if (onRemove) {
-          columns.push('32px'); // Fixed width for remove button
-        }
-
-        return columns.join(' ');
-      }, [
-        showCheckbox,
-        showAlbumArt,
-        track.album?.images,
-        showDuration,
-        track.duration_ms,
-        actions,
-        onRemove,
-      ]);
-
-      // Memoize CSS classes generation
-      const trackItemClasses = useMemo(
-        () =>
-          [styles.trackItem, selected && styles.selected, className]
-            .filter(Boolean)
-            .join(' '),
-        [selected, className]
-      );
-
-      // Stabilize event handlers with useCallback
-      const handleClick = useCallback(
-        (e: React.MouseEvent<HTMLDivElement>) => {
-          if (onClick) {
-            onClick(e, track);
-          } else if (onSelect) {
-            onSelect(track);
-          }
-        },
-        [onClick, onSelect, track]
-      );
-
-      const handleRemoveClick = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-          e.stopPropagation();
-          if (onRemove) {
-            onRemove(track);
-          }
-        },
-        [onRemove, track]
-      );
-
+      const columns = [
+        showCheckbox && '20px',
+        showIndex && '30px',
+        showAlbumArt && '40px',
+        'minmax(0,1fr)',
+        showSourcePlaylist && track.sourcePlaylistName && '150px',
+        showDuration && track.duration_ms && '54px',
+        actions && 'auto',
+        onRemove && '34px',
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (onClick) onClick(event, track);
+        else onSelect?.(track);
+      };
+      const artwork =
+        track.album?.images?.[2]?.url ||
+        track.album?.images?.[1]?.url ||
+        track.album?.images?.[0]?.url;
       return (
         <div
           ref={ref}
-          className={trackItemClasses}
+          className={`${styles.trackItem} ${selected ? styles.selected : ''} ${showIndex ? styles.withIndex : ''} ${showSourcePlaylist ? styles.withSource : ''} ${className}`}
           onClick={handleClick}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleClick(e as any);
+          onKeyDown={event => {
+            if (
+              event.target === event.currentTarget &&
+              (event.key === 'Enter' || event.key === ' ')
+            ) {
+              event.preventDefault();
+              handleClick(event as any);
             }
           }}
-          style={{
-            ...style,
-            gridTemplateColumns: gridTemplate,
-          }}
+          style={{ ...style, gridTemplateColumns: columns }}
           data-testid={`track-item-${track.id}`}
           role="listitem"
           tabIndex={0}
           {...otherProps}
         >
-          {/* Checkbox */}
           {showCheckbox && (
             <div
               className={`${styles.checkbox} ${selected ? styles.selected : ''}`}
+              role="checkbox"
+              aria-checked={selected}
+              aria-label={`Select ${track.name}`}
+              tabIndex={0}
+              onClick={event => {
+                event.stopPropagation();
+                onSelect?.(track);
+              }}
+              onKeyDown={event => {
+                if (event.key === ' ' || event.key === 'Enter') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onSelect?.(track);
+                }
+              }}
             >
               {selected && <span className={styles.checkmark}>✓</span>}
             </div>
           )}
-
-          {/* Album Art */}
-          {showAlbumArt && track.album?.images?.[0]?.url && (
-            <img
-              src={
-                track.album.images[2]?.url ||
-                track.album.images[1]?.url ||
-                track.album.images[0]?.url
-              }
-              alt={`${track.album.name} album cover`}
-              className={styles.albumArt}
-              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+          {showIndex && (
+            <span className={styles.index} aria-hidden="true">
+              {String(index).padStart(2, '0')}
+            </span>
           )}
-
-          {/* Track Info */}
+          {showAlbumArt &&
+            (artwork ? (
+              <img
+                src={artwork}
+                alt={`${track.album.name} album cover`}
+                className={styles.albumArt}
+                onError={event => {
+                  event.currentTarget.style.visibility = 'hidden';
+                }}
+              />
+            ) : (
+              <span
+                className={`${styles.albumArt} ${styles.artFallback}`}
+                aria-hidden="true"
+              >
+                {track.name?.[0] || '♪'}
+              </span>
+            ))}
           <div className={styles.trackInfo}>
-            {/* Track Name */}
             <div className={styles.trackName}>{track.name}</div>
-
-            {/* Artist and Additional Info */}
             <div className={styles.artistInfo}>
               <span className={styles.artistName}>
                 {track.artists?.[0]?.name || 'Unknown Artist'}
               </span>
-
-              {/* Source Playlist */}
               {showSourcePlaylist && track.sourcePlaylistName && (
-                <>
-                  <span>•</span>
-                  <span className={styles.sourcePlaylist}>
-                    {track.sourcePlaylistName}
-                  </span>
-                </>
+                <span className={styles.mobileSource}>
+                  {track.sourcePlaylistName}
+                </span>
               )}
             </div>
           </div>
-
-          {/* Duration */}
-          {showDuration && track.duration_ms && (
+          {showSourcePlaylist && track.sourcePlaylistName && (
+            <div
+              className={styles.sourcePlaylist}
+              title={track.sourcePlaylistName}
+            >
+              <i aria-hidden="true" />
+              {track.sourcePlaylistName}
+            </div>
+          )}
+          {showDuration && !!track.duration_ms && (
             <div className={styles.duration}>
               {formatDuration(track.duration_ms)}
             </div>
           )}
-
-          {/* Custom Actions */}
           {actions && <div className={styles.actions}>{actions}</div>}
-
-          {/* Remove Button */}
           {onRemove && (
             <button
-              onClick={handleRemoveClick}
+              type="button"
+              onClick={event => {
+                event.stopPropagation();
+                onRemove(track);
+              }}
               aria-label={`Remove ${track.name}`}
               className={styles.removeButton}
             >
@@ -204,7 +156,5 @@ const TrackItem = memo(
     }
   )
 );
-
 TrackItem.displayName = 'TrackItem';
-
 export default TrackItem;

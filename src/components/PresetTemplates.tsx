@@ -15,6 +15,8 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
   onApplyPreset,
   className,
   testId,
+  mixOptions,
+  ratioConfig,
 }) => {
   const presets: PresetTemplate[] = [
     {
@@ -108,7 +110,7 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
   };
 
   const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLDivElement>,
+    event: React.KeyboardEvent<HTMLButtonElement>,
     preset: PresetTemplate
   ): void => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -117,47 +119,44 @@ const PresetTemplates: React.FC<PresetTemplatesProps> = ({
     }
   };
 
-  if (selectedPlaylists.length === 0) {
-    return null;
-  }
-
   return (
-    <div
-      className={`card ${styles.container} ${className || ''}`.trim()}
-      data-testid={testId}
-    >
-      <div className={styles.header}>
-        <h2 className={styles.title}>🎯 Quick Start Templates</h2>
-        <p className={styles.description}>
-          Apply proven mixing patterns for different occasions
-        </p>
-      </div>
+    <div className={className || ''} data-testid={testId}>
+      <p className={styles.cap}>Presets</p>
 
-      <div className={styles.presetsGrid}>
-        {presets.map((preset: PresetTemplate) => (
-          <div
-            key={preset.id}
-            className={styles.presetCard}
-            onClick={() => handleApplyPreset(preset)}
-            onKeyDown={e => handleKeyDown(e, preset)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Apply ${preset.name} preset template`}
-          >
-            <h3 className={styles.presetName}>{preset.name}</h3>
-            <p className={styles.presetDescription}>{preset.description}</p>
-            <div className={styles.presetMeta}>
-              Playlist-balanced order • {selectedPlaylists.length} playlists
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.tip}>
-        <span className={styles.tipIcon}>💡</span>
-        <strong className={styles.tipStrong}>Tip:</strong> These templates will
-        automatically configure ratios and settings. You can still adjust them
-        afterwards!
+      <div className={styles.pads}>
+        {presets.map((preset: PresetTemplate) => {
+          const ratios = preset.ratios(selectedPlaylists);
+          const active =
+            selectedPlaylists.length > 0 &&
+            !!mixOptions &&
+            !!ratioConfig &&
+            Object.entries(preset.settings).every(
+              ([key, value]) =>
+                mixOptions[key as keyof typeof mixOptions] === value
+            ) &&
+            selectedPlaylists.every((playlist, index) =>
+              Object.entries(ratios[index]).every(
+                ([key, value]) =>
+                  ratioConfig[playlist.id]?.[key as keyof RatioConfigItem] ===
+                  value
+              )
+            );
+          return (
+            <button
+              type="button"
+              key={preset.id}
+              className={`${styles.pad} ${active ? styles.active : ''}`}
+              disabled={!selectedPlaylists.length}
+              aria-pressed={active}
+              onClick={() => handleApplyPreset(preset)}
+              onKeyDown={e => handleKeyDown(e, preset)}
+              aria-label={`Apply ${preset.name} preset template`}
+            >
+              <b>{preset.name.replace(/^[^A-Za-z]+/, '')}</b>
+              <span>{preset.settings.targetDurationSeconds / 3600} h</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

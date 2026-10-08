@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spotify Playlist Mixer (terminal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0C0C0C; --fg:#D8D8D8; --dim:#8C8C8C; --line:#555555; --rdim:#3A3A3A;
+  --amber:#E0A100; --green:#5FB360; --red:#E8553D;
+  --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --lh:22px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg);color-scheme:dark;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/22px var(--mono);font-variant-ligatures:none;
+  padding-bottom:64px;min-height:100vh;overflow-x:hidden}
+button{font:inherit;color:inherit;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;line-height:inherit}
+button:hover,button:focus-visible{background:var(--fg);color:var(--bg);outline:none}
+button:disabled{color:var(--dim);cursor:not-allowed;background:transparent}
+input{font:inherit;color:inherit}
+kbd,code,pre{font:inherit}
+::selection{background:#5a5a5a;color:#fff}
+.dim{color:var(--dim)}
+ul,ol{list-style:none;margin:0;padding:0}
+p{margin:0}
+a{color:inherit}
+
+/* mock controls strip, then the one-line header */
+.mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:0 2ch;padding:4px 16px;border-bottom:1px solid var(--line);color:var(--dim)}
+.mockbar button{padding:0 .5ch;color:var(--fg)}
+.mockbar .grp{display:inline-flex;gap:0 1ch;align-items:center}
+.top{display:flex;align-items:center;gap:0 2ch;padding:8px 16px 0;margin:0}
+.top h1{margin:0;font:400 14px/22px var(--mono)}
+.top .nm{color:var(--dim)}
+.top .nm b{font-weight:400;color:var(--fg)}
+
+main{padding:22px 16px 0}
+.ws{display:grid;gap:30px 16px;align-items:start;
+  grid-template-columns:calc(38ch + 26px) calc(55ch + 26px) minmax(0,1fr);
+  grid-template-areas:"p1 p2 p4" "p3 p2 p4"}
+#pane1{grid-area:p1} #pane2{grid-area:p2} #pane3{grid-area:p3} #pane4{grid-area:p4}
+
+.pane{position:relative;border:1px solid var(--line);padding:20px 12px 12px;min-width:0;outline:none}
+.pane .pt{position:absolute;top:-11px;left:11px;margin:0;font:400 14px/22px var(--mono);background:var(--bg);color:var(--dim);padding:0 1ch;white-space:nowrap}
+.pane .pr{position:absolute;top:-11px;right:11px;background:var(--bg);color:var(--dim);padding:0 1ch;white-space:nowrap}
+.pane.focus{border-color:var(--fg);outline:1px solid var(--fg);outline-offset:-4px}
+.pane.focus .pt{background:var(--fg);color:var(--bg)}
+.pane.focus .pr{color:var(--fg)}
+.pfoot{display:flex;justify-content:space-between;align-items:center;gap:1ch;margin-top:10px}
+.lb{display:inline-block;width:9ch;color:var(--dim);flex:none}
+.frow{display:flex;align-items:center;gap:0 1ch;min-height:22px;margin-top:6px}
+.frow:first-of-type{margin-top:0}
+.frow.top{align-items:flex-start}
+
+/* shared bits */
+.lt{display:inline-block;width:1ch;text-align:center;color:var(--c,var(--dim))}
+.mk{display:inline-block;width:2ch}
+.x{color:var(--dim);text-align:center;width:3ch}
+.x:hover,.x:focus-visible{color:var(--bg)}
+mark{background:none;color:inherit;text-decoration:underline}
+.empty{padding:6px 0;color:var(--dim)}
+
+/* inputs: reverse video when focused */
+.txt,.num{background:transparent;border:1px solid var(--line);color:var(--fg);height:24px;line-height:20px;outline:0;padding:0 1ch;border-radius:0}
+.txt{flex:1;min-width:0}
+.num{width:6ch;text-align:right}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.txt:focus,.num:focus{background:var(--fg);color:var(--bg);border-color:var(--fg);caret-color:var(--bg)}
+.num:disabled{color:var(--dim);border-color:var(--rdim)}
+::placeholder{color:var(--dim);opacity:1}
+.txt:focus::placeholder{color:#555}
+
+/* sources */
+.srch{display:flex;align-items:center;gap:1ch;border:1px solid var(--line);padding:0 1ch;height:26px}
+.srch:focus-within{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.srch input{flex:1;min-width:0;background:transparent;border:0;outline:0;height:24px;padding:0;caret-color:var(--bg)}
+.srch:focus-within input::placeholder{color:#555}
+#srcList{margin-top:8px;max-height:340px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.src{display:grid;grid-template-columns:2ch 4ch minmax(0,1fr) auto;column-gap:1ch;cursor:pointer;padding:0 0 0 0;margin-bottom:4px}
+.src .cb{color:var(--dim)} .src.on .cb{color:var(--fg)}
+.src .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src .ct{text-align:right;color:var(--dim)}
+.src .sub{grid-column:3 / 5;padding-left:2ch;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src:hover{background:#1c1c1c}
+.src.cur .nm{font-weight:600}
+.pane.focus .src.cur{background:var(--fg);color:var(--bg)}
+.pane.focus .src.cur .cb,.pane.focus .src.cur .ct,.pane.focus .src.cur .sub{color:var(--rdim)}
+.pane.focus .src.cur .lt{background:var(--bg)}
+
+/* blend */
+.rad{display:flex;flex-wrap:wrap;align-items:center;gap:0 2ch;min-height:22px}
+.rad button,.lenrow button.rd,.chk{white-space:pre;padding:0 .5ch}
+.rad button[aria-checked=true],.lenrow button.rd[aria-checked=true],.chk[aria-checked=true]{font-weight:600}
+.note{color:var(--dim);margin-top:2px}
+.mbw{margin-top:16px}
+.mbar{position:relative;height:22px;margin-top:6px;width:calc(var(--cells,40)*1ch);touch-action:none;user-select:none;-webkit-user-select:none}
+.mbar .seg{position:absolute;top:0;height:22px;color:var(--c);white-space:pre;overflow:hidden}
+.hdl{position:absolute;top:-9px;bottom:-9px;width:3ch;margin-left:-1ch;display:flex;justify-content:center;cursor:col-resize;outline:none;touch-action:none}
+.hdl span{display:block;width:1ch;margin-top:9px;height:22px;background:var(--bg);color:var(--fg);text-align:center}
+.hdl:hover span,.hdl:focus-visible span,.hdl.drag span{background:var(--fg);color:var(--bg)}
+.mlab{position:relative;height:22px;margin-top:2px}
+.mlab span{position:absolute;top:0;color:var(--c);white-space:nowrap;overflow:hidden}
+#blendRows{margin-top:14px}
+.brow{margin-bottom:12px}
+.b1{display:grid;grid-template-columns:2ch 2ch minmax(0,1fr) auto 3ch;align-items:center;min-height:22px}
+.b1 .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b1 .meta{color:var(--dim);white-space:nowrap;padding-right:1ch}
+.pane.focus .brow.cur .b1{background:var(--fg);color:var(--bg)}
+.pane.focus .brow.cur .b1 .meta{color:var(--rdim)}
+.pane.focus .brow.cur .b1 .lt{background:var(--bg)}
+.pane.focus .brow.cur .b1 .x{color:var(--bg)}
+.brow.cur .nm{font-weight:600}
+.b2{display:flex;flex-wrap:wrap;align-items:center;gap:0 2ch;padding-left:4ch;min-height:26px}
+.b2 .g{display:inline-flex;align-items:center;white-space:nowrap}
+.b2 .g .dim{margin-right:1ch}
+.b2 .v{display:inline-block;width:2ch;text-align:center;font-weight:400}
+.b2 .st{color:var(--fg);padding:0}
+.b2 .pct{margin-left:auto;width:4ch;text-align:right}
+.b2 .num{width:6ch;height:24px}
+.seqwrap{margin-top:14px}
+#seq{display:flex;flex-wrap:wrap;gap:0 2ch}
+#seq .run{white-space:pre;color:var(--c)}
+.warn{position:relative;margin-top:26px;border:1px solid var(--fg);padding:16px 12px 10px}
+.warn .wt{position:absolute;top:-11px;left:11px;background:var(--bg);padding:0 1ch}
+.warn .wa{margin-top:6px;display:flex;flex-direction:column;align-items:flex-start}
+.warn .wa button{padding:0 .5ch}
+
+/* mix settings */
+.lenrow{display:flex;flex-wrap:wrap;align-items:center;gap:0 1ch;min-height:26px}
+.lenrow button.rd{min-width:19ch}
+.lenrow .u{color:var(--dim)}
+.plabel{margin-top:16px;color:var(--dim)}
+#presets{margin-top:2px}
+#presets button{display:grid;grid-template-columns:4ch 12ch minmax(0,1fr);width:100%;column-gap:0;padding:0 .5ch}
+#presets .pd{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#presets button:hover .pd,#presets button:focus-visible .pd{color:var(--rdim)}
+#presets button.on .pn{font-weight:600}
+
+/* running order */
+.bd{display:grid;margin-bottom:12px}
+.bd .l{display:grid;grid-template-columns:2ch minmax(0,1fr) 11ch 9ch 12ch;column-gap:1ch;align-items:center}
+.bd .l .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd .r{text-align:right;color:var(--dim)}
+.bd .bar{color:var(--c);white-space:pre}
+.bd .bar s{text-decoration:none;color:var(--rdim)}
+.totals{margin:0 0 14px}
+.thead,.trk{display:grid;grid-template-columns:2ch 3ch 3ch minmax(0,1.4fr) minmax(0,1fr) 2ch 6ch 3ch;column-gap:1ch;align-items:center;min-height:22px}
+.thead{color:var(--dim);border-bottom:1px solid var(--line);margin-bottom:2px}
+.thead .t,.trk .ix,.trk .du{text-align:right}
+#trackList{position:relative}
+.trk{position:relative;background:var(--bg);touch-action:pan-y}
+.trk>span,.trk>button{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.trk .h{color:var(--dim);cursor:grab;touch-action:none;text-align:center;user-select:none;-webkit-user-select:none}
+.trk .ar,.trk .du,.trk .ix{color:var(--dim)}
+.trk .tg{text-align:center}
+.trk .x{width:auto;text-align:center}
+.trk.dragging{z-index:5;outline:1px solid var(--fg);cursor:grabbing}
+.trk.dragging .h{cursor:grabbing;color:var(--fg)}
+.trk.cur .tt{font-weight:600}
+.pane.focus .trk.cur{background:var(--fg);color:var(--bg)}
+.pane.focus .trk.cur .ar,.pane.focus .trk.cur .du,.pane.focus .trk.cur .ix,.pane.focus .trk.cur .h,.pane.focus .trk.cur .x{color:var(--rdim)}
+.pane.focus .trk.cur .lt{background:var(--bg)}
+.pane.focus .trk.cur .x:hover{color:var(--bg)}
+.more{color:var(--dim);margin-top:6px}
+.acts{margin-top:14px;display:flex;flex-wrap:wrap;gap:0 2ch}
+.acts button{padding:0 .5ch}
+.create{display:block;width:100%;margin-top:16px;text-align:center;padding:8px 1ch;border:1px solid var(--fg);color:var(--fg)}
+.create:hover,.create:focus-visible{background:var(--fg);color:var(--bg)}
+.create:disabled{border-color:var(--line);color:var(--dim)}
+.privacy{margin-top:10px;color:var(--dim)}
+
+/* connect */
+#view-connect{max-width:calc(68ch + 26px);margin:8px auto 0}
+#view-connect .pane p{margin-bottom:12px}
+#view-connect ul{margin:0 0 14px;padding-left:2ch;list-style:"- "}
+#connectBtn{border:1px solid var(--fg);padding:8px 2ch}
+#connectBtn:hover,#connectBtn:focus-visible{background:var(--fg);color:var(--bg)}
+
+/* notes + footer */
+.notes{margin:30px 16px 0}
+.notes summary{cursor:pointer;color:var(--fg)}
+.notes .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(30ch,1fr));gap:14px 24px;margin-top:10px}
+.notes h3{margin:0 0 2px;font:600 14px/22px var(--mono)}
+.notes ul{padding-left:2ch;list-style:"- "}
+.notes li{margin:2px 0}
+.sw-row{display:flex;flex-wrap:wrap;gap:0 2ch}
+.sw-row span{white-space:nowrap}
+.sw-row i{display:inline-block;width:1ch;height:14px;margin-right:1ch;vertical-align:-2px;border:1px solid var(--line)}
+footer.pf{margin:22px 16px 0;color:var(--dim)}
+footer.pf a{color:var(--fg)}
+
+/* status bar */
+.sb{position:fixed;left:0;right:0;bottom:0;z-index:75;background:var(--bg);border-top:1px solid var(--line);min-height:34px;display:flex;align-items:center;padding:0 16px}
+.sb .hints{display:flex;flex-wrap:nowrap;align-items:center;overflow-x:auto;white-space:nowrap;scrollbar-width:none;width:100%}
+.sb .hints::-webkit-scrollbar{display:none}
+.sb .hi{flex:none;white-space:nowrap;color:var(--dim)}
+.sb .hi button{padding:0 .5ch;color:var(--fg);display:inline-block}
+.sb .hi button:hover,.sb .hi button:focus-visible{color:var(--bg)}
+.sb .hi .sep{color:var(--dim)}
+.sb .msg{position:absolute;left:16px;right:16px;top:0;bottom:0;display:none;align-items:center;background:var(--bg);white-space:nowrap;overflow:hidden;transition:opacity .35s}
+.sb.toasting .msg{display:flex}
+.sb.toasting .hints{visibility:hidden}
+.sb.fading .msg{opacity:0}
+.sb .msg button{padding:0 .5ch;margin-left:1ch;border:1px solid var(--fg)}
+
+/* overlay */
+#ov{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:16px}
+#ov .pane{width:min(780px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--bg);border-color:var(--fg);outline:1px solid var(--fg);outline-offset:-4px;padding-top:24px}
+#ov .pane .pt{background:var(--fg);color:var(--bg)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(34ch,1fr));gap:0 28px}
+.kv h4{margin:12px 0 2px;font:600 14px/22px var(--mono)}
+.kv .r{display:flex;gap:1ch}
+.kv kbd{display:inline-block;min-width:10ch;flex:none}
+.ovsearch{display:flex;gap:1ch;border:1px solid var(--fg);padding:0 1ch;margin-bottom:8px;height:26px;align-items:center}
+.ovsearch input{flex:1;background:transparent;border:0;outline:0;height:24px;padding:0}
+.ovres button{display:grid;grid-template-columns:2ch minmax(0,1.3fr) minmax(0,1fr) 5ch;gap:1ch;width:100%;padding:0 1ch}
+.ovres button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovres button .dim{color:var(--dim)}
+.ovres button:hover .dim,.ovres button:focus-visible .dim{color:var(--rdim)}
+
+/* responsive */
+@media (max-width:1240px){
+  .ws{grid-template-columns:calc(38ch + 26px) minmax(0,1fr);grid-template-areas:"p1 p2" "p3 p2" "p4 p4"}
+}
+@media (max-width:860px){
+  main{padding:22px 12px 0}
+  .mockbar,.top{padding-left:12px;padding-right:12px}
+  .ws{grid-template-columns:minmax(0,1fr);grid-template-areas:"p1" "p2" "p3" "p4"}
+  .notes{margin-left:12px;margin-right:12px} footer.pf{margin-left:12px;margin-right:12px}
+  body{padding-bottom:76px}
+  .sb{min-height:56px;padding:0 8px}
+  .sb .hints{height:56px}
+  .sb .hi button{min-height:44px;min-width:44px;padding:0 1ch;text-align:center}
+  .sb .msg{left:8px;right:8px;white-space:normal;line-height:20px}
+  .mockbar button,.rad button,.lenrow button.rd,.chk,.acts button,#presets button,#clearAll,#wApply,#wCont{min-height:40px;display:inline-flex;align-items:center}
+  #presets button{display:grid;align-items:center}
+  .x{min-height:40px;min-width:40px;display:flex;align-items:center;justify-content:center}
+  .b1{grid-template-columns:2ch 2ch minmax(0,1fr) 40px}
+  .b1 .meta{grid-column:3 / 4;grid-row:2;padding-right:0}
+  .b1 .x{grid-column:4;grid-row:1 / span 2}
+  .b2{padding-left:0;row-gap:0}
+  .b2 .st{min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center}
+  .b2 .num,.txt,.num{height:40px}
+  .lenrow{min-height:40px}
+  .srch{height:40px} .srch input{height:38px}
+  .src{padding:6px 0;margin-bottom:0}
+  #srcList{max-height:none}
+  .hdl{width:6ch;margin-left:-2.5ch}
+  .bd .l{grid-template-columns:2ch minmax(0,1fr) 11ch 9ch}
+  .bd .bar{display:none}
+  .thead{display:none}
+  .trk{grid-template-columns:5ch 3ch minmax(0,1fr) 2ch 6ch 5ch;grid-template-rows:auto auto;min-height:48px;padding:2px 0}
+  .trk .mk{display:none}
+  .trk .h{grid-column:1;grid-row:1 / span 2;display:flex;align-items:center;justify-content:center;height:100%}
+  .trk .ix{grid-column:2;grid-row:1 / span 2;align-self:center}
+  .trk .tt{grid-column:3;grid-row:1;align-self:end}
+  .trk .ar{grid-column:3;grid-row:2;align-self:start}
+  .trk .tg{grid-column:4;grid-row:1 / span 2;align-self:center}
+  .trk .du{grid-column:5;grid-row:1 / span 2;align-self:center}
+  .trk .x{grid-column:6;grid-row:1 / span 2;height:100%;display:flex;align-items:center;justify-content:center}
+  .create{padding:12px 1ch}
+  #ov{padding:8px}
+  .ovres button{grid-template-columns:2ch minmax(0,1fr) 5ch;min-height:40px;align-items:center}
+  .ovres button .ar2{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="mockbar" role="group" aria-label="mock controls">
+  <span>mock controls</span>
+  <span class="grp" role="radiogroup" aria-label="view">
+    <span>view</span>
+    <button type="button" role="radio" id="vConnect" aria-checked="false">( ) Connect</button>
+    <button type="button" role="radio" id="vWork" aria-checked="true">(x) Workspace</button>
+  </span>
+  <button type="button" role="checkbox" id="warnSw" aria-checked="true">[x] Show exhaustion warning</button>
+  <button type="button" id="errBtn">[ ] Simulate an error</button>
+</div>
+
+<header class="top">
+  <h1>Spotify Playlist Mixer</h1>
+  <span class="nm" id="hdrMix">Mix: <b id="hdrName">Friday Heat</b></span>
+</header>
+
+<main id="app">
+
+  <section id="view-connect" hidden>
+    <div class="pane focus" aria-label="Connect">
+      <h2 class="pt">Connect</h2>
+      <p>Spotify Playlist Mixer blends up to 10 of your playlists into one new playlist.</p>
+      <p>You pick the playlists, say how many songs from each should play in a row and how often, check the running order, then save it to Spotify.</p>
+      <p>Spotify will ask you to allow two things:</p>
+      <ul>
+        <li>read your playlists</li>
+        <li>create playlists for you</li>
+      </ul>
+      <p class="dim">Nothing is posted to your profile.</p>
+      <button type="button" id="connectBtn">Connect Spotify</button>
+    </div>
+  </section>
+
+  <section id="view-work" class="ws">
+
+    <section class="pane" id="pane1" tabindex="0" data-pane="1" aria-label="Sources">
+      <h2 class="pt">Sources</h2><span class="pr"><span id="cnt">3/10</span> playlists</span>
+      <label class="srch"><span aria-hidden="true">/</span><input id="q" type="text" placeholder="search or paste a URL" autocomplete="off" spellcheck="false" aria-label="Search playlists or paste a Spotify URL"></label>
+      <ul id="srcList" role="listbox" aria-label="Playlists"></ul>
+      <div class="pfoot"><span class="dim" id="srcInfo"></span><button type="button" id="clearAll">[X] Clear all</button></div>
+    </section>
+
+    <section class="pane" id="pane2" tabindex="0" data-pane="2" aria-label="Blend">
+      <h2 class="pt">Blend</h2>
+      <div class="rad" role="radiogroup" aria-label="Balance method">
+        <span class="dim">Balance method</span>
+        <button type="button" role="radio" data-bal="time" id="balTime">(x) play time</button>
+        <button type="button" role="radio" data-bal="count" id="balCount">( ) song count</button>
+      </div>
+      <p class="note" id="balNote"></p>
+      <div class="mbw" id="mbw">
+        <div class="dim">Share of the mix. Drag a divider, or focus one and use the arrow keys.</div>
+        <div class="mbar" id="mbar"></div>
+        <div class="mlab" id="mlab" aria-hidden="true"></div>
+      </div>
+      <ul id="blendRows" aria-label="Per-playlist ratio controls"></ul>
+      <div class="seqwrap">
+        <div class="dim">Example order of songs</div>
+        <div id="seq" aria-label="Example mix sequence"></div>
+      </div>
+      <div class="warn" id="warn" role="alert" hidden>
+        <span class="wt">Warning</span>
+        <p id="warnTxt"></p>
+        <div class="wa">
+          <button type="button" id="wApply">[a] Apply suggested ratios</button>
+          <button type="button" id="wCont">[c] Continue with remaining playlists</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" id="pane3" tabindex="0" data-pane="3" aria-label="Mix settings">
+      <h2 class="pt">Mix settings</h2>
+      <div class="frow"><label class="lb" for="name">Name</label><input class="txt" id="name" type="text" maxlength="48" autocomplete="off" spellcheck="false" value="Friday Heat"></div>
+      <div class="frow top"><span class="lb" style="padding-top:2px">Length</span>
+        <div role="radiogroup" aria-label="Length mode" id="modeGrp">
+          <div class="lenrow"><button type="button" class="rd" role="radio" data-m="duration">(x) set duration</button><input class="num" id="minutes" type="number" min="5" max="3000" value="300" aria-label="Minutes"><span class="u">min</span></div>
+          <div class="lenrow"><button type="button" class="rd" role="radio" data-m="count">( ) set song count</button><input class="num" id="count" type="number" min="1" max="900" value="80" aria-label="Song count"><span class="u">songs</span></div>
+          <div class="lenrow"><button type="button" class="rd" role="radio" data-m="all">( ) use all songs</button></div>
+        </div>
+      </div>
+      <div class="frow"><span class="lb">Shuffle</span><button type="button" class="chk" id="shuf" role="checkbox" aria-checked="true">[x] within each playlist</button></div>
+      <div class="plabel">Presets</div>
+      <ul id="presets">
+        <li><button type="button" data-p="1"><span class="pk">[1]</span><span class="pn">Karimctiva</span><span class="pd">dance flow, 5 h</span></button></li>
+        <li><button type="button" data-p="2"><span class="pk">[2]</span><span class="pn">Workout Mix</span><span class="pd">1 h, 3-5 in a row</span></button></li>
+        <li><button type="button" data-p="3"><span class="pk">[3]</span><span class="pn">Road Trip</span><span class="pd">even blend</span></button></li>
+      </ul>
+    </section>
+
+    <section class="pane" id="pane4" tabindex="0" data-pane="4" aria-label="Running order">
+      <h2 class="pt">Running order</h2>
+      <div class="bd" id="bd"></div>
+      <p class="totals" id="totals"></p>
+      <div class="thead" aria-hidden="true"><span></span><span></span><span class="t">#</span><span>Title</span><span>Artist</span><span>From</span><span class="t">Time</span><span></span></div>
+      <ol id="trackList" aria-label="Track order"></ol>
+      <div class="more" id="more"></div>
+      <div class="acts">
+        <button type="button" id="aSearch">[t] Search Spotify</button>
+        <button type="button" id="aAdd">[u] Add unselected tracks</button>
+        <button type="button" id="aGen">[p] Preview again</button>
+      </div>
+      <button type="button" class="create" id="create">[s] Create playlist on Spotify</button>
+      <p class="privacy">Saved playlists stay off your profile, but anyone with the link may access them.</p>
+    </section>
+  </section>
+</main>
+
+<section class="notes" aria-label="Design notes">
+  <details>
+    <summary>Design notes</summary>
+    <div class="cols">
+      <div><h3>Palette</h3>
+        <div class="sw-row">
+          <span><i style="background:#0C0C0C"></i>#0C0C0C background</span>
+          <span><i style="background:#D8D8D8"></i>#D8D8D8 text</span>
+          <span><i style="background:#8C8C8C"></i>#8C8C8C secondary text</span>
+          <span><i style="background:#555555"></i>#555555 borders</span>
+          <span><i style="background:#E0A100"></i>#E0A100 amber, source 1</span>
+          <span><i style="background:#5FB360"></i>#5FB360 green, source 2</span>
+          <span><i style="background:#E8553D"></i>#E8553D red-orange, source 3</span>
+        </div></div>
+      <div><h3>Fonts</h3><ul><li>IBM Plex Mono at 14px, weights 400 and 600, for every character</li><li>Everything sits on one character grid, so columns line up by counting characters</li></ul></div>
+      <div><h3>Signature ideas</h3><ul>
+        <li>Off-white on near-black with one highlight: reverse video marks the focused row, and the focused pane gets a double border and an inverted title</li>
+        <li>The blend bar is a row of block characters on the grid. Drag the dividers, or use the arrow keys</li>
+        <li>The status bar shows only the keys that work in the current pane, each one tappable. Toasts replace it for 4 seconds</li></ul></div>
+      <div><h3>Trade-off</h3><ul><li>Speed and density for people who live on the keyboard, at the cost of a first-time visitor needing the hints and the help screen (?) to find things</li></ul></div>
+      <div><h3>Tells avoided and how</h3><ul><li>Flat fills only, one monospace face, no glow or scanlines, no badges, no icon containers, no decorative numbering, no fake status text. Source colour is used only as text colour on the data it belongs to</li></ul></div>
+    </div>
+  </details>
+</section>
+
+<footer class="pf"><a href="#" onclick="return false">Privacy</a>  <a href="#" onclick="return false">Terms</a>  Not affiliated with Spotify. This is a mock.</footer>
+
+<div class="sb" id="sb">
+  <div class="hints" id="hints" role="toolbar" aria-label="Keys for this pane"></div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+</div>
+
+<div id="ov" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pad2 = n => String(n).padStart(2, '0');
+const mmss = s => Math.floor(s / 60) + ':' + pad2(Math.round(s % 60));
+const fmtDur = s => { const m = Math.round(s / 60), h = Math.floor(m / 60); return h ? (m % 60 ? h + ' h ' + pad2(m % 60) + ' m' : h + ' h') : m + ' min'; };
+
+/* ---------------- data ---------------- */
+const POOL = ['#E0A100', '#5FB360', '#E8553D', '#6C9ED6', '#C9B28A', '#B8B8B8'];
+const lib = [
+  {id:'bs', name:'Bachata Sensual',    owner:'Latin Nights',    tracks:312, avg:228, color:POOL[0], letter:'B', sel:true,  min:2, max:3, pri:60},
+  {id:'sr', name:'Salsa Romantica',    owner:'Cali Salsero',    tracks:204, avg:261, color:POOL[1], letter:'S', sel:true,  min:1, max:2, pri:40},
+  {id:'kc', name:'Kizomba Classics',   owner:'Afro Lounge',     tracks:148, avg:245, color:POOL[2], letter:'K', sel:true,  min:1, max:1, pri:25},
+  {id:'bd', name:'Bachata Dominicana', owner:'Ritmo Dominicano',tracks:188, avg:235, color:null,    letter:'D', sel:false, min:2, max:3, pri:40},
+  {id:'sd', name:'Salsa Dura',         owner:'Barrio Sonoro',   tracks:260, avg:270, color:null,    letter:'U', sel:false, min:1, max:2, pri:40},
+  {id:'zl', name:'Zouk Love',          owner:'Zouk Station',    tracks:96,  avg:255, color:null,    letter:'Z', sel:false, min:1, max:2, pri:40}
+];
+const byId = id => lib.find(s => s.id === id);
+const selected = () => lib.filter(s => s.sel);
+const col = s => (s && s.color) || 'var(--dim)';
+function ensureColor(s){
+  const used = new Set(selected().filter(x => x !== s).map(x => x.color));
+  if (!s.color || used.has(s.color)) s.color = POOL.find(c => !used.has(c)) || POOL[5];
+}
+
+const CUR = {
+  bs:[['Obsesión','Aventura',251],['Noche de Luna','Ana Beltrán',228],['Si Te Vas','Romeo Sánchez',214],['Sabor a Ti','Aventurero',200],['Corazón Prestado','Grupo Nocturno',221],['Cuando Me Besas','Los Hermanos Vega',236],['Bésame Despacio','Yolanda Reyes',245],['Mi Debilidad','Aventura Sur',232]],
+  sr:[['Vivir Mi Vida','Marc Anthony',252],['Dime Que Sí','Celia Duarte',290],['Yo Quiero Bailar','Ricky Martin',236],['Cali Pachanguero','Orquesta Luna',248],['Sabor a Mí','La Típica 77',262],['Quítame el Frío','Son del Barrio',255],['Lluvia de Estrellas','Rumba Nueva',270]],
+  kc:[['Tarraxinha de Ti','Mino Kassav',245],['Ao Meu Lado','Kizomba Kings',273],['Saudade','Anita Tavares',238],['Noite de Luanda','DJ Sombra',250],['Carícia','Dilson & Nanda',241],['Coração Partido','Zé Mário',259]]
+};
+const TITLES = ['Luna Roja','Fuego Lento','Besos de Sal','Medianoche','Sin Ti','Ritmo de Tu Piel','Corazón de Neón','Cielo Abierto','Mar de Fondo','Última Canción','Piel Canela','Dame Tiempo','Contigo Bailo','Ven Conmigo'];
+const ARTS = ['Los del Sur','Marisol Vera','Orquesta Aurora','Dúo Amanecer','Leo Campos','Nina y los Faros'];
+let uidN = 0;
+function mkTrack(srcId, k){
+  const c = CUR[srcId];
+  if (c && k < c.length) return {uid:++uidN, src:srcId, title:c[k][0], artist:c[k][1], dur:c[k][2]};
+  const s = byId(srcId), h = (k * 7 + srcId.charCodeAt(0) * 3 + srcId.charCodeAt(1)) | 0;
+  return {uid:++uidN, src:srcId, title:TITLES[(h + k) % TITLES.length], artist:ARTS[(h * 3 + k) % ARTS.length], dur:clamp(s.avg - 40 + ((h * 37 + k * 53) % 90), 200, 290)};
+}
+const INIT = [['bs',0],['sr',0],['bs',1],['bs',2],['sr',1],['kc',0],['bs',3],['sr',2],['kc',1],['bs',4],['sr',3],['kc',2]];
+
+const BASE = {bs:{t:7740,c:34}, sr:{t:7080,c:28}, kc:{t:3300,c:16}};
+const DEFSH = {bs:60/125, sr:40/125, kc:25/125};
+const bias = s => BASE[s.id] ? (BASE[s.id].t / 18120) / DEFSH[s.id] : 1;
+const effAvg = s => BASE[s.id] ? BASE[s.id].t / BASE[s.id].c : s.avg;
+
+const S = {
+  view:'work', pane:1, q:'', cursor:0, blendIdx:0, trackCur:0,
+  balance:'time', mode:'duration', minutes:300, count:80, shuffle:true, name:'Friday Heat', preset:null,
+  tracks:[], pv:null, stale:false, warnDemo:true, warnDismissed:false
+};
+
+/* ---------------- model ---------------- */
+function shares(){ const sel = selected(), t = sel.reduce((a, s) => a + s.pri, 0) || 1; return sel.map(s => s.pri / t); }
+function pcts(){
+  const sel = selected(), sh = shares(), fl = sh.map(x => Math.floor(x * 100 + 1e-9));
+  const rem = 100 - fl.reduce((a, b) => a + b, 0), ord = sh.map((x, i) => [x * 100 - fl[i], i]).sort((a, b) => b[0] - a[0]);
+  if (sel.length) for (let k = 0; k < rem; k++) fl[ord[k % ord.length][1]]++;
+  return fl;
+}
+function estimate(){
+  const sel = selected();
+  if (!sel.length) return {rows:[], tracks:0, secs:0};
+  const sh = shares(), w = sel.map((s, i) => sh[i] * bias(s)), sw = w.reduce((a, b) => a + b, 0), av = sel.map(effAvg);
+  let cs;
+  if (S.mode === 'all') cs = sel.map(s => s.tracks);
+  else if (S.mode === 'duration'){
+    const T = S.minutes * 60 + 120;
+    if (S.balance === 'time') cs = sel.map((s, i) => Math.round(T * w[i] / sw / av[i]));
+    else { const k = T / sel.reduce((a, s, i) => a + w[i] * av[i], 0); cs = w.map(x => Math.round(k * x)); }
+  } else {
+    const N = S.count, x = S.balance === 'time' ? w.map((v, i) => v / av[i]) : w, sx = x.reduce((a, b) => a + b, 0);
+    cs = x.map(v => Math.round(N * v / sx));
+    cs[cs.indexOf(Math.max(...cs))] += N - cs.reduce((a, b) => a + b, 0);
+  }
+  const rows = sel.map((s, i) => {
+    const a = S.mode === 'all' ? s.avg : av[i], c = Math.min(cs[i], s.tracks);
+    return {s, c, t:Math.round(c * a), raw:cs[i], a};
+  });
+  return {rows, tracks:rows.reduce((a, r) => a + r.c, 0), secs:rows.reduce((a, r) => a + r.t, 0)};
+}
+function warnInfo(){
+  const sel = selected();
+  if (!sel.length) return null;
+  const est = estimate();
+  let list;
+  if (S.mode === 'all'){
+    const sh = shares();
+    list = sel.map((s, i) => ({s, T:(s.tracks * s.avg) / sh[i]})).sort((a, b) => a.T - b.T);
+    if (list.length > 1 && (list[1].T - list[0].T) / list[0].T >= 0.025)
+      return {s:list[0].s, mins:Math.round((list[1].T - list[0].T) / 60)};
+  } else {
+    const tot = est.rows.reduce((a, r) => a + r.raw * r.a, 0);
+    list = est.rows.filter(r => r.raw > r.s.tracks).map(r => ({s:r.s, T:(r.s.tracks * r.a) / ((r.raw * r.a) / tot)})).sort((a, b) => a.T - b.T);
+    if (list.length) return {s:list[0].s, mins:Math.round((tot - list[0].T) / 60) || 1};
+  }
+  if (S.warnDemo) return {s:sel.find(s => s.id === 'bs') || sel[0], mins:38};
+  return null;
+}
+function sequence(n){
+  const sel = selected();
+  if (!sel.length) return [];
+  const sh = shares(), x = sel.map((s, i) => S.balance === 'time' ? sh[i] / s.avg : sh[i]), sx = x.reduce((a, b) => a + b, 0);
+  const tgt = x.map(v => v / sx), cnt = sel.map(() => 0), out = [];
+  let last = -1, turn = 0;
+  while (out.length < n){
+    let best = -1, bd = -1e9;
+    sel.forEach((s, i) => { if (sel.length > 1 && i === last) return; const d = tgt[i] * (out.length + 2) - cnt[i]; if (d > bd){ bd = d; best = i; } });
+    const s = sel[best], run = s.min + ((turn * 3 + best) % (s.max - s.min + 1));
+    for (let r = 0; r < run && out.length < n; r++){ out.push(s); cnt[best]++; }
+    last = best; turn++;
+  }
+  return out;
+}
+
+/* ---------------- status bar: hints and toasts ---------------- */
+const KN = {' ':'space'};
+const HINTS = {
+  connect:[[['Enter'],'connect Spotify'],[['?'],'help']],
+  1:[[['j','k'],'move'],[[' '],'toggle'],[['/'],'search'],[['X'],'clear all'],[['Tab'],'next pane'],[['p'],'preview'],[['s'],'save'],[['?'],'help']],
+  2:[[['j','k'],'pick row'],[['h','l'],'change share'],[['b'],'balance method'],[['x'],'remove'],[['1','2','3'],'preset'],[['p'],'preview'],[['s'],'save'],[['?'],'help']],
+  3:[[['n'],'name'],[['m'],'length mode'],[['f'],'shuffle'],[['1','2','3'],'preset'],[['Tab'],'next pane'],[['p'],'preview'],[['s'],'save'],[['?'],'help']],
+  4:[[['j','k'],'move'],[['J','K'],'reorder'],[['x'],'remove'],[['t'],'search Spotify'],[['u'],'add unselected'],[['p'],'preview'],[['s'],'save'],[['?'],'help']]
+};
+function renderHints(){
+  let list = HINTS[S.view === 'connect' ? 'connect' : S.pane].slice();
+  if (S.view !== 'connect' && S.pane === 2 && !$('#warn').hidden) list = [[['a'], 'apply suggested ratios'], [['c'], 'continue']].concat(list);
+  $('#hints').innerHTML = list.map((h, i) =>
+    `<span class="hi">${h[0].map(k => `<button type="button" data-key="${esc(k)}" aria-label="${esc(h[1])}">${esc(KN[k] || k)}</button>`).join('/')} ${esc(h[1])}${i < list.length - 1 ? '<span class="sep">,</span> ' : ''}</span>`).join('');
+}
+let tT = 0, tT2 = 0, toastAct = null;
+function toast(msg, action){
+  const sb = $('#sb'), m = $('#msg');
+  clearTimeout(tT); clearTimeout(tT2);
+  toastAct = action || null;
+  m.innerHTML = esc(msg) + (action ? ` <button type="button" id="tact">${esc(action.label)}</button>` : '');
+  if (action) $('#tact').addEventListener('click', () => { const a = toastAct; if (a) a.fn(); });
+  sb.classList.remove('fading'); sb.classList.add('toasting');
+  tT = setTimeout(() => {
+    sb.classList.add('fading');
+    tT2 = setTimeout(() => { sb.classList.remove('toasting', 'fading'); m.textContent = ''; toastAct = null; }, RM ? 0 : 350);
+  }, 4000);
+}
+
+/* ---------------- sources pane ---------------- */
+const URLRE = /open\.spotify\.com\/playlist\/([A-Za-z0-9]+)|spotify:playlist:([A-Za-z0-9]+)/;
+function visible(){
+  const q = S.q.trim().toLowerCase();
+  const m = S.q.match(URLRE);
+  if (m){
+    const code = m[1] || m[2], id = 'p' + code;
+    if (!byId(id)){
+      const n = lib.filter(s => s.pasted).length;
+      lib.push({id, pasted:true, name:'Pasted playlist ' + code.slice(0, 6), owner:'from your link', tracks:64 + n * 7, avg:235, color:null, letter:String.fromCharCode(80 + n), sel:false, min:1, max:2, pri:40});
+    }
+    return [byId(id)];
+  }
+  return q ? lib.filter(s => s.name.toLowerCase().includes(q) || s.owner.toLowerCase().includes(q)) : lib.slice();
+}
+function hi(text){
+  const q = S.q.trim();
+  if (!q || URLRE.test(S.q)) return esc(text);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+}
+function renderSources(){
+  const v = visible();
+  S.cursor = clamp(S.cursor, 0, Math.max(0, v.length - 1));
+  $('#srcList').innerHTML = v.length ? v.map((s, i) => `<li class="src${s.sel ? ' on' : ''}${i === S.cursor ? ' cur' : ''}" role="option" aria-selected="${s.sel}" data-id="${s.id}" style="--c:${s.sel ? s.color : 'var(--dim)'}">
+    <span class="mk">${i === S.cursor ? '›' : ''}</span><span class="cb">${s.sel ? '[x]' : '[ ]'}</span>
+    <span class="nm"><span class="lt">${esc(s.letter)}</span> ${hi(s.name)}</span><span class="ct">${s.tracks} tracks</span>
+    <span class="sub">${hi(s.owner)}, avg ${mmss(s.avg)} per song</span></li>`).join('') : `<li class="empty">No playlists match "${esc(S.q)}".</li>`;
+  $('#cnt').textContent = selected().length + '/10';
+  $('#srcInfo').textContent = S.q.trim() ? `${v.length} result${v.length === 1 ? '' : 's'}` : `${lib.length} playlists in your library`;
+  const cur = $('#srcList .cur'); if (cur) cur.scrollIntoView({block:'nearest'});
+}
+function toggleSrc(id){
+  const s = byId(id);
+  if (!s.sel && selected().length >= 10){ toast('You can blend up to 10 playlists.'); return; }
+  s.sel = !s.sel;
+  if (s.sel) ensureColor(s);
+  toast(s.sel ? `Added ${s.name}. ${selected().length}/10 playlists.` : `Removed ${s.name}. ${selected().length}/10 playlists.`);
+  S.blendIdx = clamp(S.blendIdx, 0, Math.max(0, selected().length - 1));
+  renderSources(); renderBlend(); changed();
+}
+function clearAll(){
+  if (!selected().length) return;
+  lib.forEach(s => s.sel = false);
+  toast('Cleared all playlists.');
+  renderSources(); renderBlend(); changed();
+}
+
+/* ---------------- blend pane ---------------- */
+let cells = 40;
+function measureCells(){
+  const wrap = $('#mbw');
+  if (!wrap.clientWidth) return false;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:inherit';
+  probe.textContent = '0'.repeat(50);
+  wrap.appendChild(probe);
+  const cw = probe.getBoundingClientRect().width / 50;
+  probe.remove();
+  const n = clamp(Math.floor((wrap.clientWidth + 0.5) / cw), 20, 90);
+  if (n !== cells){ cells = n; return true; }
+  return false;
+}
+function renderBlend(){
+  const sel = selected();
+  S.blendIdx = clamp(S.blendIdx, 0, Math.max(0, sel.length - 1));
+  $('#blendRows').innerHTML = sel.length ? sel.map((s, i) => `<li class="brow${i === S.blendIdx ? ' cur' : ''}" data-id="${s.id}" style="--c:${s.color}">
+    <div class="b1"><span class="mk">${i === S.blendIdx ? '›' : ''}</span><span class="lt">${esc(s.letter)}</span><span class="nm">${esc(s.name)}</span>
+      <span class="meta">${s.tracks} tracks, avg ${mmss(s.avg)}</span>
+      <button type="button" class="x" data-act="rm" aria-label="Remove ${esc(s.name)}" title="Remove">×</button></div>
+    <div class="b2">
+      <span class="g"><span class="dim">min</span><button type="button" class="st" data-act="minD" aria-label="Fewer songs in a row, minimum">[-]</button><b class="v vmin"></b><button type="button" class="st" data-act="minU" aria-label="More songs in a row, minimum">[+]</button></span>
+      <span class="g"><span class="dim">max</span><button type="button" class="st" data-act="maxD" aria-label="Fewer songs in a row, maximum">[-]</button><b class="v vmax"></b><button type="button" class="st" data-act="maxU" aria-label="More songs in a row, maximum">[+]</button></span>
+      <label class="g"><span class="dim">priority</span><input class="num" type="number" min="1" max="100" value="${s.pri}" data-f="pri" aria-label="Priority for ${esc(s.name)}"></label>
+      <span class="pct"></span></div>
+  </li>`).join('') : '<li class="empty">No playlists selected. Press / to search and add some.</li>';
+  liveBlend();
+}
+function liveBlend(){
+  const sel = selected(), pc = pcts();
+  $$('#blendRows .brow').forEach(li => {
+    const i = sel.findIndex(s => s.id === li.dataset.id); if (i < 0) return;
+    const s = sel[i];
+    $('.pct', li).textContent = pc[i] + '%';
+    $('.vmin', li).textContent = s.min; $('.vmax', li).textContent = s.max;
+    const inp = $('input', li); if (document.activeElement !== inp) inp.value = s.pri;
+    li.classList.toggle('cur', i === S.blendIdx);
+    $('.mk', li).textContent = i === S.blendIdx ? '›' : '';
+  });
+  renderMbar(); renderSeq(); renderWarn();
+}
+function renderMbar(){
+  const mb = $('#mbar'), sel = selected(), sh = shares(), pc = pcts();
+  const focusK = document.activeElement && document.activeElement.classList.contains('hdl') ? document.activeElement.dataset.k : null;
+  mb.style.setProperty('--cells', cells);
+  let acc = 0, prev = 0, html = '', hd = '', lab = '';
+  sel.forEach((s, i) => {
+    acc += sh[i];
+    const b = i === sel.length - 1 ? cells : Math.round(acc * cells), w = b - prev;
+    html += `<div class="seg" style="left:${prev}ch;width:${w}ch;--c:${s.color}">${'█'.repeat(w)}</div>`;
+    const t = w >= 6 ? `${s.letter} ${pc[i]}%` : w >= 2 ? s.letter : '';
+    lab += `<span style="left:${prev}ch;width:${w}ch;--c:${s.color}">${t}</span>`;
+    if (i < sel.length - 1){
+      hd += `<div class="hdl${drag && drag.k === i ? ' drag' : ''}" role="slider" tabindex="0" data-k="${i}" style="left:${b}ch" aria-label="Divider between ${esc(s.name)} and ${esc(sel[i + 1].name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(acc * 100)}"><span>┃</span></div>`;
+    }
+    prev = b;
+  });
+  mb.innerHTML = sel.length ? html + hd : `<div class="seg dim" style="left:0;width:${cells}ch">${'░'.repeat(cells)}</div>`;
+  $('#mlab').innerHTML = lab;
+  if (focusK !== null){ const h = $(`.hdl[data-k="${focusK}"]`, mb); if (h) h.focus({preventScroll:true}); }
+}
+function renderSeq(){
+  const seq = sequence(30);
+  let html = '', i = 0;
+  while (i < seq.length){
+    let j = i; while (j < seq.length && seq[j] === seq[i]) j++;
+    html += `<span class="run" style="--c:${seq[i].color}">` + seq.slice(i, j).map(s => s.letter).join(' ') + '</span>';
+    i = j;
+  }
+  $('#seq').innerHTML = html || '<span class="dim">Nothing to show yet.</span>';
+}
+function renderBalance(){
+  $('#balTime').textContent = (S.balance === 'time' ? '(x)' : '( )') + ' play time';
+  $('#balTime').setAttribute('aria-checked', S.balance === 'time');
+  $('#balCount').textContent = (S.balance === 'count' ? '(x)' : '( )') + ' song count';
+  $('#balCount').setAttribute('aria-checked', S.balance === 'count');
+  $('#balNote').textContent = S.balance === 'time'
+    ? 'Each playlist gets its share of listening time. A playlist with longer songs plays fewer of them.'
+    : 'Each playlist gets its share of songs, however long they are.';
+}
+function renderWarn(){
+  const w = warnInfo(), el = $('#warn'), was = el.hidden;
+  if (!w || S.warnDismissed){ el.hidden = true; }
+  else {
+    el.hidden = false;
+    $('#warnTxt').innerHTML = `<span style="color:${col(w.s)}">${esc(w.s.name)}</span> will run out first, about ${w.mins} min before the others.`;
+  }
+  if (was !== el.hidden) renderHints();
+}
+function setPri(s, v){ s.pri = clamp(Math.round(v) || 1, 1, 100); }
+function nudge(i, d){
+  const s = selected()[i]; if (!s) return;
+  setPri(s, s.pri + d); S.warnDismissed = false; changed(); liveBlend();
+}
+let drag = null;
+function bindMbar(){
+  const mb = $('#mbar');
+  mb.addEventListener('pointerdown', e => {
+    const h = e.target.closest('.hdl'); if (!h) return;
+    e.preventDefault();
+    try { mb.setPointerCapture(e.pointerId); } catch (_) {}
+    const sel = selected(), sh = shares();
+    const B = [0]; sh.forEach(x => B.push(B[B.length - 1] + x));
+    drag = {k:+h.dataset.k, B, sh, total:sel.reduce((a, s) => a + s.pri, 0), rect:mb.getBoundingClientRect(), start:pcts().join('/')};
+    setPane(2); renderMbar();
+  });
+  mb.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const {k, B, sh, total, rect} = drag, sel = selected(), min = 1 / cells;
+    let p = Math.round((e.clientX - rect.left) / (rect.width / cells)) / cells;
+    p = clamp(p, B[k] + min, B[k + 2] - min);
+    const ns = sh.slice(); ns[k] = p - B[k]; ns[k + 1] = B[k + 2] - p;
+    sel.forEach((s, i) => setPri(s, ns[i] * total));
+    S.warnDismissed = false; changed(); liveBlend();
+  });
+  const end = () => { if (!drag) return; const was = drag; drag = null; renderMbar(); const now = pcts().join('/'); if (now !== was.start) toast(`Shares set to ${now.split('/').join(', ')} percent.`); };
+  mb.addEventListener('pointerup', end); mb.addEventListener('pointercancel', end);
+}
+
+/* ---------------- mix pane ---------------- */
+function renderMix(){
+  $$('#modeGrp .rd').forEach(b => {
+    const on = b.dataset.m === S.mode, label = {duration:'set duration', count:'set song count', all:'use all songs'}[b.dataset.m];
+    b.setAttribute('aria-checked', on);
+    b.textContent = (on ? '(x) ' : '( ) ') + label;
+  });
+  $('#minutes').disabled = S.mode !== 'duration';
+  $('#count').disabled = S.mode !== 'count';
+  const sh = $('#shuf'); sh.setAttribute('aria-checked', S.shuffle); sh.textContent = (S.shuffle ? '[x]' : '[ ]') + ' within each playlist';
+  $$('#presets button').forEach(b => { const on = +b.dataset.p === S.preset; b.classList.toggle('on', on); b.setAttribute('aria-current', on); });
+}
+const PRESETS = {
+  1:{name:'Karimctiva', balance:'time', mode:'duration', minutes:300, shuffle:true, cfg:[[2,3,60],[1,2,40],[1,1,25]]},
+  2:{name:'Workout Mix', balance:'count', mode:'duration', minutes:60, shuffle:true, cfg:[[3,5,50],[3,5,30],[3,5,20]]},
+  3:{name:'Road Trip', balance:'time', mode:'duration', minutes:240, shuffle:true, cfg:[[1,2,34],[1,2,33],[1,2,33]]}
+};
+function applyPreset(n){
+  const p = PRESETS[n]; if (!p) return;
+  if (!selected().length){ toast('Add at least one playlist before applying a preset.'); return; }
+  selected().forEach((s, i) => { const c = p.cfg[i % p.cfg.length]; s.min = c[0]; s.max = c[1]; s.pri = c[2]; });
+  Object.assign(S, {balance:p.balance, mode:p.mode, minutes:p.minutes, shuffle:p.shuffle, name:p.name});
+  $('#name').value = p.name; $('#minutes').value = p.minutes; syncName();
+  S.warnDismissed = false;
+  renderBalance(); renderMix(); liveBlend();
+  generate(true);
+  S.preset = n; renderMix();
+  toast(`Applied preset ${p.name}: ${p.minutes} min, by ${p.balance === 'time' ? 'play time' : 'song count'}.`);
+}
+function syncName(){
+  S.name = $('#name').value;
+  $('#hdrName').textContent = S.name.trim() || 'Untitled mix';
+}
+
+/* ---------------- running order pane ---------------- */
+function srcColor(id){ const s = byId(id); return s && s.sel ? s.color : (s && s.color) || 'var(--dim)'; }
+function srcLetter(id){ const s = byId(id); return s ? s.letter : '?'; }
+function generate(quiet){
+  const sel = selected();
+  S.pv = estimate();
+  const seq = sequence(12), nextK = {};
+  sel.forEach(s => nextK[s.id] = S.shuffle ? Math.floor(Math.random() * 12) : 0);
+  S.tracks = seq.map(s => mkTrack(s.id, nextK[s.id]++));
+  S.trackCur = 0; S.stale = false;
+  renderPreview();
+  if (!quiet) toast(`Preview updated: ${S.pv.tracks} tracks, ${fmtDur(S.pv.secs)}.`);
+}
+function pvAdd(srcId, dur, sign){
+  if (!S.pv) return;
+  let r = S.pv.rows.find(r => r.s.id === srcId);
+  if (!r){ r = {s:byId(srcId), c:0, t:0}; S.pv.rows.push(r); }
+  r.c += sign; r.t += sign * dur; S.pv.tracks += sign; S.pv.secs += sign * dur;
+  S.pv.rows = S.pv.rows.filter(r => r.c > 0 || r.s.sel);
+}
+function trackHTML(t, i){
+  return `<li class="trk${i === S.trackCur ? ' cur' : ''}" data-uid="${t.uid}" style="--c:${srcColor(t.src)}">
+    <span class="mk">${i === S.trackCur ? '›' : ''}</span>
+    <span class="h" role="button" aria-label="Drag to reorder" title="Drag to reorder, or use J and K">≡</span>
+    <span class="ix">${i + 1}</span>
+    <span class="tt" title="${esc(t.title)}">${esc(t.title)}</span><span class="ar">${esc(t.artist)}</span>
+    <span class="tg" title="${esc((byId(t.src) || {}).name || '')}"><span class="lt">${esc(srcLetter(t.src))}</span></span>
+    <span class="du">${mmss(t.dur)}</span>
+    <button type="button" class="x" data-act="rm" aria-label="Remove ${esc(t.title)}">×</button></li>`;
+}
+function renderTracks(){
+  $('#trackList').innerHTML = S.tracks.length ? S.tracks.map(trackHTML).join('') : '<li class="empty">No tracks yet. Press p to preview.</li>';
+  const total = S.pv ? S.pv.tracks : 0;
+  $('#more').textContent = S.tracks.length ? `Showing ${S.tracks.length} of ${total} tracks. The rest follow the same pattern when saved.` : '';
+}
+function totalsText(){
+  const pv = S.pv || {tracks:0, secs:0};
+  if (!pv.tracks) return 'No tracks yet. Press p to preview.';
+  let t = `${pv.tracks} tracks, ${fmtDur(pv.secs)}.`;
+  if (S.mode === 'duration'){
+    const T = S.minutes * 60, d = pv.secs - T;
+    t += Math.abs(d) < 30 ? ` That matches your ${fmtDur(T)} target.` : ` That is ${fmtDur(Math.abs(d))} ${d > 0 ? 'over' : 'under'} your ${fmtDur(T)} target.`;
+  } else if (S.mode === 'count'){
+    const d = pv.tracks - S.count;
+    t += d === 0 ? ` That matches your target of ${S.count} songs.` : ` That is ${Math.abs(d)} ${d > 0 ? 'over' : 'under'} your target of ${S.count} songs.`;
+  } else t += ' That is every song in the selected playlists.';
+  if (S.stale) t += ' Settings changed since this preview. Press p to refresh.';
+  return t;
+}
+function renderPreview(){
+  const pv = S.pv || {rows:[], tracks:0, secs:0};
+  const tot = pv.rows.reduce((a, r) => a + r.t, 0) || 1;
+  $('#bd').innerHTML = pv.rows.map(r => {
+    const full = Math.round(r.t / tot * 12);
+    return `<div class="l" style="--c:${col(r.s)}"><span class="lt">${esc(r.s.letter)}</span><span class="nm">${esc(r.s.name)}</span>
+    <span class="r">${r.c} tracks</span><span class="r">${fmtDur(r.t)}</span><span class="bar">${'█'.repeat(full)}<s>${'░'.repeat(12 - full)}</s></span></div>`;
+  }).join('') || '<div class="dim">No playlists in the mix.</div>';
+  $('#totals').textContent = totalsText();
+  renderTracks();
+}
+function changed(){ S.stale = true; S.preset = null; renderMix(); $('#totals').textContent = totalsText(); }
+
+function moveTrackCur(d){
+  if (!S.tracks.length) return;
+  S.trackCur = clamp(S.trackCur + d, 0, S.tracks.length - 1);
+  $$('#trackList .trk').forEach((li, i) => { li.classList.toggle('cur', i === S.trackCur); $('.mk', li).textContent = i === S.trackCur ? '›' : ''; });
+  const li = $$('#trackList .trk')[S.trackCur]; if (li) li.scrollIntoView({block:'nearest'});
+}
+function reorderTrack(d){
+  const i = S.trackCur, j = i + d;
+  if (j < 0 || j >= S.tracks.length) return;
+  [S.tracks[i], S.tracks[j]] = [S.tracks[j], S.tracks[i]];
+  S.trackCur = j; renderTracks();
+  toast(`Moved ${S.tracks[j].title} to position ${j + 1}.`);
+}
+function removeTrack(uid){
+  const i = S.tracks.findIndex(t => t.uid === uid); if (i < 0) return;
+  const [t] = S.tracks.splice(i, 1);
+  pvAdd(t.src, t.dur, -1);
+  S.trackCur = clamp(S.trackCur, 0, Math.max(0, S.tracks.length - 1));
+  renderPreview();
+  toast(`Removed ${t.title} from the running order.`);
+}
+function bindTracks(){
+  const ol = $('#trackList');
+  let td = null;
+  ol.addEventListener('pointerdown', e => {
+    const h = e.target.closest('.h'); if (!h) return;
+    e.preventDefault();
+    const li = h.closest('.trk');
+    try { h.setPointerCapture(e.pointerId); } catch (_) {}
+    td = {li, h, startY:e.clientY, from:[...ol.children].indexOf(li)};
+    li.classList.add('dragging'); setPane(4);
+  });
+  ol.addEventListener('pointermove', e => {
+    if (!td) return;
+    const li = td.li;
+    li.style.transform = `translateY(${e.clientY - td.startY}px)`;
+    let moved = true, guard = 0;
+    while (moved && guard++ < 50){
+      moved = false;
+      const r = li.getBoundingClientRect(), c = r.top + r.height / 2, prev = li.previousElementSibling, next = li.nextElementSibling;
+      if (prev){ const pr = prev.getBoundingClientRect(); if (c < pr.top + pr.height / 2){ ol.insertBefore(li, prev); td.startY -= pr.height; moved = true; } }
+      if (!moved && next){ const nr = next.getBoundingClientRect(); if (c > nr.top + nr.height / 2){ ol.insertBefore(li, next.nextSibling); td.startY += nr.height; moved = true; } }
+      if (moved) li.style.transform = `translateY(${e.clientY - td.startY}px)`;
+    }
+  });
+  const end = () => {
+    if (!td) return;
+    const {li, from} = td; td = null;
+    li.classList.remove('dragging'); li.style.transform = '';
+    const order = [...ol.children].map(x => +x.dataset.uid), to = order.indexOf(+li.dataset.uid);
+    if (to !== from){
+      const map = new Map(S.tracks.map(t => [t.uid, t]));
+      S.tracks = order.map(u => map.get(u));
+      S.trackCur = to;
+      toast(`Moved ${map.get(+li.dataset.uid).title} to position ${to + 1}.`);
+    }
+    renderTracks();
+  };
+  ol.addEventListener('pointerup', end); ol.addEventListener('pointercancel', end);
+  ol.addEventListener('click', e => {
+    const li = e.target.closest('.trk'); if (!li) return;
+    const x = e.target.closest('[data-act=rm]');
+    if (x){ removeTrack(+li.dataset.uid); return; }
+    S.trackCur = [...ol.children].indexOf(li);
+    moveTrackCur(0);
+  });
+}
+
+/* ---------------- actions ---------------- */
+let saving = false;
+function save(){
+  if (saving) return;
+  if (!S.tracks.length){ toast('Nothing to save yet. Press p to preview first.'); return; }
+  const btn = $('#create'), name = S.name.trim() || 'Untitled mix';
+  saving = true; btn.disabled = true; btn.textContent = 'Creating playlist...';
+  const done = () => {
+    saving = false; btn.disabled = false; btn.textContent = '[s] Create playlist on Spotify';
+    toast(`Saved ${name} to Spotify.`, {label:'[o] Open in Spotify', key:'o', fn:() => toast(`Opening ${name} in Spotify.`)});
+  };
+  setTimeout(done, RM ? 0 : 700);
+}
+function applySuggested(){
+  const sel = selected(); if (!sel.length) return;
+  const A = sel.map(s => s.tracks * s.avg), tot = A.reduce((a, b) => a + b, 0), total = sel.reduce((a, s) => a + s.pri, 0);
+  sel.forEach((s, i) => setPri(s, A[i] / tot * total));
+  S.warnDemo = false; S.warnDismissed = false;
+  $('#warnSw').setAttribute('aria-checked', 'false'); $('#warnSw').textContent = '[ ] Show exhaustion warning';
+  toast(`Ratios changed to ${pcts().join(', ')} percent so the playlists run out together.`);
+  changed(); liveBlend();
+}
+function continueWarn(){
+  S.warnDismissed = true; S.warnDemo = false;
+  $('#warnSw').setAttribute('aria-checked', 'false'); $('#warnSw').textContent = '[ ] Show exhaustion warning';
+  toast('Continuing. Empty playlists will drop out of the mix.');
+  renderWarn();
+}
+function addUnselected(){
+  const un = lib.filter(s => !s.sel).slice(0, 3);
+  if (!un.length){ toast('Every playlist in your library is already selected.'); return; }
+  un.forEach(s => {
+    const t = mkTrack(s.id, Math.floor(Math.random() * 10));
+    S.tracks.push(t); pvAdd(s.id, t.dur, 1);
+  });
+  renderPreview();
+  toast(`Added ${un.length} tracks from playlists you have not selected.`);
+}
+const CATALOG = [['Hasta el Amanecer','Nicky Jam & Co.',241],['Tu Vampiro','Xtreme Sur',268],['Danza Kuduro Lento','Don Omar Tribute',233],['La Noche Es Nuestra','Grupo Mambo',254],['Caramelo','Ozuna Sur',229],['Bailando Despacio','Juan Luis Nuevo',246],['Zouk Me Slowly','Kaysha Fan',261],['Corazón Espinado','Santana Latin',275]];
+function openSearch(){
+  const items = q => CATALOG.map((c, i) => [c, i]).filter(([c]) => !q || (c[0] + ' ' + c[1]).toLowerCase().includes(q.toLowerCase()));
+  openOv('Search Spotify', `<div class="ovsearch"><span aria-hidden="true">/</span><input id="ovq" type="text" placeholder="search tracks to add" autocomplete="off" aria-label="Search tracks"></div><div class="ovres" id="ovres"></div><p class="dim" style="margin-top:8px">Enter or click adds a track to the top of the running order. Esc closes.</p>`, () => {
+    const res = $('#ovres'), inp = $('#ovq');
+    const draw = () => {
+      const it = items(inp.value);
+      res.innerHTML = it.length ? it.map(([c, i]) => `<button type="button" data-i="${i}"><span>+</span><span>${esc(c[0])}</span><span class="dim ar2">${esc(c[1])}</span><span class="dim">${mmss(c[2])}</span></button>`).join('') : '<div class="empty">No results.</div>';
+    };
+    draw(); inp.addEventListener('input', draw);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ const b = $('#ovres button'); if (b) b.click(); } if (e.key === 'ArrowDown'){ const b = $('#ovres button'); if (b){ e.preventDefault(); b.focus(); } } });
+    res.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const c = CATALOG[+b.dataset.i], src = (selected()[0] || lib[0]).id;
+      S.tracks.unshift({uid:++uidN, src, title:c[0], artist:c[1], dur:c[2]}); pvAdd(src, c[2], 1);
+      S.trackCur = 0; closeOv(); renderPreview();
+      toast(`Added ${c[0]} to the top of the running order.`);
+    });
+    inp.focus();
+  });
+}
+function help(){
+  const R = (k, t) => `<div class="r"><kbd>${k}</kbd><span>${t}</span></div>`;
+  openOv('Keys', `<div class="kv"><div>
+    <h4>Everywhere</h4>${R('?','show or hide this help')}${R('Tab','next pane (Shift+Tab for previous)')}${R('Alt+1 to 4','jump to a pane')}${R('/','search playlists')}${R('1 2 3','apply a preset')}${R('p','preview again')}${R('s','create playlist on Spotify')}${R('b','toggle balance method')}${R('m','cycle length mode')}${R('f','toggle shuffle')}${R('n','edit mix name')}${R('Esc','leave a field, or close')}
+    </div><div>
+    <h4>Sources</h4>${R('j k','move')}${R('space','add or remove')}${R('X','clear all')}
+    <h4>Blend</h4>${R('j k','pick a playlist')}${R('h l','change its share (H L for 5)')}${R('x','remove the playlist')}${R('a','apply suggested ratios')}${R('c','continue with remaining')}
+    <h4>Running order</h4>${R('j k','move')}${R('J K','move the track up or down')}${R('x','remove the track')}${R('t','search Spotify')}${R('u','add unselected tracks')}${R('drag ≡','reorder with the mouse')}
+    </div></div>`);
+}
+let ovReturn = null;
+function openOv(title, body, mount){
+  const ov = $('#ov'); ovReturn = document.activeElement;
+  ov.innerHTML = `<div class="pane focus" role="dialog" aria-modal="true" aria-label="${esc(title)}"><h2 class="pt">${esc(title)}</h2><span class="pr"><button type="button" id="ovx">Esc closes</button></span>${body}</div>`;
+  ov.hidden = false;
+  $('#ovx').addEventListener('click', closeOv);
+  ov.onclick = e => { if (e.target === ov) closeOv(); };
+  if (mount) mount(); else $('#ovx').focus();
+}
+function closeOv(){ const ov = $('#ov'); ov.hidden = true; ov.innerHTML = ''; if (ovReturn && ovReturn.focus) ovReturn.focus({preventScroll:true}); }
+
+/* ---------------- panes / keys ---------------- */
+function setPane(n){
+  const changedPane = S.pane !== n;
+  S.pane = n;
+  $$('.ws .pane').forEach(p => p.classList.toggle('focus', +p.dataset.pane === n));
+  if (changedPane || !$('#hints').children.length) renderHints();
+}
+function focusPane(n){ setPane(n); $('#pane' + n).focus({preventScroll:false}); }
+function focusSearch(){ setPane(1); const q = $('#q'); q.focus(); q.select(); }
+function moveCursor(d){ const v = visible(); S.cursor = clamp(S.cursor + d, 0, Math.max(0, v.length - 1)); renderSources(); }
+function moveBlend(d){ S.blendIdx = clamp(S.blendIdx + d, 0, Math.max(0, selected().length - 1)); liveBlend(); const r = $$('#blendRows .brow')[S.blendIdx]; if (r) r.scrollIntoView({block:'nearest'}); }
+function setMode(m){ S.mode = m; S.warnDismissed = false; renderMix(); changed(); renderWarn(); }
+function setBalance(b){ S.balance = b; S.warnDismissed = false; renderBalance(); changed(); liveBlend(); toast(`Balancing by ${b === 'time' ? 'play time' : 'song count'}.`); }
+function activate(){
+  if (S.pane === 1){ const s = visible()[S.cursor]; if (s) toggleSrc(s.id); }
+}
+
+function doKey(k){
+  if (toastAct && k === toastAct.key){ toastAct.fn(); return true; }
+  switch (k){
+    case '?': if ($('#ov').hidden) help(); else closeOv(); return true;
+    case '/': focusSearch(); return true;
+    case 'p': generate(); return true;
+    case 's': save(); return true;
+    case 'b': setBalance(S.balance === 'time' ? 'count' : 'time'); return true;
+    case 'm': { const o = ['duration','count','all']; setMode(o[(o.indexOf(S.mode) + 1) % 3]); return true; }
+    case 'f': S.shuffle = !S.shuffle; renderMix(); changed(); return true;
+    case 'n': setPane(3); { const n = $('#name'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); } return true;
+    case 'Tab': focusPane(S.pane % 4 + 1); return true;
+    case '1': case '2': case '3': applyPreset(+k); return true;
+    case 'a': if (!$('#warn').hidden){ applySuggested(); return true; } return false;
+    case 'c': if (!$('#warn').hidden){ continueWarn(); return true; } return false;
+  }
+  return false;
+}
+function paneKey(k, shift){
+  if (k === ' ' || k === 'Enter'){ if (S.pane === 1){ activate(); return true; } return false; }
+  switch (S.pane){
+    case 1:
+      if (k === 'j' || k === 'ArrowDown'){ moveCursor(1); return true; }
+      if (k === 'k' || k === 'ArrowUp'){ moveCursor(-1); return true; }
+      if (k === 'X'){ clearAll(); return true; }
+      break;
+    case 2:
+      if (k === 'j' || k === 'ArrowDown'){ moveBlend(1); return true; }
+      if (k === 'k' || k === 'ArrowUp'){ moveBlend(-1); return true; }
+      if (k === 'ArrowLeft' || k === 'h'){ nudge(S.blendIdx, shift ? -5 : -1); return true; }
+      if (k === 'H'){ nudge(S.blendIdx, -5); return true; }
+      if (k === 'ArrowRight' || k === 'l'){ nudge(S.blendIdx, shift ? 5 : 1); return true; }
+      if (k === 'L'){ nudge(S.blendIdx, 5); return true; }
+      if (k === 'x' || k === 'Delete'){ const s = selected()[S.blendIdx]; if (s) toggleSrc(s.id); return true; }
+      break;
+    case 4:
+      if (k === 'j' || k === 'ArrowDown'){ moveTrackCur(1); return true; }
+      if (k === 'k' || k === 'ArrowUp'){ moveTrackCur(-1); return true; }
+      if (k === 'J'){ reorderTrack(1); return true; }
+      if (k === 'K'){ reorderTrack(-1); return true; }
+      if (k === 't'){ openSearch(); return true; }
+      if (k === 'u'){ addUnselected(); return true; }
+      if (k === 'x' || k === 'Delete'){ const t0 = S.tracks[S.trackCur]; if (t0) removeTrack(t0.uid); return true; }
+      break;
+  }
+  return false;
+}
+document.addEventListener('keydown', e => {
+  const t = e.target, tag = t.tagName;
+  if (!$('#ov').hidden){ if (e.key === 'Escape'){ e.preventDefault(); closeOv(); } return; }
+  if (S.view === 'connect'){
+    if (e.key === '?'){ e.preventDefault(); help(); }
+    else if (e.key === 'Enter' && tag !== 'BUTTON'){ e.preventDefault(); connect(); }
+    return;
+  }
+  const typing = (tag === 'INPUT' && t.type !== 'checkbox') || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (typing){
+    if (e.key === 'Escape'){ e.preventDefault(); t.blur(); $('#pane' + S.pane).focus({preventScroll:true}); return; }
+    if (t.id === 'q'){
+      if (e.key === 'ArrowDown'){ e.preventDefault(); moveCursor(1); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); moveCursor(-1); }
+      else if (e.key === 'Enter'){ e.preventDefault(); const s = visible()[S.cursor]; if (s) toggleSrc(s.id); }
+    } else if (t.id === 'name' && e.key === 'Enter'){ t.blur(); }
+    return;
+  }
+  if (e.ctrlKey || e.metaKey) return;
+  if (e.altKey && /^Digit[1-4]$/.test(e.code)){ e.preventDefault(); focusPane(+e.code.slice(5)); return; }
+  if (e.altKey && S.pane === 4 && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){ e.preventDefault(); reorderTrack(e.key === 'ArrowDown' ? 1 : -1); return; }
+  if (e.altKey) return;
+  const k = e.key;
+  if (t.classList && t.classList.contains('hdl') && (k === 'ArrowLeft' || k === 'ArrowRight')){
+    e.preventDefault();
+    const i = +t.dataset.k, d = (k === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 3 : 1), sel = selected();
+    if (clamp(sel[i].pri + d, 1, 100) === sel[i].pri + d && clamp(sel[i + 1].pri - d, 1, 100) === sel[i + 1].pri - d){
+      setPri(sel[i], sel[i].pri + d); setPri(sel[i + 1], sel[i + 1].pri - d); S.warnDismissed = false; changed(); liveBlend();
+    }
+    return;
+  }
+  if (k === 'Tab'){
+    if (t === document.body || t.classList.contains('pane')){ e.preventDefault(); focusPane(((S.pane - 1 + (e.shiftKey ? 3 : 1)) % 4) + 1); }
+    return;
+  }
+  if ((k === ' ' || k === 'Enter') && (tag === 'BUTTON' || tag === 'A')) return;
+  if (k === 'Enter' && S.pane === 4 && t.classList.contains('pane')){ e.preventDefault(); save(); return; }
+  if (k === ' ' || k === 'Enter'){ if (paneKey(k, false)) e.preventDefault(); return; }
+  if (doKey(k)){ e.preventDefault(); return; }
+  if (paneKey(k, e.shiftKey)) e.preventDefault();
+});
+
+/* ---------------- wiring ---------------- */
+function bind(){
+  $$('.ws .pane').forEach(p => {
+    p.addEventListener('pointerdown', () => setPane(+p.dataset.pane));
+    p.addEventListener('focusin', () => setPane(+p.dataset.pane));
+  });
+  $('#q').addEventListener('input', e => { S.q = e.target.value; S.cursor = 0; renderSources(); });
+  $('#srcList').addEventListener('click', e => {
+    const li = e.target.closest('.src'); if (!li) return;
+    const v = visible(); S.cursor = v.findIndex(s => s.id === li.dataset.id);
+    toggleSrc(li.dataset.id);
+  });
+  $('#clearAll').addEventListener('click', clearAll);
+  $('#balTime').addEventListener('click', () => setBalance('time'));
+  $('#balCount').addEventListener('click', () => setBalance('count'));
+  const rows = $('#blendRows');
+  rows.addEventListener('click', e => {
+    const li = e.target.closest('.brow'); if (!li) return;
+    const sel = selected(), i = sel.findIndex(s => s.id === li.dataset.id), s = sel[i];
+    if (i !== S.blendIdx){ S.blendIdx = i; liveBlend(); }
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const a = b.dataset.act;
+    if (a === 'rm'){ toggleSrc(s.id); return; }
+    if (a === 'minD') s.min = Math.max(1, s.min - 1);
+    if (a === 'minU'){ s.min = Math.min(8, s.min + 1); s.max = Math.max(s.max, s.min); }
+    if (a === 'maxD'){ s.max = Math.max(1, s.max - 1); s.min = Math.min(s.min, s.max); }
+    if (a === 'maxU') s.max = Math.min(8, s.max + 1);
+    changed(); liveBlend();
+  });
+  rows.addEventListener('input', e => {
+    const inp = e.target.closest('input[data-f=pri]'); if (!inp) return;
+    const li = inp.closest('.brow'), s = byId(li.dataset.id);
+    const v = parseInt(inp.value, 10); if (!isNaN(v)){ setPri(s, v); S.warnDismissed = false; changed(); liveBlend(); }
+  });
+  rows.addEventListener('change', e => { const inp = e.target.closest('input[data-f=pri]'); if (inp) inp.value = byId(inp.closest('.brow').dataset.id).pri; });
+  bindMbar();
+  $('#wApply').addEventListener('click', applySuggested);
+  $('#wCont').addEventListener('click', continueWarn);
+  $('#name').addEventListener('input', () => { syncName(); S.preset = null; renderMix(); });
+  $('#modeGrp').addEventListener('click', e => { const b = e.target.closest('.rd'); if (b) setMode(b.dataset.m); });
+  $('#modeGrp').addEventListener('keydown', e => {
+    if (!e.target.classList.contains('rd')) return;
+    if (!['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)) return;
+    e.preventDefault();
+    const o = ['duration','count','all'], d = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : -1;
+    const m = o[(o.indexOf(e.target.dataset.m) + d + 3) % 3]; setMode(m); $(`.rd[data-m=${m}]`).focus();
+  });
+  $('#minutes').addEventListener('input', e => { const v = parseInt(e.target.value, 10); if (v > 0){ S.minutes = clamp(v, 1, 3000); S.warnDismissed = false; changed(); renderWarn(); } });
+  $('#count').addEventListener('input', e => { const v = parseInt(e.target.value, 10); if (v > 0){ S.count = clamp(v, 1, 900); S.warnDismissed = false; changed(); renderWarn(); } });
+  $('#shuf').addEventListener('click', () => { S.shuffle = !S.shuffle; renderMix(); changed(); });
+  $('#presets').addEventListener('click', e => { const b = e.target.closest('button'); if (b) applyPreset(+b.dataset.p); });
+  $('#aGen').addEventListener('click', () => generate());
+  $('#aAdd').addEventListener('click', addUnselected);
+  $('#aSearch').addEventListener('click', openSearch);
+  $('#create').addEventListener('click', save);
+  // tappable key hints
+  $('#hints').addEventListener('click', e => {
+    const b = e.target.closest('button[data-key]'); if (!b) return;
+    const k = b.dataset.key;
+    if (S.view === 'connect'){ if (k === '?') help(); else if (k === 'Enter') connect(); return; }
+    if (k !== '/' && k !== 'n') $('#pane' + S.pane).focus({preventScroll:true});
+    if (!doKey(k)) paneKey(k, false);
+  });
+  // mock controls
+  $('#vConnect').addEventListener('click', () => setView('connect'));
+  $('#vWork').addEventListener('click', () => setView('work'));
+  $('#warnSw').addEventListener('click', () => {
+    S.warnDemo = !S.warnDemo; S.warnDismissed = false;
+    $('#warnSw').setAttribute('aria-checked', S.warnDemo); $('#warnSw').textContent = (S.warnDemo ? '[x]' : '[ ]') + ' Show exhaustion warning';
+    renderWarn();
+  });
+  $('#errBtn').addEventListener('click', () => toast('Could not reach Spotify. Check your connection and try again.', {label:'[r] Retry', key:'r', fn:() => toast('Spotify answered. You are back online.')}));
+  window.addEventListener('resize', () => { if (measureCells()) renderMbar(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { if (measureCells()) renderMbar(); }).observe($('#pane2'));
+}
+
+/* ---------------- connect view ---------------- */
+function connect(){
+  toast('Connected to Spotify.');
+  setView('work');
+}
+function setView(v){
+  S.view = v;
+  $('#view-connect').hidden = v !== 'connect';
+  $('#view-work').hidden = v !== 'work';
+  $('#hdrMix').hidden = v === 'connect';
+  $('#vConnect').setAttribute('aria-checked', v === 'connect');
+  $('#vConnect').textContent = (v === 'connect' ? '(x)' : '( )') + ' Connect';
+  $('#vWork').setAttribute('aria-checked', v === 'work');
+  $('#vWork').textContent = (v === 'work' ? '(x)' : '( )') + ' Workspace';
+  if (v === 'connect') $('#connectBtn').focus({preventScroll:true});
+  else { measureCells(); renderMbar(); }
+  renderHints();
+}
+
+/* ---------------- init ---------------- */
+function init(){
+  S.tracks = INIT.map(([s, k]) => mkTrack(s, k));
+  S.pv = {rows:selected().map(s => ({s, c:BASE[s.id].c, t:BASE[s.id].t})), tracks:78, secs:18120};
+  bind();
+  bindTracks();
+  $('#connectBtn').addEventListener('click', connect);
+  renderSources(); renderBalance(); renderBlend(); renderMix(); renderPreview();
+  measureCells(); renderMbar();
+  setPane(1); renderHints();
+  if (location.hash === '#connect') setView('connect');
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (measureCells()) renderMbar(); });
+}
+init();
+})();
+</script>
+</body>
+</html>
