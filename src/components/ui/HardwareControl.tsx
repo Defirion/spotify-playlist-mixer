@@ -19,7 +19,11 @@ export default function HardwareControl({
   onChange,
 }: HardwareControlProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const drag = useRef<{ y: number; value: number } | null>(null);
+  const drag = useRef<{
+    pointerId: number;
+    angle: number | null;
+    value: number;
+  } | null>(null);
   const latest = useRef({ value, onChange });
   latest.current = { value, onChange };
   const clamp = (next: number) =>
@@ -41,18 +45,43 @@ export default function HardwareControl({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [min, max, kind]);
 
-  const move = (event: PointerEvent<HTMLInputElement>) => {
-    if (!drag.current) return;
+  const pointerAngle = (event: PointerEvent<HTMLInputElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    const next =
-      kind === 'knob'
-        ? drag.current.value + (drag.current.y - event.clientY) / 14
-        : min +
-          (1 -
-            (event.clientY - bounds.top - 21) /
-              Math.max(1, bounds.height - 42)) *
-            (max - min);
+    const x = event.clientX - (bounds.left + bounds.width / 2);
+    const y = event.clientY - (bounds.top + bounds.height / 2);
+    // Angles near the center are unstable; resume tracking outside this area.
+    return Math.hypot(x, y) < 6 ? null : (Math.atan2(x, -y) * 180) / Math.PI;
+  };
+
+  const move = (event: PointerEvent<HTMLInputElement>) => {
+    const current = drag.current;
+    if (!current || event.pointerId !== current.pointerId) return;
+    let next: number;
+    if (kind === 'knob') {
+      const angle = pointerAngle(event);
+      const previous = current.angle;
+      current.angle = angle;
+      if (angle === null || previous === null) return;
+      // Take the shortest turn across the -180/180 degree boundary.
+      const delta = ((angle - previous + 540) % 360) - 180;
+      next = Math.max(
+        min,
+        Math.min(max, current.value + (delta / 270) * (max - min))
+      );
+      current.value = next;
+    } else {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      next =
+        min +
+        (1 -
+          (event.clientY - bounds.top - 21) / Math.max(1, bounds.height - 42)) *
+          (max - min);
+    }
     onChange(clamp(next));
+  };
+
+  const endDrag = (event: PointerEvent<HTMLInputElement>) => {
+    if (event.pointerId === drag.current?.pointerId) drag.current = null;
   };
 
   return (
@@ -99,29 +128,27 @@ export default function HardwareControl({
         className={styles.range}
         type="range"
         aria-label={label}
-        aria-orientation="vertical"
+        aria-orientation={kind === 'fader' ? 'vertical' : undefined}
         min={min}
         max={max}
         value={value}
         onChange={event => onChange(clamp(Number(event.target.value)))}
         onPointerDown={event => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || drag.current) return;
           event.preventDefault();
           event.currentTarget.focus({ preventScroll: true });
           event.currentTarget.setPointerCapture(event.pointerId);
-          drag.current = { y: event.clientY, value };
+          drag.current = {
+            pointerId: event.pointerId,
+            angle: kind === 'knob' ? pointerAngle(event) : null,
+            value,
+          };
           if (kind === 'fader') move(event);
         }}
         onPointerMove={move}
-        onPointerUp={() => {
-          drag.current = null;
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
-        }}
-        onLostPointerCapture={() => {
-          drag.current = null;
-        }}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onLostPointerCapture={endDrag}
         onKeyDown={event => {
           const steps: Record<string, number> = {
             ArrowUp: 1,

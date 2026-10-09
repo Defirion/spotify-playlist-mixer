@@ -113,7 +113,7 @@
   height: 62px;
   display: grid;
   place-items: center;
-  cursor: ns-resize;
+  cursor: grab;
   touch-action: none;
   border-radius: 50%;
   user-select: none;
@@ -180,6 +180,9 @@
     0 1px 3px rgba(0, 0, 0, 0.55),
     0 0 0 3px #1e1d1a,
     inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+.knob:active {
+  cursor: grabbing;
 }
 .knob:focus-visible {
   border-radius: 50%;
@@ -455,6 +458,9 @@
   cursor: ns-resize;
   touch-action: none;
   margin: 0;
+}
+.knob .range {
+  cursor: inherit;
 }
 .knob:has(.range:focus-visible),
 .fader:has(.range:focus-visible) {
